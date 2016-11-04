@@ -10,6 +10,8 @@ from multiprocessing import Pool
 import numpy as np
 from nosynum import Dot, random_beta, shape_parameter_beta
 
+from expyriment.stimuli import Canvas, Circle, Line
+
 def _map_fnc_save_incremental(parameter):
     # helper function for Pool().map()
     (dot_array, name, file_type, n_dots, area_colour, convex_hull_colour,
@@ -330,10 +332,9 @@ class DotArray(object):
 
     def create_expyriment_stimulus(self, area_colour=None,
                     convex_hull_colour=None, antialiasing=None):
-        from expyriment.stimuli import Canvas, Circle, Line
         canvas = Canvas(size=[self.stimulus_area_radius*2]*2)
         if area_colour is not None:
-            Dot(radius=self.stimulus_area_radius,
+            Circle(radius=self.stimulus_area_radius,
                     colour=area_colour).plot(canvas)
         if convex_hull_colour is not None:
             #plot convey hull
@@ -345,7 +346,7 @@ class DotArray(object):
                     Line(start_point=last, end_point=p, line_width=2,
                     colour=convex_hull_colour).plot(canvas)
                 last = p
-        map(lambda d: Circle(diameter=2*int(d.radius), colour=d.colour,
+        map(lambda d: Circle(radius=d.radius, colour=d.colour,
                     line_width=0, position = d.xy).plot(canvas),
                     self.dots)
         return canvas
