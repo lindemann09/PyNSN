@@ -11,7 +11,7 @@ dot_diameter_range=(2, 20)
 number_list = range(10, 200)
 
 print "creating "
-dal = DotArrayList(number_list, subfolder="picts")
+dal = DotArrayListMatched(number_list, subfolder="picts")
 dal.create_method(method=3, dot_diameter = 20, dot_diameter_std=2)
 
 #dal2 = DotArrayList(number_list, subfolder="picts")

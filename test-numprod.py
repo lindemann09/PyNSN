@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from expyriment import control, design, io, stimuli
 from turning_knob import numerosity_production
-from nosynum import get_array_of_dot_arrays
+from nosynum import get_list_of_incremental_dot_arrays
 
-#control.set_develop_mode(True)
+control.set_develop_mode(True)
 
 exp = control.initialize()
 
@@ -14,12 +14,12 @@ mouse = io.Mouse(show_cursor=False, track_button_events=True)
 maxnumber = 20
 
 stimuli.TextLine("Creating stimuli....please wait").present()
-arrays = get_array_of_dot_arrays(max_n_dots = maxnumber,
-                                area_colour = (255, 255, 255),
-                                area_radius=400,
-                                dot_size = 110,
-                                dot_picture="picts/pict1.png",
-                                position=(0, 0))
+arrays = get_list_of_incremental_dot_arrays(max_n_dots = maxnumber,
+                                            area_colour = (255, 255, 255),
+                                            area_radius=400,
+                                            dot_size = 110,
+                                            dot_picture="picts/pict1.png",
+                                            position=(0, 0))
 
 stimuli.BlankScreen().present()
 
