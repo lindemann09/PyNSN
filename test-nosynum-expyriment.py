@@ -5,8 +5,6 @@ from expyriment import control, misc
 
 control.set_develop_mode(True)
 
-
-
 exp = control.initialize()
 control.start()
 

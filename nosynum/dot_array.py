@@ -4,6 +4,7 @@ Dot Array
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+import os
 import math
 import random
 import pickle
@@ -21,7 +22,7 @@ def _map_fnc_save_incremental(parameter):
                 antialiasing, property_num_format) = parameter
     filename = name + "_incre_{0}.{1}".format(n_dots, file_type.lower())
     print filename
-    dot_array.dot_limitation = n_dots
+    dot_array._dot_limitation = n_dots
     dot_array.save_image(filename=filename, file_type=file_type,
         area_colour=area_colour,convex_hull_colour=convex_hull_colour,
         antialiasing=antialiasing)
@@ -465,3 +466,57 @@ class DotArray(object):
         for p in properties:
             rtn += p
         return rtn
+
+
+def get_array_of_dot_arrays(subfolder="arrays",
+                            area_radius=200,
+                            area_colour = (200, 200, 200),
+                            max_n_dots=20,
+                            dot_diameter_range=None,
+                            dot_diameter_std=None,
+                            dot_colour=(0, 255, 0),
+                            dot_size=20,
+                            pictformat="png",
+                            dot_picture=None,
+                            n_sets=3,  # max 25
+                            position=(0, 0)):
+
+    """ CALL THIS FUNCTION
+    returns the array with all stimuli
+    """
+
+    if n_sets>24:
+        raise RuntimeError("Max number od sets is 25")
+
+    sets = list(map(lambda x: chr(x), range(ord("a"), ord("a") + n_sets)))
+    if not os.path.isdir(subfolder):
+        os.mkdir(subfolder)
+        txt = ""
+        for s in sets:
+            dot_array = DotArray(stimulus_area_radius=area_radius,
+                                 n_dots=max_n_dots,
+                                 dot_diameter_mean=dot_size,
+                                 dot_diameter_range=dot_diameter_range,
+                                 dot_diameter_std=dot_diameter_std,
+                                 dot_colour=dot_colour,
+                                 dot_picture=dot_picture)
+            property_str = dot_array.save_incremental_images(
+                area_colour=area_colour,
+                name=subfolder + os.path.sep + "array_" + s,
+                file_type=pictformat, antialiasing=True)
+            txt += property_str
+
+        # properties
+        with file(subfolder + os.path.sep + "properties.csv", 'w') as fl:
+            for x in txt:
+                fl.write(x)
+
+    arrays = []
+    filename = subfolder + os.path.sep + "array_{0}_incre_{1}." + pictformat
+    for s in sets:
+        array_list = []
+        for x in range(max_n_dots + 1):
+            array_list.append(Picture(filename.format(s, x), position=position))
+        arrays.append(array_list)
+
+    return arrays

@@ -41,6 +41,7 @@ nosetests.xml
 # PyPi
 .pypirc
 
+arrays/
 data/
 events/
 _build/
