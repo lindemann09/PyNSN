@@ -7,9 +7,30 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import math
 import random
 import pickle
+from multiprocessing import Pool
 from hashlib import sha1
 import numpy as np
 from nosynum import Dot, random_beta, shape_parameter_beta
+
+def _map_fnc_save_incremental(parameter):
+    # helper function for Pool().map()
+    (dot_array, name, file_type, n_dots, area_colour, convex_hull_colour,
+                antialiasing, property_num_format) = parameter
+    filename = name + "_incre_{0}.{1}".format(n_dots, file_type.lower())
+    print filename
+    dot_array.dot_limitation = n_dots
+    dot_array.save_image(filename=filename, file_type=file_type,
+        area_colour=area_colour,convex_hull_colour=convex_hull_colour,
+        antialiasing=antialiasing)
+    properties = "{0},{1},{2}".format(filename, dot_array.properties[0],
+                dot_array.properties[1])
+    for x in dot_array.properties[2:]:
+        if x is not None:
+            properties += "," + property_num_format%x
+        else:
+            properties += ",None"
+    properties += "\n"
+    return properties
 
 def load_dot_array(filename):
     with open(filename, 'rb')as fl:
@@ -409,41 +430,25 @@ class DotArray(object):
                                     antialiasing=antialiasing)
         img.save(filename, file_type)
 
-    def save_incremental_images(self, name, file_type="PNG", area_colour=None,
-                                convex_hull_colour=None, antialiasing=True,
-                                property_num_format="%10.2f"):
-        """Saving incrementally.
+        def save_incremental_images(self, name, file_type="PNG", area_colour=None,
+                                    convex_hull_colour=None, antialiasing=True,
+                                    property_num_format="%10.2f"):
 
-        Each numerosity will be saved in a separate file by adding dots
-        incrementally.
-
-        returns
-        -------
-        rtn : string
-            property list as string
-        """
-
-        old_dlim = self._dot_limitation
-        properties_str = ""
-        hash = self.hash_id
-        for n_dots in range(1, len(self._dots) + 1):
-            filename = name + "_incre_{0}.{1}".format(n_dots, file_type.lower())
-            # print filename
-            self.limit_number_of_dot(n_dots)
-            self.save_image(filename=filename, file_type=file_type,
-                            area_colour=area_colour,
-                            convex_hull_colour=convex_hull_colour,
-                            antialiasing=antialiasing)
-
-            probs = self.properties
-            properties_str += "{0},{1},{2},{3}".format(hash, filename, probs[0],
-                                                       probs[1])
-            for x in probs[2:]:
-                if x is not None:
-                    properties_str += "," + property_num_format % x
-                else:
-                    properties_str += ",None"
-            properties_str += "\n"
-
-        self.limit_number_of_dot(old_dlim)
-        return "hash_id, filename, " + self.property_names + "\n" + properties_str
+            """Saving incrementally.
+            Each numerosity will be saved in a separate file by adding dots
+            incrementally.
+            returns
+            -------
+            rtn : string
+                property list as string
+            """
+            dlim = self.dot_limitation
+            parameter = map(lambda x: [self, name, file_type, x, area_colour, \
+                                       convex_hull_colour, antialiasing, property_num_format],
+                            range(len(self._dots) + 1))
+            properties = Pool().map(_map_fnc_save_incremental, parameter)
+            self.dot_limitation = dlim
+            rtn = "filename, " + self.property_names + "\n"
+            for p in properties:
+                rtn += p
+            return rtn
