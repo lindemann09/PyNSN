@@ -343,7 +343,7 @@ class DotArray(object):
 
         canvas = Canvas(size=[self._stimulus_area_radius * 2] * 2)
         if area_colour is not None:
-            Dot(radius=self._stimulus_area_radius,
+            Dot(diameter=self._stimulus_area_radius,
                 colour=area_colour).plot(canvas)
         if convex_hull_colour is not None:
             # plot convey hull
