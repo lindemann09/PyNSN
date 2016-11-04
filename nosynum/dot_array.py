@@ -9,8 +9,11 @@ import random
 import pickle
 from multiprocessing import Pool
 from hashlib import sha1
+import Image, ImageDraw
 import numpy as np
 from nosynum import Dot, random_beta, shape_parameter_beta
+
+from expyriment.stimuli import Canvas, Circle, Line, Picture
 
 def _map_fnc_save_incremental(parameter):
     # helper function for Pool().map()
@@ -39,9 +42,11 @@ def load_dot_array(filename):
 
 class DotArray(object):
     def __init__(self, stimulus_area_radius, n_dots,
-                 dot_diameter_mean,
-                 dot_diameter_range=None,
-                 dot_diameter_std=None, min_gap=1, dot_colour=None):
+            dot_diameter_mean,
+            dot_diameter_range=None,
+            dot_diameter_std=None,
+            dot_picture = None,
+            min_gap=1, dot_colour=None):
 
         """Create a Random Dot Kinematogram
 
@@ -69,6 +74,7 @@ class DotArray(object):
             dot_diameter_std = None
         self._dot_diameter_std = dot_diameter_std
         self._dot_colour = dot_colour
+        self._dot_picture = dot_picture
         self._create_dots(n_dots)
 
     def _create_dots(self, n_dots):
@@ -77,7 +83,8 @@ class DotArray(object):
                         self._dot_diameter_std is None:
             # constant mean
             self._dots = [Dot(diameter=self._dot_diameter_mean,
-                              colour=self._dot_colour) \
+                              colour=self._dot_colour,
+			                   picture = self._dot_picture) \
                           for _ in range(n_dots)]
         else:
             # draw diameter from beta distribution
@@ -359,13 +366,11 @@ class DotArray(object):
             diff = abs(density - actual_density)
 
     def create_expyriment_stimulus(self, area_colour=None,
-                                   convex_hull_colour=None, antialiasing=None):
-        from expyriment.stimuli import Canvas, Circle, Line
-
-        canvas = Canvas(size=[self._stimulus_area_radius * 2] * 2)
+                    convex_hull_colour=None, antialiasing=None):
+        canvas = Canvas(size= tuple([self._stimulus_area_radius * 2]*2))
         if area_colour is not None:
-            Dot(diameter=self._stimulus_area_radius,
-                colour=area_colour).plot(canvas)
+            Circle(radius=self._stimulus_area_radius,
+                    colour=area_colour).plot(canvas)
         if convex_hull_colour is not None:
             # plot convey hull
             hull = self.convex_hull
@@ -374,51 +379,59 @@ class DotArray(object):
             for p in hull:
                 if last is not None:
                     Line(start_point=last, end_point=p, line_width=2,
-                         colour=convex_hull_colour).plot(canvas)
+                    colour=convex_hull_colour).plot(canvas)
                 last = p
-        map(lambda d: Circle(diameter=2 * int(d.radius), colour=d.colour,
-                             line_width=0, position=d.xy).plot(canvas),
-            self.dots)
+
+        # plot dots
+        for d in self.dots:
+            if d.picture is not None:
+                Picture(filename=d.picture,
+                        position=d.xy).plot(canvas)
+            else:
+                Circle(radius=d.radius, colour=d.colour,
+                   line_width=0, position=d.xy).plot(canvas)
+
         return canvas
 
     def create_pil_image(self, area_colour=None, convex_hull_colour=None,
-                         antialiasing=True):
+                antialiasing=True):
         """returns pil image"""
-        import Image, ImageDraw
-
         pict_size = int(round(self._stimulus_area_radius * 2))
-
         def convert_pos(xy):
             j = int(float(pict_size) / 2)
-            return (int(xy[0]) + j, int(-1 * xy[1]) + j)
+            return (int(xy[0])+j, int(-1*xy[1])+j)
 
-        def draw_dot(draw, dot):
+        def draw_dot(img, dot):
             if dot.colour is None:
-                colour = (200, 200, 200)
+                colour = (200,200,200)
             else:
                 colour = dot.colour
             r = int(dot.radius)
-            x, y = convert_pos(dot.xy)
-            draw.ellipse((x - r, y - r, x + r, y + r), fill=colour)
+            x,y = convert_pos(dot.xy)
+            if dot.picture is not None:
+                pict = Image.open(dot.picture, "r")
+                img.paste(pict, (x-r,y-r))
+            else:
+                ImageDraw.Draw(img).ellipse((x-r, y-r, x+r, y+r), fill=colour)
 
-        img = Image.new("RGB", (pict_size, pict_size), "black")
-        draw = ImageDraw.Draw(img)
+        img = Image.new("RGBA", (pict_size, pict_size), "black")
         if area_colour is not None:
-            draw_dot(draw, Dot(x=0, y=0, diameter=self._stimulus_area_radius * 2),
-                     colour=area_colour)
+            draw_dot(img, Dot(x=0, y=0, diameter=self._stimulus_area_radius*2,
+                    colour = area_colour))
         if convex_hull_colour is not None:
-            # plot convey hull
+            #plot convey hull
             hull = self.convex_hull
             hull.append(hull[0])
             last = None
+            draw = ImageDraw.Draw(img)
             for p in hull:
                 if last is not None:
                     draw.line(convert_pos(last) + convert_pos(p),
-                              width=2, fill=convex_hull_colour)
+                    width = 2, fill=convex_hull_colour)
                 last = p
-        map(lambda d: draw_dot(draw, d), self.dots)
+        map(lambda d: draw_dot(img, d), self.dots)
         if antialiasing:
-            img = img.resize((pict_size * 2, pict_size * 2))
+            img = img.resize((pict_size*2, pict_size*2), Image.ANTIALIAS)
             img = img.resize((pict_size, pict_size), Image.ANTIALIAS)
         return img
 
@@ -430,25 +443,25 @@ class DotArray(object):
                                     antialiasing=antialiasing)
         img.save(filename, file_type)
 
-        def save_incremental_images(self, name, file_type="PNG", area_colour=None,
-                                    convex_hull_colour=None, antialiasing=True,
-                                    property_num_format="%10.2f"):
+    def save_incremental_images(self, name, file_type="PNG", area_colour=None,
+                                convex_hull_colour=None, antialiasing=True,
+                                property_num_format="%10.2f"):
 
-            """Saving incrementally.
-            Each numerosity will be saved in a separate file by adding dots
-            incrementally.
-            returns
-            -------
-            rtn : string
-                property list as string
-            """
-            dlim = self.dot_limitation
-            parameter = map(lambda x: [self, name, file_type, x, area_colour, \
-                                       convex_hull_colour, antialiasing, property_num_format],
-                            range(len(self._dots) + 1))
-            properties = Pool().map(_map_fnc_save_incremental, parameter)
-            self.dot_limitation = dlim
-            rtn = "filename, " + self.property_names + "\n"
-            for p in properties:
-                rtn += p
-            return rtn
+        """Saving incrementally.
+        Each numerosity will be saved in a separate file by adding dots
+        incrementally.
+        returns
+        -------
+        rtn : string
+            property list as string
+        """
+        dlim = self._dot_limitation
+        parameter = map(lambda x: [self, name, file_type, x, area_colour, \
+                                   convex_hull_colour, antialiasing, property_num_format],
+                        range(len(self._dots) + 1))
+        properties = Pool().map(_map_fnc_save_incremental, parameter)
+        self._dot_limitation = dlim
+        rtn = "filename, " + self.property_names + "\n"
+        for p in properties:
+            rtn += p
+        return rtn

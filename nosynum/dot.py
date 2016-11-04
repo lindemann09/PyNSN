@@ -8,7 +8,7 @@ import math
 
 class Dot(object):
 
-    def __init__(self, x=0, y=0, diameter=1, colour=None):
+    def __init__(self, x=0, y=0, diameter=1, colour=None, picture=None):
         """Initialize a point
 
         Parameters
@@ -24,6 +24,7 @@ class Dot(object):
         self.y = y
         self.diameter = diameter
         self.colour = colour
+        self.picture = picture
 
     def __repr__(self):
         rtn = "[{0},{1}], d={2}".format(self.x, self.y, self.diameter)
