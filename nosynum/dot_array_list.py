@@ -18,7 +18,9 @@ def get_list_of_incremental_dot_arrays(subfolder="arrays",
                                        pictformat="png",
                                        dot_picture=None,
                                        n_sets=3,  # max 25
-                                       position=(0, 0)):
+                                       position=(0, 0),
+                                       background_colour_pil="black",
+                                       background_stimulus_expyriment=None):
 
     """ CALL THIS FUNCTION
     returns the array with all stimuli
@@ -38,7 +40,9 @@ def get_list_of_incremental_dot_arrays(subfolder="arrays",
                                  dot_diameter_range=dot_diameter_range,
                                  dot_diameter_std=dot_diameter_std,
                                  dot_colour=dot_colour,
-                                 dot_picture=dot_picture)
+                                 dot_picture=dot_picture,
+                                 background_colour_pil=background_colour_pil,
+                                 background_stimulus_expyriment=background_stimulus_expyriment)
             property_str = dot_array.save_incremental_images(
                 area_colour=area_colour,
                 name=subfolder + os.path.sep + "array_" + s,

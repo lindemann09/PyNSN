@@ -3,9 +3,11 @@ from expyriment import control, design, io, stimuli
 from turning_knob import numerosity_production
 from nosynum import get_list_of_incremental_dot_arrays
 
-control.set_develop_mode(True)
+#control.set_develop_mode(True)
 
-exp = control.initialize()
+exp = design.Experiment(background_colour=(255,255,255))
+
+control.initialize(exp)
 
 control.start(exp, skip_ready_screen=True)
 #######################
@@ -18,8 +20,9 @@ arrays = get_list_of_incremental_dot_arrays(max_n_dots = maxnumber,
                                             area_colour = (255, 255, 255),
                                             area_radius=400,
                                             dot_size = 110,
-                                            dot_picture="picts/pict1.png",
-                                            position=(0, 0))
+                                            dot_picture="picts/pict2.png",
+                                            position=(0, 0),
+                                            background_colour_pil="white")
 
 stimuli.BlankScreen().present()
 

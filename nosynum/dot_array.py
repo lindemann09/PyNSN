@@ -43,11 +43,13 @@ def load_dot_array(filename):
 
 class DotArray(object):
     def __init__(self, stimulus_area_radius, n_dots,
-            dot_diameter_mean,
-            dot_diameter_range=None,
-            dot_diameter_std=None,
-            dot_picture = None,
-            min_gap=1, dot_colour=None):
+                 dot_diameter_mean,
+                 dot_diameter_range=None,
+                 dot_diameter_std=None,
+                 dot_picture = None,
+                 min_gap=1, dot_colour=None,
+                 background_colour_pil="white",
+                 background_stimulus_expyriment=None):
 
         """Create a Random Dot Kinematogram
 
@@ -76,6 +78,8 @@ class DotArray(object):
         self._dot_diameter_std = dot_diameter_std
         self._dot_colour = dot_colour
         self._dot_picture = dot_picture
+        self.background_colour_pil = background_colour_pil
+        self.background_stimulus_expyriment = background_stimulus_expyriment
         self._create_dots(n_dots)
 
     def _create_dots(self, n_dots):
@@ -368,7 +372,11 @@ class DotArray(object):
 
     def create_expyriment_stimulus(self, area_colour=None,
                     convex_hull_colour=None, antialiasing=None):
-        canvas = Canvas(size= tuple([self._stimulus_area_radius * 2]*2))
+        if self.background_stimulus_expyriment is None:
+            canvas = Canvas(size= tuple([self._stimulus_area_radius * 2]*2))
+        else:
+            canvas = self.background_stimulus_expyriment.copy()
+
         if area_colour is not None:
             Circle(radius=self._stimulus_area_radius,
                     colour=area_colour).plot(canvas)
@@ -415,7 +423,7 @@ class DotArray(object):
             else:
                 ImageDraw.Draw(img).ellipse((x-r, y-r, x+r, y+r), fill=colour)
 
-        img = Image.new("RGBA", (pict_size, pict_size), "black")
+        img = Image.new("RGBA", (pict_size, pict_size), color=self.background_colour_pil)
         if area_colour is not None:
             draw_dot(img, Dot(x=0, y=0, diameter=self._stimulus_area_radius*2,
                     colour = area_colour))
