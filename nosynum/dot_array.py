@@ -47,7 +47,8 @@ class DotArray(object):
                  dot_diameter_range=None,
                  dot_diameter_std=None,
                  dot_picture = None,
-                 min_gap=1, dot_colour=None,
+                 dot_colour=None,
+                 min_gap=1,
                  background_colour_pil="white",
                  background_stimulus_expyriment=None):
 
@@ -213,8 +214,8 @@ class DotArray(object):
             x = None
         self._dot_limitation = x
 
-    def set_dot_colour(self, colour, dot_ids=None):
-        """Set the colour of dots.
+    def change_dot_colour(self, colour, dot_ids=None):
+        """Change the colour of dots.
 
         Parameter
         ---------
@@ -232,6 +233,26 @@ class DotArray(object):
             dot_ids = range(len(self._dots))
         for x in map(lambda x: self._dots[x], dot_ids):
             x.colour = colour
+
+    def change_dot_picture(self, picture, dot_ids=None):
+        """Change the picture of dots.
+
+        Parameter
+        ---------
+        colour: colour
+            the dot colour
+        dot_ids: list of integers, optional
+            if defined it set the colour of the dot defined by the id
+
+        Note
+        ----
+        The function ignores dot limitations
+        """
+
+        if dot_ids is None:
+            dot_ids = range(len(self._dots))
+        for x in map(lambda x: self._dots[x], dot_ids):
+            x.picture = picture
 
     @property
     def property_names(self):
