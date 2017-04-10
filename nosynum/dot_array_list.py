@@ -1,11 +1,14 @@
+from __future__ import absolute_import, print_function, division
+from builtins import *
+
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import os
 import math
 from multiprocessing import Pool
 import numpy as np
-from dot_array import DotArray
 from expyriment.stimuli import Picture
+from .dot_array import DotArray
 
 def get_list_of_incremental_dot_arrays(subfolder="arrays",
                                        area_radius=200,
@@ -22,12 +25,19 @@ def get_list_of_incremental_dot_arrays(subfolder="arrays",
                                        background_colour_pil="black",
                                        background_stimulus_expyriment=None):
 
-    """ CALL THIS FUNCTION
+    """ TEMPORARY FUNCTION
+
     returns the array with all stimuli
+
+    usefull for simple numerosity production tasks.
+
+    Creates array and saves it, if subfolder does not exsit, but assumes otherwise
+    that the stimuli are correctly created (i.e., settings are unchanged).
+
     """
 
     if n_sets > 24:
-        raise RuntimeError("Max number od sets is 25")
+        raise RuntimeError("Max number of sets is 25")
 
     sets = list(map(lambda x: chr(x), range(ord("a"), ord("a") + n_sets)))
     if not os.path.isdir(subfolder):
@@ -42,7 +52,8 @@ def get_list_of_incremental_dot_arrays(subfolder="arrays",
                                  dot_colour=dot_colour,
                                  dot_picture=dot_picture,
                                  background_colour_pil=background_colour_pil,
-                                 background_stimulus_expyriment=background_stimulus_expyriment)
+                                 background_stimulus_expyriment=
+                                                background_stimulus_expyriment)
             property_str = dot_array.save_incremental_images(
                 area_colour=area_colour,
                 name=subfolder + os.path.sep + "array_" + s,
@@ -82,8 +93,11 @@ def _map_fnc_adapt_convex_hull_area(parameter):
 
 
 class DotArrayListMatched(object):
+    """creates multiple unrelated dot arrays that are matched for certain visual
+    cues. Method not useable for incremental dot arrays such as needed for
+    numerosity production tasks"""
 
-    def __init__(self, number_list, subfolder=""):
+    def __init__(self, number_list, subfolder="arrays"):
         self.number_list = number_list
         self._dot_arrays = []
         self.subfolder = subfolder
@@ -143,12 +157,13 @@ class DotArrayListMatched(object):
         ## adaptations
         if method in [1, 3]:
             parameter = map(lambda x:[x, density, precision], self._dot_arrays)
-            self._dot_arrays = Pool().map(_map_fnc_adapt_density, parameter)
+            self._dot_arrays = list(Pool().map(_map_fnc_adapt_density, parameter))
         elif method==2:
-            cha = max(map(lambda x:x.convex_hull_area, self._dot_arrays))
+            cha = max(list(map(lambda x:x.convex_hull_area, self._dot_arrays)))
             precision = 0.01
             parameter = map(lambda x:[x, cha, precision], self._dot_arrays)
-            self._dot_arrays = Pool().map(_map_fnc_adapt_convex_hull_area, parameter)
+            self._dot_arrays = list(Pool().map(
+                                _map_fnc_adapt_convex_hull_area, parameter))
 
     def get_arrays_csv_text(self, num_format="%10.2f"):
         """Dot array as csv text
@@ -185,6 +200,11 @@ class DotArrayListMatched(object):
             prop.append([cnt] + ar.properties)
         return prop
 
+    def __str__(self):
+        txt = self.property_names + "\n"
+        txt = txt + str(np.array(self.properties))
+        return txt
+
     def extend(self, other_dot_array_list):
         self._dot_arrays.extend(other_dot_array_list._dot_arrays)
 
@@ -192,13 +212,14 @@ class DotArrayListMatched(object):
         data = np.array(self.properties)
         def cor(label, var1,var2):
             r = np.corrcoef(var1, var2)[0, 1]
-            print "{0}: R2={1}".format(label, r**2)
+            return "{0}: R2={1}".format(label, r**2)
 
-        cor("mean dot diameter", data[:,1], data[:, 2] )
-        cor("total_area", data[:,1], data[:, 3])
-        cor("convex_hull_area", data[:,1], data[:, 4])
-        cor("density", data[:,1], data[:, 5])
-        cor("total_circumference", data[:,1], data[:, 6])
+        txt = cor("mean dot diameter", data[:,1], data[:, 2] )
+        txt = txt + "\n" + cor("total_area", data[:,1], data[:, 3])
+        txt = txt + "\n" + cor("convex_hull_area", data[:,1], data[:, 4])
+        txt = txt + "\n" + cor("density", data[:,1], data[:, 5])
+        txt = txt + "\n" + cor("total_circumference", data[:,1], data[:, 6])
+        return txt
 
     def save_arrays_csv_text(self, filename, num_format="%10.2f"):
         """save dot arrays as text files
@@ -243,4 +264,4 @@ class DotArrayListMatched(object):
         parameter = map(lambda x:[x, file_type, area_colour, convex_hull_colour,
                 antialiasing, x.filename],
                 self._dot_arrays)
-        Pool().map(_map_fnc_dot_array_list_save, parameter)
+        list(Pool().map(_map_fnc_dot_array_list_save, parameter))

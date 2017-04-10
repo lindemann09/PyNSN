@@ -1,6 +1,8 @@
 """
 Dot Array
 """
+from __future__ import absolute_import, print_function, division
+from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -8,11 +10,12 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import math
 import random
 import pickle
+from copy import deepcopy
 from multiprocessing import Pool
 from hashlib import sha1
-import Image, ImageDraw
+from PIL import Image, ImageDraw
 import numpy as np
-from nosynum import Dot, random_beta, shape_parameter_beta
+from . import Dot, random_beta, shape_parameter_beta
 
 from expyriment.stimuli import Canvas, Circle, Line, Picture
 
@@ -21,7 +24,7 @@ def _map_fnc_save_incremental(parameter):
     (dot_array, name, file_type, n_dots, area_colour, convex_hull_colour,
                 antialiasing, property_num_format) = parameter
     filename = name + "_incre_{0}.{1}".format(n_dots, file_type.lower())
-    print filename
+    print(filename)
     dot_array._dot_limitation = n_dots
     dot_array.save_image(filename=filename, file_type=file_type,
         area_colour=area_colour,convex_hull_colour=convex_hull_colour,
@@ -95,14 +98,15 @@ class DotArray(object):
         else:
             # draw diameter from beta distribution
             parameter = shape_parameter_beta(self._dot_diameter_range,
-                                             self._dot_diameter_mean, self._dot_diameter_std)
+                                             self._dot_diameter_mean,
+                                             self._dot_diameter_std)
             self._dots = [Dot(diameter=random_beta(
                 self._dot_diameter_range, parameter),
                               colour=self._dot_colour) for _ in range(n_dots)]
         self._dot_limitation = None
-        self.mix_positions()
+        self.mix_positions(ignore_overlapping=False)
 
-    def mix_positions(self):
+    def mix_positions(self, ignore_overlapping=False):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
         tmp_dots = self._dots
@@ -112,14 +116,18 @@ class DotArray(object):
             while (True):
                 cnt += 1
                 polar = (random.random() * (self._stimulus_area_radius - \
-                                            d.diameter / 2.0), random.random() * 2 * math.pi)
+                                            d.diameter / 2.0), 
+                                            random.random() * 2 * math.pi)
                 d.xy = (polar[0] * math.cos(polar[1]),
                         polar[0] * math.sin(polar[1]))
                 bad_position = False
-                for c in self._dots:
-                    if d.distance(c) < self._min_gap:
-                        bad_position = True
-                        break  # for
+                if not ignore_overlapping:
+                    # find bad_positions
+                    for c in self._dots:
+                        if d.distance(c) < self._min_gap:
+                            bad_position = True
+                            break  # for
+
                 if not (bad_position):
                     self._dots.append(d)
                     break  # while
@@ -130,7 +138,7 @@ class DotArray(object):
     def hash_id(self):
         """secure hash (sha1) of the stimulus
 
-        This is a unique id of this particular stimulus
+        This is a unique id of this stimulus
 
         Notes
         -----
@@ -192,6 +200,19 @@ class DotArray(object):
             return self._dots
         else:
             return self._dots[:self._dot_limitation]
+
+    def number_of_dots(self):
+        return len(self._dots)
+
+    def remove_dot(self, dot_id):
+        if dot_id>=0 and dot_id<len(self._dots):
+            self._dots.pop(dot_id)
+            return True
+        return False
+
+    def add_dot(self,_dot_ind):
+        # TODO 
+        return None
 
     def limit_number_of_dot(self, value):
         """Dot limitations
@@ -265,20 +286,20 @@ class DotArray(object):
 
     @property
     def mean_dot_diameter(self):
-        return np.mean(map(lambda x: x.diameter, self.dots))
+        return np.mean(list(map(lambda x: x.diameter, self.dots)))
 
     @property
     def total_area(self):
-        return sum(map(lambda x: x.area, self.dots))
+        return sum(list(map(lambda x: x.area, self.dots)))
 
     @property
     def total_circumference(self):
-        return sum(map(lambda x: x.circumference, self.dots))
+        return sum(list(map(lambda x: x.circumference, self.dots)))
 
     @property
     def points(self):
         """list of tuples with xy coordinates"""
-        return map(lambda x: x.xy, self.dots)
+        return list(map(lambda x: x.xy, self.dots))
 
     @property
     def convex_hull_area(self):
@@ -459,7 +480,7 @@ class DotArray(object):
                     draw.line(convert_pos(last) + convert_pos(p),
                     width = 2, fill=convex_hull_colour)
                 last = p
-        map(lambda d: draw_dot(img, d), self.dots)
+        list(map(lambda d: draw_dot(img, d), self.dots))
         if antialiasing:
             img = img.resize((pict_size*2, pict_size*2), Image.ANTIALIAS)
             img = img.resize((pict_size, pict_size), Image.ANTIALIAS)
@@ -495,3 +516,26 @@ class DotArray(object):
         for p in properties:
             rtn += p
         return rtn
+
+    def realign(self):
+        """ removes all overlaps"""
+
+
+    def create_deviant(self, num_dots, match="total_area"):
+        """ignore dot_limitation
+        """
+        deviant = deepcopy(self)
+        deviant._dot_limitation = None
+        diff = num_dots - len(self._dots)
+        if diff<0:
+            for x in range(abs(diff)):
+                deviant.remove_dot(random.randint(0, len(deviant._dots)))
+        else:
+            pass # TODO add_dots
+
+        if match == "total_area":
+            scale = np.sqrt((self.total_area*4)/(num_dots*np.pi)) / \
+                    np.sqrt((self.total_area*4)/(len(self._dots)*np.pi))
+            for d in deviant._dots:
+                d.diameter = scale * d.diameter
+            return deviant
