@@ -9,71 +9,7 @@ from multiprocessing import Pool
 import numpy as np
 from expyriment.stimuli import Picture
 from .dot_array import DotArray
-
-def get_list_of_incremental_dot_arrays(subfolder="arrays",
-                                       area_radius=200,
-                                       area_colour=(200, 200, 200),
-                                       max_n_dots=20,
-                                       dot_diameter_range=None,
-                                       dot_diameter_std=None,
-                                       dot_colour=(0, 255, 0),
-                                       dot_size=20,
-                                       pictformat="png",
-                                       dot_picture=None,
-                                       n_sets=3,  # max 25
-                                       position=(0, 0),
-                                       background_colour_pil="black",
-                                       background_stimulus_expyriment=None):
-
-    """ TEMPORARY FUNCTION
-
-    returns the array with all stimuli
-
-    usefull for simple numerosity production tasks.
-
-    Creates array and saves it, if subfolder does not exsit, but assumes otherwise
-    that the stimuli are correctly created (i.e., settings are unchanged).
-
-    """
-
-    if n_sets > 24:
-        raise RuntimeError("Max number of sets is 25")
-
-    sets = list(map(lambda x: chr(x), range(ord("a"), ord("a") + n_sets)))
-    if not os.path.isdir(subfolder):
-        os.mkdir(subfolder)
-        txt = ""
-        for s in sets:
-            dot_array = DotArray(stimulus_area_radius=area_radius,
-                                 n_dots=max_n_dots,
-                                 dot_diameter_mean=dot_size,
-                                 dot_diameter_range=dot_diameter_range,
-                                 dot_diameter_std=dot_diameter_std,
-                                 dot_colour=dot_colour,
-                                 dot_picture=dot_picture,
-                                 background_colour_pil=background_colour_pil,
-                                 background_stimulus_expyriment=
-                                                background_stimulus_expyriment)
-            property_str = dot_array.save_incremental_images(
-                area_colour=area_colour,
-                name=subfolder + os.path.sep + "array_" + s,
-                file_type=pictformat, antialiasing=True)
-            txt += property_str
-
-        # properties
-        with file(subfolder + os.path.sep + "properties.csv", 'w') as fl:
-            for x in txt:
-                fl.write(x)
-
-    arrays = []
-    filename = subfolder + os.path.sep + "array_{0}_incre_{1}." + pictformat
-    for s in sets:
-        array_list = []
-        for x in range(max_n_dots + 1):
-            array_list.append(Picture(filename.format(s, x), position=position))
-        arrays.append(array_list)
-
-    return arrays
+from . import pil_image
 
 
 #### property matched dot arrays (under development)

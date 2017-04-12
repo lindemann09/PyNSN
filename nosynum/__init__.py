@@ -9,5 +9,5 @@ __version__ = '0.4.0'
 
 from .random_beta import random_beta, shape_parameter_beta
 from .dot import Dot
-from .dot_array import DotArray, load_dot_array
+from .dot_array import DotArray, list_all_saved_incremental_arrays
 

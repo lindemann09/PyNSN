@@ -6,6 +6,7 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+from os import listdir
 import types
 import math
 import random
@@ -17,9 +18,13 @@ from . import Dot, random_beta, shape_parameter_beta
 
 TWO_PI = 2*math.pi
 
-def load_dot_array(filename):
-    with open(filename, 'rb')as fl:
-        rtn = pickle.load(fl)
+PROPERTY_FILE_SUFFIX = ".property.csv"
+
+def list_all_saved_incremental_arrays(picture_folder):
+    rtn = []
+    for x in listdir(picture_folder):
+        if x.endswith(PROPERTY_FILE_SUFFIX):
+            rtn.append(x[:len(x)-len(PROPERTY_FILE_SUFFIX)])
     return rtn
 
 class DotArray(object):
@@ -209,11 +214,6 @@ class DotArray(object):
             rtn += num_format % d.x + "," + num_format % d.y + "," + \
                    num_format % d.diameter + "\n"
         return rtn
-
-    def save(self, filename):
-        """Saving dot array object. Use load_array to load save array"""
-        with open(filename, 'wb')as fl:
-            pickle.dump(self, fl)
 
     def change_dot_colour(self, colour, dot_ids=None):
         """Change the colour of dots.
