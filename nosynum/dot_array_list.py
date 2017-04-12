@@ -140,12 +140,12 @@ class DotArrayListMatched(object):
                                       dot_diameter+3*dot_diameter_std)
 
             dp = DotArray(n_dots = num,
-                    stimulus_area_radius = stimulus_area_radius,
-                    dot_diameter_mean = dot_diameter,
-                    dot_diameter_range = dot_diameter_range,
-                    dot_diameter_std = dot_diameter_std,
-                    min_gap=min_gap,
-                    dot_colour=dot_colour)
+                          stimulus_area_radius = stimulus_area_radius,
+                          dot_diameter_mean = dot_diameter,
+                          dot_diameter_range = dot_diameter_range,
+                          dot_diameter_std = dot_diameter_std,
+                          minium_gap=min_gap,
+                          dot_colour=dot_colour)
             #filename
             if len(self.subfolder)>2:
                 dp.filename = "{0}/".format(self.subfolder)

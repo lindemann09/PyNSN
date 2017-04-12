@@ -25,8 +25,8 @@ class Dot(object):
 
         self._x = x
         self._y = y
-        self._radius = None
-        self._angle = None
+        self._pos_radius = None
+        self._pos_angle = None
         self.diameter = diameter
         self.colour = colour
         self.picture = picture
@@ -40,7 +40,7 @@ class Dot(object):
     @property
     def x(self):
         if self._x is None:
-            self._x = self._radius * math.sin(self._angle)
+            self._x = self._pos_radius * math.sin(self._pos_angle)
         return self._x
 
     @x.setter
@@ -50,7 +50,7 @@ class Dot(object):
     @property
     def y(self):
         if self._y is None:
-            self._y = self._radius * math.cos(self._angle)
+            self._y = self._pos_radius * math.cos(self._pos_angle)
         return self._y
 
     @y.setter
@@ -65,40 +65,40 @@ class Dot(object):
     def xy(self, xy_tuple):
         self._x = xy_tuple[0]
         self._y = xy_tuple[1]
-        self._radius = None
-        self._angle = None
+        self._pos_radius = None
+        self._pos_angle = None
 
     @property
-    def radius(self):
-        if self._radius is None:
-            self._radius = math.hypot(self._x, self._y)
-        return self._radius
+    def pos_radius(self):
+        if self._pos_radius is None:
+            self._pos_radius = math.hypot(self._x, self._y)
+        return self._pos_radius
 
-    @radius.setter
-    def radius(self, value):
-        self.polar = (value, self.angle)
+    @pos_radius.setter
+    def pos_radius(self, value):
+        self.polar = (value, self.pos_angle)
 
     @property
-    def angle(self):
-        if self._angle is None:
-            self._angle = math.atan2(self._x, self._y)
-        return self._angle
+    def pos_angle(self):
+        if self._pos_angle is None:
+            self._pos_angle = math.atan2(self._x, self._y)
+        return self._pos_angle
 
-    @angle.setter
-    def angle(self, value):
-        self.polar = (self.radius, value)
+    @pos_angle.setter
+    def pos_angle(self, value):
+        self.polar = (self.pos_radius, value)
 
     @property
     def polar(self):
-        """polar coordinate (radius, angle) """
-        return (self.radius, self.angle)
+        """polar coordinate (radius, pos_angle) """
+        return (self.pos_radius, self.pos_angle)
 
     @polar.setter
     def polar(self, rad_ang):
         """polar coordinate (radius, angle) """
 
-        self._radius = rad_ang[0]
-        self._angle = rad_ang[1]
+        self._pos_radius = rad_ang[0]
+        self._pos_angle = rad_ang[1]
         self._x = None
         self._y = None
 
@@ -118,7 +118,7 @@ class Dot(object):
 
         """
 
-        return math.hypot(self._x - d._x, self._y - d._y) - \
+        return math.hypot(self.x - d.x, self.y - d.y) - \
                ((self.diameter + d.diameter) / 2.0)
 
     @property

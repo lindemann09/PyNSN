@@ -6,38 +6,16 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-
+import types
 import math
 import random
 import pickle
-from copy import deepcopy
-from multiprocessing import Pool
+from copy import deepcopy, copy
 from hashlib import sha1
-from PIL import Image, ImageDraw
 import numpy as np
 from . import Dot, random_beta, shape_parameter_beta
 
-from expyriment.stimuli import Canvas, Circle, Line, Picture
-
-def _map_fnc_save_incremental(parameter):
-    # helper function for Pool().map()
-    (dot_array, name, file_type, n_dots, area_colour, convex_hull_colour,
-                antialiasing, property_num_format) = parameter
-    filename = name + "_incre_{0}.{1}".format(n_dots, file_type.lower())
-    print(filename)
-    dot_array._dot_limitation = n_dots
-    dot_array.save_image(filename=filename, file_type=file_type,
-        area_colour=area_colour,convex_hull_colour=convex_hull_colour,
-        antialiasing=antialiasing)
-    properties = "{0},{1},{2}".format(filename, dot_array.properties[0],
-                dot_array.properties[1])
-    for x in dot_array.properties[2:]:
-        if x is not None:
-            properties += "," + property_num_format%x
-        else:
-            properties += ",None"
-    properties += "\n"
-    return properties
+TWO_PI = 2*math.pi
 
 def load_dot_array(filename):
     with open(filename, 'rb')as fl:
@@ -51,9 +29,7 @@ class DotArray(object):
                  dot_diameter_std=None,
                  dot_picture = None,
                  dot_colour=None,
-                 min_gap=1,
-                 background_colour_pil="white",
-                 background_stimulus_expyriment=None):
+                 minium_gap=1):
 
         """Create a Random Dot Kinematogram
 
@@ -72,67 +48,113 @@ class DotArray(object):
 
         """
 
-        self._min_gap = min_gap
+        if dot_diameter_std <= 0:
+            dot_diameter_std = None
+
+        self._min_gap = minium_gap
         self._stimulus_area_radius = stimulus_area_radius
         self._dot_diameter_range = dot_diameter_range
         self._dot_diameter_mean = dot_diameter_mean
-        # clear that this are expended values
-        if dot_diameter_std <= 0:
-            dot_diameter_std = None
         self._dot_diameter_std = dot_diameter_std
         self._dot_colour = dot_colour
         self._dot_picture = dot_picture
-        self.background_colour_pil = background_colour_pil
-        self.background_stimulus_expyriment = background_stimulus_expyriment
-        self._create_dots(n_dots)
+        self.dots = []
+        self._create_dots(n_dots=n_dots)
+
+    def copy(self, subset_dot_ids=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+
+        if subset_dot_ids is None:
+            return deepcopy(self)
+        else:
+            rtn = copy(self)
+            if isinstance(subset_dot_ids, types.IntType):
+                subset_dot_ids = [subset_dot_ids]
+            rtn.dots = []
+            for x in subset_dot_ids:
+                rtn.dots.append(deepcopy(self.dots[x]))
+            return rtn
 
     def _create_dots(self, n_dots):
-        self._dots = []
+        self.dots = []
+        for _ in range(n_dots):
+            self.dots.append(self.create_random_dot(ignore_overlapping=False))
+
+    def create_random_dot(self, ignore_overlapping=False):
+        """returns a random dot
+
+        if no available space can be found it raise an Runtime Error
+        """
+
         if self._dot_diameter_range is None or \
                         self._dot_diameter_std is None:
             # constant mean
-            self._dots = [Dot(diameter=self._dot_diameter_mean,
+            rtn = Dot(diameter=self._dot_diameter_mean,
                               colour=self._dot_colour,
-			                   picture = self._dot_picture) \
-                          for _ in range(n_dots)]
+                              picture=self._dot_picture)
         else:
             # draw diameter from beta distribution
             parameter = shape_parameter_beta(self._dot_diameter_range,
                                              self._dot_diameter_mean,
                                              self._dot_diameter_std)
-            self._dots = [Dot(diameter=random_beta(
+            rtn = Dot(diameter=random_beta(
                 self._dot_diameter_range, parameter),
-                              colour=self._dot_colour) for _ in range(n_dots)]
-        self._dot_limitation = None
-        self.mix_positions(ignore_overlapping=False)
+                colour=self._dot_colour)
 
-    def mix_positions(self, ignore_overlapping=False):
+        self.randomize_dot_position(rtn, ignore_overlapping)
+        return rtn
+
+    def randomize_dot_position(self, dot,
+                               ignore_overlapping=False,
+                               minimum_gap=None):
+        """moves a dot to an available random position
+
+        raise exception if not found"""
+
+        if minimum_gap is None:
+            minimum_gap = self._min_gap
+
+        cnt = 0
+        while True:
+            cnt += 1
+            dot.polar = (random.random() * (self._stimulus_area_radius -
+                                            dot.diameter / 2.0),
+                         random.random() * TWO_PI)
+
+            bad_position = False
+            if not ignore_overlapping:
+                # find bad_positions
+                for c in self.dots:
+                    if dot.distance(c) < minimum_gap:
+                        bad_position = True
+                        break  # for
+
+            if not bad_position:
+                return
+            elif cnt > 3000:
+                raise RuntimeError("Can't find a solution")
+
+    def shuffle_all_positions(self, ignore_overlapping=False,
+                              minimum_gap = None):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
-        tmp_dots = self._dots
-        self._dots = []
-        for d in tmp_dots:
-            cnt = 0
-            while (True):
-                cnt += 1
-                polar = (random.random() * (self._stimulus_area_radius - \
-                                            d.diameter / 2.0), 
-                                            random.random() * 2 * math.pi)
-                d.xy = (polar[0] * math.cos(polar[1]),
-                        polar[0] * math.sin(polar[1]))
-                bad_position = False
-                if not ignore_overlapping:
-                    # find bad_positions
-                    for c in self._dots:
-                        if d.distance(c) < self._min_gap:
-                            bad_position = True
-                            break  # for
 
-                if not (bad_position):
-                    self._dots.append(d)
-                    break  # while
-                elif cnt > 10000:
-                    raise RuntimeError("Can't find a solution")
+        if minimum_gap is not None:
+            self._min_gap = minimum_gap
+
+        tmp_dots = self.dots
+        self.dots = []
+        for d in tmp_dots:
+            self.randomize_dot_position(d, ignore_overlapping)
+            self.dots.append(d)
+
+    @property
+    def minimum_gap(self):
+        return self._min_gap
 
     @property
     def hash_id(self):
@@ -142,12 +164,11 @@ class DotArray(object):
 
         Notes
         -----
-        Hash id is based on all available dots. That is, dot_limitations will
-        be ignored.
+        Hash id is based on all available dots.
 
         """
 
-        return sha1(pickle.dumps(self._dots)).hexdigest()
+        return sha1(pickle.dumps(self.dots)).hexdigest()
 
     def __str__(self):
         return "dot pattern: \n" + self.property_names + "\n" + \
@@ -167,7 +188,8 @@ class DotArray(object):
         print_hash_id : boolean, optional
             if True unique hash will be printed (default: False)
 
-        """  # TODO add colour to csv
+        TODO add colour to csv
+        """
 
         rtn = ""
         if variable_names:
@@ -193,48 +215,6 @@ class DotArray(object):
         with open(filename, 'wb')as fl:
             pickle.dump(self, fl)
 
-    @property
-    def dots(self):
-        """list of Dots"""
-        if self._dot_limitation is None:
-            return self._dots
-        else:
-            return self._dots[:self._dot_limitation]
-
-    def number_of_dots(self):
-        return len(self._dots)
-
-    def remove_dot(self, dot_id):
-        if dot_id>=0 and dot_id<len(self._dots):
-            self._dots.pop(dot_id)
-            return True
-        return False
-
-    def add_dot(self,_dot_ind):
-        # TODO 
-        return None
-
-    def limit_number_of_dot(self, value):
-        """Dot limitations
-
-        If dot_limitations (integer) is defined (i.e. is not None), only the first
-        x dots are considered in all subsequent methods and for all properties.
-        Dot limitation will be reset with create_dots.  This function is, for
-        instance, useful when displaying incrementally a dot pattern.
-
-        if value is None dots array is unlimited.
-        """
-
-        try:
-            x = int(value)
-            if x < 0:
-                x = 0
-            elif x > len(self._dots):
-                x = len(self._dots)
-        except:
-            x = None
-        self._dot_limitation = x
-
     def change_dot_colour(self, colour, dot_ids=None):
         """Change the colour of dots.
 
@@ -251,8 +231,8 @@ class DotArray(object):
         """
 
         if dot_ids is None:
-            dot_ids = range(len(self._dots))
-        for x in map(lambda x: self._dots[x], dot_ids):
+            dot_ids = range(len(self.dots))
+        for x in map(lambda x: self.dots[x], dot_ids):
             x.colour = colour
 
     def change_dot_picture(self, picture, dot_ids=None):
@@ -265,14 +245,11 @@ class DotArray(object):
         dot_ids: list of integers, optional
             if defined it set the colour of the dot defined by the id
 
-        Note
-        ----
-        The function ignores dot limitations
         """
 
         if dot_ids is None:
-            dot_ids = range(len(self._dots))
-        for x in map(lambda x: self._dots[x], dot_ids):
+            dot_ids = range(len(self.dots))
+        for x in map(lambda x: self.dots[x], dot_ids):
             x.picture = picture
 
     @property
@@ -297,7 +274,7 @@ class DotArray(object):
         return sum(list(map(lambda x: x.circumference, self.dots)))
 
     @property
-    def points(self):
+    def all_positions(self):
         """list of tuples with xy coordinates"""
         return list(map(lambda x: x.xy, self.dots))
 
@@ -347,7 +324,7 @@ class DotArray(object):
             # negative for clockwise turn, and zero if the points are collinear.
             return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
-        points = sorted(self.points)
+        points = sorted(self.all_positions)
         if len(points) <= 1:
             return points
         # Build lower hull
@@ -377,7 +354,7 @@ class DotArray(object):
         abs_precision = convex_hull_area * precision
         while (diff > abs_precision):
             if diff < (abs_precision * 2) and remix <= 10:  # try with remixing
-                self.mix_positions()
+                self.shuffle_all_positions()
                 remix += 1
             else:
                 remix = 0
@@ -385,7 +362,7 @@ class DotArray(object):
                     self._stimulus_area_radius += 10
                 else:
                     self._stimulus_area_radius -= 10
-                self._create_dots(n_dots=len(self._dots))
+                self._create_dots(n_dots=len(self.dots))
             actual_cha = self.convex_hull_area
             diff = abs(convex_hull_area - actual_cha)
 
@@ -400,7 +377,7 @@ class DotArray(object):
         abs_precision = density * precision
         while (diff > abs_precision):
             if diff < (abs_precision * 2) and remix <= 10:  # try with remixing
-                self.mix_positions()
+                self.shuffle_all_positions()
                 remix += 1
             else:
                 remix = 0
@@ -408,134 +385,71 @@ class DotArray(object):
                     self._stimulus_area_radius += 10
                 else:
                     self._stimulus_area_radius -= 10
-                self._create_dots(n_dots=len(self._dots))
+                self._create_dots(n_dots=len(self.dots))
             actual_density = self.density
             diff = abs(density - actual_density)
 
-    def create_expyriment_stimulus(self, area_colour=None,
-                    convex_hull_colour=None, antialiasing=None):
-        if self.background_stimulus_expyriment is None:
-            canvas = Canvas(size= tuple([self._stimulus_area_radius * 2]*2))
-        else:
-            canvas = self.background_stimulus_expyriment.copy()
+    def sort_dots_by_eccentricity(self):
+        """Sort the dot list from inner to outer dots"""
 
-        if area_colour is not None:
-            Circle(radius=self._stimulus_area_radius,
-                    colour=area_colour).plot(canvas)
-        if convex_hull_colour is not None:
-            # plot convey hull
-            hull = self.convex_hull
-            hull.append(hull[0])
-            last = None
-            for p in hull:
-                if last is not None:
-                    Line(start_point=last, end_point=p, line_width=2,
-                    colour=convex_hull_colour).plot(canvas)
-                last = p
+        def dot_eccentricity(d):
+            return d.pos_radius
+        self.dots.sort(key=dot_eccentricity)
 
-        # plot dots
-        for d in self.dots:
-            if d.picture is not None:
-                Picture(filename=d.picture,
-                        position=d.xy).plot(canvas)
-            else:
-                Circle(radius=d.radius, colour=d.colour,
-                   line_width=0, position=d.xy).plot(canvas)
+    def realign(self, minimum_gap = None):
+        """Realigns the dots in order to remove all dots overlaps. If two dots
+        overlap, the dots that is further apart from the arry center will be
+        moved opposite to the direction of the other dot until there is no
+        overlap (note: minimun_gap parameter). If two dots have exactly the same
+        position the same position one is minimally shifted in a random direction.
 
-        return canvas
-
-    def create_pil_image(self, area_colour=None, convex_hull_colour=None,
-                antialiasing=True):
-        """returns pil image"""
-        pict_size = int(round(self._stimulus_area_radius * 2))
-        def convert_pos(xy):
-            j = int(float(pict_size) / 2)
-            return (int(xy[0])+j, int(-1*xy[1])+j)
-
-        def draw_dot(img, dot):
-            if dot.colour is None:
-                colour = (200,200,200)
-            else:
-                colour = dot.colour
-            r = int(dot.radius)
-            x,y = convert_pos(dot.xy)
-            if dot.picture is not None:
-                pict = Image.open(dot.picture, "r")
-                img.paste(pict, (x-r,y-r))
-            else:
-                ImageDraw.Draw(img).ellipse((x-r, y-r, x+r, y+r), fill=colour)
-
-        img = Image.new("RGBA", (pict_size, pict_size), color=self.background_colour_pil)
-        if area_colour is not None:
-            draw_dot(img, Dot(x=0, y=0, diameter=self._stimulus_area_radius*2,
-                    colour = area_colour))
-        if convex_hull_colour is not None:
-            #plot convey hull
-            hull = self.convex_hull
-            hull.append(hull[0])
-            last = None
-            draw = ImageDraw.Draw(img)
-            for p in hull:
-                if last is not None:
-                    draw.line(convert_pos(last) + convert_pos(p),
-                    width = 2, fill=convex_hull_colour)
-                last = p
-        list(map(lambda d: draw_dot(img, d), self.dots))
-        if antialiasing:
-            img = img.resize((pict_size*2, pict_size*2), Image.ANTIALIAS)
-            img = img.resize((pict_size, pict_size), Image.ANTIALIAS)
-        return img
-
-    def save_image(self, filename, file_type="PNG", area_colour=None,
-                   convex_hull_colour=None, antialiasing=True):
-        """Save"""
-        img = self.create_pil_image(area_colour=area_colour,
-                                    convex_hull_colour=convex_hull_colour,
-                                    antialiasing=antialiasing)
-        img.save(filename, file_type)
-
-    def save_incremental_images(self, name, file_type="PNG", area_colour=None,
-                                convex_hull_colour=None, antialiasing=True,
-                                property_num_format="%10.2f"):
-
-        """Saving incrementally.
-        Each numerosity will be saved in a separate file by adding dots
-        incrementally.
-        returns
-        -------
-        rtn : string
-            property list as string
         """
-        dlim = self._dot_limitation
-        parameter = map(lambda x: [self, name, file_type, x, area_colour, \
-                                   convex_hull_colour, antialiasing, property_num_format],
-                        range(len(self._dots) + 1))
-        properties = Pool().map(_map_fnc_save_incremental, parameter)
-        self._dot_limitation = dlim
-        rtn = "filename, " + self.property_names + "\n"
-        for p in properties:
-            rtn += p
-        return rtn
 
-    def realign(self):
-        """ removes all overlaps"""
+        if minimum_gap is not None:
+            self._min_gap = minimum_gap
+
+        diff = Dot()
+        self.sort_dots_by_eccentricity()
+        for a in range(len(self.dots)):
+            for b in range(a+1, len((self.dots))):
+                if self.dots[a].xy == self.dots[b].xy:
+                    # jitter
+                    diff.polar = (0.1, random.random() * TWO_PI)
+                    self.dots[a].xy = (self.dots[a].x + diff.x,
+                                       self.dots[a].y + diff.y)
+                    return self.realign()
+
+                diff.xy = (self.dots[b].x - self.dots[a].x,
+                           self.dots[b].y - self.dots[a].y)
+                m_gap = self._min_gap + (self.dots[a].diameter +
+                                         self.dots[b].diameter) // 2
+                if diff.pos_radius < m_gap:
+                    diff.pos_radius += m_gap
+                    self.dots[b].xy = (self.dots[a].x + diff.x,
+                                       self.dots[a].y + diff.y)
+                    return self.realign()
+        return True
 
 
-    def create_deviant(self, num_dots, match="total_area"):
-        """ignore dot_limitation
+    def pcc_deviant(self, num_dots, match="total_area"):
+        """perceptual cue controlled (pcc) deviant
+
+        Creates deviant with different numerosity but controlled for
+        perceptual cues
+
         """
+
         deviant = deepcopy(self)
-        deviant._dot_limitation = None
-        diff = num_dots - len(self._dots)
+        diff = num_dots - len(self.dots)
         if diff<0:
             for x in range(abs(diff)):
-                deviant.remove_dot(random.randint(0, len(deviant._dots)))
+                deviant.dots.pop(random.randint(0, len(deviant.dots)))
         else:
             pass # TODO add_dots
 
         if match == "total_area":
             scale = np.sqrt((self.total_area*4)/(num_dots*np.pi)) / \
-                    np.sqrt((self.total_area*4)/(len(self._dots)*np.pi))
-            for d in deviant._dots:
+                    np.sqrt((self.total_area*4) / (len(self.dots) * np.pi))
+            for d in deviant.dots:
                 d.diameter = scale * d.diameter
             return deviant
