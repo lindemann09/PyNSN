@@ -5,6 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import os
 import math
+import codecs
 from multiprocessing import Pool
 import numpy as np
 from expyriment.stimuli import Picture
@@ -21,10 +22,10 @@ def _map_fnc_dot_array_list_save(parameter):
                 antialiasing=parameter[4])
 
 def _map_fnc_adapt_density(parameter):
-    parameter[0].adapt_density(density=parameter[1], precision=parameter[2])
+    parameter[0].fit_density(density=parameter[1], precision=parameter[2])
     return parameter[0]
 def _map_fnc_adapt_convex_hull_area(parameter):
-    parameter[0].adapt_convex_hull_area(convex_hull_area=parameter[1], precision=parameter[2])
+    parameter[0].fit_convex_hull_area(convex_hull_area=parameter[1], precision=parameter[2])
     return parameter[0]
 
 
@@ -38,12 +39,14 @@ class DotArrayListMatched(object):
         self._dot_arrays = []
         self.subfolder = subfolder
 
-    def create_method(self, method, dot_diameter,
-            dot_diameter_std=None, stimulus_area_factor = 10,
+    def create_method(self,
+                      method,
+                      dot_diameter,
+                      dot_diameter_std=None, stimulus_area_factor = 10,
             min_gap=1, dot_colour=None):
         """Creating dot array list with one of three methods. see Izard & Dehaene"""
 
-        max_stimulus_area_radius =  math.sqrt( stimulus_area_factor * \
+        max_stimulus_area_radius =  math.sqrt(stimulus_area_factor * \
                                     max(self.number_list) * dot_diameter**2/4) + 1
 
         precision = 0.01 #TODO
@@ -162,7 +165,7 @@ class DotArrayListMatched(object):
         TODO
         """
 
-        with file(filename, 'w') as fl:
+        with codecs.open(filename, 'w') as fl: #TODO PY3
             fl.write(self.get_arrays_csv_text(num_format=num_format))
 
     def save_properties(self, filename,  num_format="%10.2f"):
@@ -172,7 +175,7 @@ class DotArrayListMatched(object):
 
         """
 
-        with file(filename, 'w') as fl:
+        with codecs.open(filename, 'w') as fl:
             fl.write("id, " + self.property_names + "\n")
             for s in self.properties:
                 fl.write("{0},{1}".format(s[0], s[1]))

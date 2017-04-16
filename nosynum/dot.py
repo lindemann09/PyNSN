@@ -1,10 +1,14 @@
 """
 Dot Array
 """
+from __future__ import absolute_import, print_function, division
+from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
+
+## TODO speed up by implementing a dot list class in numpy
 
 class Dot(object):
 
@@ -122,13 +126,10 @@ class Dot(object):
                ((self.diameter + d.diameter) / 2.0)
 
     @property
-    def radius(self):
-        return float(self.diameter)/2
-
-    @property
     def area(self):
         return math.pi * (self.diameter**2)/4
 
     @property
     def circumference(self):
         return math.pi * self.diameter
+

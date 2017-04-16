@@ -25,7 +25,7 @@ def create_image(dot_array, area_colour=None,
             colour = (200 ,200 ,200)
         else:
             colour = dot.colour
-        r = int(dot.radius)
+        r = dot.diameter//2
         x ,y = convert_pos(dot.xy)
         if dot.picture is not None:
             pict = Image.open(dot.picture, "r")

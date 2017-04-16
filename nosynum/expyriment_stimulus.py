@@ -34,7 +34,7 @@ def create_stimulus(dot_array, area_colour=None,
             Picture(filename=d.picture,
                     position=d.xy).plot(canvas)
         else:
-            Circle(radius=d.radius, colour=d.colour,
+            Circle(radius=d.diameter//2, colour=d.colour,
                    line_width=0, position=d.xy).plot(canvas)
 
     return canvas
