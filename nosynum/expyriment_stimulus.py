@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from expyriment.stimuli import Canvas, Circle, Line, Picture
 
-def create_stimulus(dot_array, area_colour=None,
+def create(dot_array, area_colour=None,
                     convex_hull_colour=None,
                     antialiasing=None,  #TODO
                                background_stimulus_expyriment=None):
@@ -19,8 +19,8 @@ def create_stimulus(dot_array, area_colour=None,
                colour=area_colour).plot(canvas)
     if convex_hull_colour is not None:
         # plot convey hull
-        hull = dot_array.convex_hull
-        hull.append(hull[0])
+        hull = dot_array.convex_hull_points
+        hull = list(hull) + [hull[0]]
         last = None
         for p in hull:
             if last is not None:

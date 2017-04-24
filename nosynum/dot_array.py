@@ -271,10 +271,13 @@ class DotArray(object):
 
     @property
     def convex_hull_points(self):
+        pos = self.numpy_dot_positions
         try:
-            return ConvexHull(self.numpy_dot_positions).points
+            x = ConvexHull(pos).vertices
         except:
             return None
+
+        return pos[x,:]
 
     @property
     def density_stimulus_area(self):
@@ -340,27 +343,28 @@ class DotArray(object):
         for d in self.dots:
             d.pos_radius = d.pos_radius * scale
 
-    def xx_fit_density(self, density, precision=0.01):
+    def fit_density(self, density, precision=0.01, ratio_area_convex_hull_adaptation = 0.5):
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
+
+        ratio_area_convex_hull_adaptation:
+            ratio of adaptation via area and convex_hull (between 0 and 1)
+
         """
-        remix = 0
-        actual_density = self.density
-        diff = abs(density - actual_density)
-        abs_precision = density * precision
-        while diff > abs_precision:
-            if diff < abs_precision * 2 and remix <= 10:  # try with remixing
-                self.shuffle_all_positions()
-                remix += 1
-            else:
-                remix = 0
-                if density > actual_density:
-                    self._stimulus_area_radius += 10
-                else:
-                    self._stimulus_area_radius -= 10
-                self._create_dots(n_dots=len(self.dots))
-            actual_density = self.density
-            diff = abs(density - actual_density)
+
+        # dens = convex_hull_area / total_area
+        if ratio_area_convex_hull_adaptation<0 or ratio_area_convex_hull_adaptation>1:
+            ratio_area_convex_hull_adaptation = 0.5
+
+        density_change = density - self.density
+        d_change_convex_hull = density_change * (1-ratio_area_convex_hull_adaptation)
+        if abs(d_change_convex_hull) > 0:
+            self.fit_convex_hull_area(convex_hull_area= self.total_area * (self.density+d_change_convex_hull),
+                                  precision=precision)
+
+        self.fit_total_area(total_area=self.convex_hull_area / density)
+
+
 
     def sort_dots_by_eccentricity(self):
         """Sort the dot list from inner to outer dots"""
@@ -368,40 +372,6 @@ class DotArray(object):
         def dot_eccentricity(d):
             return d.pos_radius
         self.dots.sort(key=dot_eccentricity)
-
-    def _realign_old(self, minimum_gap = None):
-        """Realigns the dots in order to remove all dots overlaps. If two dots
-        overlap, the dots that is further apart from the arry center will be
-        moved opposite to the direction of the other dot until there is no
-        overlap (note: minimun_gap parameter). If two dots have exactly the same
-        position the same position one is minimally shifted in a random direction.
-
-        """
-
-        if minimum_gap is not None:
-            self._min_gap = minimum_gap
-
-        diff = Dot()
-        self.sort_dots_by_eccentricity()
-        for a in range(len(self.dots)):
-            for b in range(a+1, len(self.dots)):
-                if self.dots[a].xy == self.dots[b].xy:
-                    # jitter
-                    diff.polar = (0.1, random.random() * TWO_PI)
-                    self.dots[a].xy = (self.dots[a].x + diff.x,
-                                       self.dots[a].y + diff.y)
-                    return self._realign_old()
-
-                diff.xy = (self.dots[b].x - self.dots[a].x,
-                           self.dots[b].y - self.dots[a].y)
-                m_gap = self._min_gap + (self.dots[a].diameter +
-                                         self.dots[b].diameter) // 2
-                if diff.pos_radius < m_gap:
-                    diff.pos_radius = m_gap +1
-                    self.dots[b].xy = (self.dots[a].x + diff.x,
-                                       self.dots[a].y + diff.y)
-                    return self._realign_old()
-        return True
 
     def realign(self, minimum_gap = None):
         """Realigns the dots in order to remove all dots overlaps. If two dots
@@ -415,37 +385,50 @@ class DotArray(object):
         if minimum_gap is not None:
             self._min_gap = minimum_gap
 
-        tmp = Dot(diameter=0)
+
         d = NumpyPositionList(self.dots)
+        d.jitter_identical_positions()
+        shift_required = False
 
-        no_shift_required = True
-        for i in np.argsort(d.polar[:,0]): # sort by eccentricity
-            ref_dot = Dot(x=d.xy[i,0], y=d.xy[i,1], diameter=d.diameter[i])
+        # from inner to outer remove overlaps
+        for i in np.argsort(d.polar[:, 0]):
+            if d.remove_overlap_for_dot(dotid=i, min_gap=self._min_gap):
+                shift_required = True
 
-            identical = np.where(np.all(np.equal(d.xy, ref_dot.xy), axis=1))[0] # find identical positions
-            if len(identical)>1:
-                for x in identical: # jitter all identical positions
-                    if x != i:
-                        tmp.polar = (0.1, random.random() * TWO_PI)
-                        d[x, :] -= tmp.xy
+        # sqeeze in points that pop out of the stimulus area radius
+        cnt = 0
+        while True:
+            too_far = np.where( (d.polar[:,0] + d.diameter//2) > self._stimulus_area_radius)[0] # find outlier
+            if len(too_far)>0:
+                # squeeze in outlier
+                tmp = deepcopy(self.dots[too_far[0]])
+                tmp.pos_radius = self._stimulus_area_radius - tmp.diameter//2 - 0.000000001
+                d.xy[too_far[0], :] = tmp.xy
+                # remove overlaps centered around new outlier position
+                d.xy -= tmp.xy
+                # remove all overlaps (inner to outer, i.e. starting with outlier)
+                for i in np.argsort(d.polar[:, 0]):
+                    d.remove_overlap_for_dot(dotid=i, min_gap=self._min_gap)
 
-            dist = d.distance(ref_dot)
-            for x in np.where(dist < self._min_gap)[0]:
-                if x != i:
-                    no_shift_required = False
-                    #calc vector (tmp) to shift
-                    tmp.xy = d.xy[x, :] - ref_dot.xy
-                    tmp.pos_radius = 0.000001 + self._min_gap  - dist[x]
+                # new pos for outlyer
+                d.xy += tmp.xy # move back to old position
+                shift_required = True
+            else:
+                break # end while loop
 
-                    d.xy[x, :] = (d.xy[x,0] + tmp.x, d.xy[x,1] + tmp.y)
+            cnt += 1
+            if cnt>500:
+                raise RuntimeError("Can't find solution when removing outlier")
 
         for c, xy in enumerate(d.xy):
             self.dots[c].xy = xy
 
-        if no_shift_required:
-            return True
+        if not shift_required:
+            return False
         else:
-            return self.realign()
+            self.realign() # recursion
+            return True
+
 
     def fit_total_area(self, total_area):
         """dots will be realigned"""
@@ -453,16 +436,13 @@ class DotArray(object):
         x = 2 / math.sqrt(math.pi)
         for d in self.dots:
             d.diameter = math.sqrt(d.area * a_scale) * x  # d=sqrt(4a/pi) = 2*sqrt(pi)*sqrt(a)
-        if a_scale>1:
-            self._realign_old()
 
     def fit_mean_item_size(self, mean_dot_diameter):
         """dots will be realigned"""
         scale = mean_dot_diameter / self.mean_dot_diameter
         for d in self.dots:
             d.diameter = d.diameter * scale
-        if scale > 1:
-            self._realign_old()
+
 
     def number_deviant(self, change_numerosity):
         """number deviant
