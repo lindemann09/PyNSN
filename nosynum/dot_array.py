@@ -8,14 +8,12 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from os import listdir
 import types
-import math
 import random
 from copy import deepcopy, copy
 import numpy as np
 from scipy.spatial import ConvexHull
 from . import Dot, random_beta, shape_parameter_beta
-from .numpy_position_list import NumpyPositionList
-TWO_PI = 2*math.pi
+TWO_PI = 2*np.pi
 
 PROPERTY_FILE_SUFFIX = ".property.csv"
 
@@ -26,8 +24,101 @@ def list_all_saved_incremental_arrays(picture_folder):
             rtn.append(x[:len(x)-len(PROPERTY_FILE_SUFFIX)])
     return rtn
 
+
+class NumpyPositionList(object):
+    """Numpy Position list
+
+    for optimized calculations
+    """
+
+    def __init__(self, list_of_Dots):
+        xy = []
+        d = []
+        for dot in list_of_Dots:
+            xy.append(dot.xy)
+            d.append(dot.diameter)
+
+        self._xy = np.array(xy)
+        self.diameter = np.array(d)
+        self._polar = None
+
+    @property
+    def xy(self):
+        """numpy array of [x, y]"""
+
+        if self._xy is None:
+            self.calc_cartesian()
+        return self._xy
+
+    @xy.setter
+    def xy(self, xy_position_list):
+        self._xy = np.array(xy_position_list)
+        self._polar = None
+
+    @property
+    def polar(self):
+        """numpy array of [radius, angle]"""
+        if self._polar is None:
+            self.calc_polar()
+        return self._polar
+
+    @polar.setter
+    def polar(self, radius_angle_list):
+        self._polar = np.array(radius_angle_list)
+        self._xy = None
+
+    def calc_cartesian(self):
+        self._xy = np.array([self._polar[:, 0] * np.cos(self._polar[:, 1]),
+                             self._polar[:, 0] * np.sin(self._polar[:, 1])]).T
+
+    def calc_polar(self):
+        self._polar = np.array([np.hypot(self._xy[:, 0], self._xy[:, 1]),
+                                np.arctan2(self._xy[:, 0], self._xy[:, 1])]).T
+
+    def distance(self, dot):
+        return np.hypot(self.xy[:,0] - dot.x, self.xy[:, 1] - dot.y) - \
+               ((self.diameter + dot.diameter) / 2.0)
+
+
+    def jitter_identical_positions(self):
+        """jitters points with identical position"""
+        tmp = Dot(diameter=0)
+        for i in range(len(self._xy)):
+            ref_dot = Dot(x=self._xy[i, 0], y=self._xy[i, 1], diameter=self.diameter[i])
+            identical = np.where(np.all(np.equal(self._xy, ref_dot.xy), axis=1))[0]  # find identical positions
+            if len(identical) > 1:
+                for x in identical:  # jitter all identical positions
+                    if x != i:
+                        tmp.polar = (0.1, random.random() * TWO_PI)
+                        self._xy[x, :] -= tmp.xy
+                        self._polar = None
+
+    def remove_overlap_for_dot(self, dotid, min_gap):
+        """remove overlap for one point"""
+
+        ref_dot = Dot(x=self._xy[dotid, 0], y=self._xy[dotid, 1], diameter=self.diameter[dotid])
+        dist = self.distance(ref_dot)
+        tmp = Dot(diameter=0)
+        shift_required = False
+        for x in np.where(dist < min_gap)[0]: # x=overlapping dot id
+            if x != dotid:
+                shift_required = True
+                # calc vector (tmp) to shift
+                tmp.xy = self._xy[x, :] - ref_dot.xy
+                tmp.pos_radius = 0.000000001 + min_gap - dist[x]
+
+                self._xy[x, :] = (self._xy[x, 0] + tmp.x, self._xy[x, 1] + tmp.y)
+                shift_required = True
+
+        if shift_required:
+            self._polar = None
+
+        return shift_required
+
+
 class DotArray(object):
-    def __init__(self, stimulus_area_radius, n_dots,
+
+    def __init__(self, n_dots, stimulus_area_radius,
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
@@ -76,9 +167,9 @@ class DotArray(object):
             return deepcopy(self)
         else:
             rtn = copy(self)
+            rtn.dots = []
             if isinstance(subset_dot_ids, types.IntType):
                 subset_dot_ids = [subset_dot_ids]
-            rtn.dots = []
             for x in subset_dot_ids:
                 rtn.dots.append(deepcopy(self.dots[x]))
             return rtn
@@ -160,8 +251,9 @@ class DotArray(object):
     def minimum_gap(self):
         return self._min_gap
 
-    def __str__(self):
-        return "dot pattern: \n" + self.property_names + "\n" + \
+    @property
+    def property_string(self):
+        return self.property_names + "\n" + \
                str(self.properties).replace("[", "").replace("]", "")
 
     def get_array_csv_text(self, label=None, num_format="%10.2f",
@@ -282,7 +374,7 @@ class DotArray(object):
     @property
     def density_stimulus_area(self):
         """density takes into account the full possible stimulus area """
-        return math.pi * self._stimulus_area_radius ** 2 / self.total_area
+        return np.pi * self._stimulus_area_radius ** 2 / self.total_area
 
     @property
     def density(self):
@@ -418,7 +510,7 @@ class DotArray(object):
 
             cnt += 1
             if cnt>500:
-                raise RuntimeError("Can't find solution when removing outlier")
+                raise RuntimeError("Can't find solution when removing outlier (n=" + str(len(self.dots))+")")
 
         for c, xy in enumerate(d.xy):
             self.dots[c].xy = xy
@@ -433,9 +525,9 @@ class DotArray(object):
     def fit_total_area(self, total_area):
         """dots will be realigned"""
         a_scale = (total_area / self.total_area)
-        x = 2 / math.sqrt(math.pi)
+        x = 2 / np.sqrt(np.pi)
         for d in self.dots:
-            d.diameter = math.sqrt(d.area * a_scale) * x  # d=sqrt(4a/pi) = 2*sqrt(pi)*sqrt(a)
+            d.diameter = np.sqrt(d.area * a_scale) * x  # d=sqrt(4a/pi) = 2*sqrt(pi)*sqrt(a)
 
     def fit_mean_item_size(self, mean_dot_diameter):
         """dots will be realigned"""

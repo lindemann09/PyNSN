@@ -1,14 +1,17 @@
 from __future__ import absolute_import, print_function, division
 from builtins import *
 
+__all__ = ["create", "ExpyrimentDotArraySequence" ]
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from expyriment.stimuli import Canvas, Circle, Line, Picture
+from .dot_array_sequences import DotArraySequence
 
 def create(dot_array, area_colour=None,
                     convex_hull_colour=None,
                     antialiasing=None,  #TODO
-                               background_stimulus_expyriment=None):
+                    background_stimulus_expyriment=None):
+
     if background_stimulus_expyriment is None:
         canvas = Canvas(size=(dot_array._stimulus_area_radius * 2,) * 2)
     else:
@@ -38,3 +41,39 @@ def create(dot_array, area_colour=None,
                    line_width=0, position=d.xy).plot(canvas)
 
     return canvas
+
+
+class ExpyrimentDotArraySequence(DotArraySequence):
+
+    def create_stimuli(self, area_colour=None,
+                       convex_hull_colour=None,
+                       antialiasing=None,
+                       background_stimulus_expyriment=None):
+        self.stimuli = []
+        for da in self.da_sequence:
+            self.stimuli.append(create(dot_array=da, area_colour=area_colour,
+                                       convex_hull_colour=convex_hull_colour,
+                                       antialiasing=antialiasing,
+                                       background_stimulus_expyriment=background_stimulus_expyriment))
+
+    def preload(self):
+        """
+        returns array of preloaded dot_array_sequence
+        """
+
+        try:
+            list(map(lambda x: x.preload(), self.stimuli))
+            return True
+        except:
+            return False
+
+    def unload(self):
+        """
+        returns array of preloaded dot_array_sequence
+        """
+
+        try:
+            list(map(lambda x:x.unload(), self.stimuli))
+            return True
+        except:
+            return False
