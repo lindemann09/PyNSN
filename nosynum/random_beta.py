@@ -54,7 +54,7 @@ def shape_parameter_beta(number_range, mean, std):
 
 	if mean<=number_range[0] or mean>=number_range[1] or \
 		number_range[0]>=number_range[1]:
-		raise RuntimeError("Mean has to inside the defined number range")
+		raise RuntimeError("Mean has to be inside the defined number range")
 	f = float(number_range[1] - number_range[0])
 	mean = (mean-number_range[0])/f
 	std = (std)/f

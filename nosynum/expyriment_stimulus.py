@@ -8,9 +8,9 @@ from expyriment.stimuli import Canvas, Circle, Line, Picture
 from .dot_array_sequences import DotArraySequence
 
 def create(dot_array, area_colour=None,
-                    convex_hull_colour=None,
-                    antialiasing=None,  #TODO
-                    background_stimulus_expyriment=None):
+           convex_hull_colour=None,
+           anti_aliasing=None,
+           background_stimulus_expyriment=None):
 
     if background_stimulus_expyriment is None:
         canvas = Canvas(size=(dot_array._stimulus_area_radius * 2,) * 2)
@@ -19,7 +19,8 @@ def create(dot_array, area_colour=None,
 
     if area_colour is not None:
         Circle(radius=dot_array._stimulus_area_radius,
-               colour=area_colour).plot(canvas)
+               colour=area_colour,
+               anti_aliasing=anti_aliasing).plot(canvas)
     if convex_hull_colour is not None:
         # plot convey hull
         hull = dot_array.convex_hull_points
@@ -28,7 +29,8 @@ def create(dot_array, area_colour=None,
         for p in hull:
             if last is not None:
                 Line(start_point=last, end_point=p, line_width=2,
-                     colour=convex_hull_colour).plot(canvas)
+                     colour=convex_hull_colour,
+                     anti_aliasing=anti_aliasing).plot(canvas)
             last = p
 
     # plot dots
@@ -38,7 +40,8 @@ def create(dot_array, area_colour=None,
                     position=d.xy).plot(canvas)
         else:
             Circle(radius=d.diameter//2, colour=d.colour,
-                   line_width=0, position=d.xy).plot(canvas)
+                   line_width=0, position=d.xy,
+                   anti_aliasing=anti_aliasing).plot(canvas)
 
     return canvas
 
@@ -47,13 +50,13 @@ class ExpyrimentDotArraySequence(DotArraySequence):
 
     def create_stimuli(self, area_colour=None,
                        convex_hull_colour=None,
-                       antialiasing=None,
+                       anti_aliasing=None,
                        background_stimulus_expyriment=None):
         self.stimuli = []
         for da in self.da_sequence:
             self.stimuli.append(create(dot_array=da, area_colour=area_colour,
                                        convex_hull_colour=convex_hull_colour,
-                                       antialiasing=antialiasing,
+                                       anti_aliasing=anti_aliasing,
                                        background_stimulus_expyriment=background_stimulus_expyriment))
 
     def preload(self):

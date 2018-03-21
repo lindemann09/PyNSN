@@ -126,7 +126,7 @@ class DotArray(object):
                  dot_colour=None,
                  minium_gap=1):
 
-        """Create a Random Dot Kinematogram
+        """Create a Random Dot Array
 
         Parameters:
         -----------
@@ -455,7 +455,6 @@ class DotArray(object):
                                   precision=precision)
 
         self.fit_total_area(total_area=self.convex_hull_area / density)
-
 
 
     def sort_dots_by_eccentricity(self):

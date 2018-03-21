@@ -4,7 +4,6 @@ from builtins import *
 
 import os
 import pickle
-import codecs
 import gzip
 from time import sleep
 from multiprocessing import Process, Queue, queues, cpu_count
@@ -12,7 +11,11 @@ import numpy as np
 
 from .dot_array import DotArray
 
-ALL_METHODS = ("None", "item_size", "convex_hull", "total_area", "density")
+M_ITEM_SIZE = 2
+M_CONVEX_HULL = 3
+M_TOTAL_AREA = 4
+M_DENSITY = 5
+
 EXTENSION = ".das"
 
 def make_dot_array_sequence(max_dot_array, filename, method, realign_error_queue=None,
@@ -38,18 +41,16 @@ def make_dot_array_sequence(max_dot_array, filename, method, realign_error_queue
             error = None
             cnt += 1
 
-            if method == "density":
+            if method == M_DENSITY:
                 da.fit_density(density=dens, ratio_area_convex_hull_adaptation=0.5)
-            elif method == "convex_hull":
+            elif method == M_CONVEX_HULL:
                 da.fit_convex_hull_area(convex_hull_area=cha)
-            elif method == "item_size":
+            elif method == M_ITEM_SIZE:
                 da.fit_mean_item_size(mean_dot_diameter=dot_diameter)
-            elif method == "total_area":
+            elif method == M_TOTAL_AREA:
                 da.fit_total_area(total_area=total_area)
-            elif method == "None":
-                pass
             else:
-                raise RuntimeError("Unkown Method")
+                pass
 
             try:
                 if not da.realign():  # Ok if realign not anymore required
