@@ -11,15 +11,20 @@ dot_diameter_range=(2, 20)
 number_list = range(10, 200)
 
 print "creating "
-da = nosynum.DotArray(n_dots=100, stimulus_area_radius= 200,
+da = nosynum.DotArray(n_dots=100, stimulus_area_radius= 400,
                        dot_diameter_mean=10,
                        dot_diameter_range=(2, 30),
                        dot_diameter_std=2)
 print(da.get_array_csv_text())
 
 
-x = nosynum.make_dot_array_sequence(max_dot_array=da, filename="test.txt.gz", method=nosynum.M_CONVEX_HULL)
+x = nosynum.make_da_sequence(max_dot_array=da, method=nosynum.M_CONVEX_HULL)
 print(x)
+#p = nosynum.MakeDASequenceProcess(max_dot_array=da, method=nosynum.M_CONVEX_HULL)
+p.start()
+x, error = p.get_results()
+print(error)
+print(x[2])
 
 
 #dal2 = DotArrayList(number_list, subfolder="picts")

@@ -18,17 +18,16 @@ M_DENSITY = 5
 
 EXTENSION = ".das"
 
-def make_dot_array_sequence(max_dot_array, filename, method, realign_error_queue=None,
-                            save_erroneous_arrays=False):
+def make_da_sequence(max_dot_array, method):
     """makes sequence of deviants by subtracting dots
 
     error queue: multiprocess.Queue for multiprocessing
         if runtime error occured it writes with tuple (dot_array, method)
     """
 
-    print("making " + filename)
     da = max_dot_array.copy()
-    da_list = [da]
+    da_sequence = [da]
+    error = False
     cha = da.convex_hull_area
     dens = da.density
     dot_diameter = da.mean_dot_diameter
@@ -38,7 +37,6 @@ def make_dot_array_sequence(max_dot_array, filename, method, realign_error_queue
         cnt = 0
 
         while True:
-            error = None
             cnt += 1
 
             if method == M_DENSITY:
@@ -56,29 +54,48 @@ def make_dot_array_sequence(max_dot_array, filename, method, realign_error_queue
                 if not da.realign():  # Ok if realign not anymore required
                     break
             except:
-                error = "ERROR: outlier, " + filename + ", " + str(len(da.dots))
+                error = "ERROR: outlier, " + str(cnt) + ", " + str(len(da.dots))
 
             if cnt>100:
-                error = "ERROR: realign, " + filename + ", " + str(len(da.dots))
+                error = "ERROR: realign, " + str(cnt) + ", " + str(len(da.dots))
 
-            if error is not None:
-                if isinstance(realign_error_queue, queues.Queue):
-                    print(error)
-                    realign_error_queue.put((error, da))
-                    if save_erroneous_arrays:
-                        break
-                    else:
-                        return False
-                else:
-                    raise RuntimeError(error)
+            if error != False:
+                print(error)
+                error = (cnt, error)
+                break
 
-        da_list.append(da)
+        da_sequence.append(da)
+        if error != False:
+            break
 
-    da_list = list(reversed(da_list))
-    with gzip.open(filename, 'wb') as fl:
-        pickle.dump(da_list, file=fl, protocol=pickle.HIGHEST_PROTOCOL)
+    return (reversed(da_sequence), error)
 
-    return da_list
+
+class MakeDASequenceProcess(Process):
+
+    def __init__(self, max_dot_array, method):
+        super(MakeDASequenceProcess, self).__init__()
+        self.max_dot_array = max_dot_array
+        self.method = method
+        self._error_queue = Queue()
+        self._da_sequence_queue = Queue()
+        self._error = None
+        self._da_sequence = []
+
+    def run(self):
+        da_seq, error = make_da_sequence(max_dot_array=self.max_dot_array, method=self.method)
+        self._error_queue.put(error)
+        for x in da_seq:
+            self._da_sequence_queue.put(x)
+
+    def get_results(self):
+        self.join()
+        if not self._error_queue.empty(): # new data
+            self._error = self._error_queue.get_nowait()
+            while not self._da_sequence_queue.empty():
+                self._da_sequence.append(self._da_sequence_queue.get_nowait())
+
+        return( (self._da_sequence, self._error) )
 
 def make_multiple_dot_array_sequences(n_versions,
                                       methods,
@@ -106,7 +123,6 @@ def make_multiple_dot_array_sequences(n_versions,
         pass
 
     # make processes
-    realign_error_queue = Queue()
     processes = []
     for cnt in range(n_versions):
         for method in methods:
@@ -120,9 +136,10 @@ def make_multiple_dot_array_sequences(n_versions,
                 if sqeeze_factor<1 and sqeeze_factor>0:
                     da.fit_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
 
-                p = Process(target = make_dot_array_sequence, args=(da, filename, method, realign_error_queue,
-                                                                    save_erroneous_arrays))
-                processes.append(p)
+                error_queue = Queue()
+                sequence_queue = Queue()
+                p = Process(target = make_da_sequence, args=(da, method, sequence_queue, error_queue))
+                processes.append((p, error_queue, sequence_queue) )
 
     # run processes
     running=[]
@@ -144,8 +161,8 @@ def make_multiple_dot_array_sequences(n_versions,
         p.join()
 
     realign_error_list = []
-    while not realign_error_queue.empty():
-        realign_error_list.append(realign_error_queue.get_nowait())
+    while not error_queue.empty():
+        realign_error_list.append(error_queue.get_nowait())
 
     return realign_error_list
 
