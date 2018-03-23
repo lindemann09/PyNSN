@@ -13,15 +13,15 @@ from copy import deepcopy, copy
 import numpy as np
 from scipy.spatial import ConvexHull
 from . import Dot, random_beta, shape_parameter_beta
+
 TWO_PI = 2*np.pi
 
-PROPERTY_FILE_SUFFIX = ".property.csv"
-
-def list_all_saved_incremental_arrays(picture_folder):
+def list_all_saved_incremental_arrays(picture_folder,
+                                      property_file_suffix=".property.csv"):
     rtn = []
     for x in listdir(picture_folder):
-        if x.endswith(PROPERTY_FILE_SUFFIX):
-            rtn.append(x[:len(x)-len(PROPERTY_FILE_SUFFIX)])
+        if x.endswith(property_file_suffix):
+            rtn.append(x[:len(x)-len(property_file_suffix)])
     return rtn
 
 
@@ -116,9 +116,10 @@ class NumpyPositionList(object):
         return shift_required
 
 
-class DotArray(object):
+class DotArrayDefinition(object):
 
-    def __init__(self, n_dots, stimulus_area_radius,
+    def __init__(self,
+                 stimulus_area_radius,
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
@@ -126,7 +127,7 @@ class DotArray(object):
                  dot_colour=None,
                  minium_gap=1):
 
-        """Create a Random Dot Array
+        """Specification of a Random Dot Array
 
         Parameters:
         -----------
@@ -134,8 +135,6 @@ class DotArray(object):
             the radius of the stimulus area
         n_dots : int
             number of moving dots
-
-        FIXME
 
         Notes:
         ------
@@ -146,13 +145,32 @@ class DotArray(object):
         if dot_diameter_std <= 0:
             dot_diameter_std = None
 
-        self._min_gap = minium_gap
-        self._stimulus_area_radius = stimulus_area_radius
-        self._dot_diameter_range = dot_diameter_range
-        self._dot_diameter_mean = dot_diameter_mean
-        self._dot_diameter_std = dot_diameter_std
-        self._dot_colour = dot_colour
-        self._dot_picture = dot_picture
+        self.minium_gap = minium_gap
+        self.stimulus_area_radius = stimulus_area_radius
+        self.dot_diameter_range = dot_diameter_range
+        self.dot_diameter_mean = dot_diameter_mean
+        self.dot_diameter_std = dot_diameter_std
+        self.dot_colour = dot_colour
+        self.dot_picture = dot_picture
+
+
+class DotArray(object):
+
+    def __init__(self, n_dots,
+                 dot_array_definition,
+                 array_id=None):
+
+        """Create a Random Dot Array
+        """
+
+        self._min_gap = dot_array_definition.minium_gap
+        self._stimulus_area_radius = dot_array_definition.stimulus_area_radius
+        self._dot_diameter_range = dot_array_definition.dot_diameter_range
+        self._dot_diameter_mean = dot_array_definition.dot_diameter_mean
+        self._dot_diameter_std = dot_array_definition.dot_diameter_std
+        self._dot_colour = dot_array_definition.dot_colour
+        self._dot_picture = dot_array_definition.dot_picture
+        self.array_id = array_id
         self.dots = []
         self._create_dots(n_dots=n_dots)
 
@@ -256,33 +274,47 @@ class DotArray(object):
         return self.property_names + "\n" + \
                str(self.properties).replace("[", "").replace("]", "")
 
-    def get_array_csv_text(self, label=None, num_format="%10.2f",
-                           variable_names=False):
+    def get_array_csv_text(self, num_format="%7.2f",
+                           variable_names=False, n_dots_column=False,
+                           colour_column=False, picture_column=False):
         """Return the dot array as csv text
 
         Parameter
         ---------
-        label : str or numeric, optional
-            optional label of the dot array that is printed
-        TODO
         variable_names : bool, optional
             if True variable name will be printed in the first line
 
-        TODO add colour to csv
         """
 
         rtn = ""
         if variable_names:
-            if label is not None:
-                rtn += "label,"
-            rtn += "cnt,x,y,diameter\n"
+            if self.array_id is not None:
+                rtn += "array_id,"
+            if n_dots_column:
+                rtn += "n_dots,"
+            rtn += "dot_cnt,x,y,diameter"
+            if colour_column:
+                rtn += ",r,g,b"
+            if picture_column:
+                rtn += ",file"
+            rtn += "\n"
 
         for cnt, d in enumerate(self.dots):
-            if label is not None:
-                rtn += "{0},".format(label)
+            if self.array_id is not None:
+                rtn += "{0},".format(self.array_id)
+            if n_dots_column:
+                rtn += "{},".format(len(self.dots))
             rtn += "{0},".format(cnt + 1)
             rtn += num_format % d.x + "," + num_format % d.y + "," + \
-                   num_format % d.diameter + "\n"
+                   num_format % d.diameter
+            if colour_column:
+                if d.colour is not None and len(d.colour)==3:
+                    rtn += ",{},{},{}".format(d.colour[0], d.colour[1], d.colour[2])
+                else:
+                    rtn += ", None, None, None"
+            if picture_column:
+                rtn += ", {}".format(d.picture)
+            rtn += "\n"
         return rtn
 
     def change_dot_colours(self, colour, dot_ids=None):

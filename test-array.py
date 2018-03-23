@@ -1,30 +1,36 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, print_function, division
+from builtins import *
 
 import math
 import random
 import numpy as np
+from time import sleep
+from copy import deepcopy
 import nosynum
 from expyriment import misc
-c = misc.Clock()
 
-dot_diameter_range=(2, 20)
-number_list = range(10, 200)
+cl = misc.Clock()
 
-print "creating "
-da = nosynum.DotArray(n_dots=100, stimulus_area_radius= 400,
+dot_array_def = nosynum.DotArrayDefinition(
+                       stimulus_area_radius= 400,
                        dot_diameter_mean=10,
                        dot_diameter_range=(2, 30),
                        dot_diameter_std=2)
-print(da.get_array_csv_text())
+
+max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def,
+                      array_id=23425233)
+
+#print(da.get_array_csv_text(variable_names=True, colour_column=False))
+
+mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
+                                     method=nosynum.sequence_methods.CONVEX_HULL)
+
+da = mp.da_sequence
+print(da.property_string)
+print("hi")
 
 
-x = nosynum.make_da_sequence(max_dot_array=da, method=nosynum.M_CONVEX_HULL)
-print(x)
-#p = nosynum.MakeDASequenceProcess(max_dot_array=da, method=nosynum.M_CONVEX_HULL)
-p.start()
-x, error = p.get_results()
-print(error)
-print(x[2])
 
 
 #dal2 = DotArrayList(number_list, subfolder="picts")

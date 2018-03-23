@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, division
 from builtins import *
 
-__all__ = ["create", "ExpyrimentDotArraySequence" ]
+__all__ = ["create", "ExpyrimentDASequence"]
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from expyriment.stimuli import Canvas, Circle, Line, Picture
-from .dot_array_sequences import DotArraySequence
+from .dot_array_sequences import DASequence
 
 def create(dot_array, area_colour=None,
            convex_hull_colour=None,
@@ -46,7 +46,7 @@ def create(dot_array, area_colour=None,
     return canvas
 
 
-class ExpyrimentDotArraySequence(DotArraySequence):
+class ExpyrimentDASequence(DASequence):
 
     def create_stimuli(self, area_colour=None,
                        convex_hull_colour=None,
