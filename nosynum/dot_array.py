@@ -93,19 +93,19 @@ class NumpyPositionList(object):
                         self._xy[x, :] -= tmp.xy
                         self._polar = None
 
-    def remove_overlap_for_dot(self, dotid, min_gap):
+    def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
 
-        ref_dot = Dot(x=self._xy[dotid, 0], y=self._xy[dotid, 1], diameter=self.diameter[dotid])
+        ref_dot = Dot(x=self._xy[dot_id, 0], y=self._xy[dot_id, 1], diameter=self.diameter[dot_id])
         dist = self.distance(ref_dot)
         tmp = Dot(diameter=0)
         shift_required = False
-        for x in np.where(dist < min_gap)[0]: # x=overlapping dot id
-            if x != dotid:
+        for x in np.where(dist < minimum_gap)[0]: # x=overlapping dot id
+            if x != dot_id:
                 shift_required = True
                 # calc vector (tmp) to shift
                 tmp.xy = self._xy[x, :] - ref_dot.xy
-                tmp.pos_radius = 0.000000001 + min_gap - dist[x]
+                tmp.pos_radius = 0.000000001 + minimum_gap - dist[x]
 
                 self._xy[x, :] = (self._xy[x, 0] + tmp.x, self._xy[x, 1] + tmp.y)
                 shift_required = True
@@ -144,6 +144,11 @@ class DotArrayDefinition(object):
 
         if dot_diameter_std <= 0:
             dot_diameter_std = None
+        if dot_diameter_range != None and \
+                (dot_diameter_mean <= dot_diameter_range[0] or\
+                 dot_diameter_mean >= dot_diameter_range[1] or\
+                 dot_diameter_range[0] >= dot_diameter_range[1]):
+                raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
         self.minium_gap = minium_gap
         self.stimulus_area_radius = stimulus_area_radius
@@ -163,13 +168,7 @@ class DotArray(object):
         """Create a Random Dot Array
         """
 
-        self._min_gap = dot_array_definition.minium_gap
-        self._stimulus_area_radius = dot_array_definition.stimulus_area_radius
-        self._dot_diameter_range = dot_array_definition.dot_diameter_range
-        self._dot_diameter_mean = dot_array_definition.dot_diameter_mean
-        self._dot_diameter_std = dot_array_definition.dot_diameter_std
-        self._dot_colour = dot_array_definition.dot_colour
-        self._dot_picture = dot_array_definition.dot_picture
+        self.definition = copy(dot_array_definition)
         self.array_id = array_id
         self.dots = []
         self._create_dots(n_dots=n_dots)
@@ -203,20 +202,20 @@ class DotArray(object):
         if no available space can be found it raise an Runtime Error
         """
 
-        if self._dot_diameter_range is None or \
-                        self._dot_diameter_std is None:
+        if self.definition.dot_diameter_range is None or \
+                        self.definition.dot_diameter_std is None:
             # constant mean
-            rtn = Dot(diameter=self._dot_diameter_mean,
-                              colour=self._dot_colour,
-                              picture=self._dot_picture)
+            rtn = Dot(diameter=self.definition.dot_diameter_mean,
+                      colour=self.definition.dot_colour,
+                      picture=self.definition.dot_picture)
         else:
             # draw diameter from beta distribution
-            parameter = shape_parameter_beta(self._dot_diameter_range,
-                                             self._dot_diameter_mean,
-                                             self._dot_diameter_std)
+            parameter = shape_parameter_beta(self.definition.dot_diameter_range,
+                                             self.definition.dot_diameter_mean,
+                                             self.definition.dot_diameter_std)
             rtn = Dot(diameter=random_beta(
-                self._dot_diameter_range, parameter),
-                colour=self._dot_colour)
+                self.definition.dot_diameter_range, parameter),
+                colour=self.definition.dot_colour)
 
         self.randomize_dot_position(rtn, ignore_overlapping)
         return rtn
@@ -229,12 +228,12 @@ class DotArray(object):
         raise exception if not found"""
 
         if minimum_gap is not None:
-            self._min_gap = minimum_gap
+            self.definition.minium_gap = minimum_gap
 
         cnt = 0
         while True:
             cnt += 1
-            dot.polar = (random.random() * (self._stimulus_area_radius -
+            dot.polar = (random.random() * (self.definition.stimulus_area_radius -
                                             dot.diameter / 2.0),
                          random.random() * TWO_PI)
 
@@ -242,7 +241,7 @@ class DotArray(object):
             if not ignore_overlapping:
                 # find bad_positions
                 for c in self.dots:
-                    if dot.distance(c) < self._min_gap:
+                    if dot.distance(c) < self.definition.minium_gap:
                         bad_position = True
                         break  # for
 
@@ -257,7 +256,7 @@ class DotArray(object):
         # mixes always all position (ignores dot limitation)
 
         if minimum_gap is not None:
-            self._min_gap = minimum_gap
+            self.definition.minium_gap = minimum_gap
 
         tmp_dots = self.dots
         self.dots = []
@@ -267,16 +266,16 @@ class DotArray(object):
 
     @property
     def minimum_gap(self):
-        return self._min_gap
+        return self.definition.minium_gap
 
     @property
     def property_string(self):
-        return self.property_names + "\n" + \
+        return ", ".join(self.property_names) + "\n" + \
                str(self.properties).replace("[", "").replace("]", "")
 
-    def get_array_csv_text(self, num_format="%7.2f",
-                           variable_names=False, n_dots_column=False,
-                           colour_column=False, picture_column=False):
+    def get_csv(self, num_format="%7.2f",
+                variable_names=True, n_dots_column=False,
+                colour_column=False, picture_column=False):
         """Return the dot array as csv text
 
         Parameter
@@ -356,7 +355,8 @@ class DotArray(object):
 
     @property
     def property_names(self):
-        return "n_dots,mean_dot_diameter,total_area,convex_hull_area,density, total_circumference"
+        return ("n_dots", "mean_dot_diameter", "total_area", "convex_hull_area",
+                "density", "total_circumference")
 
     @property
     def properties(self):
@@ -406,7 +406,7 @@ class DotArray(object):
     @property
     def density_stimulus_area(self):
         """density takes into account the full possible stimulus area """
-        return np.pi * self._stimulus_area_radius ** 2 / self.total_area
+        return np.pi * self.definition.stimulus_area_radius ** 2 / self.total_area
 
     @property
     def density(self):
@@ -506,7 +506,7 @@ class DotArray(object):
         """
 
         if minimum_gap is not None:
-            self._min_gap = minimum_gap
+            self.definition.minium_gap = minimum_gap
 
 
         d = NumpyPositionList(self.dots)
@@ -515,23 +515,23 @@ class DotArray(object):
 
         # from inner to outer remove overlaps
         for i in np.argsort(d.polar[:, 0]):
-            if d.remove_overlap_for_dot(dotid=i, min_gap=self._min_gap):
+            if d.remove_overlap_for_dot(dot_id=i, minimum_gap=self.definition.minium_gap):
                 shift_required = True
 
         # sqeeze in points that pop out of the stimulus area radius
         cnt = 0
         while True:
-            too_far = np.where( (d.polar[:,0] + d.diameter//2) > self._stimulus_area_radius)[0] # find outlier
+            too_far = np.where((d.polar[:,0] + d.diameter//2) > self.definition.stimulus_area_radius)[0] # find outlier
             if len(too_far)>0:
                 # squeeze in outlier
                 tmp = deepcopy(self.dots[too_far[0]])
-                tmp.pos_radius = self._stimulus_area_radius - tmp.diameter//2 - 0.000000001
+                tmp.pos_radius = self.definition.stimulus_area_radius - tmp.diameter // 2 - 0.000000001
                 d.xy[too_far[0], :] = tmp.xy
                 # remove overlaps centered around new outlier position
                 d.xy -= tmp.xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
                 for i in np.argsort(d.polar[:, 0]):
-                    d.remove_overlap_for_dot(dotid=i, min_gap=self._min_gap)
+                    d.remove_overlap_for_dot(dot_id=i, minimum_gap=self.definition.minium_gap)
 
                 # new pos for outlyer
                 d.xy += tmp.xy # move back to old position

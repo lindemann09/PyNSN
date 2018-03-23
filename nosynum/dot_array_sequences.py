@@ -5,11 +5,11 @@ from builtins import *
 from multiprocessing import Process, Queue, Event
 import numpy as np
 
-from . import sequence_methods
+from . import sequence_methods, DotArray
 
 class MakeDASequenceProcess(Process):
 
-    def __init__(self, max_dot_array, method, n_trails=3):
+    def __init__(self, max_dot_array, method=sequence_methods.NO_FITTING, n_trails=3):
         super(MakeDASequenceProcess, self).__init__()
         self.max_dot_array = max_dot_array
         self.method = method
@@ -22,7 +22,8 @@ class MakeDASequenceProcess(Process):
         else:
             self._n_trails = n_trails
 
-        self.start()
+        if isinstance(max_dot_array, DotArray):
+            self.start()
 
     @property
     def da_sequence(self):
@@ -61,7 +62,7 @@ class MakeDASequenceProcess(Process):
 class DASequence(object):
 
     def __init__(self):
-        self.da_sequence = []
+        self.dot_arrays = []
         self.method = None
         self.error = None
         self._n_dots = []
@@ -69,32 +70,55 @@ class DASequence(object):
     def get_number(self, number):
         try:
             idx = self._n_dots.index(number)
-            return self.da_sequence[idx]
+            return self.dot_arrays[idx]
         except:
             return None
 
     @property
     def max_dot_array(self):
-        return self.da_sequence[-1]
+        return self.dot_arrays[-1]
 
     @property
     def property_names(self):
-        return self.da_sequence[0].property_names
+        return self.dot_arrays[0].property_names
 
     @property
     def properties(self):
         rtn = []
-        for da in self.da_sequence:
+        for da in self.dot_arrays:
             rtn.append(da.properties)
         return np.array(rtn)
 
     @property
+    def property_correlations(self):
+        return np.corrcoef(self.properties, rowvar=False)
+
+    @property
+    def numerosity_correlations(self):
+        cor = self.property_correlations[0, :]
+        rtn = {}
+        for x in range(1, len(cor)):
+            rtn[self.property_names[x]] = cor[x]
+        return rtn
+
+
+    @property
     def property_string(self):
-        rtn = self.property_names + "\n"
-        for da in self.da_sequence:
+        rtn = ", ".join(self.property_names) + "\n"
+        for da in self.dot_arrays:
             rtn += str(da.properties).replace("[", "").replace("]", "\n")
 
         return rtn[:-1]
+
+    def get_csv(self, num_format="%7.2f", variable_names=True, colour_column=False, picture_column=False):
+
+        rtn = ""
+        for da in self.dot_arrays:
+            rtn += da.get_csv(n_dots_column=True, variable_names=variable_names,
+                              num_format=num_format, colour_column=colour_column,
+                              picture_column=picture_column)
+            variable_names = False
+        return rtn
 
 
     def make_by_incrementing(self, max_dot_array, method):
@@ -149,8 +173,8 @@ class DASequence(object):
             if error is not None:
                 break
 
-        self.da_sequence = list(reversed(da_sequence))
-        self._n_dots = list(map(lambda x: len(x.dots), self.da_sequence))
+        self.dot_arrays = list(reversed(da_sequence))
+        self._n_dots = list(map(lambda x: len(x.dots), self.dot_arrays))
         self.method = method
         self.error = error
 

@@ -8,6 +8,7 @@ import numpy as np
 from time import sleep
 from copy import deepcopy
 import nosynum
+from nosynum import expyriment_stimulus
 from expyriment import misc
 
 cl = misc.Clock()
@@ -18,17 +19,21 @@ dot_array_def = nosynum.DotArrayDefinition(
                        dot_diameter_range=(2, 30),
                        dot_diameter_std=2)
 
-max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def,
+max_da = nosynum.DotArray(n_dots=50, dot_array_definition=dot_array_def,
                       array_id=23425233)
 
 #print(da.get_array_csv_text(variable_names=True, colour_column=False))
 
 mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
-                                     method=nosynum.sequence_methods.CONVEX_HULL)
+                                     method=nosynum.sequence_methods.NO_FITTING)
 
-da = mp.da_sequence
-print(da.property_string)
-print("hi")
+seq  = mp.da_sequence
+
+exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
+
+#print(seq.dot_arrays)
+#print(seq.get_csv())
+print(seq.numerosity_correlations)
 
 
 

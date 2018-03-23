@@ -13,12 +13,12 @@ def create(dot_array, area_colour=None,
            background_stimulus_expyriment=None):
 
     if background_stimulus_expyriment is None:
-        canvas = Canvas(size=(dot_array._stimulus_area_radius * 2,) * 2)
+        canvas = Canvas(size=(dot_array.definition.stimulus_area_radius * 2,) * 2)
     else:
         canvas = background_stimulus_expyriment.copy()
 
     if area_colour is not None:
-        Circle(radius=dot_array._stimulus_area_radius,
+        Circle(radius=dot_array.definition.stimulus_area_radius,
                colour=area_colour,
                anti_aliasing=anti_aliasing).plot(canvas)
     if convex_hull_colour is not None:
@@ -48,12 +48,23 @@ def create(dot_array, area_colour=None,
 
 class ExpyrimentDASequence(DASequence):
 
+    def __init__(self, da_sequence):
+
+        super(ExpyrimentDASequence, self).__init__()
+        self.dot_arrays = da_sequence.dot_arrays
+        self.method = da_sequence.method
+        self.error = da_sequence.method
+        self._n_dots = da_sequence._n_dots
+
+        self.stimuli = []
+
+
     def create_stimuli(self, area_colour=None,
                        convex_hull_colour=None,
                        anti_aliasing=None,
                        background_stimulus_expyriment=None):
         self.stimuli = []
-        for da in self.da_sequence:
+        for da in self.dot_arrays:
             self.stimuli.append(create(dot_array=da, area_colour=area_colour,
                                        convex_hull_colour=convex_hull_colour,
                                        anti_aliasing=anti_aliasing,
