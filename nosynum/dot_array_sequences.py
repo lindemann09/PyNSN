@@ -2,62 +2,18 @@
 from __future__ import absolute_import, print_function, division
 from builtins import *
 
-from multiprocessing import Process, Queue, Event
 import numpy as np
 
-from . import sequence_methods, DotArray
+M_ITEM_SIZE = 2
+M_CONVEX_HULL = 3
+M_TOTAL_AREA = 4
+M_DENSITY = 5
+M_NO_FITTING = 6
 
-class MakeDASequenceProcess(Process):
+ALL_METHODS = [M_ITEM_SIZE, M_CONVEX_HULL, M_TOTAL_AREA, M_DENSITY, M_NO_FITTING]
 
-    def __init__(self, max_dot_array, method=sequence_methods.NO_FITTING, n_trails=3):
-        super(MakeDASequenceProcess, self).__init__()
-        self.max_dot_array = max_dot_array
-        self.method = method
-        self.sequence_available = Event()
-        self._data_queue = Queue()
-        self._da_sequence = None
-        self.daemon = True
-        if n_trails<1:
-            self._n_trails = 1
-        else:
-            self._n_trails = n_trails
-
-        if isinstance(max_dot_array, DotArray):
-            self.start()
-
-    @property
-    def da_sequence(self):
-        self._get_results()
-        return self._da_sequence
-
-    def run(self):
-        cnt = 0
-        da_seq = DASequence()
-
-        while cnt<self._n_trails:
-            cnt += 1
-            if da_seq.make_by_incrementing(max_dot_array=self.max_dot_array, method=self.method):
-                break
-
-        self.sequence_available.set()
-        self._data_queue.put(da_seq)
-
-    def join(self, timeout=None):
-        self._get_results()
-        super(MakeDASequenceProcess, self).join(timeout)
-
-    def _get_results(self):
-
-        while self.is_alive():
-            try:
-                x = self._data_queue.get(timeout=0.1)
-            except:
-                continue
-
-            self._da_sequence = x
-            break
-
-
+def is_method(value):
+    return value in ALL_METHODS
 
 class DASequence(object):
 
@@ -142,15 +98,15 @@ class DASequence(object):
             while True:
                 cnt += 1
 
-                if method == sequence_methods.DENSITY:
+                if method == M_DENSITY:
                     da.fit_density(density=dens, ratio_area_convex_hull_adaptation=0.5)
-                elif method == sequence_methods.CONVEX_HULL:
+                elif method == M_CONVEX_HULL:
                     da.fit_convex_hull_area(convex_hull_area=cha)
-                elif method == sequence_methods.ITEM_SIZE:
+                elif method == M_ITEM_SIZE:
                     da.fit_mean_item_size(mean_dot_diameter=dot_diameter)
-                elif method == sequence_methods.TOTAL_AREA:
+                elif method == M_TOTAL_AREA:
                     da.fit_total_area(total_area=total_area)
-                elif method == sequence_methods.NO_FITTING:
+                elif method == M_NO_FITTING:
                     pass
                 else:
                     method == sequence_methods.NO_FITTING

@@ -12,7 +12,7 @@ import random
 from copy import deepcopy, copy
 import numpy as np
 from scipy.spatial import ConvexHull
-from . import Dot, random_beta, shape_parameter_beta
+from . import Dot, random_beta
 
 TWO_PI = 2*np.pi
 
@@ -210,10 +210,10 @@ class DotArray(object):
                       picture=self.definition.dot_picture)
         else:
             # draw diameter from beta distribution
-            parameter = shape_parameter_beta(self.definition.dot_diameter_range,
+            parameter = random_beta.shape_parameter_beta(self.definition.dot_diameter_range,
                                              self.definition.dot_diameter_mean,
                                              self.definition.dot_diameter_std)
-            rtn = Dot(diameter=random_beta(
+            rtn = Dot(diameter=random_beta.random_beta(
                 self.definition.dot_diameter_range, parameter),
                 colour=self.definition.dot_colour)
 

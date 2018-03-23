@@ -8,7 +8,7 @@ import numpy as np
 from time import sleep
 from copy import deepcopy
 import nosynum
-from nosynum import expyriment_stimulus
+from nosynum import expyriment_stimulus, pil_image
 from expyriment import misc
 
 cl = misc.Clock()
@@ -24,12 +24,15 @@ max_da = nosynum.DotArray(n_dots=50, dot_array_definition=dot_array_def,
 
 #print(da.get_array_csv_text(variable_names=True, colour_column=False))
 
-mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
-                                     method=nosynum.sequence_methods.NO_FITTING)
-
-seq  = mp.da_sequence
-
-exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
+mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
+                                     method=nosynum.M_NO_FITTING)
+mp.join()
+seq = mp.da_sequence
+#exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
+print("converting")
+cl.reset_stopwatch()
+#pil_image.dasequence2images(dot_array_sequence=seq, image_filename="test")
+print(cl.stopwatch_time)
 
 #print(seq.dot_arrays)
 #print(seq.get_csv())
