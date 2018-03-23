@@ -5,7 +5,6 @@ __all__ = ["create", "ExpyrimentDASequence"]
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from expyriment.stimuli import Canvas, Circle, Line, Picture
-from .dot_array_sequences import DASequence
 
 def create(dot_array, area_colour=None,
            convex_hull_colour=None,
@@ -46,30 +45,30 @@ def create(dot_array, area_colour=None,
     return canvas
 
 
-class ExpyrimentDASequence(DASequence):
+class ExpyrimentDASequence():
 
     def __init__(self, da_sequence):
 
-        super(ExpyrimentDASequence, self).__init__()
-        self.dot_arrays = da_sequence.dot_arrays
-        self.method = da_sequence.method
-        self.error = da_sequence.error
-        self.pil_images = da_sequence.pil_images
-        self._n_dots = da_sequence._n_dots
-
+        self.da_sequence = da_sequence
         self.stimuli = []
-
 
     def create_stimuli(self, area_colour=None,
                        convex_hull_colour=None,
                        anti_aliasing=None,
                        background_stimulus_expyriment=None):
         self.stimuli = []
-        for da in self.dot_arrays:
+        for da in self.da_sequence.dot_arrays:
             self.stimuli.append(create(dot_array=da, area_colour=area_colour,
                                        convex_hull_colour=convex_hull_colour,
                                        anti_aliasing=anti_aliasing,
                                        background_stimulus_expyriment=background_stimulus_expyriment))
+
+    def load_associated_images(self, position=(0,0)):
+        """e.g. if created with pil images"""
+        self.stimuli = []
+        for image in self.da_sequence.images:
+            self.stimuli.append(Picture(filename=image, position=position))
+
 
     def preload(self):
         """

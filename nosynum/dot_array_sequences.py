@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, division
 from builtins import *
 
+import os
 import numpy as np
 from hashlib import md5
 
@@ -24,7 +25,12 @@ class DASequence(object):
         self.method = None
         self.error = None
         self._n_dots = []
-        self.pil_images = []
+        self.images = []
+        self.auto_delete_image_files = False
+
+    def __del__(self):
+        if self.auto_delete_image_files:
+            self.delete_image_files()
 
     def get_number(self, number):
         try:
@@ -104,6 +110,13 @@ class DASequence(object):
         else:
             return rtn
 
+    def delete_image_files(self):
+        for im in self.images:
+            if isinstance(im, unicode):
+                try:
+                    os.remove(im)
+                except:
+                    pass
 
     def make_by_incrementing(self, max_dot_array, method):
         """makes sequence of deviants by subtracting dots

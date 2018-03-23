@@ -9,11 +9,7 @@ c = misc.Clock()
 control.set_develop_mode(True)
 
 exp = control.initialize()
-control.start()
 
-blank = stimuli.BlankScreen()
-
-dot_picture=None#"picts/pict1.png"
 
 dot_array_def = nosynum.DotArrayDefinition(
                        stimulus_area_radius= 300,
@@ -23,30 +19,36 @@ dot_array_def = nosynum.DotArrayDefinition(
 
 max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def)
 mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
-                                       method=nosynum.M_DENSITY,
-                                       auto_start_process=True)
+                                        save_images=True,
+                                        method=nosynum.M_DENSITY)
+mp.join()
+
+control.start()
+
+blank = stimuli.BlankScreen()
+
+dot_picture=None#"picts/pict1.png"
 
 while(True):
     blank.present()
-
     # get next sequence and restart
-    seq = mp.da_sequence
+    c.reset_stopwatch()
+    print("DAS seq")
+    expy_seq = expyriment_stimulus.ExpyrimentDASequence(da_sequence=mp.da_sequence)
     max_da = nosynum.DotArray(n_dots=100, dot_array_definition= dot_array_def)
     mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                        method=nosynum.M_DENSITY,
-                                       auto_start_process=True,
-                                       image_filename="da-")
-    c.reset_stopwatch()
-    print("pil")
-    #pil_image.dasequence2images(dot_array_sequence=seq, image_filename="asdf")
-    print(c.stopwatch_time)
-    c.reset_stopwatch()
-    print("EXPY")
-    expy_seq = expyriment_stimulus.ExpyrimentDASequence(da_sequence=seq)
-    expy_seq.create_stimuli(area_colour=misc.constants.C_GREY, anti_aliasing=0)
+                                       save_images=True,
+                                       auto_start_process=True)
     print(c.stopwatch_time)
 
-    expy_seq.preload()
+    c.reset_stopwatch()
+    print("EXPY")
+    expy_seq.load_associated_images()
+    #expy_seq.create_stimuli()
+    #expy_seq.preload()
+    print(c.stopwatch_time)
+
     expy_seq.stimuli[10].present()
 
     key, rt = exp.keyboard.wait()
