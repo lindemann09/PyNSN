@@ -22,9 +22,9 @@ dot_array_def = nosynum.DotArrayDefinition(
                        dot_diameter_std=3)
 
 max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def)
-mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
-                                   method=nosynum.M_DENSITY,
-                                   auto_start_process=True)
+mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
+                                       method=nosynum.M_DENSITY,
+                                       auto_start_process=True)
 
 while(True):
     blank.present()
@@ -32,15 +32,13 @@ while(True):
     # get next sequence and restart
     seq = mp.da_sequence
     max_da = nosynum.DotArray(n_dots=100, dot_array_definition= dot_array_def)
-    mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
+    mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                        method=nosynum.M_DENSITY,
-                                       auto_start_process=False)
-
-    mp.start()
-
+                                       auto_start_process=True,
+                                       image_filename="da-")
     c.reset_stopwatch()
     print("pil")
-    pil_image.dasequence2images(dot_array_sequence=seq, image_filename="asdf")
+    #pil_image.dasequence2images(dot_array_sequence=seq, image_filename="asdf")
     print(c.stopwatch_time)
     c.reset_stopwatch()
     print("EXPY")

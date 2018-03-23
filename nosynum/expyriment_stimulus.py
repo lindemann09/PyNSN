@@ -53,7 +53,8 @@ class ExpyrimentDASequence(DASequence):
         super(ExpyrimentDASequence, self).__init__()
         self.dot_arrays = da_sequence.dot_arrays
         self.method = da_sequence.method
-        self.error = da_sequence.method
+        self.error = da_sequence.error
+        self.pil_images = da_sequence.pil_images
         self._n_dots = da_sequence._n_dots
 
         self.stimuli = []

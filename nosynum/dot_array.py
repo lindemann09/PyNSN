@@ -10,11 +10,13 @@ from os import listdir
 import types
 import random
 from copy import deepcopy, copy
+from hashlib import md5
 import numpy as np
 from scipy.spatial import ConvexHull
 from . import Dot, random_beta
 
 TWO_PI = 2*np.pi
+HASH_LENGTH = 8
 
 def list_all_saved_incremental_arrays(picture_folder,
                                       property_file_suffix=".property.csv"):
@@ -162,14 +164,12 @@ class DotArrayDefinition(object):
 class DotArray(object):
 
     def __init__(self, n_dots,
-                 dot_array_definition,
-                 array_id=None):
+                 dot_array_definition):
 
         """Create a Random Dot Array
         """
 
         self.definition = copy(dot_array_definition)
-        self.array_id = array_id
         self.dots = []
         self._create_dots(n_dots=n_dots)
 
@@ -273,7 +273,7 @@ class DotArray(object):
         return ", ".join(self.property_names) + "\n" + \
                str(self.properties).replace("[", "").replace("]", "")
 
-    def get_csv(self, num_format="%7.2f",
+    def get_csv(self, num_format="%7.2f", hash_column=False,
                 variable_names=True, n_dots_column=False,
                 colour_column=False, picture_column=False):
         """Return the dot array as csv text
@@ -287,8 +287,8 @@ class DotArray(object):
 
         rtn = ""
         if variable_names:
-            if self.array_id is not None:
-                rtn += "array_id,"
+            if hash_column:
+                rtn += "hash,"
             if n_dots_column:
                 rtn += "n_dots,"
             rtn += "dot_cnt,x,y,diameter"
@@ -298,9 +298,11 @@ class DotArray(object):
                 rtn += ",file"
             rtn += "\n"
 
+        if hash_column:
+            hash = self.md5hash()
         for cnt, d in enumerate(self.dots):
-            if self.array_id is not None:
-                rtn += "{0},".format(self.array_id)
+            if hash_column:
+                rtn += "{0},".format(hash)
             if n_dots_column:
                 rtn += "{},".format(len(self.dots))
             rtn += "{0},".format(cnt + 1)
@@ -352,6 +354,15 @@ class DotArray(object):
             dot_ids = range(len(self.dots))
         for x in map(lambda i: self.dots[i], dot_ids):
             x.picture = picture
+
+    @property
+    def md5hash(self):
+        """md5_hash of csv (counter, position, diameter only)"""
+
+        csv = self.get_csv(num_format="%7.2f", hash_column=False,
+                           variable_names=False, n_dots_column=False,
+                           colour_column=False, picture_column=False)
+        return md5(csv).hexdigest()[:HASH_LENGTH]
 
     @property
     def property_names(self):

@@ -61,42 +61,35 @@ def create(dot_array,
     return img
 
 
-def create_and_save(dot_array, filename,
-           file_type="PNG",
-           area_colour=None,
-           convex_hull_colour=None,
-           antialiasing=None,
-           background_colour="#ffffff"):
-    """see create"""
-
-    pil_img = create(dot_array=dot_array, area_colour=area_colour,
-           convex_hull_colour=convex_hull_colour, antialiasing=antialiasing,
-           background_colour=background_colour)
-    pil_img.save(filename, file_type)
-
-
-def dasequence2images(dot_array_sequence,
-                      image_filename,
-                      subfolder="stimuli",
-                      image_file_type="png",
+def write_pil_images_of_da_sequence(dot_array_sequence,
                       area_colour=None,
                       convex_hull_colour=None,
                       antialiasing=None,
                       background_colour="#ffffff"):
-    try:
-        mkdir(subfolder)
-    except:
-        pass
-
-    tmp = path.splitext(image_filename)
+    dot_array_sequence.pil_images = []
     for da in dot_array_sequence.dot_arrays:
         im = create(dot_array=da, area_colour=area_colour,
                                       convex_hull_colour=convex_hull_colour,
                                       antialiasing=antialiasing,
                                       background_colour=background_colour)
-        filename = path.join(subfolder, tmp[0] + "-" + str(len(da.dots)) + tmp[1] + "." + image_file_type)
-        im.save(fp=filename, file_type=image_file_type)
+        dot_array_sequence.pil_images.append(im)
 
+
+def pil_images_save(da_sequence_with_images, subfolder="stimuli", file_type="png",
+                      file_prefix = "da-",
+                      replace_images_by_filename = True):
+    try:
+        mkdir(subfolder)
+    except:
+        pass
+
+    name = file_prefix + da_sequence_with_images.md5hash
+    for x in range(len(da_sequence_with_images.pil_images)):
+        n = len(da_sequence_with_images.dot_arrays[x].dots)
+        filename = path.join(subfolder, name + "-" + str(n) + "." + file_type)
+        da_sequence_with_images.pil_images[x].save(fp=filename, file_type=file_type)
+        if replace_images_by_filename:
+            da_sequence_with_images.pil_images[x] = filename
 
 
 class PILMakeDASequenceProcess(TemplateDASequenceProcess):
@@ -105,22 +98,24 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
                  method=M_NO_FITTING,
                  n_trials=3,
                  auto_start_process=True,
-                 image_filename="array",
+                 save_images=False,
                  subfolder="stimuli",
-                 image_file_type="png",
                  area_colour=None,
                  convex_hull_colour=None,
                  antialiasing=None,
                  background_colour="#ffffff"):
+        """
+        property: da_sequence, after processes finished
+        Event(): sequence_available
+        """
 
         super(PILMakeDASequenceProcess, self).__init__()
 
         self.max_dot_array = max_dot_array
         self.method = method
         self.n_trials = n_trials
-        self.image_filename = image_filename
+        self.save_images = save_images
         self.subfolder = subfolder
-        self.image_file_type = image_file_type
         self.area_colour = area_colour
         self.convex_hull_colour = convex_hull_colour
         self.antialiasing = antialiasing
@@ -135,14 +130,16 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
                                                   n_trials=self.n_trials,
                                                   auto_start_process=True)
         self._makeprocess.join()
-        dasequence2images( dot_array_sequence=self._makeprocess.da_sequence,
-                          image_filename=self.image_file_type,
-                          subfolder=self.subfolder,
-                          image_file_type=self.image_file_type,
+        da_sequence = self._makeprocess.da_sequence
+        write_pil_images_of_da_sequence( dot_array_sequence=da_sequence,
                           area_colour=self.area_colour,
                           convex_hull_colour=self.convex_hull_colour,
                           antialiasing=self.antialiasing,
                           background_colour=self.background_colour)
+        if self.save_images:
+            pil_images_save(da_sequence_with_images=da_sequence,
+                        subfolder = self.subfolder,
+                        replace_images_by_filename=True)
 
         self.sequence_available.set()
-        self._data_queue.put(self._makeprocess.da_sequence)
+        self._data_queue.put(da_sequence)

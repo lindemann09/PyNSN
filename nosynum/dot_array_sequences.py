@@ -3,7 +3,9 @@ from __future__ import absolute_import, print_function, division
 from builtins import *
 
 import numpy as np
+from hashlib import md5
 
+from .dot_array import HASH_LENGTH
 M_ITEM_SIZE = 2
 M_CONVEX_HULL = 3
 M_TOTAL_AREA = 4
@@ -22,6 +24,7 @@ class DASequence(object):
         self.method = None
         self.error = None
         self._n_dots = []
+        self.pil_images = []
 
     def get_number(self, number):
         try:
@@ -33,6 +36,15 @@ class DASequence(object):
     @property
     def max_dot_array(self):
         return self.dot_arrays[-1]
+
+    @property
+    def md5hash(self):
+        """md5_hash of csv (n_dots, counter, position, diameter only)"""
+
+        csv = self.get_csv(num_format="%7.2f", hash_column=False,
+                           variable_names=False,
+                           colour_column=False, picture_column=False)
+        return md5(csv).hexdigest()[:HASH_LENGTH]
 
     @property
     def property_names(self):
@@ -66,15 +78,31 @@ class DASequence(object):
 
         return rtn[:-1]
 
-    def get_csv(self, num_format="%7.2f", variable_names=True, colour_column=False, picture_column=False):
+    def get_csv(self, num_format="%7.2f", hash_column=False,
+                variable_names=True, colour_column=False, picture_column=False):
 
         rtn = ""
+        tmp_var_names = variable_names
         for da in self.dot_arrays:
-            rtn += da.get_csv(n_dots_column=True, variable_names=variable_names,
+            rtn += da.get_csv(n_dots_column=True, hash_column=False,
+                              variable_names=tmp_var_names,
                               num_format=num_format, colour_column=colour_column,
                               picture_column=picture_column)
-            variable_names = False
-        return rtn
+            tmp_var_names = False
+
+        if hash_column:
+            hash = self.md5hash
+            rtn2 = ""
+            tmp_var_names = variable_names
+            for l in rtn.split("\n"):
+                if tmp_var_names:
+                    rtn2 += "hash," + l + "\n"
+                    tmp_var_names = False
+                elif len(l)>0:
+                    rtn2 += "{},{}\n".format(hash, l)
+            return rtn2
+        else:
+            return rtn
 
 
     def make_by_incrementing(self, max_dot_array, method):
@@ -109,7 +137,7 @@ class DASequence(object):
                 elif method == M_NO_FITTING:
                     pass
                 else:
-                    method == sequence_methods.NO_FITTING
+                    method == M_NO_FITTING
                     raise Warning("Unknown method {}. Using NO_FITTING.".format(method))
 
                 try:

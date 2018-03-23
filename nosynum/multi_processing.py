@@ -43,6 +43,12 @@ class MakeDASequenceProcess(TemplateDASequenceProcess):
 
     def __init__(self, max_dot_array, method=M_NO_FITTING, n_trials=3,
                  auto_start_process=True):
+
+        """
+        property: da_sequence, after processes finished
+        Event(): sequence_available
+        """
+
         super(MakeDASequenceProcess, self).__init__()
         self.max_dot_array = max_dot_array
         self.method = method

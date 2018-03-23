@@ -19,15 +19,19 @@ dot_array_def = nosynum.DotArrayDefinition(
                        dot_diameter_range=(2, 30),
                        dot_diameter_std=2)
 
-max_da = nosynum.DotArray(n_dots=50, dot_array_definition=dot_array_def,
-                      array_id=23425233)
+max_da = nosynum.DotArray(n_dots=20, dot_array_definition=dot_array_def)
 
 #print(da.get_array_csv_text(variable_names=True, colour_column=False))
 
 mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
-                                     method=nosynum.M_NO_FITTING)
+                                        method=nosynum.M_NO_FITTING,
+                                        save_images=True)
 mp.join()
+
 seq = mp.da_sequence
+print(seq.pil_images)
+print(seq.get_csv(variable_names=True, hash_column=True))
+
 #exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
 print("converting")
 cl.reset_stopwatch()
