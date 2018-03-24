@@ -75,18 +75,18 @@ def write_pil_images_of_da_sequence(dot_array_sequence,
         dot_array_sequence.images.append(im)
 
 
-def pil_images_save(da_sequence_with_images, subfolder="stimuli", file_type="png",
-                      file_prefix = "da-",
-                      replace_images_by_filename = True):
+def pil_images_save(da_sequence_with_images, folder, file_type="png",
+                    file_prefix = "da-",
+                    replace_images_by_filename = True):
     try:
-        mkdir(subfolder)
+        mkdir(folder)
     except:
         pass
 
     name = file_prefix + da_sequence_with_images.md5hash
     for x in range(len(da_sequence_with_images.images)):
         n = len(da_sequence_with_images.dot_arrays[x].dots)
-        filename = unicode(path.join(subfolder, name + "-" + str(n) + "." + file_type))
+        filename = unicode(path.join(folder, name + "-" + str(n) + "." + file_type))
         da_sequence_with_images.images[x].save(fp=filename, file_type=file_type)
         if replace_images_by_filename:
             da_sequence_with_images.images[x] = filename
@@ -100,7 +100,7 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
                  auto_start_process=True,
                  save_images=False,
                  auto_delete_image_files = True,
-                 subfolder="stimuli",
+                 folder="tmp_stimuli",
                  area_colour=(255, 255, 255),
                  convex_hull_colour=None,
                  antialiasing=None,
@@ -116,7 +116,7 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
         self.method = method
         self.n_trials = n_trials
         self.save_images = save_images
-        self.subfolder = subfolder
+        self.folder = folder
         self.area_colour = area_colour
         self.convex_hull_colour = convex_hull_colour
         self.antialiasing = antialiasing
@@ -140,8 +140,8 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
                           background_colour=self.background_colour)
         if self.save_images:
             pil_images_save(da_sequence_with_images=da_sequence,
-                        subfolder = self.subfolder,
-                        replace_images_by_filename=True)
+                            folder= self.folder,
+                            replace_images_by_filename=True)
         da_sequence.auto_delete_image_files = self.auto_delete_image_files
 
         self.sequence_available.set()

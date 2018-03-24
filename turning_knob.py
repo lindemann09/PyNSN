@@ -53,8 +53,8 @@ class Knob:
             self.value = self._max_value
 
 
-def numerosity_production(exp, mouse, incremental_dot_array,
-                        maxnumber, background=None):
+def numerosity_production(exp, mouse, expy_da_sequence,
+                        maxnumber, preload=True, background=None):
     """numerosity production
 
     returns knob value, rt, and last stimuli
@@ -63,8 +63,7 @@ def numerosity_production(exp, mouse, incremental_dot_array,
         background = stimuli.BlankScreen()
 
     background.present()
-    for x in incremental_dot_array:
-        x.preload()
+    expy_da_sequence.preload()
 
     knob = Knob(00, maxnumber, 0)
     exp.clock.reset_stopwatch()
@@ -74,7 +73,7 @@ def numerosity_production(exp, mouse, incremental_dot_array,
     stim = None
     while goOn:
         if changed:
-            stim = incremental_dot_array[knob.value]
+            stim = expy_da_sequence.stimuli[knob.value]
             stim.present(clear=False, update=True)
             changed = False
 
@@ -94,6 +93,5 @@ def numerosity_production(exp, mouse, incremental_dot_array,
 
     rt = exp.clock.stopwatch_time
     background.present()
-    for x in incremental_dot_array:
-        x.unload()
+    expy_da_sequence.unload()
     return knob.value, rt, stim

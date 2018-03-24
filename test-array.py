@@ -30,18 +30,18 @@ mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
 mp.join()
 
 seq = mp.da_sequence
-print(seq.pil_images)
+#print(seq.images)
 print(seq.get_csv(variable_names=True, hash_column=True))
-
+print(seq.md5hash)
 #exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
-print("converting")
-cl.reset_stopwatch()
+#print("converting")
+#cl.reset_stopwatch()
 #pil_image.dasequence2images(dot_array_sequence=seq, image_filename="test")
-print(cl.stopwatch_time)
+#print(cl.stopwatch_time)
 
 #print(seq.dot_arrays)
 #print(seq.get_csv())
-print(seq.numerosity_correlations)
+#print(seq.numerosity_correlations)
 
 
 

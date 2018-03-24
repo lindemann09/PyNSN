@@ -32,10 +32,9 @@ class DASequence(object):
         if self.auto_delete_image_files:
             self.delete_image_files()
 
-    def get_number(self, number):
+    def get_array_n_dots(self, number_of_dots):
         try:
-            idx = self._n_dots.index(number)
-            return self.dot_arrays[idx]
+            return self.dot_arrays[self._n_dots.index(number_of_dots)]
         except:
             return None
 
@@ -172,6 +171,9 @@ class DASequence(object):
 
         self.dot_arrays = list(reversed(da_sequence))
         self._n_dots = list(map(lambda x: len(x.dots), self.dot_arrays))
+        {b: a for a, b in enumerate([994, 7, 6, 3, 2, 5])}
+
+        self.numerosity_idx = {}
         self.method = method
         self.error = error
 
