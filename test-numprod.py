@@ -4,9 +4,9 @@ from turning_knob import numerosity_production
 import nosynum
 from nosynum import expyriment_stimulus, pil_image
 
-#control.set_develop_mode(True)
+control.set_develop_mode(True)
 
-exp = design.Experiment(background_colour=(255,255,255))
+exp = design.Experiment()#background_colour=(255,255,255))
 
 control.initialize(exp)
 
@@ -43,10 +43,11 @@ while(True):
                                                       method=nosynum.M_NO_FITTING,
                                                       save_images=True)
     if da_sequence is not None:
-        #array_id_estim = design.randomize.rand_int(0, len(arrays) - 1)
-        estim, rt, stim = numerosity_production(exp, mouse,
-                                                da_sequence,
-                                                maxnumber)
+        print("preloading")
+        da_expy = expyriment_stimulus.ExpyrimentDASequence(da_sequence)
+        da_expy.load_associated_images()
+
+        estim, rt, stim = numerosity_production(exp, mouse, da_expy)
         print(estim, rt)
 
 control.end()

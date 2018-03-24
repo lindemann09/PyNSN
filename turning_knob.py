@@ -12,8 +12,8 @@ from expyriment.misc import constants
 class Knob:
     large_step = 1
     def __init__(self, min_value, max_value, time_interval):
-        self.position = 0
-        self.value = 0
+        self.position = None
+        self.value = None
         self._min_value = min_value
         self._max_value = max_value
         self._time_interval = time_interval
@@ -26,7 +26,7 @@ class Knob:
 
     def reset(self):
         self.position = 0
-        self.value = 0
+        self.value = self._min_value
 
     def turn_clockwise(self):
         self.position += 1
@@ -53,9 +53,10 @@ class Knob:
             self.value = self._max_value
 
 
-def numerosity_production(exp, mouse, expy_da_sequence,
-                        maxnumber, preload=True, background=None):
+def numerosity_production(exp, mouse, expy_da_sequence, preload=True, background=None):
     """numerosity production
+
+    expy_da_sequence: associated stimuli have to be created
 
     returns knob value, rt, and last stimuli
     """
@@ -63,9 +64,11 @@ def numerosity_production(exp, mouse, expy_da_sequence,
         background = stimuli.BlankScreen()
 
     background.present()
-    expy_da_sequence.preload()
+    if  preload:
+        expy_da_sequence.preload()
 
-    knob = Knob(00, maxnumber, 0)
+    knob = Knob(expy_da_sequence.da_sequence.min_max_numerosity[0],
+                expy_da_sequence.da_sequence.min_max_numerosity[1], 0)
     exp.clock.reset_stopwatch()
 
     goOn = True
@@ -73,7 +76,7 @@ def numerosity_production(exp, mouse, expy_da_sequence,
     stim = None
     while goOn:
         if changed:
-            stim = expy_da_sequence.stimuli[knob.value]
+            stim = expy_da_sequence.get_stimulus_numerosity(knob.value)
             stim.present(clear=False, update=True)
             changed = False
 
@@ -93,5 +96,6 @@ def numerosity_production(exp, mouse, expy_da_sequence,
 
     rt = exp.clock.stopwatch_time
     background.present()
-    expy_da_sequence.unload()
+    if preload:
+        expy_da_sequence.unload()
     return knob.value, rt, stim

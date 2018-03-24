@@ -69,6 +69,11 @@ class ExpyrimentDASequence():
         for image in self.da_sequence.images:
             self.stimuli.append(Picture(filename=image, position=position))
 
+    def get_stimulus_numerosity(self, number_of_dots):
+        try:
+            return self.stimuli[self.da_sequence.numerosity_idx[number_of_dots]]
+        except:
+            return None
 
     def preload(self):
         """

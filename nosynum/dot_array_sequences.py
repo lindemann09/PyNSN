@@ -24,7 +24,7 @@ class DASequence(object):
         self.dot_arrays = []
         self.method = None
         self.error = None
-        self._n_dots = []
+        self.numerosity_idx = {}
         self.images = []
         self.auto_delete_image_files = False
 
@@ -32,15 +32,15 @@ class DASequence(object):
         if self.auto_delete_image_files:
             self.delete_image_files()
 
-    def get_array_n_dots(self, number_of_dots):
+    def get_array_numerosity(self, number_of_dots):
         try:
-            return self.dot_arrays[self._n_dots.index(number_of_dots)]
+            return self.dot_arrays[self.numerosity_idx[number_of_dots]]
         except:
             return None
 
     @property
-    def max_dot_array(self):
-        return self.dot_arrays[-1]
+    def min_max_numerosity(self):
+        return (len(self.dot_arrays[0].dots), len(self.dot_arrays[-1].dots))
 
     @property
     def md5hash(self):
@@ -170,10 +170,7 @@ class DASequence(object):
                 break
 
         self.dot_arrays = list(reversed(da_sequence))
-        self._n_dots = list(map(lambda x: len(x.dots), self.dot_arrays))
-        {b: a for a, b in enumerate([994, 7, 6, 3, 2, 5])}
-
-        self.numerosity_idx = {}
+        self.numerosity_idx = {len(da.dots):idx for idx, da in enumerate(self.dot_arrays)}
         self.method = method
         self.error = error
 

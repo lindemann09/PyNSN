@@ -33,6 +33,7 @@ seq = mp.da_sequence
 #print(seq.images)
 print(seq.get_csv(variable_names=True, hash_column=True))
 print(seq.md5hash)
+print(seq.numerosity_idx)
 #exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
 #print("converting")
 #cl.reset_stopwatch()
