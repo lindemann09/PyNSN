@@ -7,12 +7,12 @@ import numpy as np
 from hashlib import md5
 
 from .dot_array import HASH_LENGTH
-M_ITEM_SIZE = 2
-M_CONVEX_HULL = 3
-M_TOTAL_AREA = 4
-M_DENSITY = 5
-M_NO_FITTING = 6
-M_TOTAL_CIRCUMFERENCE = 7
+M_ITEM_SIZE = "IS"
+M_CONVEX_HULL = "CH"
+M_TOTAL_AREA = "TA"
+M_DENSITY = "DE"
+M_NO_FITTING = "NF"
+M_TOTAL_CIRCUMFERENCE = "TC"
 
 ALL_METHODS = [M_ITEM_SIZE, M_CONVEX_HULL, M_TOTAL_AREA, M_DENSITY, M_NO_FITTING]
 
@@ -81,11 +81,13 @@ class DASequence(object):
         return rtn
 
 
-    @property
-    def property_string(self):
-        rtn = ", ".join(self.property_names) + "\n"
+    def get_property_string(self, varnames=False):
+        rtn =""
+        if varnames:
+            rtn += "hash, " + ", ".join(self.property_names) + "\n"
+        hash = self.md5hash
         for da in self.dot_arrays:
-            rtn += str(da.properties).replace("[", "").replace("]", "\n")
+            rtn += hash + "," + str(da.properties).replace("[", "").replace("]", "\n")
 
         return rtn[:-1]
 

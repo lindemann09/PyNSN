@@ -104,7 +104,8 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
                  area_colour=(255, 255, 255),
                  convex_hull_colour=None,
                  antialiasing=None,
-                 background_colour=(0,0,0)):
+                 background_colour=(0,0,0),
+                 sqeeze_factor=.90):
         """
         property: da_sequence, after processes finished
         Event(): sequence_available
@@ -122,7 +123,7 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
         self.antialiasing = antialiasing
         self.background_colour = background_colour
         self.auto_delete_image_files = auto_delete_image_files
-
+        self.sqeeze_factor = sqeeze_factor
 
     def run(self):
         cnt = 0
@@ -131,7 +132,8 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
         while cnt<self.n_trials:
             cnt += 1
             if da_sequence.make_by_incrementing(max_dot_array=self.max_dot_array,
-                                                method=self.method):
+                                                method=self.method,
+                                                sqeeze_factor=self.sqeeze_factor):
                 break
             print("remix")
 
