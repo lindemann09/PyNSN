@@ -7,7 +7,7 @@ from os import path, mkdir
 from PIL import Image, ImageDraw
 
 from . import Dot
-from .dot_array_sequences import M_NO_FITTING
+from .dot_array_sequences import DASequence, M_NO_FITTING
 from .multi_processing import MakeDASequenceProcess, TemplateDASequenceProcess
 
 def create(dot_array,
@@ -38,7 +38,6 @@ def create(dot_array,
         else:
             ImageDraw.Draw(img).ellipse((x - r, y - r, x + r, y + r), fill=colour)
 
-
     img = Image.new("RGBA", (pict_size, pict_size), color=background_colour)
     if area_colour is not None:
         draw_dot(img, Dot(x=0, y=0, diameter=dot_array.definition.stimulus_area_radius * 2,
@@ -66,8 +65,10 @@ def write_pil_images_of_da_sequence(dot_array_sequence,
                       convex_hull_colour=None,
                       antialiasing=None,
                       background_colour=(255,255,255)):
+    """note: rounds dot array to intergers """
     dot_array_sequence.images = []
     for da in dot_array_sequence.dot_arrays:
+        da.round_dot_paramter_to_integer()
         im = create(dot_array=da, area_colour=area_colour,
                                       convex_hull_colour=convex_hull_colour,
                                       antialiasing=antialiasing,
@@ -97,7 +98,6 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
     def __init__(self, max_dot_array,
                  method=M_NO_FITTING,
                  n_trials=3,
-                 auto_start_process=True,
                  save_images=False,
                  auto_delete_image_files = True,
                  folder="tmp_stimuli",
@@ -123,26 +123,32 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
         self.background_colour = background_colour
         self.auto_delete_image_files = auto_delete_image_files
 
-        if auto_start_process:
-            self.start()
 
     def run(self):
-        self._makeprocess = MakeDASequenceProcess(max_dot_array=self.max_dot_array,
-                                                  method=self.method,
-                                                  n_trials=self.n_trials,
-                                                  auto_start_process=True)
-        self._makeprocess.join()
-        da_sequence = self._makeprocess.da_sequence
+        cnt = 0
+        da_sequence = DASequence()
+
+        while cnt<self.n_trials:
+            cnt += 1
+            if da_sequence.make_by_incrementing(max_dot_array=self.max_dot_array,
+                                                method=self.method):
+                break
+            print("remix")
+
         write_pil_images_of_da_sequence( dot_array_sequence=da_sequence,
                           area_colour=self.area_colour,
                           convex_hull_colour=self.convex_hull_colour,
                           antialiasing=self.antialiasing,
                           background_colour=self.background_colour)
+
         if self.save_images:
             pil_images_save(da_sequence_with_images=da_sequence,
                             folder= self.folder,
                             replace_images_by_filename=True)
-        da_sequence.auto_delete_image_files = self.auto_delete_image_files
+            da_sequence.auto_delete_image_files = self.auto_delete_image_files
+        else:
+            da_sequence.auto_delete_image_files = False
 
-        self.sequence_available.set()
+        self.data_available.set()
         self._data_queue.put(da_sequence)
+

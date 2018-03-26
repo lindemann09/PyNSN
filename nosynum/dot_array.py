@@ -523,6 +523,7 @@ class DotArray(object):
         d = NumpyPositionList(self.dots)
         d.jitter_identical_positions()
         shift_required = False
+        outlier_error = False
 
         # from inner to outer remove overlaps
         for i in np.argsort(d.polar[:, 0]):
@@ -551,11 +552,15 @@ class DotArray(object):
                 break # end while loop
 
             cnt += 1
-            if cnt>500:
-                raise RuntimeError("Can't find solution when removing outlier (n=" + str(len(self.dots))+")")
+            if cnt>10:
+                outlier_error = True
+                break
 
         for c, xy in enumerate(d.xy):
             self.dots[c].xy = xy
+
+        if outlier_error:
+            raise RuntimeError("Can't find solution when removing outlier (n=" + str(len(self.dots))+")")
 
         if not shift_required:
             return False
@@ -571,12 +576,16 @@ class DotArray(object):
         for d in self.dots:
             d.diameter = np.sqrt(d.area * a_scale) * x  # d=sqrt(4a/pi) = 2*sqrt(pi)*sqrt(a)
 
+
     def fit_mean_item_size(self, mean_dot_diameter):
         """dots will be realigned"""
         scale = mean_dot_diameter / self.mean_dot_diameter
         for d in self.dots:
             d.diameter = d.diameter * scale
 
+    def fit_total_circumference(self, total_circumference):
+        mean_dot_diameter = total_circumference/ (len(self.dots) * np.pi)
+        self.fit_mean_item_size(mean_dot_diameter)
 
     def number_deviant(self, change_numerosity):
         """number deviant
@@ -600,3 +609,8 @@ class DotArray(object):
                     deviant.dots.append(deviant.create_random_dot(ignore_overlapping=False))
 
         return deviant
+
+    def round_dot_paramter_to_integer(self):
+        for d in self.dots:
+            d.diameter = np.round(d.diameter)
+            d.xy = np.round(d.xy)

@@ -13,25 +13,30 @@ from expyriment import misc
 
 cl = misc.Clock()
 
-dot_array_def = nosynum.DotArrayDefinition(
-                       stimulus_area_radius= 400,
-                       dot_diameter_mean=10,
-                       dot_diameter_range=(2, 30),
-                       dot_diameter_std=2,
-                       dot_colour=(255, 57, 57))
+maxnumber = 200
 
-max_da = nosynum.DotArray(n_dots=20, dot_array_definition=dot_array_def)
+dot_array_def = nosynum.DotArrayDefinition(
+                       stimulus_area_radius= 300,
+                       dot_diameter_mean=10,
+                       dot_diameter_range=(5, 15),
+                       dot_diameter_std=1,
+                       dot_colour=(230, 230, 230))
+
+max_da = nosynum.DotArray(n_dots=maxnumber, dot_array_definition=dot_array_def)
 
 #print(da.get_array_csv_text(variable_names=True, colour_column=False))
 
-mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
-                                        method=nosynum.M_NO_FITTING,
-                                        save_images=True)
-mp.join()
-
+mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
+                                        method=nosynum.M_TOTAL_CIRCUMFERENCE)
+mp.start()
 seq = mp.da_sequence
+
+print(seq.property_string)
+print(seq.numerosity_correlations)
+print(seq.variances)
+
 #print(seq.images)
-print(seq.get_csv(variable_names=True, hash_column=True))
+#print(seq.get_csv(variable_names=True, hash_column=True))
 print(seq.md5hash)
 print(seq.numerosity_idx)
 #exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)

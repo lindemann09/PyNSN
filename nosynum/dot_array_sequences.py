@@ -12,6 +12,7 @@ M_CONVEX_HULL = 3
 M_TOTAL_AREA = 4
 M_DENSITY = 5
 M_NO_FITTING = 6
+M_TOTAL_CIRCUMFERENCE = 7
 
 ALL_METHODS = [M_ITEM_SIZE, M_CONVEX_HULL, M_TOTAL_AREA, M_DENSITY, M_NO_FITTING]
 
@@ -65,7 +66,11 @@ class DASequence(object):
 
     @property
     def property_correlations(self):
-        return np.corrcoef(self.properties, rowvar=False)
+        return np.corrcoef(np.round(self.properties,2), rowvar=False)
+
+    @property
+    def variances(self):
+        return np.var(self.properties, axis=0)
 
     @property
     def numerosity_correlations(self):
@@ -118,20 +123,24 @@ class DASequence(object):
                 except:
                     pass
 
-    def make_by_incrementing(self, max_dot_array, method):
+    def make_by_incrementing(self, max_dot_array, method, sqeeze_factor=.90):
         """makes sequence of deviants by subtracting dots
+
+        sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
+                      therefore need to sqeeze the stimulus before. We do that therefore all stimuli
 
         returns False is error occured (see self.error)
         """
 
         da = max_dot_array.copy()
 
+        da.fit_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
         da_sequence = [da]
         error = None
         cha = da.convex_hull_area
         dens = da.density
-        dot_diameter = da.mean_dot_diameter
         total_area = da.total_area
+        cirumference = da.total_circumference
         for x in range(len(da.dots)-10):
             da = da.number_deviant(change_numerosity=-1)
             cnt = 0
@@ -144,9 +153,11 @@ class DASequence(object):
                 elif method == M_CONVEX_HULL:
                     da.fit_convex_hull_area(convex_hull_area=cha)
                 elif method == M_ITEM_SIZE:
-                    da.fit_mean_item_size(mean_dot_diameter=dot_diameter)
+                    pass
                 elif method == M_TOTAL_AREA:
                     da.fit_total_area(total_area=total_area)
+                elif method == M_TOTAL_CIRCUMFERENCE:
+                    da.fit_total_circumference(total_circumference=cirumference)
                 elif method == M_NO_FITTING:
                     pass
                 else:
@@ -157,7 +168,10 @@ class DASequence(object):
                     if not da.realign():  # Ok if realign not anymore required
                         break
                 except:
-                    error = "ERROR: outlier, " + str(cnt) + ", " + str(len(da.dots))
+                    #error = "WARNING: outlier removal, " + str(cnt) + ", " + str(len(da.dots))
+                    #print(error)
+                    break
+
 
                 if cnt>100:
                     error = "ERROR: realign, " + str(cnt) + ", " + str(len(da.dots))
@@ -175,4 +189,4 @@ class DASequence(object):
         self.method = method
         self.error = error
 
-        return error==False
+        return error is None

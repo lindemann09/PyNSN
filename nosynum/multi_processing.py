@@ -4,6 +4,7 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+from time import sleep
 from multiprocessing import Process, Queue, Event
 from . import DotArray, DASequence
 from .dot_array_sequences import M_NO_FITTING
@@ -14,9 +15,11 @@ class TemplateDASequenceProcess(Process): # abstract class
     def __init__(self):
         super(TemplateDASequenceProcess, self).__init__()
 
-        self.sequence_available = Event()
+        self.data_available = Event()
         self._data_queue = Queue()
         self._da_sequence = None
+        self.daemon = True
+
 
     @property
     def da_sequence(self):
@@ -41,26 +44,21 @@ class TemplateDASequenceProcess(Process): # abstract class
 
 class MakeDASequenceProcess(TemplateDASequenceProcess):
 
-    def __init__(self, max_dot_array, method=M_NO_FITTING, n_trials=3,
-                 auto_start_process=True):
+    def __init__(self, max_dot_array, method=M_NO_FITTING, n_trials=3):
 
         """
         property: da_sequence, after processes finished
-        Event(): sequence_available
+        Event(): data_available
         """
 
         super(MakeDASequenceProcess, self).__init__()
         self.max_dot_array = max_dot_array
         self.method = method
-        self.daemon = True
 
         if n_trials<1:
             self._n_trails = 1
         else:
             self._n_trails = n_trials
-
-        if isinstance(max_dot_array, DotArray) and auto_start_process:
-            self.start()
 
     def run(self):
         cnt = 0
@@ -70,7 +68,41 @@ class MakeDASequenceProcess(TemplateDASequenceProcess):
             cnt += 1
             if da_seq.make_by_incrementing(max_dot_array=self.max_dot_array, method=self.method):
                 break
+            print("remix")
 
-        self.sequence_available.set()
+        self.data_available.set()
         self._data_queue.put(da_seq)
 
+
+class ProcessContainer(object):
+
+    def __init__(self, forerun):
+        """forerun: number of processes started in advance,
+        if one process is retrieved next process will be started"""
+        self.container = []
+        self.forerun = forerun
+
+    def add_process(self, process):
+        self.container.append(process)
+        self._start_processes()
+
+    def _start_processes(self):
+        """start process if required"""
+        for p in self.container[:self.forerun]:
+            if not p.is_alive():
+                p.start()
+
+    def pop_processes(self):
+        """returns next finished sequence process"""
+
+        pro = self.container.pop(0)
+        self._start_processes()
+        return pro
+
+    @property
+    def running_processes(self):
+        return len(list(filter(lambda x:x.is_alive(), self.container)))
+
+    @property
+    def data_avaiable(self):
+        return len(list(filter(lambda x:x.data_available.is_set(), self.container)))

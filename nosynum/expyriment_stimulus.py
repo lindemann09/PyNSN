@@ -7,6 +7,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import math
 from expyriment.stimuli import Canvas, Circle, Line, Picture
 from expyriment.misc import Clock
+from .expyriment_pil_image import ExprimentPILImage
 
 
 def create(dot_array, area_colour=None,
@@ -55,22 +56,31 @@ class ExpyrimentDASequence():
         self.da_sequence = da_sequence
         self.stimuli = []
 
-    def create_stimuli(self, area_colour=None,
-                       convex_hull_colour=None,
-                       anti_aliasing=None,
-                       background_stimulus_expyriment=None):
+    def create_stimuli_native(self, area_colour=None,
+                              convex_hull_colour=None,
+                              anti_aliasing=None,
+                              background_stimulus_expyriment=None):
+        """note: rounds dot array to intergers """
+
         self.stimuli = []
         for da in self.da_sequence.dot_arrays:
+            da.round_dot_paramter_to_integer()
             self.stimuli.append(create(dot_array=da, area_colour=area_colour,
                                        convex_hull_colour=convex_hull_colour,
                                        anti_aliasing=anti_aliasing,
                                        background_stimulus_expyriment=background_stimulus_expyriment))
 
     def load_associated_images(self, position=(0,0)):
-        """e.g. if created with pil images"""
+        """create stimuli from images, if images comprises filenames"""
         self.stimuli = []
         for image in self.da_sequence.images:
             self.stimuli.append(Picture(filename=image, position=position))
+
+    def create_stimuli_from_pil_images(self, position=(0, 0)):
+        """create stimuli from images, if images comprises pil images"""
+        self.stimuli = []
+        for image in self.da_sequence.images:
+            self.stimuli.append(ExprimentPILImage(pil_image=image, position=position))
 
     def get_stimulus_numerosity(self, number_of_dots):
         try:

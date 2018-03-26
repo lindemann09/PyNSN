@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from PIL import Image
 import nosynum
 from nosynum import expyriment_stimulus, pil_image
 
 from expyriment import control, misc, stimuli
+import pygame
 
 c = misc.Clock()
 control.set_develop_mode(True)
@@ -19,11 +21,11 @@ dot_array_def = nosynum.DotArrayDefinition(
 
 max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def)
 mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
-                                        save_images=True,
+                                        save_images=False,
                                         method=nosynum.M_NO_FITTING)
 mp.join()
 
-control.start()
+control.start(skip_ready_screen=True)
 
 blank = stimuli.BlankScreen()
 
@@ -34,20 +36,23 @@ while(True):
     # get next sequence and restart
     c.reset_stopwatch()
     print("DAS seq")
-    expy_seq = expyriment_stimulus.ExpyrimentDASequence(da_sequence=mp.da_sequence)
+    da_sequence = mp.da_sequence
+    expy_seq = expyriment_stimulus.ExpyrimentDASequence(da_sequence=da_sequence)
     max_da = nosynum.DotArray(n_dots=100, dot_array_definition= dot_array_def)
     mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                        method=nosynum.M_DENSITY,
-                                       save_images=True,
-                                       auto_start_process=False)
-    print(c.stopwatch_time)
+                                       save_images=False)
+    mp.start()
 
+    print(c.stopwatch_time)
     c.reset_stopwatch()
     print("EXPY")
     expy_seq.load_associated_images()
-    #expy_seq.create_stimuli()
-    #expy_seq.preload()
+    expy_seq.preload()
+
     print(c.stopwatch_time)
+    c.reset_stopwatch()
+
     mp.start()
     expy_seq.stimuli[10].present()
 

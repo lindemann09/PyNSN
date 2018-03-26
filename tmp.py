@@ -48,9 +48,6 @@ class DASequenceContainer():
 
 
 
-
-
-
 def OLD_make_multiple_dot_array_sequences(n_versions,
                                       methods,
                                       n_dots,
