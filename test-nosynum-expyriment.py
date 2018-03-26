@@ -13,14 +13,14 @@ exp = control.initialize()
 
 dot_array_def = nosynum.DotArrayDefinition(
                        stimulus_area_radius= 300,
-                       dot_diameter_mean=15,
-                       dot_diameter_range=(2, 20),
-                       dot_diameter_std=3)
+                       dot_diameter_mean=5,
+                       dot_diameter_range=(2, 10),
+                       dot_diameter_std=2)
 
 max_da = nosynum.DotArray(n_dots=100, dot_array_definition=dot_array_def)
 mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                         save_images=True,
-                                        method=nosynum.M_DENSITY)
+                                        method=nosynum.M_NO_FITTING)
 mp.join()
 
 control.start()
@@ -39,7 +39,7 @@ while(True):
     mp = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                        method=nosynum.M_DENSITY,
                                        save_images=True,
-                                       auto_start_process=True)
+                                       auto_start_process=False)
     print(c.stopwatch_time)
 
     c.reset_stopwatch()
@@ -48,7 +48,7 @@ while(True):
     #expy_seq.create_stimuli()
     #expy_seq.preload()
     print(c.stopwatch_time)
-
+    mp.start()
     expy_seq.stimuli[10].present()
 
     key, rt = exp.keyboard.wait()
