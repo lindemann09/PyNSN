@@ -7,11 +7,12 @@ import sys
 import time
 
 from expyriment import stimuli
-from expyriment.misc import constants
+from expyriment.misc import constants, Clock
+
 
 class Knob:
     large_step = 1
-    def __init__(self, min_value, max_value, time_interval):
+    def __init__(self, min_value, max_value, time_interval, start_value=0):
         self.position = None
         self.value = None
         self._min_value = min_value
@@ -22,11 +23,11 @@ class Knob:
             self._cpu_time = time.clock
         else:
             self._cpu_time = time.time
-        self.reset()
+        self.reset(start_value=start_value)
 
-    def reset(self):
+    def reset(self, start_value=0):
         self.position = 0
-        self.value = self._min_value
+        self.value = start_value
 
     def turn_clockwise(self):
         self.position += 1
@@ -53,7 +54,8 @@ class Knob:
             self.value = self._max_value
 
 
-def numerosity_production(exp, mouse, expy_da_sequence, preload=True, background=None):
+def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, background=None,
+                          start_value=0):
     """numerosity production
 
     expy_da_sequence: associated stimuli have to be created
@@ -68,8 +70,11 @@ def numerosity_production(exp, mouse, expy_da_sequence, preload=True, background
         expy_da_sequence.preload()
 
     knob = Knob(expy_da_sequence.da_sequence.min_max_numerosity[0],
-                expy_da_sequence.da_sequence.min_max_numerosity[1], 0)
+                expy_da_sequence.da_sequence.min_max_numerosity[1],
+                time_interval=0, start_value=start_value)
+
     exp.clock.reset_stopwatch()
+    cl = Clock()
 
     goOn = True
     changed = True
@@ -92,7 +97,14 @@ def numerosity_production(exp, mouse, expy_da_sequence, preload=True, background
             changed = True
         elif (k == constants.K_SPACE or m == 0) and knob.value>0:
             goOn = False
-        time.sleep(0.0005)
+        elif (k == constants.K_q):
+            goOn = False
+            knob.value = None
+        else:
+            time.sleep(0.05)
+            if cl.stopwatch_time>3000:
+                mouse.clear()
+                cl.reset_stopwatch()
 
     rt = exp.clock.stopwatch_time
     background.present()

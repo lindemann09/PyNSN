@@ -4,7 +4,10 @@ from builtins import *
 __all__ = ["create", "ExpyrimentDASequence"]
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+import math
 from expyriment.stimuli import Canvas, Circle, Line, Picture
+from expyriment.misc import Clock
+
 
 def create(dot_array, area_colour=None,
            convex_hull_colour=None,
@@ -75,16 +78,34 @@ class ExpyrimentDASequence():
         except:
             return None
 
-    def preload(self):
+    def preload(self, percent = 100, time=None, do_not_return_earlier=False):
         """
         returns array of preloaded dot_array_sequence
+
+        preload certain percent or or a time.
+
         """
 
+        if percent>0 and percent<100:
+            last = int(math.floor(percent*len(self.stimuli)/100.0))
+        elif percent==0:
+            last = 0
+        else:
+            last = len(self.stimuli)
+        cl = Clock()
+
         try:
-            list(map(lambda x: x.preload(), self.stimuli))
-            return True
+            for x in self.stimuli[:last]:
+                if not x.is_preloaded and (time is None or cl.time<time):
+                    x.preload()
+            rtn = True
         except:
-            return False
+            rtn = False
+
+        if do_not_return_earlier:
+            cl.wait(time - cl.time)
+        return rtn
+
 
     def unload(self):
         """

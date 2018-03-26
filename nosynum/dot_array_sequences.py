@@ -29,6 +29,7 @@ class DASequence(object):
         self.auto_delete_image_files = False
 
     def __del__(self):
+
         if self.auto_delete_image_files:
             self.delete_image_files()
 

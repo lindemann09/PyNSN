@@ -70,11 +70,6 @@ class MakeDASequenceProcess(TemplateDASequenceProcess):
             cnt += 1
             if da_seq.make_by_incrementing(max_dot_array=self.max_dot_array, method=self.method):
                 break
-            else:
-                print("remix")
-
-        if cnt>=self._n_trails:
-            raise Warning("Could not fine a solution!")
 
         self.sequence_available.set()
         self._data_queue.put(da_seq)
