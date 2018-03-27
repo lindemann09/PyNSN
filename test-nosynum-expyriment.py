@@ -1,31 +1,31 @@
 #!/usr/bin/env python
 
-from PIL import Image
 import nosynum
 from nosynum import expyriment_stimulus, pil_image
 
 from expyriment import control, misc, stimuli
-import pygame
+
 
 c = misc.Clock()
-control.set_develop_mode(True)
+#control.set_develop_mode(True)
+control.defaults.open_gl = False
 
 exp = control.initialize()
-
 
 squeeze = .7
 dot_array_def = nosynum.DotArrayDefinition(
                        stimulus_area_radius= 300*squeeze,
-                       dot_diameter_mean=5,
-                       dot_diameter_range=(2, 10),
+                       dot_diameter_mean=10,
+                       dot_diameter_range=(5, 20),
                        dot_diameter_std=2)
 
-def compare_stimulus(n_left, n_right, pos_left=(-300,0), pos_right=(300,0),
+def compare_stimulus(n_left, n_right,
+                     pos_left=(-300,0),
+                     pos_right=(300,0),
                      match_method=nosynum.M_NO_FITTING,
                      match_the_left=True):
 
     da_left = nosynum.DotArray(n_dots=n_left, dot_array_definition=dot_array_def)
-
     da_right= nosynum.DotArray(n_dots=n_right, dot_array_definition=dot_array_def)
 
     if match_the_left:
@@ -50,6 +50,24 @@ def compare_stimulus(n_left, n_right, pos_left=(-300,0), pos_right=(300,0),
     else:
         raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
 
+    cnt = 0
+    error = None
+    while True:
+        cnt += 1
+        try:
+            if not a.realign():  # Ok if realign not anymore required
+                break
+        except:
+            # error = "WARNING: outlier removal, " + str(cnt) + ", " + str(len(da.dots))
+            # print(error)
+            break
+        if cnt > 100:
+            error = "ERROR: realign, " + str(cnt) + ", " + str(len(da.dots))
+
+        if error is not None:
+            error = (cnt, error)
+            break
+
     # stimuli
     left = expyriment_stimulus.ExprimentPILImage(pil_image.create(dot_array=da_left),
                                               position=pos_left)
@@ -60,11 +78,15 @@ def compare_stimulus(n_left, n_right, pos_left=(-300,0), pos_right=(300,0),
     right.plot(stim)
     return stim
 
+
+
+
 control.start(skip_ready_screen=True)
 
 c.reset_stopwatch()
 
-stim = compare_stimulus(50, 120)
+stim = compare_stimulus(20, 120,
+                        match_method=nosynum.M_TOTAL_AREA)
 
 print(c.stopwatch_time)
 c.reset_stopwatch()

@@ -16,7 +16,7 @@ DOT_ARRAY_DEF = nosynum.DotArrayDefinition(
                        dot_diameter_std=1,
                        dot_colour=(230, 230, 230))
 
-def prepare_processes(trials, forerun=3):
+def prepare_processes(trials, forerun):
     processes = nosynum.ProcessContainer(forerun=forerun)
     for tr in trials:
         maxnumber = tr.get_factor("maxnumber")
@@ -67,7 +67,7 @@ da_property_file = io.OutputFile(suffix=".da-prop.csv",directory="data")
 exp.mouse.hide_cursor(track_button_events=True, track_motion_events=False)
 
 
-processes = prepare_processes(exp.blocks[0].trials, forerun=2)
+processes = prepare_processes(exp.blocks[0].trials, forerun=1)
 for tr_cnt, tr in enumerate(exp.blocks[0].trials):
 
     make_process = processes.pop_processes()
@@ -108,7 +108,7 @@ for tr_cnt, tr in enumerate(exp.blocks[0].trials):
         # print(da_sequence.get_csv(num_format="%6.0f"))
         # print(da_expy.da_sequence.numerosity_correlations)
 
-        exp.data.add([tr_cnt, tr.get_factor("target"), da_sequence.hash,
+        exp.data.add([tr_cnt, tr.get_factor("target"), da_sequence.md5hash,
                       tr.get_factor("method"), estim, rt])
         if (estim is None):
             break

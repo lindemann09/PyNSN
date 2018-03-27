@@ -76,11 +76,15 @@ class ExpyrimentDASequence():
         for image in self.da_sequence.images:
             self.stimuli.append(Picture(filename=image, position=position))
 
-    def create_stimuli_from_pil_images(self, position=(0, 0)):
+    def create_stimuli_from_pil_images(self, position=(0, 0), delete_pil_images_afterwards=False):
         """create stimuli from images, if images comprises pil images"""
         self.stimuli = []
         for image in self.da_sequence.images:
             self.stimuli.append(ExprimentPILImage(pil_image=image, position=position))
+
+        if delete_pil_images_afterwards:
+            self.da_sequence.images = []
+
 
     def get_stimulus_numerosity(self, number_of_dots):
         try:

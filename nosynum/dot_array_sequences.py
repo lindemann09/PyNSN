@@ -30,7 +30,6 @@ class DASequence(object):
         self.auto_delete_image_files = False
 
     def __del__(self):
-
         if self.auto_delete_image_files:
             self.delete_image_files()
 
@@ -145,25 +144,25 @@ class DASequence(object):
         circumference = da.total_circumference
         for x in range(len(da.dots)-10):
             da = da.number_deviant(change_numerosity=-1)
-            cnt = 0
 
+            if method == M_DENSITY:
+                da.fit_density(density=dens, ratio_area_convex_hull_adaptation=0.5)
+            elif method == M_CONVEX_HULL:
+                da.fit_convex_hull_area(convex_hull_area=cha)
+            elif method == M_ITEM_SIZE:
+                pass
+            elif method == M_TOTAL_AREA:
+                da.fit_total_area(total_area=total_area)
+            elif method == M_TOTAL_CIRCUMFERENCE:
+                da.fit_total_circumference(total_circumference=circumference)
+            elif method == M_NO_FITTING:
+                pass
+            else:
+                raise Warning("Unknown method {}. Using NO_FITTING.".format(method))
+
+            cnt = 0
             while True:
                 cnt += 1
-
-                if method == M_DENSITY:
-                    da.fit_density(density=dens, ratio_area_convex_hull_adaptation=0.5)
-                elif method == M_CONVEX_HULL:
-                    da.fit_convex_hull_area(convex_hull_area=cha)
-                elif method == M_ITEM_SIZE:
-                    pass
-                elif method == M_TOTAL_AREA:
-                    da.fit_total_area(total_area=total_area)
-                elif method == M_TOTAL_CIRCUMFERENCE:
-                    da.fit_total_circumference(total_circumference=circumference)
-                elif method == M_NO_FITTING:
-                    pass
-                else:
-                    raise Warning("Unknown method {}. Using NO_FITTING.".format(method))
 
                 try:
                     if not da.realign():  # Ok if realign not anymore required
