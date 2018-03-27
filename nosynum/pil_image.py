@@ -96,6 +96,7 @@ def pil_images_save(da_sequence_with_images, folder, file_type="png",
 class PILMakeDASequenceProcess(TemplateDASequenceProcess):
 
     def __init__(self, max_dot_array,
+                 min_numerosity,
                  method=M_NO_FITTING,
                  n_trials=3,
                  save_images=False,
@@ -124,6 +125,7 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
         self.background_colour = background_colour
         self.auto_delete_image_files = auto_delete_image_files
         self.sqeeze_factor = sqeeze_factor
+        self.min_numerosity = min_numerosity
 
     def run(self):
         cnt = 0
@@ -133,7 +135,8 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
             cnt += 1
             if da_sequence.make_by_incrementing(max_dot_array=self.max_dot_array,
                                                 method=self.method,
-                                                sqeeze_factor=self.sqeeze_factor):
+                                                sqeeze_factor=self.sqeeze_factor,
+                                                min_numerosity=self.min_numerosity):
                 break
             print("remix")
 

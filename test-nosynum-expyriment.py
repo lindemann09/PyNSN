@@ -5,9 +5,9 @@ from nosynum import expyriment_stimulus, pil_image
 
 from expyriment import control, misc, stimuli
 
-
+control.defaults.window_size=(1100, 600)
 c = misc.Clock()
-#control.set_develop_mode(True)
+control.set_develop_mode(True)
 control.defaults.open_gl = False
 
 exp = control.initialize()
@@ -17,7 +17,8 @@ dot_array_def = nosynum.DotArrayDefinition(
                        stimulus_area_radius= 300*squeeze,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 20),
-                       dot_diameter_std=2)
+                       dot_diameter_std=2,
+                       minium_gap=3)
 
 def compare_stimulus(n_left, n_right,
                      pos_left=(-300,0),
@@ -62,7 +63,7 @@ def compare_stimulus(n_left, n_right,
             # print(error)
             break
         if cnt > 100:
-            error = "ERROR: realign, " + str(cnt) + ", " + str(len(da.dots))
+            error = "ERROR: realign, " + str(cnt) + ", " + str(len(a.dots))
 
         if error is not None:
             error = (cnt, error)
@@ -86,12 +87,8 @@ control.start(skip_ready_screen=True)
 c.reset_stopwatch()
 
 stim = compare_stimulus(20, 120,
-                        match_method=nosynum.M_TOTAL_AREA)
-
-print(c.stopwatch_time)
-c.reset_stopwatch()
-stim.preload()
-print(c.stopwatch_time)
+                        match_method=nosynum.M_TOTAL_AREA,
+                        match_the_left=True)
 
 stim.present()
 

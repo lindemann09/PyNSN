@@ -60,7 +60,7 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
 
     expy_da_sequence: associated stimuli have to be created
 
-    returns knob value, rt, and last stimuli
+    returns knob value, rt, and last stimuli, adjustments (all actions (value, time))
     """
     if background is None:
         background = stimuli.BlankScreen()
@@ -75,6 +75,7 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
 
     exp.clock.reset_stopwatch()
     cl = Clock()
+    adjustments =[]
 
     goOn = True
     changed = True
@@ -83,6 +84,7 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
         if changed:
             stim = expy_da_sequence.get_stimulus_numerosity(knob.value)
             stim.present(clear=False, update=True)
+            adjustments.append((knob.value, exp.clock.stopwatch_time))
             changed = False
 
         k = exp.keyboard.check()
@@ -110,4 +112,4 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
     background.present()
     if preload:
         expy_da_sequence.unload()
-    return knob.value, rt, stim
+    return knob.value, rt, stim, adjustments

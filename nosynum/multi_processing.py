@@ -44,7 +44,7 @@ class TemplateDASequenceProcess(Process): # abstract class
 
 class MakeDASequenceProcess(TemplateDASequenceProcess):
 
-    def __init__(self, max_dot_array, method=M_NO_FITTING, n_trials=3):
+    def __init__(self, max_dot_array, min_numerosity, method=M_NO_FITTING, n_trials=3):
 
         """
         property: da_sequence, after processes finished
@@ -54,6 +54,7 @@ class MakeDASequenceProcess(TemplateDASequenceProcess):
         super(MakeDASequenceProcess, self).__init__()
         self.max_dot_array = max_dot_array
         self.method = method
+        self.min_numerosity = min_numerosity
 
         if n_trials<1:
             self._n_trails = 1
@@ -66,7 +67,9 @@ class MakeDASequenceProcess(TemplateDASequenceProcess):
 
         while cnt<self._n_trails:
             cnt += 1
-            if da_seq.make_by_incrementing(max_dot_array=self.max_dot_array, method=self.method):
+            if da_seq.make_by_incrementing(max_dot_array=self.max_dot_array,
+                                           method=self.method,
+                                           min_numerosity=self.min_numerosity):
                 break
             print("remix")
 

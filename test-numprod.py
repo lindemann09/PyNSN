@@ -24,6 +24,7 @@ def prepare_processes(trials, forerun):
         max_da = nosynum.DotArray(n_dots=maxnumber,
                                   dot_array_definition=DOT_ARRAY_DEF)
         make_process = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
+                                                          min_numerosity=20,
                                                           method=method,
                                                           area_colour=(0, 0, 0),
                                                           antialiasing=None,
@@ -75,6 +76,7 @@ for tr_cnt, tr in enumerate(exp.blocks[0].trials):
         stimuli.TextLine("Please wait...").present()
 
     da_sequence = make_process.da_sequence
+    print(da_sequence.min_max_numerosity[1])
 
     if da_sequence is not None: # error handling
         blank.present()
@@ -95,7 +97,7 @@ for tr_cnt, tr in enumerate(exp.blocks[0].trials):
         da_expy.preload()  # ensure the rest is preloaded (should no be required)
 
         # print(cl.stopwatch_time)
-        estim, rt, _ = numerosity_production(exp=exp, mouse=exp.mouse,
+        estim, rt, _, adjustments = numerosity_production(exp=exp, mouse=exp.mouse,
                                                 expy_da_sequence=da_expy,
                                                 start_value=da_sequence.min_max_numerosity[1])
         da_expy.unload()

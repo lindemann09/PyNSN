@@ -124,7 +124,7 @@ class DASequence(object):
                 except:
                     pass
 
-    def make_by_incrementing(self, max_dot_array, method, sqeeze_factor=.90):
+    def make_by_incrementing(self, max_dot_array, method, min_numerosity, sqeeze_factor=.90):
         """makes sequence of deviants by subtracting dots
 
         sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -142,7 +142,7 @@ class DASequence(object):
         dens = da.density
         total_area = da.total_area
         circumference = da.total_circumference
-        for x in range(len(da.dots)-10):
+        for x in range(len(da.dots)-min_numerosity):
             da = da.number_deviant(change_numerosity=-1)
 
             if method == M_DENSITY:

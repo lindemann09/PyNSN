@@ -268,10 +268,13 @@ class DotArray(object):
     def minimum_gap(self):
         return self.definition.minium_gap
 
-    @property
-    def property_string(self):
-        return ", ".join(self.property_names) + "\n" + \
-               str(self.properties).replace("[", "").replace("]", "")
+    def get_property_string(self, varnames=False):
+        rtn = ""
+        if varnames:
+            rtn += "hash, " + ", ".join(self.property_names) + "\n"
+        rtn += self.md5hash +","
+        rtn += str(self.properties).replace("[", "").replace("]", "")
+        return rtn
 
     def get_csv(self, num_format="%7.2f", hash_column=False,
                 variable_names=True, n_dots_column=False,
@@ -299,7 +302,7 @@ class DotArray(object):
             rtn += "\n"
 
         if hash_column:
-            hash = self.md5hash()
+            hash = self.md5hash
         for cnt, d in enumerate(self.dots):
             if hash_column:
                 rtn += "{0},".format(hash)
