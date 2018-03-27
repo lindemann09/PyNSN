@@ -142,7 +142,7 @@ class DASequence(object):
         cha = da.convex_hull_area
         dens = da.density
         total_area = da.total_area
-        cirumference = da.total_circumference
+        circumference = da.total_circumference
         for x in range(len(da.dots)-10):
             da = da.number_deviant(change_numerosity=-1)
             cnt = 0
@@ -159,11 +159,10 @@ class DASequence(object):
                 elif method == M_TOTAL_AREA:
                     da.fit_total_area(total_area=total_area)
                 elif method == M_TOTAL_CIRCUMFERENCE:
-                    da.fit_total_circumference(total_circumference=cirumference)
+                    da.fit_total_circumference(total_circumference=circumference)
                 elif method == M_NO_FITTING:
                     pass
                 else:
-                    method == M_NO_FITTING
                     raise Warning("Unknown method {}. Using NO_FITTING.".format(method))
 
                 try:

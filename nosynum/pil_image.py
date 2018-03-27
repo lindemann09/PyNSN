@@ -14,7 +14,7 @@ def create(dot_array,
                     area_colour=None,
                     convex_hull_colour=None,
                     antialiasing=None,  #TODO
-                    background_colour=(255,255,255) ):
+                    background_colour=(0, 0, 0) ):
     """use PIL colours (see PIL.ImageColor.colormap)
 
     returns pil image"""
@@ -27,7 +27,7 @@ def create(dot_array,
 
     def draw_dot(img, dot):
         if dot.colour is None:
-            colour = (200, 200, 200)
+            colour = (255, 255, 255)
         else:
             colour = dot.colour
         r = dot.diameter // 2
