@@ -6,7 +6,7 @@ import os
 import numpy as np
 from hashlib import md5
 
-from .dot_array import HASH_LENGTH
+from .dot_array import my_md5_hash
 M_ITEM_SIZE = "IS"
 M_CONVEX_HULL = "CH"
 M_TOTAL_AREA = "TA"
@@ -50,7 +50,7 @@ class DASequence(object):
         csv = self.get_csv(num_format="%7.2f", hash_column=False,
                            variable_names=False,
                            colour_column=False, picture_column=False)
-        return md5(csv).hexdigest()[:HASH_LENGTH]
+        return my_md5_hash(csv)
 
     @property
     def property_names(self):
@@ -124,7 +124,7 @@ class DASequence(object):
                 except:
                     pass
 
-    def make_by_incrementing(self, max_dot_array, method, min_numerosity, sqeeze_factor=.90):
+    def make_by_incrementing(self, max_dot_array, method, min_numerosity, sqeeze_factor=None):
         """makes sequence of deviants by subtracting dots
 
         sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -133,10 +133,13 @@ class DASequence(object):
         returns False is error occured (see self.error)
         """
 
-        da = max_dot_array.copy()
+        if sqeeze_factor is None:
+            sqeeze_factor = 1
 
+        da = max_dot_array.copy()
         da.fit_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
         da_sequence = [da]
+
         error = None
         cha = da.convex_hull_area
         dens = da.density

@@ -54,7 +54,8 @@ class Knob:
             self.value = self._max_value
 
 
-def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, background=None,
+def  numerosity_production(exp, mouse, expy_da_sequence,
+                           preload=False, background=None,
                           start_value=0):
     """numerosity production
 
@@ -80,6 +81,8 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
     goOn = True
     changed = True
     stim = None
+    exp.keyboard.clear()
+    mouse.clear()
     while goOn:
         if changed:
             stim = expy_da_sequence.get_stimulus_numerosity(knob.value)
@@ -97,7 +100,7 @@ def  numerosity_production(exp, mouse, expy_da_sequence, preload=False, backgrou
             knob.turn_clockwise()
             #tone.play()
             changed = True
-        elif (k == constants.K_SPACE or m == 0) and knob.value>0:
+        elif (k == constants.K_SPACE) and knob.value>0:
             goOn = False
         elif (k == constants.K_q):
             goOn = False

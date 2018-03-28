@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 from . import Dot
 from .dot_array_sequences import DASequence, M_NO_FITTING
-from .multi_processing import MakeDASequenceProcess, TemplateDASequenceProcess
+from .multi_processing import TemplateDASequenceProcess
 
 def create(dot_array,
                     area_colour=None,
@@ -94,19 +94,24 @@ def pil_images_save(da_sequence_with_images, folder, file_type="png",
 
 
 class PILMakeDASequenceProcess(TemplateDASequenceProcess):
+    # making images in seperate prcess
+    # DO NOT USE SAVE_IMAGES=FALSE, BECAUSE OF LARGE MEMORY REQUIRMENTS
+    # AND TRANSFER OF PIL IMAGES BETWEEN PROCESSES IS SLOW
+    # use multiprocessing.MakeDASequenceProcess and write_pil_images_of_da_sequence
+    # in main process.
 
     def __init__(self, max_dot_array,
                  min_numerosity,
                  method=M_NO_FITTING,
                  n_trials=3,
-                 save_images=False,
                  auto_delete_image_files = True,
                  folder="tmp_stimuli",
                  area_colour=(255, 255, 255),
                  convex_hull_colour=None,
                  antialiasing=None,
                  background_colour=(0,0,0),
-                 sqeeze_factor=.90):
+                 sqeeze_factor=None,
+                 save_images=True):
         """
         property: da_sequence, after processes finished
         Event(): sequence_available

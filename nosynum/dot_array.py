@@ -16,7 +16,9 @@ from scipy.spatial import ConvexHull
 from . import Dot, random_beta
 
 TWO_PI = 2*np.pi
-HASH_LENGTH = 8
+
+def my_md5_hash(unicode, hash_length=8):
+    return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
 
 def list_all_saved_incremental_arrays(picture_folder,
                                       property_file_suffix=".property.csv"):
@@ -365,7 +367,7 @@ class DotArray(object):
         csv = self.get_csv(num_format="%7.2f", hash_column=False,
                            variable_names=False, n_dots_column=False,
                            colour_column=False, picture_column=False)
-        return md5(csv).hexdigest()[:HASH_LENGTH]
+        return my_md5_hash(csv)
 
     @property
     def property_names(self):

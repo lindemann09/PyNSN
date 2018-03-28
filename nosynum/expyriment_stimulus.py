@@ -92,6 +92,13 @@ class ExpyrimentDASequence():
         except:
             return None
 
+    @property
+    def is_preloaded(self):
+        for x in reversed(self.stimuli):
+            if not x.is_preloaded:
+                return False
+        return True
+
     def preload(self, percent = 100, time=None, do_not_return_earlier=False):
         """
         returns array of preloaded dot_array_sequence
