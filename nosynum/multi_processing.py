@@ -4,13 +4,11 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from time import sleep
 from multiprocessing import Process, Queue, Event
-from . import DotArray, DASequence
-from .dot_array_sequences import M_NO_FITTING
+from .dot_array_sequences import DASequence, M_NO_FITTING
 
 
-class TemplateDASequenceProcess(Process): # abstract class
+class TemplateDASequenceProcess(Process): # "abstract" class
 
     def __init__(self):
         super(TemplateDASequenceProcess, self).__init__()

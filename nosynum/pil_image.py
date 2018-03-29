@@ -87,7 +87,7 @@ def pil_images_save(da_sequence_with_images, folder, file_type="png",
     name = file_prefix + da_sequence_with_images.md5hash
     for x in range(len(da_sequence_with_images.images)):
         n = len(da_sequence_with_images.dot_arrays[x].dots)
-        filename = unicode(path.join(folder, name + "-" + str(n) + "." + file_type))
+        filename = path.join(folder, name + u"-" + str(n) + u"." + file_type)
         da_sequence_with_images.images[x].save(fp=filename, file_type=file_type)
         if replace_images_by_filename:
             da_sequence_with_images.images[x] = filename
@@ -161,4 +161,3 @@ class PILMakeDASequenceProcess(TemplateDASequenceProcess):
 
         self.data_available.set()
         self._data_queue.put(da_sequence)
-

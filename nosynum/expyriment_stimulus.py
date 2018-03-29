@@ -7,7 +7,11 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import math
 from expyriment.stimuli import Canvas, Circle, Line, Picture
 from expyriment.misc import Clock
-from .expyriment_pil_image import ExprimentPILImage
+try:
+    from .expyriment_pil_image import ExprimentPILImage
+except:
+    ExprimentPILImage = None
+    print("Pillow (PIL) is not installed. Create_stimuli_from_pil_images will not be possible.")
 
 
 def create(dot_array, area_colour=None,
@@ -49,7 +53,7 @@ def create(dot_array, area_colour=None,
     return canvas
 
 
-class ExpyrimentDASequence():
+class ExpyrimentDASequence(object):
 
     def __init__(self, da_sequence):
 

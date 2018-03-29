@@ -127,7 +127,7 @@ class Dot(object):
 
     @property
     def area(self):
-        return math.pi * (self.diameter**2)/4
+        return math.pi * (self.diameter**2)/4.0
 
     @property
     def circumference(self):

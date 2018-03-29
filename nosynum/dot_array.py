@@ -97,6 +97,7 @@ class NumpyPositionList(object):
                         self._xy[x, :] -= tmp.xy
                         self._polar = None
 
+
     def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
 
@@ -309,7 +310,7 @@ class DotArray(object):
             if hash_column:
                 rtn += "{0},".format(hash)
             if n_dots_column:
-                rtn += "{},".format(len(self.dots))
+                rtn += "{},".format(self.prop_numerosity)
             rtn += "{0},".format(cnt + 1)
             rtn += num_format % d.x + "," + num_format % d.y + "," + \
                    num_format % d.diameter
@@ -339,7 +340,7 @@ class DotArray(object):
         """
 
         if dot_ids is None:
-            dot_ids = range(len(self.dots))
+            dot_ids = range(self.prop_numerosity)
         for x in map(lambda i: self.dots[i], dot_ids):
             x.colour = colour
 
@@ -356,7 +357,7 @@ class DotArray(object):
         """
 
         if dot_ids is None:
-            dot_ids = range(len(self.dots))
+            dot_ids = range(self.prop_numerosity)
         for x in map(lambda i: self.dots[i], dot_ids):
             x.picture = picture
 
@@ -376,8 +377,8 @@ class DotArray(object):
 
     @property
     def properties(self):
-        return [len(self.dots), self.mean_dot_diameter, self.total_area,
-                self.convex_hull_area, self.density, self.total_circumference]
+        return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_area,
+                self.prop_convex_hull_area, self.prop_density, self.prop_total_circumference]
 
     @property
     def numpy_dot_positions(self):
@@ -391,23 +392,28 @@ class DotArray(object):
 
 
     @property
-    def mean_dot_diameter(self):
+    def prop_mean_dot_diameter(self):
         return self.numpy_dot_diameters.mean()
 
     @property
-    def total_area(self):
+    def prop_total_area(self):
         return sum(list(map(lambda x: x.area, self.dots)))
 
     @property
-    def total_circumference(self):
+    def prop_total_circumference(self):
         return sum(list(map(lambda x: x.circumference, self.dots)))
 
     @property
-    def convex_hull_area(self):
+    def prop_convex_hull_area(self):
         try:
             return ConvexHull(self.numpy_dot_positions).area
         except:
             return None
+
+    @property
+    def prop_numerosity(self):
+        return  len(self.dots)
+
 
     @property
     def convex_hull_points(self):
@@ -420,15 +426,15 @@ class DotArray(object):
         return pos[x,:]
 
     @property
-    def density_stimulus_area(self):
+    def prop_density_stimulus_area(self):
         """density takes into account the full possible stimulus area """
-        return np.pi * self.definition.stimulus_area_radius ** 2 / self.total_area
+        return np.pi * self.definition.stimulus_area_radius ** 2 / self.prop_total_area
 
     @property
-    def density(self):
+    def prop_density(self):
         """density takes into account the convex hull"""
         try:
-            return self.convex_hull_area / self.total_area
+            return self.prop_convex_hull_area / self.prop_total_area
         except:
             return None
 
@@ -449,7 +455,7 @@ class DotArray(object):
         iterative method can takes some time.
         """
 
-        current = self.convex_hull_area
+        current = self.prop_convex_hull_area
         if current is None\
                 or abs(convex_hull_area - current) < precision:
             return # It'S good already or not defined
@@ -496,13 +502,13 @@ class DotArray(object):
         if ratio_area_convex_hull_adaptation<0 or ratio_area_convex_hull_adaptation>1:
             ratio_area_convex_hull_adaptation = 0.5
 
-        density_change = density - self.density
+        density_change = density - self.prop_density
         d_change_convex_hull = density_change * (1-ratio_area_convex_hull_adaptation)
         if abs(d_change_convex_hull) > 0:
-            self.fit_convex_hull_area(convex_hull_area= self.total_area * (self.density+d_change_convex_hull),
-                                  precision=precision)
+            self.fit_convex_hull_area(convex_hull_area=self.prop_total_area * (self.prop_density + d_change_convex_hull),
+                                      precision=precision)
 
-        self.fit_total_area(total_area=self.convex_hull_area / density)
+        self.fit_total_area(total_area=self.prop_convex_hull_area / density)
 
 
     def sort_dots_by_eccentricity(self):
@@ -565,7 +571,8 @@ class DotArray(object):
             self.dots[c].xy = xy
 
         if outlier_error:
-            raise RuntimeError("Can't find solution when removing outlier (n=" + str(len(self.dots))+")")
+            raise RuntimeError("Can't find solution when removing outlier (n=" + \
+                                    str(self.prop_numerosity) + ")")
 
         if not shift_required:
             return False
@@ -576,7 +583,7 @@ class DotArray(object):
 
     def fit_total_area(self, total_area):
         """dots will be realigned"""
-        a_scale = (total_area / self.total_area)
+        a_scale = (total_area / self.prop_total_area)
         x = 2 / np.sqrt(np.pi)
         for d in self.dots:
             d.diameter = np.sqrt(d.area * a_scale) * x  # d=sqrt(4a/pi) = 2*sqrt(pi)*sqrt(a)
@@ -584,12 +591,12 @@ class DotArray(object):
 
     def fit_mean_item_size(self, mean_dot_diameter):
         """dots will be realigned"""
-        scale = mean_dot_diameter / self.mean_dot_diameter
+        scale = mean_dot_diameter / self.prop_mean_dot_diameter
         for d in self.dots:
             d.diameter = d.diameter * scale
 
     def fit_total_circumference(self, total_circumference):
-        mean_dot_diameter = total_circumference/ (len(self.dots) * np.pi)
+        mean_dot_diameter = total_circumference/ (self.prop_numerosity * np.pi)
         self.fit_mean_item_size(mean_dot_diameter)
 
     def number_deviant(self, change_numerosity):
@@ -601,7 +608,7 @@ class DotArray(object):
 
         # make a copy for the deviant
         deviant = self.copy()
-        if len(self.dots)+change_numerosity <=0:
+        if self.prop_numerosity + change_numerosity <=0:
             deviant.dots = []
         else:
             # add or remove random dots

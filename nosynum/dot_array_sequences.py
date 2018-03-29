@@ -4,9 +4,9 @@ from builtins import *
 
 import os
 import numpy as np
-from hashlib import md5
 
 from .dot_array import my_md5_hash
+
 M_ITEM_SIZE = "IS"
 M_CONVEX_HULL = "CH"
 M_TOTAL_AREA = "TA"
@@ -137,14 +137,14 @@ class DASequence(object):
             sqeeze_factor = 1
 
         da = max_dot_array.copy()
-        da.fit_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
+        da.fit_convex_hull_area(convex_hull_area=da.prop_convex_hull_area * sqeeze_factor)
         da_sequence = [da]
 
         error = None
-        cha = da.convex_hull_area
-        dens = da.density
-        total_area = da.total_area
-        circumference = da.total_circumference
+        cha = da.prop_convex_hull_area
+        dens = da.prop_density
+        total_area = da.prop_total_area
+        circumference = da.prop_total_circumference
         for x in range(len(da.dots)-min_numerosity):
             da = da.number_deviant(change_numerosity=-1)
 
