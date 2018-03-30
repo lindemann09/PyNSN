@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
-from builtins import *
 
 import math
 import random
@@ -9,9 +8,13 @@ from time import sleep
 from copy import deepcopy
 import nosynum
 from nosynum import expyriment_stimulus, pil_image
-from expyriment import misc
+from nosynum.numpy_dot_array import NumpyRandomDotArray
+import expyriment
+from expyriment import misc, control
 
 cl = misc.Clock()
+
+
 
 maxnumber = 200
 
@@ -19,52 +22,36 @@ dot_array_def = nosynum.DotArrayDefinition(
                        stimulus_area_radius= 300,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
-                       dot_diameter_std=1,
-                       dot_colour=(230, 230, 230))
-
-max_da = nosynum.DotArray(n_dots=maxnumber, dot_array_definition=dot_array_def)
-
+                       dot_diameter_std=2,
+                       dot_colour=(230, 230, 230),
+                        minium_gap=1)
+cl.reset_stopwatch()
+max_da = NumpyRandomDotArray(n_dots=maxnumber, dot_array_definition=dot_array_def)
+print(cl.stopwatch_time)
 #print(da.get_array_csv_text(variable_names=True, colour_column=False))
 
-mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
-                                        method=nosynum.M_TOTAL_CIRCUMFERENCE)
-mp.start()
-seq = mp.da_sequence
-
-print(seq.property_string)
-print(seq.numerosity_correlations)
-print(seq.variances)
-
-#print(seq.images)
-#print(seq.get_csv(variable_names=True, hash_column=True))
-print(seq.md5hash)
-print(seq.numerosity_idx)
-#exp_seq = expyriment_stimulus.ExpyrimentDASequence(seq)
-#print("converting")
-#cl.reset_stopwatch()
-#pil_image.dasequence2images(dot_array_sequence=seq, image_filename="test")
-#print(cl.stopwatch_time)
-
-#print(seq.dot_arrays)
-#print(seq.get_csv())
+#mp = nosynum.MakeDASequenceProcess(max_dot_array=max_da,
+#                                        method=nosynum.M_TOTAL_CIRCUMFERENCE,
+#                                        min_numerosity=10)
+#mp.start()
+#seq = mp.da_sequence
+#print(seq.get_property_string())
 #print(seq.numerosity_correlations)
+#print(seq.md5hash)
+
+#print(max_da.get_csv())
+
+control.set_develop_mode(True)
+exp = control.initialize()
+control.start(exp, skip_ready_screen=True)
+pil = pil_image.create(max_da)
+expyriment_stimulus.ExprimentPILImage(pil).present()
+exp.keyboard.wait()
+
+max_da.realign(minimum_gap=10)
+pil = pil_image.create(max_da)
+expyriment_stimulus.ExprimentPILImage(pil).present()
+exp.keyboard.wait()
 
 
-
-
-#dal2 = DotArrayList(number_list, subfolder="picts")
-#dal2.create_method(method=2, dot_diameter = 10)
-#dal.extend(dal2)
-#dal2.create_method(method=3, dot_diameter = 10)
-#dal.extend(dal2)
-
-#dal.analysis()
-#dal.save_arrays_csv_text(filename="dot_arrays.csv")
-#dal.save_properties("array_info.csv")
-
-#print "saving"
-#dal.save_images(name="test", file_type="JPEG", antialiasing=False)
-
-#import matplotlib.pyplot as plt
-#plt.plot(data[:,0], data[:, 4])
-#plt.show()
+control.end()

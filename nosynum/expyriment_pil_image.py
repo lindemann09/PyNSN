@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
-from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+
+__all__ =["ExprimentPILImage"]
 
 import pygame
 from PIL.Image import isImageType

@@ -2,7 +2,6 @@
 Draw a random number from a beta dirstribution
 """
 from __future__ import absolute_import, print_function, division
-from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 

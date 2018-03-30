@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
-from builtins import *
+from builtins import map, zip, filter
 
 import os
 import numpy as np

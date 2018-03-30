@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function, division
-from builtins import *
+from builtins import map, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -20,7 +20,7 @@ def create(dot_array,
     returns pil image"""
 
     pict_size = int(round(dot_array.definition.stimulus_area_radius * 2))
-    def convert_pos(xy):
+    def convert_pos(xy): #todo numpy
         j = int(float(pict_size) / 2)
         return (int(xy[0]) +j, int(- 1 * xy[1]) + j)
 
@@ -30,13 +30,14 @@ def create(dot_array,
             colour = (255, 255, 255)
         else:
             colour = dot.colour
+
         r = dot.diameter // 2
         x, y = convert_pos(dot.xy)
         if dot.picture is not None:
             pict = Image.open(dot.picture, "r")
             img.paste(pict, (x - r, y - r))
         else:
-            ImageDraw.Draw(img).ellipse((x - r, y - r, x + r, y + r), fill=colour)
+            ImageDraw.Draw(img).ellipse((x - r, y - r, x + r, y + r), fill= tuple(colour))
 
     img = Image.new("RGBA", (pict_size, pict_size), color=background_colour)
     if area_colour is not None:

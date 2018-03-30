@@ -2,7 +2,6 @@
 Dot Array
 """
 from __future__ import absolute_import, print_function, division
-from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -32,6 +31,10 @@ class Dot(object):
         self._pos_radius = None
         self._pos_angle = None
         self.diameter = diameter
+        try:
+            colour = tuple(colour) #e.g.to avoid numpy arrays or other list types
+        except:
+            pass
         self.colour = colour
         self.picture = picture
 
@@ -44,7 +47,7 @@ class Dot(object):
     @property
     def x(self):
         if self._x is None:
-            self._x = self._pos_radius * math.sin(self._pos_angle)
+            self._x = self._pos_radius * math.cos(self._pos_angle)
         return self._x
 
     @x.setter
@@ -54,7 +57,7 @@ class Dot(object):
     @property
     def y(self):
         if self._y is None:
-            self._y = self._pos_radius * math.cos(self._pos_angle)
+            self._y = self._pos_radius * math.sin(self._pos_angle)
         return self._y
 
     @y.setter
@@ -85,7 +88,7 @@ class Dot(object):
     @property
     def pos_angle(self):
         if self._pos_angle is None:
-            self._pos_angle = math.atan2(self._x, self._y)
+            self._pos_angle = math.atan2(self._y, self._x)
         return self._pos_angle
 
     @pos_angle.setter
@@ -105,8 +108,6 @@ class Dot(object):
         self._pos_angle = rad_ang[1]
         self._x = None
         self._y = None
-
-
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function take the

@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function, division
-from builtins import *
+from builtins import map, zip, filter
 
 __all__ = ["create", "ExpyrimentDASequence"]
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'

@@ -2,7 +2,7 @@
 Dot Array
 """
 from __future__ import absolute_import, print_function, division
-from builtins import *
+from builtins import map, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -77,7 +77,7 @@ class NumpyPositionList(object):
 
     def calc_polar(self):
         self._polar = np.array([np.hypot(self._xy[:, 0], self._xy[:, 1]),
-                                np.arctan2(self._xy[:, 0], self._xy[:, 1])]).T
+                                np.arctan2(self._xy[:, 1], self._xy[:, 0])]).T
 
     def distance(self, dot):
         return np.hypot(self.xy[:,0] - dot.x, self.xy[:, 1] - dot.y) - \
@@ -155,14 +155,13 @@ class DotArrayDefinition(object):
                  dot_diameter_range[0] >= dot_diameter_range[1]):
                 raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
-        self.minium_gap = minium_gap
-        self.stimulus_area_radius = stimulus_area_radius
+        self.minium_gap = minium_gap # TODO: fix type minimum
+        self.stimulus_area_radius = stimulus_area_radius # TODO rename to array_radius
         self.dot_diameter_range = dot_diameter_range
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
-
 
 class DotArray(object):
 
