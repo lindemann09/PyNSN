@@ -34,6 +34,8 @@ class DASequence(object):
             self.delete_image_files()
 
     def get_array_numerosity(self, number_of_dots):
+        """returns array with a particular numerosity"""
+
         try:
             return self.dot_arrays[self.numerosity_idx[number_of_dots]]
         except:
@@ -137,11 +139,11 @@ class DASequence(object):
             sqeeze_factor = 1
 
         da = max_dot_array.copy()
-        da.fit_convex_hull_area(convex_hull_area=da.prop_convex_hull_area * sqeeze_factor)
+        da.fit_convex_hull_area(convex_hull_area=da.prop_area_convex_hull_positions * sqeeze_factor)
         da_sequence = [da]
 
         error = None
-        cha = da.prop_convex_hull_area
+        cha = da.prop_area_convex_hull_positions
         dens = da.prop_density
         total_area = da.prop_total_area
         circumference = da.prop_total_circumference

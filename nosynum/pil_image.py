@@ -5,59 +5,88 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from os import path, mkdir
 from PIL import Image, ImageDraw
+import numpy as np
 
-from . import Dot
 from .dot_array_sequences import DASequence, M_NO_FITTING
 from .multi_processing import TemplateDASequenceProcess
 
+
+def _draw_dot(img, xy, diameter, colour=None, picture=None):
+    # draw a dot on an image
+
+    if colour is None:
+        colour = (255, 255, 255)
+    else:
+        colour = colour
+
+    r = diameter // 2
+    if picture is not None:
+        pict = Image.open(picture, "r")
+        img.paste(pict, (xy[0]-r, xy[1]-r))
+    else:
+        ImageDraw.Draw(img).ellipse((xy[0]-r, xy[1]-r, xy[0]+r, xy[1]+r), fill=tuple(colour))
+
+def _convert_pos(xy, image_size):
+    """convert dot pos to pil image coordinantes"""
+    return (xy * [1,-1]) + image_size//2
+
+def _draw_convex_hull(img, convex_hull, convex_hull_colour):
+    # plot convey hull
+    hull = np.append(convex_hull, [convex_hull[0]], axis=0)
+    last = None
+    draw = ImageDraw.Draw(img)
+    for p in hull:
+        if last is not None:
+            draw.line(np.append(last, p).tolist(),
+                      width=2, fill=convex_hull_colour)
+        last = p
+
+
 def create(dot_array,
-                    area_colour=None,
-                    convex_hull_colour=None,
-                    antialiasing=None,  #TODO
-                    background_colour=(0, 0, 0) ):
+           colour_area=None,
+           colour_convex_hull_positions=None,
+           colour_convex_hull_dots=None,
+           colour_center_of_mass = None,
+           colour_center_of_outer_positions=None,
+           antialiasing=None,  #TODO
+           colour_background=(0, 0, 0)):
     """use PIL colours (see PIL.ImageColor.colormap)
 
     returns pil image"""
 
-    pict_size = int(round(dot_array.definition.stimulus_area_radius * 2))
-    def convert_pos(xy): #todo numpy
-        j = int(float(pict_size) / 2)
-        return (int(xy[0]) +j, int(- 1 * xy[1]) + j)
+    image_size = int(round(dot_array.max_array_radius * 2))
+    img = Image.new("RGBA", (image_size, image_size), color=colour_background)
+    if colour_area is not None:
+        _draw_dot(img, xy=_convert_pos(np.zeros(2), image_size),
+                  diameter=image_size, colour=colour_area)
 
+    for xy, d, c in zip(_convert_pos(dot_array.rounded_xy, image_size),
+                        dot_array.rounded_diameters,
+                        dot_array.colours):
+        _draw_dot(img, xy=xy, diameter=d, colour=c)
 
-    def draw_dot(img, dot):
-        if dot.colour is None:
-            colour = (255, 255, 255)
-        else:
-            colour = dot.colour
-
-        r = dot.diameter // 2
-        x, y = convert_pos(dot.xy)
-        if dot.picture is not None:
-            pict = Image.open(dot.picture, "r")
-            img.paste(pict, (x - r, y - r))
-        else:
-            ImageDraw.Draw(img).ellipse((x - r, y - r, x + r, y + r), fill= tuple(colour))
-
-    img = Image.new("RGBA", (pict_size, pict_size), color=background_colour)
-    if area_colour is not None:
-        draw_dot(img, Dot(x=0, y=0, diameter=dot_array.definition.stimulus_area_radius * 2,
-                          colour=area_colour))
-    if convex_hull_colour is not None:
+    if colour_convex_hull_positions is not None:
         # plot convey hull
-        hull = dot_array.convex_hull_points
-        hull = list(hull) + [hull[0]]
-        last = None
-        draw = ImageDraw.Draw(img)
-        for p in hull:
-            if last is not None:
-                draw.line(convert_pos(last) + convert_pos(p),
-                          width=2, fill=convex_hull_colour)
-            last = p
-    list(map(lambda d: draw_dot(img, d), dot_array.dots))
+        _draw_convex_hull(img=img,
+                          convex_hull = _convert_pos(dot_array.convex_hull_positions, image_size),
+                          convex_hull_colour=colour_convex_hull_positions)
+
+    if colour_convex_hull_dots is not None:
+        # plot convey hull
+        _draw_convex_hull(img=img,
+                          convex_hull = _convert_pos(dot_array.convex_hull_dots, image_size),
+                          convex_hull_colour=colour_convex_hull_dots)
+
+    if colour_center_of_mass is not None:
+        _draw_dot(img, xy=_convert_pos(dot_array.center_of_mass, image_size),
+                  diameter=10, colour=colour_center_of_mass)
+    if colour_center_of_outer_positions is not None:
+        _draw_dot(img, xy=_convert_pos(dot_array.center_of_outer_positions, image_size),
+                  diameter=10, colour=(0, 255,0))
+
     if antialiasing:
-        img = img.resize((pict_size * 2, pict_size * 2), Image.ANTIALIAS)
-        img = img.resize((pict_size, pict_size), Image.ANTIALIAS)
+        img = img.resize((image_size * 2, image_size * 2), Image.ANTIALIAS)
+        img = img.resize((image_size, image_size), Image.ANTIALIAS)
     return img
 
 
@@ -70,10 +99,10 @@ def write_pil_images_of_da_sequence(dot_array_sequence,
     dot_array_sequence.images = []
     for da in dot_array_sequence.dot_arrays:
         da.round_dot_paramter_to_integer()
-        im = create(dot_array=da, area_colour=area_colour,
-                                      convex_hull_colour=convex_hull_colour,
-                                      antialiasing=antialiasing,
-                                      background_colour=background_colour)
+        im = create(dot_array=da, colour_area=area_colour,
+                    convex_hull_colour=convex_hull_colour, #fixme colours convex_hulls and center
+                    antialiasing=antialiasing,
+                    colour_background=background_colour)
         dot_array_sequence.images.append(im)
 
 
