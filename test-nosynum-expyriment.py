@@ -70,10 +70,10 @@ def compare_stimulus(n_left, n_right,
             break
 
     # stimuli
-    left = expyriment_stimulus.ExprimentPILImage(pil_image.create(dot_array=da_left),
-                                              position=pos_left)
-    right = expyriment_stimulus.ExprimentPILImage(pil_image.create(dot_array=da_right),
-                                              position=pos_right)
+    left = expyriment_stimulus.ExprimentDotArray(pil_image.create(dot_array=da_left),
+                                                 position=pos_left)
+    right = expyriment_stimulus.ExprimentDotArray(pil_image.create(dot_array=da_right),
+                                                  position=pos_right)
     stim = stimuli.BlankScreen()
     left.plot(stim)
     right.plot(stim)
