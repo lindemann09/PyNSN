@@ -292,13 +292,13 @@ class DotArray(NumpyDotList):
         return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_surface_area,
                 self.prop_area_convex_hull_positions, self.prop_density, self.prop_total_circumference]
 
-    def get_property_string(self, varnames=False):
+    def get_property_string(self, variable_names=False):
         rtn = ""
-        if varnames:
+        if variable_names:
             rtn += "hash, " + ", ".join(self.property_names) + "\n"
 
         rtn += self.md5hash + ","
-        rtn += str(self.properties).replace("[", "").replace("]", "")
+        rtn += str(self.properties).replace("[", "").replace("]", "") + "\n"
         return rtn
 
     @property
@@ -593,9 +593,9 @@ class DotArraySequence(object):
             rtn[self.property_names[x]] = cor[x]
         return rtn
 
-    def get_property_string(self, varnames=False):
+    def get_property_string(self, variable_names=False):
         rtn = ""
-        if varnames:
+        if variable_names:
             rtn += "hash, " + ", ".join(self.property_names) + "\n"
         hash = self.md5hash
         for da in self._dot_arrays:

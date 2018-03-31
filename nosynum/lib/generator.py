@@ -3,6 +3,8 @@ from builtins import map, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+import atexit
+
 from . import random_beta
 from multiprocessing import Process, Queue, Event
 from .dot_array import DotArray, DotArraySequence
@@ -26,7 +28,9 @@ class RandomDotArrayGenerator(object):
                  dot_diameter_std=None,
                  dot_picture = None,
                  dot_colour=None,
-                 minimum_gap=1):
+                 minimum_gap=1,
+                 log_file_arrays=None,
+                 log_file_properties=None):
 
         """Specification of a Random Dot Array
 
@@ -55,8 +59,23 @@ class RandomDotArrayGenerator(object):
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
 
+        self.log_file_arrays = None
+        self.log_file_properties = None
 
-    def make(self, n_dots):
+        if log_file_arrays is not None:
+            if not isinstance(log_file_arrays, GeneratorLogFile):
+                raise RuntimeError("Incorrect type for log_file_arrays. Please use a GeneratorLogFile only.")
+            else:
+                self.log_file_arrays = log_file_arrays
+
+        if log_file_properties is not None:
+            if not isinstance(log_file_properties, GeneratorLogFile):
+                raise RuntimeError("Incorrect type for log_file_properties. Please use a GeneratorLogFile only.")
+            else:
+                self.log_file_properties = log_file_properties
+
+
+    def make(self, n_dots, inhibit_logging=False):
 
         rtn = DotArray(max_array_radius = self.stimulus_area_radius,
                        minimum_gap=self.minimum_gap)
@@ -80,6 +99,17 @@ class RandomDotArrayGenerator(object):
                         colour=self.dot_colour,
                         picture=self.dot_picture)
 
+        if not inhibit_logging:
+            if self.log_file_arrays is not None:
+                txt = rtn.get_csv(hash_column=True, n_dots_column=True,
+                                  colour_column=self.log_file_arrays.log_colours,
+                                  num_format=self.log_file_arrays.num_format,
+                                  variable_names=self.log_file_arrays._first_log)
+                self.log_file_arrays.log(txt)
+
+            if self.log_file_properties is not None:
+                txt = rtn.get_property_string(variable_names=self.log_file_properties._first_log)
+                self.log_file_properties.log(txt)
 
         return rtn
 
@@ -87,7 +117,10 @@ class RandomDotArrayGenerator(object):
 
 class DASequenceGenerator(object):
 
-    def __init__(self, max_dot_array, sqeeze_factor=None, use_convex_hull_positions=False):  # fixme: squeeze factor neded ?
+    def __init__(self, max_dot_array, sqeeze_factor=None, # fixme: squeeze factor needed ?
+                 use_convex_hull_positions=False,
+                 log_file_arrays=None,
+                 log_file_properties=None):
         """  makes sequence of deviants by subtracting dots
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -99,6 +132,20 @@ class DASequenceGenerator(object):
         self._da = []
         self.use_convex_hull_positions = use_convex_hull_positions
         self.set_max_dot_array(max_dot_array=max_dot_array, sqeeze_factor=sqeeze_factor)
+
+        if log_file_arrays is not None:
+            if not isinstance(log_file_arrays, GeneratorLogFile):
+                raise RuntimeError("Incorrect type for log_file_arrays. Please use a GeneratorLogFile only.")
+            else:
+                self.log_file_arrays = log_file_arrays
+
+        if log_file_properties is not None:
+            if not isinstance(log_file_properties, GeneratorLogFile):
+                raise RuntimeError("Incorrect type for log_file_properties. Please use a GeneratorLogFile only.")
+            else:
+                self.log_file_properties = log_file_properties
+
+
 
 
     def set_max_dot_array(self, max_dot_array, sqeeze_factor=None):
@@ -116,7 +163,7 @@ class DASequenceGenerator(object):
         self._circumference = self._da.prop_total_circumference
 
 
-    def make(self, method, min_numerosity):
+    def make(self, method, min_numerosity, inhibit_logging=False):
         """Methods takes take , you might use make Process
 
          returns False is error occured (see self.error)
@@ -172,6 +219,17 @@ class DASequenceGenerator(object):
         rtn.append_dot_arrays(list(reversed(da_sequence)))
         rtn.method = method
         rtn.error = error
+
+        if not inhibit_logging:
+            if self.log_file_arrays is not None:
+                txt = rtn.get_csv(hash_column=True, colour_column=self.log_file_arrays.log_colours,
+                                  num_format=self.log_file_arrays.num_format,
+                                  variable_names=self.log_file_arrays._first_log)
+                self.log_file_arrays.log(txt)
+
+            if self.log_file_properties is not None:
+                txt = rtn.get_property_string(variable_names=self.log_file_properties._first_log)
+                self.log_file_properties.log(txt)
 
         return rtn
 
@@ -240,3 +298,19 @@ class DASequenceGeneratorProcess(Process):
 
         self.data_available.set()
         self._data_queue.put(da_seq)
+
+
+class GeneratorLogFile(object):
+
+    def __init__(self, log_filename, log_colours=False, num_format="%6.0f"):
+
+        self._logfile = open(log_filename, "w+")
+        self._first_log = True
+        self.num_format = num_format
+        self.log_colours = log_colours
+        atexit.register(self._logfile.close())
+
+    def log(self, text):
+        self._logfile.write(text)
+        self._first_log = False
+

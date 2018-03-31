@@ -52,7 +52,7 @@ def compare_stimulus(n_left, n_right,
         raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
 
 
-    ok = a.realign(minimum_gap=generator.minimum_gap) # todo: check of error
+    ok = a.realign() # todo: check of error
 
     # stimuli
     left = expyriment_stimulus.ExprimentDotArray( dot_array=da_left,  position=pos_left)
