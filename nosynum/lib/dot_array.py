@@ -32,7 +32,6 @@ def my_md5_hash(unicode, hash_length=8):
     return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
 
 
-
 class NumpyDotList(object):
     """Numpy Position list for optimized for numpy calculations
 
@@ -59,7 +58,6 @@ class NumpyDotList(object):
         else:
              return np.hypot(self.xy[:,0] - xy[0], self.xy[:, 1] - xy[1]) - \
                             ((self.diameters + diameter) / 2.0)
-
     @property
     def rounded_xy(self):
         """rounded to integer"""
@@ -79,6 +77,14 @@ class NumpyDotList(object):
     def center_of_mass(self):
         weighted_sum = np.sum(self.xy *self.diameters[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.diameters)
+
+    @property
+    def surface_areas(self):
+        return np.pi * (self.diameters ** 2) / 4.0
+
+    @property
+    def circumferences(self):
+        return np.pi * self.diameters
 
     @property
     def convex_hull_positions(self):
@@ -117,12 +123,12 @@ class NumpyDotList(object):
         return self.diameters.mean()
 
     @property
-    def prop_total_area(self):
-        return np.sum(np.pi * (self.diameters**2) / 4.0)
+    def prop_total_surface_area(self):
+        return np.sum(self.surface_areas)
 
     @property
     def prop_total_circumference(self):
-        return np.sum(np.pi * self.diameters)
+        return np.sum(self.circumferences)
 
     @property
     def prop_area_convex_hull_positions(self):
@@ -140,14 +146,14 @@ class NumpyDotList(object):
     def prop_density(self):
         """density takes into account the convex hull"""
         try:
-            return self.prop_area_convex_hull_positions / self.prop_total_area
+            return self.prop_area_convex_hull_positions / self.prop_total_surface_area
         except:
             return None
 
 
 class DotArray(NumpyDotList):
 
-    def __init__(self, max_array_radius, xy_positions=(), diameters=(), colours = (),
+    def __init__(self, max_array_radius, xy_positions=(), diameters=(), minimum_gap=1, colours = (),
                             pictures=()):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
@@ -156,6 +162,7 @@ class DotArray(NumpyDotList):
         self.max_array_radius = max_array_radius
         self.colours = np.array(colours)
         self.pictures = np.array(pictures)
+        self.minimum_gap = minimum_gap
 
     def clear(self):
         NumpyDotList.clear(self)
@@ -216,7 +223,7 @@ class DotArray(NumpyDotList):
                     if x != idx:
                         self.xy[x, :] -= polar2cartesian([[jitter_size, np.random.random() * TWO_PI]])[0]
 
-    def realign(self, minimum_gap):
+    def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
         overlap, the dots that is further apart from the arry center will be
         moved opposite to the direction of the other dot until there is no
@@ -233,7 +240,7 @@ class DotArray(NumpyDotList):
 
         # from inner to outer remove overlaps
         for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
-            if self.remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
+            if self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
                 shift_required = True
 
         # sqeeze in points that pop out of the stimulus area radius
@@ -252,7 +259,7 @@ class DotArray(NumpyDotList):
                 self.xy -= new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
                 for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
-                    self.remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap)
+                    self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap)
                 # new pos for outlyer
                 self.xy += new_xy # move back to old position
                 shift_required = True
@@ -270,17 +277,17 @@ class DotArray(NumpyDotList):
         if not shift_required:
             return False
         else:
-            self.realign(minimum_gap=minimum_gap) # recursion
+            self.realign() # recursion
             return True
 
     @property
     def prop_density_max_array(self):
         """density takes into account the full possible dot area """
-        return np.pi * self.max_array_radius ** 2 / self.prop_total_area
+        return np.pi * self.max_array_radius ** 2 / self.prop_total_surface_area
 
     @property
     def properties(self):
-        return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_area,
+        return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_surface_area,
                 self.prop_area_convex_hull_positions, self.prop_density, self.prop_total_circumference]
 
     def get_property_string(self, varnames=False):
@@ -364,7 +371,6 @@ class DotArray(NumpyDotList):
 
 
     def random_free_dot_position(self, dot_diameter,
-                                 minimum_gap,
                                  ignore_overlapping=False):
         """moves a dot to an available random position
 
@@ -381,7 +387,7 @@ class DotArray(NumpyDotList):
             if not ignore_overlapping:
                 # find bad_positions
                 dist = self.distances(proposal_xy, dot_diameter)
-                idx = np.where(dist < minimum_gap)[0] # overlapping dot ids
+                idx = np.where(dist < self.minimum_gap)[0] # overlapping dot ids
                 bad_position = len(idx)>0
 
             if not bad_position:
@@ -389,7 +395,7 @@ class DotArray(NumpyDotList):
             elif cnt > 3000:
                 raise RuntimeError("Can't find a solution")
 
-    def shuffle_all_positions(self, minimum_gap, ignore_overlapping=False): #fixme centering?
+    def shuffle_all_positions(self, ignore_overlapping=False): #fixme centering?
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
@@ -397,10 +403,122 @@ class DotArray(NumpyDotList):
         self.diameters = np.array([])
         self.xy = np.array([])
         for d in diameters:
-            xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping,
-                                               minimum_gap=minimum_gap)
+            xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
             self.diameters = np.append(self.diameters, d)
             if len(self.xy) == 0:
                 self.xy = np.array([xy])
             else:
                 self.xy = np.append(self.xy, [xy], axis=0)
+
+    def number_deviant(self, change_numerosity):
+        """number deviant
+        """
+
+        # make a copy for the deviant
+        deviant = self.copy()
+        if self.prop_numerosity + change_numerosity <=0:
+            deviant.clear()
+        else:
+            # add or remove random dots
+            for _ in range(abs(change_numerosity)):
+                rnd = np.random.randint(0, len(deviant.prop_numerosity)-1)
+                if change_numerosity<0:
+                    # remove dots
+                    deviant.delete_dot(rnd)
+                else:
+                    # add
+                    d = self.get_dot(rnd) # copy a random dot
+                    d.xy = self.random_free_dot_position(dot_diameter=d.diameter)
+                    deviant.append_dot(d)
+
+        return deviant
+
+    def fit_total_area(self, total_area):
+        """dots will be realigned"""
+        # changes diameter
+        a_scale = (total_area / self.prop_total_surface_area)
+        self.diameters = np.sqrt(self.surface_areas * a_scale) * 2/np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+
+
+    def fit_mean_dot_diameter(self, mean_dot_diameter):
+        """dots will be realigned"""
+        # changes diameter
+
+        scale = mean_dot_diameter / self.prop_mean_dot_diameter
+        self.diameter = self.diameter * scale
+
+    def fit_total_circumference(self, total_circumference):
+        # linear to fit_mean_dot_diameter, but depends on numerosity
+        mean_dot_diameter = total_circumference/ (self.prop_numerosity * np.pi)
+        self.fit_mean_dot_diameter(mean_dot_diameter)
+
+
+    def fit_convex_hull_area(self, convex_hull_area, precision=0.001,
+                             center_array = True,
+                             use_convex_hull_positions=False):
+        """changes the convex hull area to a desired size with certain precision
+
+        iterative method can takes some time.
+        """
+
+        if use_convex_hull_positions:
+            current = self.prop_area_convex_hull_positions
+        else:
+            current = self.prop_area_convex_hull_dots
+
+        if current is None:
+            return # not defined
+
+        # iteratively determine scale
+        scale = 1 # find good scale
+        step = 0.1
+        if convex_hull_area < current: # current too larger
+            step *= -1
+
+        # centered  points
+        old_center = self.center_of_outer_positions
+        centered_polar = cartesian2polar(self.xy - old_center)
+
+        while abs(current - convex_hull_area) > precision:
+            scale += step
+
+            self.xy = polar2cartesian(centered_polar * [scale, 1])
+            if use_convex_hull_positions:
+                current = self.prop_area_convex_hull_positions
+            else:
+                current = self.prop_area_convex_hull_dots
+
+            if (current < convex_hull_area and step < 0) or \
+                    (current > convex_hull_area and step > 0):
+                step *= -0.2 # change direction and finer grain
+
+        if not center_array:
+            self.xy += old_center
+
+    def fit_density(self, density, precision=0.01, ratio_area_convex_hull_adaptation = 0.5,
+                    use_convex_hull_positions=False):
+        """this function changes the area and remixes to get a desired density
+        precision in percent between 1 < 0
+
+        ratio_area_convex_hull_adaptation:
+            ratio of adaptation via area and convex_hull (between 0 and 1)
+
+        """
+
+        # dens = convex_hull_area / total_area
+        if ratio_area_convex_hull_adaptation<0 or ratio_area_convex_hull_adaptation>1:
+            ratio_area_convex_hull_adaptation = 0.5
+
+        density_change = density - self.prop_density
+        d_change_convex_hull = density_change * (1-ratio_area_convex_hull_adaptation)
+        if abs(d_change_convex_hull) > 0:
+            self.fit_convex_hull_area(convex_hull_area=self.prop_total_surface_area * (self.prop_density + d_change_convex_hull),
+                                      use_convex_hull_positions=use_convex_hull_positions,
+                                      precision=precision)
+
+        if use_convex_hull_positions:
+            convex_hull = self.prop_area_convex_hull_positions
+        else:
+            convex_hull = self.prop_area_convex_hull_dots
+        self.fit_total_area(total_area=convex_hull / density)
+

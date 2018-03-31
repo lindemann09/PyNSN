@@ -131,7 +131,7 @@ class DASequence(object):
         error = None
         cha = da.prop_area_convex_hull_positions
         dens = da.prop_density
-        total_area = da.prop_total_area
+        total_area = da.prop_total_surface_area
         circumference = da.prop_total_circumference
         for x in range(len(da.dots)-min_numerosity):
             da = da.number_deviant(change_numerosity=-1)

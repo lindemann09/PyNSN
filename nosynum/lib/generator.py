@@ -6,6 +6,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from . import random_beta
 from .dot_array import DotArray
 
+
 class RandomDotArrayGenerator(object):
 
     def __init__(self,
@@ -44,8 +45,12 @@ class RandomDotArrayGenerator(object):
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
 
+
     def make(self, n_dots):
-        rtn = DotArray(max_array_radius = self.stimulus_area_radius)
+
+        rtn = DotArray(max_array_radius = self.stimulus_area_radius,
+                       minimum_gap=self.minimum_gap)
+
         for _ in range(n_dots):
 
             #diameter
@@ -60,7 +65,7 @@ class RandomDotArrayGenerator(object):
                 diameter = random_beta.random_beta(
                     self.dot_diameter_range, parameter)
 
-            xy = rtn.random_free_dot_position(dot_diameter=diameter, minimum_gap=self.minimum_gap)
+            xy = rtn.random_free_dot_position(dot_diameter=diameter)
             rtn.append(xy=xy, diameter=diameter,
                         colour=self.dot_colour,
                         picture=self.dot_picture)

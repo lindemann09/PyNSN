@@ -41,7 +41,7 @@ def compare_stimulus(n_left, n_right,
     elif match_method == nosynum.M_CONVEX_HULL:
         a.fit_convex_hull_area(convex_hull_area=b.convex_hull_area)
     elif match_method == nosynum.M_ITEM_SIZE:
-        a.fit_mean_item_size(b.mean_dot_diameter)
+        a.fit_mean_dot_diameter(b.mean_dot_diameter)
     elif match_method == nosynum.M_TOTAL_AREA:
         a.fit_total_area(total_area=b.total_area)
     elif match_method == nosynum.M_TOTAL_CIRCUMFERENCE:
