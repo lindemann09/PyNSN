@@ -113,7 +113,7 @@ class NumpyDotList(object):
 
     def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
-        self._jitter_identical_positions()
+
 
         dist = self.distances(self.xy[dot_id, :], self.diameters[dot_id])
 
@@ -121,6 +121,9 @@ class NumpyDotList(object):
         idx = np.where(dist < minimum_gap)[0].tolist() # overlapping dot ids
         if len(idx)>1:
             idx.remove(dot_id) # don't move yourself
+            if np.sum(np.all(self.xy[idx, ] == self.xy[dot_id, :], axis=1)) > 0: # check if there is an identical position
+                self._jitter_identical_positions()
+
             tmp_polar = cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
             xy = polar2cartesian(tmp_polar)
@@ -201,10 +204,10 @@ class DotArray(NumpyDotList):
                    picture=self.pictures[index], colour=self.colours[index,:],)
 
     def delete_dot(self, index):
-        np.delete(self.xy, index, axis=0)
-        np.delete(self.diameters, index)
-        np.delete(self.colours, index, axis=0)
-        np.delete(self.pictures, index)
+        self.xy = np.delete(self.xy, index, axis=0)
+        self.diameters = np.delete(self.diameters, index)
+        self.colours = np.delete(self.colours, index, axis=0)
+        self.pictures = np.delete(self.pictures, index)
 
     def copy(self, subset_dot_ids=None):
         """returns a (deep) copy of the dot array.
@@ -420,7 +423,7 @@ class DotArray(NumpyDotList):
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                rnd = np.random.randint(0, len(deviant.prop_numerosity)-1)
+                rnd = np.random.randint(0, deviant.prop_numerosity-1)
                 if change_numerosity<0:
                     # remove dots
                     deviant.delete_dot(rnd)
@@ -442,7 +445,7 @@ class DotArray(NumpyDotList):
         # changes diameter
 
         scale = mean_dot_diameter / self.prop_mean_dot_diameter
-        self.diameter = self.diameter * scale
+        self.diameters = self.diameters * scale
 
     def fit_total_circumference(self, total_circumference):
         # linear to fit_mean_dot_diameter, but depends on numerosity
@@ -528,21 +531,19 @@ class DotArraySequence(object):
         self.numerosity_idx = {}  # todo: do the use of numerosity_idx
 
     @property
-    def dot_array(self):
+    def dot_arrays(self):
         """ dot array, please use append_dot_array and delete_array to modify the list"""
-        return self.dot_array
+        return self._dot_arrays
 
     def append_dot_arrays(self, arr):
         if isinstance(arr, DotArray):
             arr = [arr]
-        for a in arr:
-            self._dot_arrays.append(arr)
-
-        self.numerosity_idx = {len(da.dots): idx for idx, da in enumerate(self._dot_arrays)}
+        self._dot_arrays.extend(arr)
+        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self._dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
         self._dot_arrays.pop(array_id)
-        self.numerosity_idx = {len(da.dots): idx for idx, da in enumerate(self._dot_arrays)}
+        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self._dot_arrays)}
 
     def get_array_numerosity(self, number_of_dots):
         """returns array with a particular numerosity"""
@@ -554,7 +555,7 @@ class DotArraySequence(object):
 
     @property
     def min_max_numerosity(self):
-        return (len(self._dot_arrays[0].dots), len(self._dot_arrays[-1].dots))
+        return (self._dot_arrays[0].prop_numerosity, self._dot_arrays[-1].prop_numerosity)
 
     @property
     def md5hash(self):

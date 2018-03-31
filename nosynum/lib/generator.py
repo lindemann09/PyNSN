@@ -7,7 +7,6 @@ from . import random_beta
 from multiprocessing import Process, Queue, Event
 from .dot_array import DotArray, DotArraySequence
 
-
 M_MEAN_DIAMETER = "IS"
 M_CONVEX_HULL = "CH"
 M_TOTAL_AREA = "TA"
@@ -93,7 +92,9 @@ class DASequenceGenerator(object):
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
                   therefore usefull to sqeeze the stimulus before. We do that therefore all stimuli
+
         Stimulus will be center before making variants
+
         """
         self._da = []
         self.use_convex_hull_positions = use_convex_hull_positions
@@ -106,9 +107,9 @@ class DASequenceGenerator(object):
 
         self._da = max_dot_array.copy()
         self._da.fit_convex_hull_area(convex_hull_area=self._da.prop_area_convex_hull_dots * sqeeze_factor)
+        self._da.xy -= self._da.center_of_outer_positions # centering
 
         self._dia = self._da.prop_mean_dot_diameter
-        self._da -= self._da.center_of_outer_positions
         self._cha = self._da.prop_area_convex_hull_dots
         self._dens = self._da.prop_density
         self._total_area = self._da.prop_total_surface_area
@@ -121,11 +122,12 @@ class DASequenceGenerator(object):
          returns False is error occured (see self.error)
         """
 
+        da = self._da
         da_sequence = [self._da]
 
         error = None
-        for x in range(self._da.prop_numerosity - min_numerosity):
-            da = self._da.number_deviant(change_numerosity=-1)
+        for _ in range(self._da.prop_numerosity - min_numerosity):
+            da = da.number_deviant(change_numerosity=-1)
 
             if method == M_DENSITY:
                 da.fit_density(density=self._dens, ratio_area_convex_hull_adaptation=0.5,
@@ -147,7 +149,6 @@ class DASequenceGenerator(object):
             cnt = 0
             while True:
                 cnt += 1
-
                 try:
                     if da.realign():  # Ok if realign not anymore required
                         break
@@ -168,7 +169,7 @@ class DASequenceGenerator(object):
                 break
 
         rtn = DotArraySequence()
-        rtn.append_dot_arrays(reversed(da_sequence))
+        rtn.append_dot_arrays(list(reversed(da_sequence)))
         rtn.method = method
         rtn.error = error
 

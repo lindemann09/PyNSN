@@ -60,7 +60,7 @@ class ExpyrimentDASequence(object):
 
         self.da_sequence = da_sequence
         self.stimuli = []
-        for da in self.da_sequence.dot_arrrays:
+        for da in self.da_sequence.dot_arrays:
             self.stimuli.append(ExprimentDotArray(dot_array=da,
                        position=position,
                        colour_area=colour_area,
