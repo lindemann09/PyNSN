@@ -15,7 +15,7 @@ cl = misc.Clock()
 
 
 
-maxnumber = 20
+maxnumber = 200
 
 generator= RandomDotArrayGenerator(
                        stimulus_area_radius= 300,
@@ -39,7 +39,8 @@ stim = expyriment_stimulus.ExprimentDotArray(max_da,
 stim.present()
 exp.keyboard.wait()
 
-max_da.fit_convex_hull_area(convex_hull_area=1500, center_array=False, use_convex_hull_positions=False)
+max_da.minimum_gap = 10
+print(max_da.realign())
 stim = expyriment_stimulus.ExprimentDotArray(max_da,
                                       colour_area=(100, 100, 100),
                                        colour_convex_hull_dots=(255, 0, 0),

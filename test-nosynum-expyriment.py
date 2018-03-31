@@ -40,7 +40,7 @@ def compare_stimulus(n_left, n_right,
         a.fit_density(density=b.density, ratio_area_convex_hull_adaptation=0.5)
     elif match_method == nosynum.M_CONVEX_HULL:
         a.fit_convex_hull_area(convex_hull_area=b.convex_hull_area)
-    elif match_method == nosynum.M_ITEM_SIZE:
+    elif match_method == nosynum.M_MEAN_DIAMETER:
         a.fit_mean_dot_diameter(b.mean_dot_diameter)
     elif match_method == nosynum.M_TOTAL_AREA:
         a.fit_total_area(total_area=b.total_area)
@@ -52,7 +52,7 @@ def compare_stimulus(n_left, n_right,
         raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
 
 
-    a.realign(minimum_gap=generator.minimum_gap)
+    ok = a.realign(minimum_gap=generator.minimum_gap) # todo: check of error
 
     # stimuli
     left = expyriment_stimulus.ExprimentDotArray( dot_array=da_left,  position=pos_left)

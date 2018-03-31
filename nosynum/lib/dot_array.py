@@ -101,8 +101,19 @@ class NumpyDotList(object):
         xy = polar2cartesian(polar_centered) + center
         return xy
 
+    def _jitter_identical_positions(self, jitter_size=0.1):
+        """jitters points with identical position"""
+
+        for idx, ref_dot in enumerate(self.xy):
+            identical = np.where(np.all(np.equal(self.xy, ref_dot), axis=1))[0]  # find identical positions
+            if len(identical) > 1:
+                for x in identical:  # jitter all identical positions
+                    if x != idx:
+                        self.xy[x, :] -= polar2cartesian([[jitter_size, np.random.random() * TWO_PI]])[0]
+
     def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
+        self._jitter_identical_positions()
 
         dist = self.distances(self.xy[dot_id, :], self.diameters[dot_id])
 
@@ -213,16 +224,6 @@ class DotArray(NumpyDotList):
                 rtn.append_dot(self.get_dot(x))
             return rtn
 
-    def _jitter_identical_positions(self, jitter_size=0.1):
-        """jitters points with identical position"""
-
-        for idx, ref_dot in enumerate(self.xy):
-            identical = np.where(np.all(np.equal(self.xy, ref_dot), axis=1))[0]  # find identical positions
-            if len(identical) > 1:
-                for x in identical:  # jitter all identical positions
-                    if x != idx:
-                        self.xy[x, :] -= polar2cartesian([[jitter_size, np.random.random() * TWO_PI]])[0]
-
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
         overlap, the dots that is further apart from the arry center will be
@@ -232,11 +233,10 @@ class DotArray(NumpyDotList):
 
         """
 
-        self._jitter_identical_positions()
         shift_required = False
-        outlier_error = False
+        error = False
 
-        # old_xy = np.copy(self.xy) # keep a copy in the case no solution is found
+        # old_xy = np.copy(self.xy) # keep a copy in the case no solution is found #todo: maybe delete
 
         # from inner to outer remove overlaps
         for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
@@ -267,18 +267,17 @@ class DotArray(NumpyDotList):
                 break # end while loop
 
             cnt += 1
-            if cnt>10:
-                outlier_error = True
+            if cnt>20:
+                error = True
                 break
 
-        if outlier_error:
-            raise RuntimeError("Can't find solution when removing outlier (n=" + \
-                                    str(self.prop_numerosity) + ")")
+        if error:
+            return False, "Can't find solution when removing outlier (n=" + \
+                                     str(self.prop_numerosity) + ")"
         if not shift_required:
-            return False
+            return True, ""
         else:
-            self.realign() # recursion
-            return True
+            return self.realign() # recursion
 
     @property
     def prop_density_max_array(self):
@@ -434,14 +433,12 @@ class DotArray(NumpyDotList):
         return deviant
 
     def fit_total_area(self, total_area):
-        """dots will be realigned"""
         # changes diameter
         a_scale = (total_area / self.prop_total_surface_area)
         self.diameters = np.sqrt(self.surface_areas * a_scale) * 2/np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
 
 
     def fit_mean_dot_diameter(self, mean_dot_diameter):
-        """dots will be realigned"""
         # changes diameter
 
         scale = mean_dot_diameter / self.prop_mean_dot_diameter
@@ -521,4 +518,113 @@ class DotArray(NumpyDotList):
         else:
             convex_hull = self.prop_area_convex_hull_dots
         self.fit_total_area(total_area=convex_hull / density)
+
+
+class DotArraySequence(object):
+    def __init__(self):
+        self._dot_arrays = []
+        self.method = None
+        self.error = None
+        self.numerosity_idx = {}  # todo: do the use of numerosity_idx
+
+    @property
+    def dot_array(self):
+        """ dot array, please use append_dot_array and delete_array to modify the list"""
+        return self.dot_array
+
+    def append_dot_arrays(self, arr):
+        if isinstance(arr, DotArray):
+            arr = [arr]
+        for a in arr:
+            self._dot_arrays.append(arr)
+
+        self.numerosity_idx = {len(da.dots): idx for idx, da in enumerate(self._dot_arrays)}
+
+    def delete_dot_arrays(self, array_id):
+        self._dot_arrays.pop(array_id)
+        self.numerosity_idx = {len(da.dots): idx for idx, da in enumerate(self._dot_arrays)}
+
+    def get_array_numerosity(self, number_of_dots):
+        """returns array with a particular numerosity"""
+
+        try:
+            return self._dot_arrays[self.numerosity_idx[number_of_dots]]
+        except:
+            return None
+
+    @property
+    def min_max_numerosity(self):
+        return (len(self._dot_arrays[0].dots), len(self._dot_arrays[-1].dots))
+
+    @property
+    def md5hash(self):
+        """md5_hash of csv (n_dots, counter, position, diameter only)"""
+
+        csv = self.get_csv(num_format="%7.2f", hash_column=False,
+                           variable_names=False,
+                           colour_column=False, picture_column=False)
+        return my_md5_hash(csv)
+
+    @property
+    def property_names(self):
+        return self._dot_arrays[0].property_names
+
+    @property
+    def properties(self):
+        rtn = []
+        for da in self._dot_arrays:
+            rtn.append(da.properties)
+        return np.array(rtn)
+
+    @property
+    def property_correlations(self):
+        return np.corrcoef(np.round(self.properties, 2), rowvar=False)
+
+    @property
+    def variances(self):
+        return np.var(self.properties, axis=0)
+
+    @property
+    def numerosity_correlations(self):
+        cor = self.property_correlations[0, :]
+        rtn = {}
+        for x in range(1, len(cor)):
+            rtn[self.property_names[x]] = cor[x]
+        return rtn
+
+    def get_property_string(self, varnames=False):
+        rtn = ""
+        if varnames:
+            rtn += "hash, " + ", ".join(self.property_names) + "\n"
+        hash = self.md5hash
+        for da in self._dot_arrays:
+            rtn += hash + "," + str(da.properties).replace("[", "").replace("]", "\n")
+
+        return rtn[:-1]
+
+    def get_csv(self, num_format="%7.2f", hash_column=False,
+                variable_names=True, colour_column=False, picture_column=False):
+
+        rtn = ""
+        tmp_var_names = variable_names
+        for da in self._dot_arrays:
+            rtn += da.get_csv(n_dots_column=True, hash_column=False,
+                              variable_names=tmp_var_names,
+                              num_format=num_format, colour_column=colour_column,
+                              picture_column=picture_column)
+            tmp_var_names = False
+
+        if hash_column:
+            hash = self.md5hash
+            rtn2 = ""
+            tmp_var_names = variable_names
+            for l in rtn.split("\n"):
+                if tmp_var_names:
+                    rtn2 += "hash," + l + "\n"
+                    tmp_var_names = False
+                elif len(l) > 0:
+                    rtn2 += "{},{}\n".format(hash, l)
+            return rtn2
+        else:
+            return rtn
 

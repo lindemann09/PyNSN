@@ -9,20 +9,20 @@ control.set_develop_mode(True)
 
 cl = misc.Clock()
 
-DOT_ARRAY_DEF = nosynum.DotArrayDefinition(
+generator =  nosynum.RandomDotArrayGenerator(
                        stimulus_area_radius= 400,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
                        dot_colour=(230, 230, 230))
 
+
 def prepare_processes(trials, forerun):
     processes = nosynum.ProcessContainer(forerun=forerun)
     for tr in trials:
         maxnumber = tr.get_factor("maxnumber")
         method = tr.get_factor("method")
-        max_da = nosynum.DotArray(n_dots=maxnumber,
-                                  dot_array_definition=DOT_ARRAY_DEF)
+        max_da = generator(n_dots=maxnumber)
         make_process = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
                                                           min_numerosity=20,
                                                           method=method,

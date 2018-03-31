@@ -3,43 +3,8 @@ from builtins import map, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from os import path, mkdir
 from PIL import Image, ImageDraw
 import numpy as np
-
-from .dot_array_sequences import DASequence, M_NO_FITTING
-from .multi_processing import TemplateDASequenceProcess
-
-
-def _draw_dot(img, xy, diameter, colour=None, picture=None):
-    # draw a dot on an image
-
-    if colour is None:
-        colour = (255, 255, 255)
-    else:
-        colour = colour
-
-    r = diameter // 2
-    if picture is not None:
-        pict = Image.open(picture, "r")
-        img.paste(pict, (xy[0]-r, xy[1]-r))
-    else:
-        ImageDraw.Draw(img).ellipse((xy[0]-r, xy[1]-r, xy[0]+r, xy[1]+r), fill=tuple(colour))
-
-def _convert_pos(xy, image_size):
-    """convert dot pos to pil image coordinantes"""
-    return (xy * [1,-1]) + image_size//2
-
-def _draw_convex_hull(img, convex_hull, convex_hull_colour):
-    # plot convey hull
-    hull = np.append(convex_hull, [convex_hull[0]], axis=0)
-    last = None
-    draw = ImageDraw.Draw(img)
-    for p in hull:
-        if last is not None:
-            draw.line(np.append(last, p).tolist(),
-                      width=2, fill=convex_hull_colour)
-        last = p
 
 
 def create(dot_array,
@@ -90,91 +55,33 @@ def create(dot_array,
     return img
 
 
-def write_pil_images_of_da_sequence(dot_array_sequence,
-                      area_colour=None,
-                      convex_hull_colour=None,
-                      antialiasing=None,
-                      background_colour=(255,255,255)):
-    """note: rounds dot array to intergers """
+def _draw_dot(img, xy, diameter, colour=None, picture=None):
+    # draw a dot on an image
 
-    dot_array_sequence.images = []
-    for da in dot_array_sequence.dot_arrays:
-        da.round_dot_paramter_to_integer()
-        im = create(dot_array=da, colour_area=area_colour,
-                    colour_convex_hull_dots=convex_hull_colour, #fixme colours convex_hulls and center
-                    antialiasing=antialiasing,
-                    colour_background=background_colour)
-        dot_array_sequence.images.append(im)
+    if colour is None:
+        colour = (255, 255, 255)
+    else:
+        colour = colour
 
+    r = diameter // 2
+    if picture is not None:
+        pict = Image.open(picture, "r")
+        img.paste(pict, (xy[0]-r, xy[1]-r))
+    else:
+        ImageDraw.Draw(img).ellipse((xy[0]-r, xy[1]-r, xy[0]+r, xy[1]+r), fill=tuple(colour))
 
-def pil_images_save(da_sequence_with_images, folder, file_type="png",
-                    file_prefix = "da-",
-                    replace_images_by_filename = True):
-    try:
-        mkdir(folder)
-    except:
-        pass
+def _convert_pos(xy, image_size):
+    """convert dot pos to pil image coordinantes"""
+    return (xy * [1,-1]) + image_size//2
 
-    name = file_prefix + da_sequence_with_images.md5hash
-    for x in range(len(da_sequence_with_images.images)):
-        n = len(da_sequence_with_images.dot_arrays[x].dots)
-        filename = path.join(folder, name + u"-" + str(n) + u"." + file_type)
-        da_sequence_with_images.images[x].save(fp=filename, file_type=file_type)
-        if replace_images_by_filename:
-            da_sequence_with_images.images[x] = filename
+def _draw_convex_hull(img, convex_hull, convex_hull_colour):
+    # plot convey hull
+    hull = np.append(convex_hull, [convex_hull[0]], axis=0)
+    last = None
+    draw = ImageDraw.Draw(img)
+    for p in hull:
+        if last is not None:
+            draw.line(np.append(last, p).tolist(),
+                      width=2, fill=convex_hull_colour)
+        last = p
 
-
-class PILMakeDASequenceProcess(TemplateDASequenceProcess):
-    # making images in seperate prcess
-    # DO NOT USE SAVE_IMAGES=FALSE, BECAUSE OF LARGE MEMORY REQUIRMENTS
-    # AND TRANSFER OF PIL IMAGES BETWEEN PROCESSES IS SLOW
-    # use multiprocessing.MakeDASequenceProcess and write_pil_images_of_da_sequence
-    # in main process.
-
-    def __init__(self, max_dot_array,
-                 min_numerosity,
-                 method=M_NO_FITTING,
-                 n_trials=3,
-                 area_colour=(255, 255, 255),
-                 convex_hull_colour=None,
-                 antialiasing=None,
-                 background_colour=(0,0,0),
-                 sqeeze_factor=None):
-        """
-        property: da_sequence, after processes finished
-        Event(): sequence_available
-        """
-
-        super(PILMakeDASequenceProcess, self).__init__()
-
-        self.max_dot_array = max_dot_array
-        self.method = method
-        self.n_trials = n_trials
-        self.area_colour = area_colour
-        self.convex_hull_colour = convex_hull_colour
-        self.antialiasing = antialiasing
-        self.background_colour = background_colour
-        self.sqeeze_factor = sqeeze_factor
-        self.min_numerosity = min_numerosity
-
-    def run(self):
-        cnt = 0
-        da_sequence = DASequence()
-
-        while cnt<self.n_trials:
-            cnt += 1
-            if da_sequence.make_by_incrementing(max_dot_array=self.max_dot_array,
-                                                method=self.method,
-                                                sqeeze_factor=self.sqeeze_factor,
-                                                min_numerosity=self.min_numerosity):
-                break
-            print("remix")
-
-        write_pil_images_of_da_sequence( dot_array_sequence=da_sequence,
-                          area_colour=self.area_colour,
-                          convex_hull_colour=self.convex_hull_colour,
-                          antialiasing=self.antialiasing,
-                          background_colour=self.background_colour)
-
-        self.data_available.set()
-        self._data_queue.put(da_sequence)
