@@ -13,12 +13,12 @@ control.defaults.open_gl = False
 exp = control.initialize()
 
 squeeze = .7
-dot_array_def = nosynum.DotArrayDefinition(
+generator = nosynum.RandomDotArrayGenerator(
                        stimulus_area_radius= 300*squeeze,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 20),
                        dot_diameter_std=2,
-                       minium_gap=3)
+                       minimum_gap=3)
 
 def compare_stimulus(n_left, n_right,
                      pos_left=(-300,0),
@@ -26,8 +26,8 @@ def compare_stimulus(n_left, n_right,
                      match_method=nosynum.M_NO_FITTING,
                      match_the_left=True):
 
-    da_left = nosynum.DotArray(n_dots=n_left, dot_array_definition=dot_array_def)
-    da_right= nosynum.DotArray(n_dots=n_right, dot_array_definition=dot_array_def)
+    da_left = generator.make(n_dots=n_left)
+    da_right= generator.make(n_dots=n_right)
 
     if match_the_left:
         b = da_right
@@ -51,29 +51,13 @@ def compare_stimulus(n_left, n_right,
     else:
         raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
 
-    cnt = 0
-    error = None
-    while True:
-        cnt += 1
-        try:
-            if not a.realign():  # Ok if realign not anymore required
-                break
-        except:
-            # error = "WARNING: outlier removal, " + str(cnt) + ", " + str(len(da.dots))
-            # print(error)
-            break
-        if cnt > 100:
-            error = "ERROR: realign, " + str(cnt) + ", " + str(len(a.dots))
 
-        if error is not None:
-            error = (cnt, error)
-            break
+    a.realign(minimum_gap=generator.minimum_gap)
 
     # stimuli
-    left = expyriment_stimulus.ExprimentDotArray(pil_image.create(dot_array=da_left),
-                                                 position=pos_left)
-    right = expyriment_stimulus.ExprimentDotArray(pil_image.create(dot_array=da_right),
-                                                  position=pos_right)
+    left = expyriment_stimulus.ExprimentDotArray( dot_array=da_left,  position=pos_left)
+    right = expyriment_stimulus.ExprimentDotArray(dot_array=da_right, position=pos_right)
+
     stim = stimuli.BlankScreen()
     left.plot(stim)
     right.plot(stim)
@@ -87,7 +71,7 @@ control.start(skip_ready_screen=True)
 c.reset_stopwatch()
 
 stim = compare_stimulus(20, 120,
-                        match_method=nosynum.M_TOTAL_AREA,
+                        match_method=nosynum.M_NO_FITTING,
                         match_the_left=True)
 
 stim.present()
