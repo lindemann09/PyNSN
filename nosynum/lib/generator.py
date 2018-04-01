@@ -52,7 +52,10 @@ class DotArrayGenerator(object):
         self.dot_diameter_std = dot_diameter_std
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
+        self.set_logger(logger)
 
+
+    def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
             raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
@@ -113,11 +116,12 @@ class DASequenceGenerator(object):
         self._da = []
         self.use_convex_hull_positions = use_convex_hull_positions
         self.set_max_dot_array(max_dot_array=max_dot_array, sqeeze_factor=sqeeze_factor)
+        self.set_logger(logger)
 
+    def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
-
+            raise RuntimeError("logger has to be None or a generator logger")  # TODO: check type name
 
     def set_max_dot_array(self, max_dot_array, sqeeze_factor=None):
         if sqeeze_factor is None:
@@ -235,21 +239,15 @@ class DASequenceGeneratorProcess(Process):
         self._read_queue()
         return self._da_sequence
 
-    def join(self, timeout=None):
+    def join(self, timeout=1):
         self._read_queue()
         super(DASequenceGeneratorProcess, self).join(timeout)
 
     def _read_queue(self):
-
-        while self.is_alive() or not self._data_queue.empty():
-            try:
-                x = self._data_queue.get(timeout=0.1)
-            except:
-                continue
-
-            self._da_sequence = x
-            break
-
+        if self._da_sequence is not None:
+            return
+        if self.is_alive() or not self._data_queue.empty():
+            self._da_sequence = self._data_queue.get()
 
     def run(self):
         cnt = 0
@@ -281,6 +279,7 @@ class GeneratorLogger(Process):
         self.log_filename_properties = log_filename + ".prop.csv"
         self.num_format = num_format
         self.log_colours = log_colours
+        self.daemon = True
 
         if override_log_files:
             self.write_mode = "w+"
@@ -302,7 +301,7 @@ class GeneratorLogger(Process):
 
     def log(self, dot_array_object):
 
-        if isinstance(dot_array_object, (DASequence, DotArray)):
+        if isinstance(dot_array_object, (DASequence, DotArray)) and not self._quit_event.is_set():
             txt = dot_array_object.get_property_string(variable_names=not self._varname_written.is_set())
             self._log_queue_prop.put(txt)
             self._new_data_avaiable.set()
