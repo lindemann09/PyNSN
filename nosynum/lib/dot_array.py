@@ -32,7 +32,7 @@ def my_md5_hash(unicode, hash_length=8):
     return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
 
 
-class NumpyDotList(object):
+class DotList(object):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -165,21 +165,21 @@ class NumpyDotList(object):
             return None
 
 
-class DotArray(NumpyDotList):
+class DotArray(DotList):
 
     def __init__(self, max_array_radius, xy_positions=(), diameters=(), minimum_gap=1, colours = (),
                             pictures=()):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
-        NumpyDotList.__init__(self, xy_positions=xy_positions, diameters=diameters)
+        DotList.__init__(self, xy_positions=xy_positions, diameters=diameters)
         self.max_array_radius = max_array_radius
         self.colours = np.array(colours)
         self.pictures = np.array(pictures)
         self.minimum_gap = minimum_gap
 
     def clear(self):
-        NumpyDotList.clear(self)
+        DotList.clear(self)
         self.colours = np.array([])
         self.pictures = np.array([])
 
@@ -523,7 +523,7 @@ class DotArray(NumpyDotList):
         self.fit_total_area(total_area=convex_hull / density)
 
 
-class DotArraySequence(object):
+class DASequence(object):
     def __init__(self):
         self._dot_arrays = []
         self.method = None

@@ -11,7 +11,7 @@ def create(dot_array,
            colour_convex_hull_dots=None,
            colour_center_of_mass = None,
            colour_center_of_outer_positions=None,
-           antialiasing=None,
+           antialiasing=True,
            colour_background=(0, 0, 0)):
 
     img = pil_image.create(dot_array=dot_array,

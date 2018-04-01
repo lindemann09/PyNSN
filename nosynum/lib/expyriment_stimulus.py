@@ -20,7 +20,7 @@ class ExprimentDotArray(Canvas):
                        colour_convex_hull_dots=None,
                        colour_center_of_mass = None,
                        colour_center_of_outer_positions=None,
-                       antialiasing=None,
+                       antialiasing=True,
                        colour_background=(0, 0, 0)):
 
         Canvas.__init__(self, size=(0, 0), position=position)
@@ -46,7 +46,7 @@ class ExprimentDotArray(Canvas):
                                       colour_background=self.colour_background)
 
         self._size = image.size
-        return pygame.image.fromstring(image.tobytes(),
+        return pygame.image.frombuffer(image.tobytes(),
                                        image.size, image.mode)
 
 
