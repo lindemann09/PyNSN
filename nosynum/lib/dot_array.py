@@ -6,6 +6,7 @@ from builtins import map, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+import random
 from copy import deepcopy, copy
 from hashlib import md5
 import numpy as np
@@ -109,7 +110,7 @@ class DotList(object):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self.xy[x, :] -= polar2cartesian([[jitter_size, np.random.random() * TWO_PI]])[0]
+                        self.xy[x, :] -= polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
@@ -362,7 +363,7 @@ class DotArray(DotList):
             rtn += "\n"
         return rtn
 
-    def get_list_of_dots(self):
+    def get_all_dots(self):
         rtn = []
         for xy, dia, col, pict in zip(self.xy, self.diameters,
                                       self.colours, self.pictures):
@@ -423,7 +424,7 @@ class DotArray(DotList):
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                rnd = np.random.randint(0, deviant.prop_numerosity-1)
+                rnd = random.randint(0, deviant.prop_numerosity-1) # strange: do not use np.rand, because parallel running process produce the same numbers
                 if change_numerosity<0:
                     # remove dots
                     deviant.delete_dot(rnd)
@@ -601,7 +602,7 @@ class DASequence(object):
         for da in self._dot_arrays:
             rtn += hash + "," + str(da.properties).replace("[", "").replace("]", "\n")
 
-        return rtn[:-1]
+        return rtn
 
     def get_csv(self, num_format="%7.2f", hash_column=False,
                 variable_names=True, colour_column=False, picture_column=False):

@@ -4,12 +4,14 @@ from builtins import map, zip, filter
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import os
+import sys
+import time
 import atexit
 
-from . import random_beta
-from multiprocessing import Process, Queue, Event
+from . import random_beta, __version__
+from Queue import Empty
+from multiprocessing import Process, Event, Lock,Queue
 from .dot_array import DotArray, DASequence
-
 
 
 class DotArrayGenerator(object):
@@ -22,7 +24,7 @@ class DotArrayGenerator(object):
                  dot_picture = None,
                  dot_colour=None,
                  minimum_gap=1,
-                 log_file=None):
+                 logger=None):
 
         """Specification of a Random Dot Array
 
@@ -51,12 +53,9 @@ class DotArrayGenerator(object):
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
 
-        self.log_file = None
-        if log_file is not None:
-            if not isinstance(log_file, GeneratorLogFile):
-                raise RuntimeError("Incorrect type for log_file. Please use a GeneratorLogFile only.")
-            else:
-                self.log_file = log_file
+        self.logger = logger
+        if not isinstance(logger, (type(None), GeneratorLogger)):
+            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
 
 
     def make(self, n_dots, inhibit_logging=False):
@@ -83,8 +82,8 @@ class DotArrayGenerator(object):
                         colour=self.dot_colour,
                         picture=self.dot_picture)
 
-        if not inhibit_logging and self.log_file is not None:
-            self.log_file.log(rtn)
+        if not inhibit_logging and self.logger is not None:
+            self.logger.log(rtn)
 
         return rtn
 
@@ -101,9 +100,8 @@ class DASequenceGenerator(object):
     TOTAL_CIRCUMFERENCE = "TC"
     ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY, NO_FITTING]
 
-    def __init__(self, max_dot_array, sqeeze_factor=None, # fixme: squeeze factor needed ?
-                 use_convex_hull_positions=False,
-                 log_file=None):
+    def __init__(self, max_dot_array, sqeeze_factor=None,  # fixme: squeeze factor needed ?
+                 use_convex_hull_positions=False, logger=None):
         """  makes sequence of deviants by subtracting dots
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -116,12 +114,9 @@ class DASequenceGenerator(object):
         self.use_convex_hull_positions = use_convex_hull_positions
         self.set_max_dot_array(max_dot_array=max_dot_array, sqeeze_factor=sqeeze_factor)
 
-        self.log_file = None
-        if log_file is not None:
-            if not isinstance(log_file, GeneratorLogFile):
-                raise RuntimeError("Incorrect type for log_file. Please use a GeneratorLogFile only.")
-            else:
-                self.log_file = log_file
+        self.logger = logger
+        if not isinstance(logger, (type(None), GeneratorLogger)):
+            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
 
 
     def set_max_dot_array(self, max_dot_array, sqeeze_factor=None):
@@ -146,10 +141,10 @@ class DASequenceGenerator(object):
         """
 
         da = self._da
-        da_sequence = [self._da]
-
+        da_sequence = [da]
         error = None
-        while (da.prop_numerosity < min_numerosity):
+
+        while (da.prop_numerosity > min_numerosity):
             da = da.number_deviant(change_numerosity=-1)
 
             if method == DASequenceGenerator.DENSITY:
@@ -196,8 +191,8 @@ class DASequenceGenerator(object):
         rtn.method = method
         rtn.error = error
 
-        if not inhibit_logging and self.log_file is not None:
-            self.log_file.log(rtn)
+        if not inhibit_logging and self.logger is not None:
+            self.logger.log(rtn)
 
         return rtn
 
@@ -205,9 +200,9 @@ class DASequenceGenerator(object):
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity,
-                 method=DASequenceGenerator.NO_FITTING,
-                 n_trials=3, sqeeze_factor=None, use_convex_hull_positions=False):
+    def __init__(self, max_dot_array, min_numerosity, method,
+                 n_trials=3, sqeeze_factor=None, use_convex_hull_positions=False,
+                 logger=None):
 
         """
         property: da_sequence, after processes finished
@@ -231,6 +226,10 @@ class DASequenceGeneratorProcess(Process):
         else:
             self._n_trails = n_trials
 
+        self.logger = logger
+        if not isinstance(logger, (type(None), GeneratorLogger)):
+            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
+
     @property
     def da_sequence(self):
         self._read_queue()
@@ -242,7 +241,7 @@ class DASequenceGeneratorProcess(Process):
 
     def _read_queue(self):
 
-        while self.is_alive():
+        while self.is_alive() or not self._data_queue.empty():
             try:
                 x = self._data_queue.get(timeout=0.1)
             except:
@@ -251,12 +250,14 @@ class DASequenceGeneratorProcess(Process):
             self._da_sequence = x
             break
 
+
     def run(self):
         cnt = 0
         da_seq = None
         generator = DASequenceGenerator(max_dot_array=self.max_dot_array,
                                         sqeeze_factor=self.sqeeze_factor,
-                                        use_convex_hull_positions=self.use_convex_hull_positions)
+                                        use_convex_hull_positions=self.use_convex_hull_positions,
+                                        logger=self.logger)
 
         while cnt<self._n_trails:
             cnt += 1
@@ -269,41 +270,103 @@ class DASequenceGeneratorProcess(Process):
         self._data_queue.put(da_seq)
 
 
-class GeneratorLogFile(object):
 
-    def __init__(self, log_filename, log_colours=False, num_format="%6.0f"):
-        """extension will be added automatically"""
+class GeneratorLogger(Process):
+
+    def __init__(self, log_filename, log_colours=False, num_format="%6.0f",
+                 override_log_files=False):
+        super(GeneratorLogger, self).__init__()
 
         self.log_filename_arrays = log_filename + ".array.csv"
         self.log_filename_properties = log_filename + ".prop.csv"
-        self._first_log = True
         self.num_format = num_format
         self.log_colours = log_colours
+
+        if override_log_files:
+            self.write_mode = "w+"
+        else:
+            self.write_mode = "a+"
 
         try:
             os.makedirs(os.path.split(log_filename)[0])
         except: pass
 
-        self._logfile_arrays = open(self.log_filename_arrays, "w+")
-        self._logfile_prop = open(self.log_filename_properties, "w+")
+        self.lock = Lock()
+        self._quit_event = Event()
+        self._varname_written = Event()
+        self._new_data_avaiable = Event()
+        self._log_queue_array = Queue()
+        self._log_queue_prop = Queue()
 
-        atexit.register(self._logfile_arrays.close)
-        atexit.register(self._logfile_prop.close)
+        self.start()
 
     def log(self, dot_array_object):
-        """ """
+
         if isinstance(dot_array_object, (DASequence, DotArray)):
-            txt = dot_array_object.get_property_string(variable_names=self._first_log)
-            self._logfile_prop.write(txt)
+            txt = dot_array_object.get_property_string(variable_names=not self._varname_written.is_set())
+            self._log_queue_prop.put(txt)
+            self._new_data_avaiable.set()
 
             if isinstance(dot_array_object, DotArray):
                 txt = dot_array_object.get_csv(hash_column=True, n_dots_column=True,
-                                  colour_column=self.log_colours,
-                                  num_format=self.num_format,
-                                  variable_names=self._first_log)
-            else: #DASequence
+                                               colour_column=self.log_colours,
+                                               num_format=self.num_format,
+                                               variable_names=not self._varname_written.is_set())
+            else:  # DASequence
                 txt = dot_array_object.get_csv(hash_column=True, colour_column=self.log_colours,
-                              num_format=self.num_format,
-                              variable_names=self._first_log)
-            self._logfile_arrays.write(txt)
-            self._first_log = False
+                                               num_format=self.num_format,
+                                               variable_names=not self._varname_written.is_set())
+            self._log_queue_array.put(txt)
+            self._new_data_avaiable.set()
+            self._varname_written.set()
+
+    def join(self, timeout=None):
+        self._quit_event.set()
+        self._new_data_avaiable.set()
+        super(GeneratorLogger, self).join(timeout)
+
+    def run(self):
+
+        logfile_arrays = open(self.log_filename_arrays, self.write_mode)
+        logfile_prop = open(self.log_filename_properties, self.write_mode)
+
+        comment = "# NoSyNum {}, {}, main: {}\n".format(__version__, time.asctime(),
+                            os.path.split(sys.argv[0])[1])
+
+        logfile_prop.write(comment)
+        logfile_arrays.write(comment)
+        while not self._quit_event.is_set():
+            self._new_data_avaiable.wait(timeout=1)
+
+            if self._new_data_avaiable.is_set():
+                prop_txt = []
+                array_txt = []
+                # read all queues
+                while True:
+                    new_data = False
+                    try:
+                        txt = self._log_queue_prop.get_nowait()
+                        prop_txt.append(txt)
+                        new_data = True
+                    except Empty:
+                        pass
+
+                    try:
+                        txt = self._log_queue_array.get_nowait()
+                        array_txt.append(txt)
+                        new_data = True
+                    except Empty:
+                        pass
+
+                    if not new_data:
+                        break
+
+                self._new_data_avaiable.clear()
+                # write files
+                for txt in prop_txt:
+                    logfile_prop.write(txt)
+                for txt in array_txt:
+                    logfile_arrays.write(txt)
+
+        logfile_arrays.close()
+        logfile_prop.close()
