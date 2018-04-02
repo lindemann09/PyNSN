@@ -93,7 +93,7 @@ class DotList(object):
         return self.xy[x,:]
 
     @property
-    def convex_hull_dots(self):
+    def convex_hull(self):
         """this convex_hull takes into account the dot diameter"""
         idx = ConvexHull(self.xy).vertices
         center = self.center_of_outer_positions
@@ -150,8 +150,8 @@ class DotList(object):
         return ConvexHull(self.xy).area
 
     @property
-    def prop_area_convex_hull_dots(self):
-        return ConvexHull(self.convex_hull_dots).area
+    def prop_area_convex_hull(self):
+        return ConvexHull(self.convex_hull).area
 
     @property
     def prop_numerosity(self):
@@ -161,10 +161,9 @@ class DotList(object):
     def prop_density(self):
         """density takes into account the convex hull"""
         try:
-            return self.prop_area_convex_hull_positions / self.prop_total_surface_area
+            return self.prop_area_convex_hull / self.prop_total_surface_area # todo: positions conved hull
         except:
             return None
-
 
 class DotArray(DotList):
 
@@ -240,8 +239,6 @@ class DotArray(DotList):
         shift_required = False
         error = False
 
-        # old_xy = np.copy(self.xy) # keep a copy in the case no solution is found #todo: maybe delete
-
         # from inner to outer remove overlaps
         for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
             if self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
@@ -253,6 +250,7 @@ class DotArray(DotList):
             radii= cartesian2polar(self.xy, radii_only=True)
             too_far = np.where((radii + self.diameters // 2) > self.max_array_radius)[0] # find outlier
             if len(too_far)>0:
+
                 # squeeze in outlier
                 polar = cartesian2polar([self.xy[too_far[0],:]])[0]
                 polar[0] = self.max_array_radius - self.diameters[too_far[0]] // 2 - 0.000000001 # new radius
@@ -291,7 +289,7 @@ class DotArray(DotList):
     @property
     def properties(self):
         return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_surface_area,
-                self.prop_area_convex_hull_positions, self.prop_density, self.prop_total_circumference]
+                self.prop_area_convex_hull, self.prop_density, self.prop_total_circumference]
 
     def get_property_string(self, variable_names=False):
         rtn = ""
@@ -436,36 +434,32 @@ class DotArray(DotList):
 
         return deviant
 
-    def fit_total_area(self, total_area):
+    def match_total_area(self, total_area):
         # changes diameter
         a_scale = (total_area / self.prop_total_surface_area)
         self.diameters = np.sqrt(self.surface_areas * a_scale) * 2/np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
 
 
-    def fit_mean_dot_diameter(self, mean_dot_diameter):
+    def match_mean_dot_diameter(self, mean_dot_diameter):
         # changes diameter
 
         scale = mean_dot_diameter / self.prop_mean_dot_diameter
         self.diameters = self.diameters * scale
 
-    def fit_total_circumference(self, total_circumference):
+    def match_total_circumference(self, total_circumference):
         # linear to fit_mean_dot_diameter, but depends on numerosity
         mean_dot_diameter = total_circumference/ (self.prop_numerosity * np.pi)
-        self.fit_mean_dot_diameter(mean_dot_diameter)
+        self.match_mean_dot_diameter(mean_dot_diameter)
 
 
-    def fit_convex_hull_area(self, convex_hull_area, precision=0.001,
-                             center_array = True,
-                             use_convex_hull_positions=False):
+    def match_convex_hull_area(self, convex_hull_area, precision=0.0001,
+                               center_array = True):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
         """
 
-        if use_convex_hull_positions:
-            current = self.prop_area_convex_hull_positions
-        else:
-            current = self.prop_area_convex_hull_dots
+        current = self.prop_area_convex_hull
 
         if current is None:
             return # not defined
@@ -484,10 +478,7 @@ class DotArray(DotList):
             scale += step
 
             self.xy = polar2cartesian(centered_polar * [scale, 1])
-            if use_convex_hull_positions:
-                current = self.prop_area_convex_hull_positions
-            else:
-                current = self.prop_area_convex_hull_dots
+            current = self.prop_area_convex_hull
 
             if (current < convex_hull_area and step < 0) or \
                     (current > convex_hull_area and step > 0):
@@ -496,40 +487,38 @@ class DotArray(DotList):
         if not center_array:
             self.xy += old_center
 
-    def fit_density(self, density, precision=0.01, ratio_area_convex_hull_adaptation = 0.5,
-                    use_convex_hull_positions=False):
+    def match_density(self, density, precision=0.01, ratio_convex_hull2area_adaptation = 0.5):
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 
         ratio_area_convex_hull_adaptation:
-            ratio of adaptation via area and convex_hull (between 0 and 1)
+            ratio of adaptation via area or via convex_hull (between 0 and 1)
 
         """
 
         # dens = convex_hull_area / total_area
-        if ratio_area_convex_hull_adaptation<0 or ratio_area_convex_hull_adaptation>1:
-            ratio_area_convex_hull_adaptation = 0.5
+        if ratio_convex_hull2area_adaptation<0 or ratio_convex_hull2area_adaptation>1:
+            ratio_convex_hull2area_adaptation = 0.5
 
-        density_change = density - self.prop_density
-        d_change_convex_hull = density_change * (1-ratio_area_convex_hull_adaptation)
-        if abs(d_change_convex_hull) > 0:
-            self.fit_convex_hull_area(convex_hull_area=self.prop_total_surface_area * (self.prop_density + d_change_convex_hull),
-                                      use_convex_hull_positions=use_convex_hull_positions,
-                                      precision=precision)
+        area_change100 = (self.prop_area_convex_hull / density) - self.prop_total_surface_area
+        d_change_area = area_change100 * (1 - ratio_convex_hull2area_adaptation)
+        if abs(d_change_area) > 0:
+            self.match_total_area(total_area= self.prop_total_surface_area + d_change_area )
 
-        if use_convex_hull_positions:
-            convex_hull = self.prop_area_convex_hull_positions
-        else:
-            convex_hull = self.prop_area_convex_hull_dots
-        self.fit_total_area(total_area=convex_hull / density)
+        self.match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
+                                        precision=precision)
+
 
 
 class DASequence(object):
+
     def __init__(self):
+        """ docu the use of numerosity_idx see get_array_numerosity"""
+
         self._dot_arrays = []
         self.method = None
         self.error = None
-        self.numerosity_idx = {}  # todo: do the use of numerosity_idx
+        self.numerosity_idx = {}
 
     @property
     def dot_arrays(self):

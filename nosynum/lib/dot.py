@@ -7,8 +7,6 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
 
-## TODO (later) speed up by implementing a dot list class in numpy
-
 class Dot(object):
 
     def __init__(self, x=0, y=0, diameter=1, colour=None, picture=None):

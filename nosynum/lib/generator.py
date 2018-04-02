@@ -9,21 +9,21 @@ import time
 import atexit
 
 from . import random_beta, __version__
-from Queue import Empty
-from multiprocessing import Process, Event, Lock,Queue
+from multiprocessing import Process, Event, Lock, Queue
 from .dot_array import DotArray, DASequence
 
 
 class DotArrayGenerator(object):
 
     def __init__(self,
-                 stimulus_area_radius,
+                 field_radius,
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
                  dot_picture = None,
                  dot_colour=None,
                  minimum_gap=1,
+                 min_distance_field_edge=None,
                  logger=None):
 
         """Specification of a Random Dot Array
@@ -46,24 +46,25 @@ class DotArrayGenerator(object):
                 raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
         self.minimum_gap = minimum_gap
-        self.stimulus_area_radius = stimulus_area_radius # TODO rename to array_radius
+        self.field_radius = field_radius
         self.dot_diameter_range = dot_diameter_range
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
+        self.min_distance_field_edge = min_distance_field_edge # not yet used, todo: instead squeeze factor
         self.set_logger(logger)
 
 
     def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
+            raise RuntimeError("logger has to be None or a GeneratorLogger")
 
 
     def make(self, n_dots, inhibit_logging=False):
 
-        rtn = DotArray(max_array_radius = self.stimulus_area_radius,
+        rtn = DotArray(max_array_radius = self.field_radius, # - distance_field_edge ?
                        minimum_gap=self.minimum_gap)
 
         for _ in range(n_dots):
@@ -95,16 +96,24 @@ class DotArrayGenerator(object):
 
 class DASequenceGenerator(object):
 
-    MEAN_DIAMETER = "IS"
-    CONVEX_HULL = "CH"
-    TOTAL_AREA = "TA"
-    DENSITY = "DE"
     NO_FITTING = "NF"
+    CONVEX_HULL = "CH"
+    DENSITY = "DE"
+    DENSITY_ONLY_CONVEX_HULL ="DE_C"
+    DENSITY_ONLY_AREA ="DE_A"
+    MEAN_DIAMETER = "MD"
+    TOTAL_AREA = "TA"
     TOTAL_CIRCUMFERENCE = "TC"
-    ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY, NO_FITTING]
+
+    ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY, NO_FITTING,
+                   DENSITY_ONLY_CONVEX_HULL, DENSITY_ONLY_AREA]
+
+    _DEPENDENCIES =[ [CONVEX_HULL, DENSITY, DENSITY_ONLY_CONVEX_HULL],
+                     [DENSITY, DENSITY_ONLY_AREA, MEAN_DIAMETER, TOTAL_CIRCUMFERENCE, TOTAL_AREA ],
+                     [DENSITY, DENSITY_ONLY_AREA, DENSITY_ONLY_CONVEX_HULL]]
 
     def __init__(self, max_dot_array, sqeeze_factor=None,  # fixme: squeeze factor needed ?
-                 use_convex_hull_positions=False, logger=None):
+                 logger=None):
         """  makes sequence of deviants by subtracting dots
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -114,35 +123,47 @@ class DASequenceGenerator(object):
 
         """
         self._da = []
-        self.use_convex_hull_positions = use_convex_hull_positions
         self.set_max_dot_array(max_dot_array=max_dot_array, sqeeze_factor=sqeeze_factor)
         self.set_logger(logger)
 
     def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a generator logger")  # TODO: check type name
+            raise RuntimeError("logger has to be None or a GeneratorLogger")
 
     def set_max_dot_array(self, max_dot_array, sqeeze_factor=None):
         if sqeeze_factor is None:
             sqeeze_factor = 1
 
         self._da = max_dot_array.copy()
-        self._da.fit_convex_hull_area(convex_hull_area=self._da.prop_area_convex_hull_dots * sqeeze_factor)
+        self._da.match_convex_hull_area(convex_hull_area=self._da.prop_area_convex_hull * sqeeze_factor)
         self._da.xy -= self._da.center_of_outer_positions # centering
 
         self._dia = self._da.prop_mean_dot_diameter
-        self._cha = self._da.prop_area_convex_hull_dots
+        self._cha = self._da.prop_area_convex_hull
         self._dens = self._da.prop_density
         self._total_area = self._da.prop_total_surface_area
         self._circumference = self._da.prop_total_circumference
 
+    @staticmethod
+    def check_match_method_compatibility(match_properties):
+        # check compatible combinations
+        for dep in DASequenceGenerator._DEPENDENCIES:
+            if sum(list(map(lambda x: x in dep, match_properties))) > 1:
+                raise RuntimeError("Incompatible properties to match: {}".format(match_properties))
+                return False
+        return True
 
-    def make(self, method, min_numerosity, inhibit_logging=False):
+    def make(self, match_methods, min_numerosity, inhibit_logging=False):
         """Methods takes take , you might use make Process
 
          returns False is error occured (see self.error)
         """
+
+        if isinstance(match_methods, (tuple, list)):
+            DASequenceGenerator.check_match_method_compatibility(match_methods)
+        else:
+            match_methods = [match_methods]
 
         da = self._da
         da_sequence = [da]
@@ -151,40 +172,43 @@ class DASequenceGenerator(object):
         while (da.prop_numerosity > min_numerosity):
             da = da.number_deviant(change_numerosity=-1)
 
-            if method == DASequenceGenerator.DENSITY:
-                da.fit_density(density=self._dens, ratio_area_convex_hull_adaptation=0.5,
-                                        use_convex_hull_positions=self.use_convex_hull_positions)
-            elif method == DASequenceGenerator.CONVEX_HULL:
-                da.fit_convex_hull_area(convex_hull_area=self._cha,
-                                        use_convex_hull_positions=self.use_convex_hull_positions)
-            elif method == DASequenceGenerator.MEAN_DIAMETER:
-                da.fit_mean_dot_diameter(mean_dot_diameter=self._dia)
-            elif method == DASequenceGenerator.TOTAL_AREA:
-                da.fit_total_area(total_area=self._total_area)
-            elif method == DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-                da.fit_total_circumference(total_circumference=self._circumference)
-            elif method == self.NO_FITTING:
-                pass
-            else:
-                raise Warning("Unknown method {}. Using NO_FITTING.".format(method))
+            for mp in match_methods:
+                if mp == DASequenceGenerator.DENSITY:
+                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=0.5)
+
+                elif mp == DASequenceGenerator.DENSITY_ONLY_AREA:
+                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=0)
+
+                elif mp == DASequenceGenerator.DENSITY_ONLY_CONVEX_HULL:
+                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=1)
+
+                elif mp == DASequenceGenerator.CONVEX_HULL:
+                    da.match_convex_hull_area(convex_hull_area=self._cha)
+
+                elif mp == DASequenceGenerator.MEAN_DIAMETER:
+                    da.match_mean_dot_diameter(mean_dot_diameter=self._dia)
+
+                elif mp == DASequenceGenerator.TOTAL_AREA:
+                    da.match_total_area(total_area=self._total_area)
+
+                elif mp == DASequenceGenerator.TOTAL_CIRCUMFERENCE:
+                    da.match_total_circumference(total_circumference=self._circumference)
+
+                elif mp == self.NO_FITTING:
+                    pass
+                else:
+                    raise Warning("Unknown method {}. Using NO_FITTING.".format(mp))
 
             cnt = 0
             while True:
                 cnt += 1
-                try:
-                    if da.realign():  # Ok if realign not anymore required
-                        break
-                except:
-                    # error = "WARNING: outlier removal, " + str(cnt) + ", " + str(len(da.dots))
-                    # print(error)
+
+                ok, mesg = da.realign()
+                if ok:
                     break
 
                 if cnt > 10:
-                    error = "ERROR: realign, " + str(cnt) + ", " + str(len(da.dots))
-
-                if error is not None:
-                    error = (cnt, error)
-                    break
+                    error = "ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
 
             da_sequence.append(da)
             if error is not None:
@@ -192,7 +216,7 @@ class DASequenceGenerator(object):
 
         rtn = DASequence()
         rtn.append_dot_arrays(list(reversed(da_sequence)))
-        rtn.method = method
+        rtn.method = match_methods
         rtn.error = error
 
         if not inhibit_logging and self.logger is not None:
@@ -204,9 +228,8 @@ class DASequenceGenerator(object):
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity, method,
-                 n_trials=3, sqeeze_factor=None, use_convex_hull_positions=False,
-                 logger=None):
+    def __init__(self, max_dot_array, min_numerosity, match_method,
+                 n_trials=3, sqeeze_factor=None, logger=None):
 
         """
         property: da_sequence, after processes finished
@@ -214,16 +237,18 @@ class DASequenceGeneratorProcess(Process):
         """
 
         super(DASequenceGeneratorProcess, self).__init__()
+
+
         self.data_available = Event()
         self._data_queue = Queue()
         self._da_sequence = None
-        self.daemon = True
 
+        if isinstance(match_method, (tuple, list)):
+            DASequenceGenerator.check_match_method_compatibility(match_method)
+        self.match_method = match_method
         self.max_dot_array = max_dot_array
-        self.method = method
         self.min_numerosity = min_numerosity
         self.sqeeze_factor = sqeeze_factor
-        self.use_convex_hull_positions = use_convex_hull_positions
 
         if n_trials<1:
             self._n_trails = 1
@@ -232,14 +257,14 @@ class DASequenceGeneratorProcess(Process):
 
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a generator logger") # TODO: check type name
+            raise RuntimeError("logger has to be None or a GeneratorLogger")
 
     @property
     def da_sequence(self):
         self._read_queue()
         return self._da_sequence
 
-    def join(self, timeout=1):
+    def join(self, timeout=None):
         self._read_queue()
         super(DASequenceGeneratorProcess, self).join(timeout)
 
@@ -254,12 +279,12 @@ class DASequenceGeneratorProcess(Process):
         da_seq = None
         generator = DASequenceGenerator(max_dot_array=self.max_dot_array,
                                         sqeeze_factor=self.sqeeze_factor,
-                                        use_convex_hull_positions=self.use_convex_hull_positions,
                                         logger=self.logger)
 
         while cnt<self._n_trails:
             cnt += 1
-            da_seq = generator.make(method=self.method, min_numerosity=self.min_numerosity)
+            da_seq = generator.make(match_methods=self.match_method,
+                                    min_numerosity=self.min_numerosity)
             if da_seq.error is None:
                 break
             # print("remix")
@@ -279,7 +304,6 @@ class GeneratorLogger(Process):
         self.log_filename_properties = log_filename + ".prop.csv"
         self.num_format = num_format
         self.log_colours = log_colours
-        self.daemon = True
 
         if override_log_files:
             self.write_mode = "w+"
@@ -297,6 +321,7 @@ class GeneratorLogger(Process):
         self._log_queue_array = Queue()
         self._log_queue_prop = Queue()
 
+        #atexit.register(self.join)
         self.start()
 
     def log(self, dot_array_object):
@@ -336,7 +361,6 @@ class GeneratorLogger(Process):
         logfile_arrays.write(comment)
         while not self._quit_event.is_set():
             self._new_data_avaiable.wait(timeout=1)
-
             if self._new_data_avaiable.is_set():
                 prop_txt = []
                 array_txt = []
@@ -347,14 +371,14 @@ class GeneratorLogger(Process):
                         txt = self._log_queue_prop.get_nowait()
                         prop_txt.append(txt)
                         new_data = True
-                    except Empty:
+                    except:
                         pass
 
                     try:
                         txt = self._log_queue_array.get_nowait()
                         array_txt.append(txt)
                         new_data = True
-                    except Empty:
+                    except:
                         pass
 
                     if not new_data:

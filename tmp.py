@@ -85,7 +85,7 @@ def OLD_make_multiple_dot_array_sequences(n_versions,
                               dot_diameter_std=dot_diameter_std, dot_colour=dot_colour, minium_gap=minium_gap)
 
                 if sqeeze_factor<1 and sqeeze_factor>0:
-                    da.fit_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
+                    da.match_convex_hull_area(convex_hull_area=da.convex_hull_area * sqeeze_factor)
 
                 error_queue = Queue()
                 sequence_queue = Queue()

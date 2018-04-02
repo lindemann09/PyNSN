@@ -14,7 +14,7 @@ exp = control.initialize()
 
 squeeze = .7
 generator = nosynum.DotArrayGenerator(
-                       stimulus_area_radius= 300*squeeze,
+                       field_radius=300 * squeeze,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 20),
                        dot_diameter_std=2,
@@ -37,22 +37,22 @@ def compare_stimulus(n_left, n_right,
         b = da_left
 
     if match_method == nosynum.DASequenceGenerator.DENSITY:
-        a.fit_density(density=b.density, ratio_area_convex_hull_adaptation=0.5)
+        a.match_density(density=b.density, ratio_convex_hull2area_adaptation=0.5)
     elif match_method == nosynum.DASequenceGenerator.CONVEX_HULL:
-        a.fit_convex_hull_area(convex_hull_area=b.convex_hull_area)
+        a.match_convex_hull_area(convex_hull_area=b.convex_hull_area)
     elif match_method == nosynum.DASequenceGenerator.MEAN_DIAMETER:
-        a.fit_mean_dot_diameter(b.mean_dot_diameter)
+        a.match_mean_dot_diameter(b.mean_dot_diameter)
     elif match_method == nosynum.DASequenceGenerator.TOTAL_AREA:
-        a.fit_total_area(total_area=b.total_area)
+        a.match_total_area(total_area=b.total_area)
     elif match_method == nosynum.DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-        a.fit_total_circumference(total_circumference=b.total_circumference)
+        a.match_total_circumference(total_circumference=b.total_circumference)
     elif match_method == nosynum.DASequenceGenerator.NO_FITTING:
         pass
     else:
         raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
 
 
-    ok = a.realign() # todo: check of error
+    ok, mesg = a.realign()
 
     # stimuli
     left = expyriment_stimulus.ExprimentDotArray( dot_array=da_left,  position=pos_left)

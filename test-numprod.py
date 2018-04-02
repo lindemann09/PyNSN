@@ -10,7 +10,7 @@ control.set_develop_mode(True)
 cl = misc.Clock()
 
 generator =  nosynum.DotArrayGenerator(
-                       stimulus_area_radius= 400,
+                       field_radius= 400,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
