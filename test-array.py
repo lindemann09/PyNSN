@@ -20,7 +20,8 @@ if __name__ == "__main__":
 
     maxnumber = 200
 
-    logger = GeneratorLogger(log_filename="log/test", override_log_files=True)
+    logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
+                             log_colours=True)
     generator= DotArrayGenerator(
                            max_array_radius= 300,
                            dot_diameter_mean=7,
@@ -30,15 +31,15 @@ if __name__ == "__main__":
                            minimum_gap=1,
                            logger= logger)
 
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
+    max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
 
-    if False:
+    if True:
 
-        gen = DASequenceGenerator(max_da, logger=logger)
-        x = gen.make(match_methods=DASequenceGenerator.TOTAL_CIRCUMFERENCE, min_numerosity=10,
-                            extra_space = 100)
+        x = generator.make(n_dots=100, inhibit_logging=True)
+        x.change_colours_random_dots(colours=["lightgreen", "red"],
+                                                random_select_ratios=[0.7, 0.3])
+        logger.log(x)
+
 
     else:
         p = DASequenceGeneratorProcess(max_dot_array=max_da,
@@ -51,36 +52,17 @@ if __name__ == "__main__":
                                         min_numerosity=10, logger=logger,
                                        extra_space=100)
         p1.start()
+        # x = p.da_sequence
 
 
     control.set_develop_mode(True)
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)
 
-    x = p.da_sequence
-    print(x.get_property_string(variable_names=True))
 
-    print(x.dot_arrays[-1].get_property_string(variable_names=True))
-    # x.dot_arrays[-1].change_colours("#ff22ff")
-    x.dot_arrays[-1].change_colours_random_dots(colours=["lightgreen", "red"],
-                                                random_select_ratios=[0.7, 0.3])
-
-    stim = expyriment_stimulus.ExprimentDotArray(x.dot_arrays[-1],
+    stim = expyriment_stimulus.ExprimentDotArray(x,
                                           colour_area=(100, 100, 100),
-                                           colour_convex_hull_dots=(255, 0, 0),
-                                          #colour_convex_hull_positions=(255, 200, 0),
-                                          #colour_center_of_mass=(255, 0, 0),
-                                          #  colour_center_of_outer_positions=(0,0,200),
-                                                     antialiasing=True)
-
-
-    stim.present()
-    exp.keyboard.wait()
-
-    print(x.dot_arrays[0].get_property_string(variable_names=False))
-    stim = expyriment_stimulus.ExprimentDotArray(x.dot_arrays[0],
-                                          colour_area=(100, 100, 100),
-                                           colour_convex_hull_dots=(255, 0, 0),
+                                           #colour_convex_hull_dots=(255, 0, 0),
                                           #colour_convex_hull_positions=(255, 200, 0),
                                           #colour_center_of_mass=(255, 0, 0),
                                           #  colour_center_of_outer_positions=(0,0,200),

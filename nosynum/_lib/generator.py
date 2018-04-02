@@ -32,6 +32,9 @@ class DotArrayGenerator(object):
         n_dots : int
             number of moving dots
 
+        automatic logging log only the create process. If colours a changes later they are not log.
+        Use manual logging in this case.
+
         """
 
         if dot_diameter_std <= 0:

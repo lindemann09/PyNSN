@@ -246,6 +246,10 @@ class DotArray(DotList):
         self.colours[subset_dot_ids, :] = colour
 
     def change_colours_random_dots(self, colours, random_select_ratios=None):
+        """change color of a part of the dots
+
+        Tip: inhibit automatic logging and log manually, to get colous
+        """
 
         if len(colours) != len(random_select_ratios):
             raise RuntimeError("Please specifiy the same amunt of ratios and colours (rgb1, rgb2,..).")
