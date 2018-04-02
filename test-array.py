@@ -17,8 +17,10 @@ import copy
 if __name__ == "__main__":
     cl = misc.Clock()
 
-
-
+    a = nosynum.Dot()
+    a.colour = "black"
+    print(a.colour)
+    exit()
     maxnumber = 200
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True)
@@ -52,17 +54,7 @@ if __name__ == "__main__":
                                         min_numerosity=10, logger=logger,
                                        extra_space=100)
         p1.start()
-        p2 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
-                                        min_numerosity=10, logger=logger,
-                                        extra_space=100)
-        p2.start()
 
-        print("F")
-        #p1.join()
-        print("F")
-        #p2.join()
-        print("F")
-        #p.join()
 
     x = p.da_sequence
     control.set_develop_mode(True)

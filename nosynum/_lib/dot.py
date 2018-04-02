@@ -6,6 +6,10 @@ from __future__ import absolute_import, print_function, division
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
+try:
+    from PIL.ImageColor import getrgb
+except:
+    getrgb = None
 
 class Dot(object):
 
@@ -20,7 +24,7 @@ class Dot(object):
         x : numeric (default=0)
         y : numeric (default=0)
         diameter : numeric (default=1)
-        colour : colour (default=None)
+        colour : rgb colour (default=None)
 
         """
 
@@ -29,12 +33,35 @@ class Dot(object):
         self._pos_radius = None
         self._pos_angle = None
         self.diameter = diameter
-        try:
-            colour = tuple(colour) #e.g.to avoid numpy arrays or other list types
-        except:
-            pass
-        self.colour = colour
         self.picture = picture
+        self.colour = colour
+
+    @property
+    def colour(self):
+        """RGB colour """
+        return self._colour
+
+    @colour.setter
+    def colour(self, value):
+        self._colour = Dot.convert_colour(value)
+
+    @staticmethod
+    def convert_colour(value):
+        """use this method to check colors"""
+
+        if value is None:
+            return None
+
+        try:
+            rgb = tuple(value) #e.g.to avoid numpy arrays or other list types
+            if len(rgb) == 3:
+                return rgb
+        except: pass
+        try:
+            return getrgb(value)
+        except: pass
+
+        raise RuntimeError("Incorrect colour. Use tuple representing RGB colour or install pillow and use PIL colours.")
 
     def __repr__(self):
         rtn = "[{0},{1}], d={2}".format(self._x, self._y, self.diameter)
