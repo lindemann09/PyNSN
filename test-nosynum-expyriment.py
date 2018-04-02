@@ -14,7 +14,7 @@ exp = control.initialize()
 
 squeeze = .7
 generator = nosynum.DotArrayGenerator(
-                       field_radius=300 * squeeze,
+                       max_array_radius=300 * squeeze,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 20),
                        dot_diameter_std=2,

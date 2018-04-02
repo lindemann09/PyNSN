@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 
 import numpy as np
-from .dot_array import DotArray, my_md5_hash
+from .dot_array import DotArray, short_md5_hash
 
 
 class DASequence(object):
@@ -55,7 +55,7 @@ class DASequence(object):
         csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False,
                            colour_column=False, picture_column=False)
-        return my_md5_hash(csv)
+        return short_md5_hash(csv)
 
     @property
     def property_names(self):

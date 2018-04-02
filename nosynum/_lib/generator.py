@@ -13,14 +13,13 @@ from .files import GeneratorLogger
 class DotArrayGenerator(object):
 
     def __init__(self,
-                 field_radius,
+                 max_array_radius,
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
                  dot_picture = None,
                  dot_colour=None,
                  minimum_gap=1,
-                 min_distance_field_edge=None,
                  logger=None):
 
         """Specification of a Random Dot Array
@@ -43,13 +42,12 @@ class DotArrayGenerator(object):
                 raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
         self.minimum_gap = minimum_gap
-        self.field_radius = field_radius
+        self.max_array_radius = max_array_radius
         self.dot_diameter_range = dot_diameter_range
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
         self.dot_colour = dot_colour
         self.dot_picture = dot_picture
-        self.min_distance_field_edge = min_distance_field_edge # not yet used, todo: instead squeeze factor
         self.set_logger(logger)
 
 
@@ -61,7 +59,7 @@ class DotArrayGenerator(object):
 
     def make(self, n_dots, inhibit_logging=False):
 
-        rtn = DotArray(max_array_radius = self.field_radius, # - distance_field_edge ?
+        rtn = DotArray(max_array_radius= self.max_array_radius,  # - distance_field_edge ?
                        minimum_gap=self.minimum_gap)
 
         for _ in range(n_dots):
@@ -109,8 +107,7 @@ class DASequenceGenerator(object):
                      [DENSITY, DENSITY_ONLY_AREA, MEAN_DIAMETER, TOTAL_CIRCUMFERENCE, TOTAL_AREA ],
                      [DENSITY, DENSITY_ONLY_AREA, DENSITY_ONLY_CONVEX_HULL]]
 
-    def __init__(self, max_dot_array, sqeeze_factor=None,  # fixme: squeeze factor needed ?
-                 logger=None):
+    def __init__(self, max_dot_array, logger=None):
         """  makes sequence of deviants by subtracting dots
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -120,7 +117,7 @@ class DASequenceGenerator(object):
 
         """
         self._da = []
-        self.set_max_dot_array(max_dot_array=max_dot_array, sqeeze_factor=sqeeze_factor)
+        self.set_max_dot_array(max_dot_array=max_dot_array)
         self.set_logger(logger)
 
     def set_logger(self, logger):
@@ -128,16 +125,12 @@ class DASequenceGenerator(object):
         if not isinstance(logger, (type(None), GeneratorLogger)):
             raise RuntimeError("logger has to be None or a GeneratorLogger")
 
-    def set_max_dot_array(self, max_dot_array, sqeeze_factor=None):
-        if sqeeze_factor is None:
-            sqeeze_factor = 1
+    def set_max_dot_array(self, max_dot_array):
 
         self._da = max_dot_array.copy()
-        self._da.match_convex_hull_area(convex_hull_area=self._da.prop_area_convex_hull * sqeeze_factor)
-        self._da.xy -= self._da.center_of_outer_positions # centering
-
+        # auxiliary variables
         self._dia = self._da.prop_mean_dot_diameter
-        self._cha = self._da.prop_area_convex_hull
+        self._cha = self._da.prop_convex_hull_area
         self._dens = self._da.prop_density
         self._total_area = self._da.prop_total_surface_area
         self._circumference = self._da.prop_total_circumference
@@ -151,7 +144,12 @@ class DASequenceGenerator(object):
                 return False
         return True
 
-    def make(self, match_methods, min_numerosity, inhibit_logging=False):
+
+
+
+    def make(self, match_methods, min_numerosity,
+             extra_space, # fitting convex hull and density might result in enlarged arrays
+             inhibit_logging=False):
         """Methods takes take , you might use make Process
 
          returns False is error occured (see self.error)
@@ -162,7 +160,8 @@ class DASequenceGenerator(object):
         else:
             match_methods = [match_methods]
 
-        da = self._da
+        da = self._da.copy()
+        da.max_array_radius += (extra_space // 2)
         da_sequence = [da]
         error = None
 
@@ -186,7 +185,7 @@ class DASequenceGenerator(object):
                     da.match_mean_dot_diameter(mean_dot_diameter=self._dia)
 
                 elif mp == DASequenceGenerator.TOTAL_AREA:
-                    da.match_total_area(total_area=self._total_area)
+                    da.match_total_surface_area(surface_area=self._total_area)
 
                 elif mp == DASequenceGenerator.TOTAL_CIRCUMFERENCE:
                     da.match_total_circumference(total_circumference=self._circumference)
@@ -225,8 +224,8 @@ class DASequenceGenerator(object):
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity, match_method,
-                 n_trials=3, sqeeze_factor=None, logger=None):
+    def __init__(self, max_dot_array, min_numerosity, match_method, extra_space,
+                 n_trials=3, logger=None):
 
         """
         property: da_sequence, after processes finished
@@ -245,7 +244,7 @@ class DASequenceGeneratorProcess(Process):
         self.match_method = match_method
         self.max_dot_array = max_dot_array
         self.min_numerosity = min_numerosity
-        self.sqeeze_factor = sqeeze_factor
+        self.extra_space = extra_space
 
         if n_trials<1:
             self._n_trails = 1
@@ -275,12 +274,12 @@ class DASequenceGeneratorProcess(Process):
         cnt = 0
         da_seq = None
         generator = DASequenceGenerator(max_dot_array=self.max_dot_array,
-                                        sqeeze_factor=self.sqeeze_factor,
                                         logger=self.logger)
 
         while cnt<self._n_trails:
             cnt += 1
             da_seq = generator.make(match_methods=self.match_method,
+                                    extra_space=self.extra_space,
                                     min_numerosity=self.min_numerosity)
             if da_seq.error is None:
                 break

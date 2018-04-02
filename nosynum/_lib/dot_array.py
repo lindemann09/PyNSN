@@ -29,7 +29,7 @@ def cartesian2polar(xy, radii_only=False):
     else:
         return np.array([radii, np.arctan2(xy[:, 1], xy[:, 0])]).T
 
-def my_md5_hash(unicode, hash_length=8):
+def short_md5_hash(unicode, hash_length=8):
     return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
 
 
@@ -146,11 +146,11 @@ class DotList(object):
         return np.sum(self.circumferences)
 
     @property
-    def prop_area_convex_hull_positions(self):
+    def prop_convex_hull_area_positions(self):
         return ConvexHull(self.xy).area
 
     @property
-    def prop_area_convex_hull(self):
+    def prop_convex_hull_area(self):
         return ConvexHull(self.convex_hull).area
 
     @property
@@ -161,14 +161,15 @@ class DotList(object):
     def prop_density(self):
         """density takes into account the convex hull"""
         try:
-            return self.prop_area_convex_hull / self.prop_total_surface_area # todo: positions conved hull
+            return self.prop_convex_hull_area / self.prop_total_surface_area # todo: positions conved hull
         except:
             return None
+
 
 class DotArray(DotList):
 
     def __init__(self, max_array_radius, xy_positions=(), diameters=(), minimum_gap=1, colours = (),
-                            pictures=()):
+                 pictures=()):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
@@ -282,14 +283,14 @@ class DotArray(DotList):
             return self.realign() # recursion
 
     @property
-    def prop_density_max_array(self):
+    def prop_density_max_field(self):
         """density takes into account the full possible dot area """
         return np.pi * self.max_array_radius ** 2 / self.prop_total_surface_area
 
     @property
     def properties(self):
         return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_surface_area,
-                self.prop_area_convex_hull, self.prop_density, self.prop_total_circumference]
+                self.prop_convex_hull_area, self.prop_density, self.prop_total_circumference]
 
     def get_property_string(self, variable_names=False):
         rtn = ""
@@ -302,7 +303,7 @@ class DotArray(DotList):
 
     @property
     def property_names(self):
-        return ("n_dots", "mean_dot_diameter", "total_area", "convex_hull_area",
+        return ("n_dots", "mean_dot_diameter", "total_surface_area", "convex_hull_area",
                 "density", "total_circumference")
 
     @property
@@ -312,7 +313,7 @@ class DotArray(DotList):
         csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False, num_idx_column=False,
                            colour_column=False, picture_column=False)
-        return my_md5_hash(csv)
+        return short_md5_hash(csv)
 
     def __str__(self):
         return self.get_csv()
@@ -436,9 +437,9 @@ class DotArray(DotList):
 
         return deviant
 
-    def match_total_area(self, total_area):
+    def match_total_surface_area(self, surface_area):
         # changes diameter
-        a_scale = (total_area / self.prop_total_surface_area)
+        a_scale = (surface_area / self.prop_total_surface_area)
         self.diameters = np.sqrt(self.surface_areas * a_scale) * 2/np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
 
 
@@ -461,7 +462,7 @@ class DotArray(DotList):
         iterative method can takes some time.
         """
 
-        current = self.prop_area_convex_hull
+        current = self.prop_convex_hull_area
 
         if current is None:
             return # not defined
@@ -480,7 +481,7 @@ class DotArray(DotList):
             scale += step
 
             self.xy = polar2cartesian(centered_polar * [scale, 1])
-            current = self.prop_area_convex_hull
+            current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \
                     (current > convex_hull_area and step > 0):
@@ -498,14 +499,14 @@ class DotArray(DotList):
 
         """
 
-        # dens = convex_hull_area / total_area
+        # dens = convex_hull_area / total_surface_area
         if ratio_convex_hull2area_adaptation<0 or ratio_convex_hull2area_adaptation>1:
             ratio_convex_hull2area_adaptation = 0.5
 
-        area_change100 = (self.prop_area_convex_hull / density) - self.prop_total_surface_area
+        area_change100 = (self.prop_convex_hull_area / density) - self.prop_total_surface_area
         d_change_area = area_change100 * (1 - ratio_convex_hull2area_adaptation)
         if abs(d_change_area) > 0:
-            self.match_total_area(total_area= self.prop_total_surface_area + d_change_area )
+            self.match_total_surface_area(surface_area=self.prop_total_surface_area + d_change_area)
 
         self.match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
                                         precision=precision)

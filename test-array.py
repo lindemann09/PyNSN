@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True)
     generator= DotArrayGenerator(
-                           field_radius= 300,
+                           max_array_radius= 300,
                            dot_diameter_mean=7,
                            dot_diameter_range=(5, 15),
                            dot_diameter_std=2,
@@ -38,20 +38,23 @@ if __name__ == "__main__":
     if False:
 
         gen = DASequenceGenerator(max_da, logger=logger)
-        x = gen.make(match_methods=DASequenceGenerator.TOTAL_CIRCUMFERENCE, min_numerosity=10)
+        x = gen.make(match_methods=DASequenceGenerator.TOTAL_CIRCUMFERENCE, min_numerosity=10,
+                            extra_space = 100)
 
     else:
         p = DASequenceGeneratorProcess(max_dot_array=max_da,
                                        match_method=[DASequenceGenerator.CONVEX_HULL,
                                                      DASequenceGenerator.DENSITY_ONLY_AREA],
                                        min_numerosity=10, logger=logger,
-                                       sqeeze_factor=0.7)
+                                       extra_space=100)
         p.start()
         p1 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
-                                        min_numerosity=10, logger=logger)
+                                        min_numerosity=10, logger=logger,
+                                       extra_space=100)
         p1.start()
         p2 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
-                                        min_numerosity=10, logger=logger)
+                                        min_numerosity=10, logger=logger,
+                                        extra_space=100)
         p2.start()
 
         print("F")
