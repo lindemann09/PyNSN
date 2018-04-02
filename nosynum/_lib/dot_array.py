@@ -184,7 +184,8 @@ class DotArray(DotList):
         self.colours = np.array([[]])
         self.pictures = np.array([])
 
-    def append(self, xy, diameter, colour=None, picture=None):
+    def append_numpy(self, xy, diameter, colour=None, picture=None):
+        """expert fucntion"""
         if len(self.xy)==0:
             self.xy = np.array([xy])
             self.colours = np.array([colour])
@@ -197,8 +198,8 @@ class DotArray(DotList):
         self.pictures = np.append(self.pictures, picture)
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
-                    colour=dot.colour, picture=dot.picture)
+        self.append_numpy(xy=[dot.x, dot.y], diameter=dot.diameter,
+                          colour=dot.colour, picture=dot.picture)
 
     def get_dot(self, index):
         return Dot(x=self.xy[index, 0], y=self.xy[index, 1], diameter=self.diameters[index],

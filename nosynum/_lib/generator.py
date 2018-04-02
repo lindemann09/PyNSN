@@ -77,9 +77,9 @@ class DotArrayGenerator(object):
                     self.dot_diameter_range, parameter)
 
             xy = rtn.random_free_dot_position(dot_diameter=diameter)
-            rtn.append(xy=xy, diameter=diameter,
-                        colour=self.dot_colour,
-                        picture=self.dot_picture)
+            rtn.append_numpy(xy=xy, diameter=diameter,
+                             colour=self.dot_colour,
+                             picture=self.dot_picture)
 
         if not inhibit_logging and self.logger is not None:
             self.logger.log(rtn)
