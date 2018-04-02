@@ -46,7 +46,7 @@ class DotList(object):
         self.diameters = np.array(diameters)
 
     def clear(self):
-        self.xy = np.array([])
+        self.xy = np.array([[]])
         self.diameters = np.array([])
 
     def polar(self):
@@ -180,7 +180,7 @@ class DotArray(DotList):
 
     def clear(self):
         DotList.clear(self)
-        self.colours = np.array([])
+        self.colours = np.array([[]])
         self.pictures = np.array([])
 
     def append(self, xy, diameter, colour=None, picture=None):
@@ -294,9 +294,9 @@ class DotArray(DotList):
     def get_property_string(self, variable_names=False):
         rtn = ""
         if variable_names:
-            rtn += "hash, " + ", ".join(self.property_names) + "\n"
+            rtn += "object_id, " + ", ".join(self.property_names) + "\n"
 
-        rtn += self.md5hash + ","
+        rtn += self.object_id + ","
         rtn += str(self.properties).replace("[", "").replace("]", "") + "\n"
         return rtn
 
@@ -306,10 +306,10 @@ class DotArray(DotList):
                 "density", "total_circumference")
 
     @property
-    def md5hash(self):
+    def object_id(self):
         """md5_hash of csv (counter, position, diameter only)"""
 
-        csv = self.get_csv(num_format="%7.2f", hash_column=False,
+        csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False, num_idx_column=False,
                            colour_column=False, picture_column=False)
         return my_md5_hash(csv)
@@ -318,7 +318,7 @@ class DotArray(DotList):
         return self.get_csv()
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
-                hash_column=True, num_idx_column=True,
+                object_id_column=True, num_idx_column=True,
                 colour_column=False, picture_column=False):
         """Return the dot array as csv text
 
@@ -331,10 +331,10 @@ class DotArray(DotList):
 
         rtn = ""
         if variable_names:
-            if hash_column:
-                rtn += "hash,"
+            if object_id_column:
+                rtn += "object_id,"
             if num_idx_column:
-                rtn += "num_idx,"
+                rtn += "num_id,"
             rtn += "x,y,diameter"
             if colour_column:
                 rtn += ",r,g,b"
@@ -342,15 +342,15 @@ class DotArray(DotList):
                 rtn += ",file"
             rtn += "\n"
 
-        if hash_column:
-            hash = self.md5hash
+        if object_id_column:
+            obj_id = self.object_id
 
         for cnt in range(len(self.xy)):
-            if hash_column:
-                rtn += "{0},".format(hash)
+            if object_id_column:
+                rtn += "{0},".format(obj_id)
             if num_idx_column:
                 rtn += "{},".format(self.prop_numerosity)
-            rtn += num_format % self.xy[cnt, 0] + "," + num_format % self.xy[cnt, 0] + "," + \
+            rtn += num_format % self.xy[cnt, 0] + "," + num_format % self.xy[cnt, 1] + "," + \
                    num_format % self.diameters[cnt]
             if colour_column:
                 colour = self.colours[cnt]

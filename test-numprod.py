@@ -103,14 +103,14 @@ for tr_cnt, tr in enumerate(exp.blocks[0].trials):
         da_expy.unload()
 
         # saving data
-        da_raw_file.write_line(da_sequence.get_csv(num_format="%6.0f", hash_column=True,
+        da_raw_file.write_line(da_sequence.get_csv(num_format="%6.0f", object_id_column=True,
                                                    variable_names=(tr_cnt==0)))
         da_property_file.write_line(da_sequence.get_property_string(variable_names=(tr_cnt == 0)))
 
         # print(da_sequence.get_csv(num_format="%6.0f"))
         # print(da_expy.da_sequence.numerosity_correlations)
 
-        exp.data.add([tr_cnt, tr.get_factor("target"), da_sequence.md5hash,
+        exp.data.add([tr_cnt, tr.get_factor("target"), da_sequence.object_id,
                       tr.get_factor("method"), estim, rt])
         if (estim is None):
             break

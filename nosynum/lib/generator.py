@@ -261,7 +261,7 @@ class DASequenceGeneratorProcess(Process):
         self._read_queue()
         return self._da_sequence
 
-    def join(self, timeout=None):
+    def join(self, timeout=1):
         self._read_queue()
         super(DASequenceGeneratorProcess, self).join(timeout)
 

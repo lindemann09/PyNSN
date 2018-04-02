@@ -49,10 +49,10 @@ class DASequence(object):
         return (self._dot_arrays[0].prop_numerosity, self._dot_arrays[-1].prop_numerosity)
 
     @property
-    def md5hash(self):
+    def object_id(self):
         """md5_hash of csv (n_dots, counter, position, diameter only)"""
 
-        csv = self.get_csv(num_format="%7.2f", hash_column=False,
+        csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False,
                            colour_column=False, picture_column=False)
         return my_md5_hash(csv)
@@ -87,38 +87,38 @@ class DASequence(object):
     def get_property_string(self, variable_names=False):
         rtn = ""
         if variable_names:
-            rtn += "hash, " + ", ".join(self.property_names) + "\n"
-        hash = self.md5hash
+            rtn += "object_id, " + ", ".join(self.property_names) + "\n"
+        obj_id = self.object_id
         for da in self._dot_arrays:
-            rtn += hash + "," + str(da.properties).replace("[", "").replace("]", "\n")
+            rtn += obj_id + "," + str(da.properties).replace("[", "").replace("]", "\n")
 
         return rtn
 
     def __str__(self):
         return self.get_csv()
 
-    def get_csv(self, num_format="%7.2f",  variable_names=True, colour_column=False,
-                picture_column=False, hash_column=True):
+    def get_csv(self, num_format="%7.2f", variable_names=True, colour_column=False,
+                picture_column=False, object_id_column=True):
 
         rtn = ""
         tmp_var_names = variable_names
         for da in self._dot_arrays:
-            rtn += da.get_csv(num_idx_column=True, hash_column=False,
+            rtn += da.get_csv(num_idx_column=True, object_id_column=False,
                               variable_names=tmp_var_names,
                               num_format=num_format, colour_column=colour_column,
                               picture_column=picture_column)
             tmp_var_names = False
 
-        if hash_column:
-            hash = self.md5hash
+        if object_id_column:
+            obj_id = self.object_id
             rtn2 = ""
             tmp_var_names = variable_names
             for l in rtn.split("\n"):
                 if tmp_var_names:
-                    rtn2 += "hash," + l + "\n"
+                    rtn2 += "object_id," + l + "\n"
                     tmp_var_names = False
                 elif len(l) > 0:
-                    rtn2 += "{},{}\n".format(hash, l)
+                    rtn2 += "{},{}\n".format(obj_id, l)
             return rtn2
         else:
             return rtn

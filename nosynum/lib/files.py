@@ -6,6 +6,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import os
 import sys
 import time
+import numpy as np
 
 from . import __version__
 from multiprocessing import Process, Event, Queue
@@ -39,7 +40,6 @@ class GeneratorLogger(Process):
         self._log_queue_array = Queue()
         self._log_queue_prop = Queue()
 
-        #atexit.register(self.join)
         self.start()
 
     def log(self, dot_array_object):
@@ -61,7 +61,7 @@ class GeneratorLogger(Process):
             self._new_data_avaiable.set()
             self._varname_written.set()
 
-    def join(self, timeout=None):
+    def join(self, timeout=10):
         self._quit_event.set()
         self._new_data_avaiable.set()
         super(GeneratorLogger, self).join(timeout)
@@ -111,7 +111,144 @@ class GeneratorLogger(Process):
         logfile_arrays.close()
         logfile_prop.close()
 
+
 class LogFileReader(object):
 
-    def __index__(self):
-        pass
+    def __init__(self, filename, colours=False, pictures=False,
+                 comment = "#", first_line_variable_names=True, zipped=False): #todo: zip
+        self.filename = filename
+        self.has_colours= colours
+        self.has_pictures= pictures
+        self.zipped = zipped
+        self.comment = comment
+        self.first_line_variable_names = first_line_variable_names
+        self.unload()
+
+    def unload(self):
+        self.xy = []
+        self.diameters = []
+        self.colours =[]
+        self.pictures = []
+        self.object_ids = []
+        self.num_ids = []
+        self.unique_object_ids = []
+
+
+    def load(self):
+
+        with open(self.filename, "r") as fl:
+            self.unique_object_ids = []
+            xy = []
+            diameters = []
+            colours = []
+            pictures = []
+            object_ids= []
+            num_ids = []
+            first_line = True
+            for l in fl:
+                if l.strip().startswith(self.comment):
+                    continue
+                if first_line and self.first_line_variable_names:
+                    first_line = False
+                    continue
+
+                arr = l.split(",")
+
+                object_ids.append(arr[0].strip())
+                if object_ids[-1] not in self.unique_object_ids:
+                    self.unique_object_ids.append(object_ids[-1])
+
+                num_ids.append(int(arr[1]))
+                xy.append([float(arr[2]), float(arr[3])])
+                diameters.append(float(arr[4]))
+                i = 5
+                if self.has_colours:
+                    c = []
+                    for x in range(3):
+                        c.append(float(arr[i+x]))
+                        i += 1
+                    colours.append(c)
+
+                if self.has_pictures:
+                    pictures.append(arr[i])
+
+        self.xy = np.array(xy)
+        self.diameters = np.array(diameters)
+        self.colours = np.array(colours)
+        self.pictures = np.array(pictures)
+        self.object_ids = np.array(object_ids)
+        self.num_ids = np.array(num_ids, dtype=np.int)
+
+    def _check_loaded(self):
+
+        if len(self.unique_object_ids) == 0:
+            raise RuntimeError("Operation not possible. Please first load log file (LogFileReader.load()).")
+
+
+    def get_object_type(self, object_id):
+
+        l = len(self.get_unique_num_ids(object_id))
+        if l > 1:  # several num_ids or just one
+            return DASequence
+        elif l == 1:
+            return DotArray
+        else:
+            return None
+
+
+    def get_unique_num_ids(self, object_id):
+
+        self._check_loaded()
+        if object_id in self.unique_object_ids:
+            ids = self.object_ids == object_id
+            return np.sort(np.unique(self.num_ids[ids]))
+        else:
+            return np.array([])
+
+
+    def _get_dot_array(self, idx, max_array_radius):
+        """Please do not use and use get_object()
+
+        helper function with plausibility check
+        """
+
+        xy = self.xy[idx, :]
+        dia = self.diameters[idx]
+        if self.has_colours:
+            col = self.colours[idx, :]
+        else:
+            col = [None] * len(xy)
+        if self.pictures:
+            pict = self.pictures[idx]
+        else:
+            pict = [None] * len(xy)
+
+        rtn = DotArray(max_array_radius=max_array_radius)
+        for x in zip(xy, dia, col, pict):
+            rtn.append(xy=x[0], diameter=x[1], colour=x[2], picture=x[3])
+
+        return rtn
+
+
+    def get_object(self, object_id, max_array_radius): #todo: save max radius?
+
+        self._check_loaded()
+        if object_id in self.unique_object_ids:
+
+            o_idx = self.object_ids == object_id
+            ot = self.get_object_type(object_id)
+            if ot == DotArray:
+                return self._get_dot_array(o_idx, max_array_radius=max_array_radius)
+
+            elif ot == DASequence:
+                rtn = DASequence()
+
+                for num_id in self.get_unique_num_ids(object_id):
+                    tmp = o_idx & (self.num_ids == num_id)
+                    da = self._get_dot_array(tmp, max_array_radius=max_array_radius)
+                    rtn.append_dot_arrays(da)
+
+                return rtn
+
+
+        return None

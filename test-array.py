@@ -17,6 +17,8 @@ import copy
 if __name__ == "__main__":
     cl = misc.Clock()
 
+
+
     maxnumber = 200
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True)
@@ -38,9 +40,6 @@ if __name__ == "__main__":
         gen = DASequenceGenerator(max_da, logger=logger)
         x = gen.make(match_methods=DASequenceGenerator.TOTAL_CIRCUMFERENCE, min_numerosity=10)
 
-        #gen = DASequenceGenerator(max_da, logger=logger)
-        #y = gen.make(method=DASequenceGenerator.CONVEX_HULL, min_numerosity=10)
-
     else:
         p = DASequenceGeneratorProcess(max_dot_array=max_da,
                                        match_method=[DASequenceGenerator.CONVEX_HULL,
@@ -55,11 +54,14 @@ if __name__ == "__main__":
                                         min_numerosity=10, logger=logger)
         p2.start()
 
-        p1.join()
-        p2.join()
-        p.join()
-        exit()
+        print("F")
+        #p1.join()
+        print("F")
+        #p2.join()
+        print("F")
+        #p.join()
 
+    x = p.da_sequence
     control.set_develop_mode(True)
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)
