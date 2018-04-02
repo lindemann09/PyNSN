@@ -2,6 +2,7 @@
 Dot Array
 """
 from __future__ import absolute_import, print_function, division
+from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -49,16 +50,16 @@ class Dot(object):
     def convert_colour(value):
         """use this method to check colors"""
 
-        if value is None:
-            return None
 
+        if value is None:
+            return (None, None, None)
+        try:
+            return getrgb(value)
+        except: pass
         try:
             rgb = tuple(value) #e.g.to avoid numpy arrays or other list types
             if len(rgb) == 3:
                 return rgb
-        except: pass
-        try:
-            return getrgb(value)
         except: pass
 
         raise RuntimeError("Incorrect colour. Use tuple representing RGB colour or install pillow and use PIL colours.")

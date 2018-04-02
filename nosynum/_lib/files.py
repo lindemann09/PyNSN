@@ -225,7 +225,7 @@ class LogFileReader(object):
 
         rtn = DotArray(max_array_radius=max_array_radius)
         for x in zip(xy, dia, col, pict):
-            rtn.append_numpy(xy=x[0], diameter=x[1], colour=x[2], picture=x[3])
+            rtn.append(xy=x[0], diameter=x[1], colour=x[2], picture=x[3])
 
         return rtn
 

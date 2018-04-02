@@ -5,6 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from PIL import Image, ImageDraw
 import numpy as np
+from .dot import Dot
 
 
 def create(dot_array,
@@ -30,9 +31,17 @@ def create(dot_array,
         except:
             aa = 1
 
+    colour_area = Dot.convert_colour(colour_convex_hull_positions)
+    colour_convex_hull_positions = Dot.convert_colour(colour_convex_hull_positions)
+    colour_convex_hull_dots = Dot.convert_colour(colour_convex_hull_dots)
+    colour_center_of_mass = Dot.convert_colour(colour_center_of_mass)
+    colour_center_of_outer_positions = Dot.convert_colour(colour_center_of_outer_positions)
+
     image_size = int(round(dot_array.max_array_radius * 2)) * aa
-    img = Image.new("RGBA", (image_size, image_size), color=colour_background)
-    if colour_area is not None:
+    img = Image.new("RGBA", (image_size, image_size),
+                    color=Dot.convert_colour(colour_background))
+
+    if colour_area[0] is not None:
         _draw_dot(img, xy=_convert_pos(np.zeros(2), image_size),
                   diameter=image_size, colour=colour_area)
 
@@ -41,22 +50,23 @@ def create(dot_array,
                         dot_array.colours):
         _draw_dot(img, xy=xy, diameter=d, colour=c)
 
-    if colour_convex_hull_positions is not None:
+    if colour_convex_hull_positions[0] is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull = _convert_pos(dot_array.convex_hull_positions*aa, image_size),
                           convex_hull_colour=colour_convex_hull_positions)
 
-    if colour_convex_hull_dots is not None:
+    if colour_convex_hull_dots[0] is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull = _convert_pos(dot_array.convex_hull * aa, image_size),
                           convex_hull_colour=colour_convex_hull_dots)
 
-    if colour_center_of_mass is not None:
+    if colour_center_of_mass[0] is not None:
         _draw_dot(img, xy=_convert_pos(dot_array.center_of_mass*aa, image_size),
                   diameter=10*aa, colour=colour_center_of_mass)
-    if colour_center_of_outer_positions is not None:
+
+    if colour_center_of_outer_positions[0] is not None:
         _draw_dot(img, xy=_convert_pos(dot_array.center_of_outer_positions*aa, image_size),
                   diameter=10*aa, colour=colour_center_of_outer_positions)
 
@@ -69,17 +79,16 @@ def create(dot_array,
 def _draw_dot(img, xy, diameter, colour=None, picture=None):
     # draw a dot on an image
 
-    if colour is None:
+    colour = Dot.convert_colour(colour)
+    if colour[0] is None:
         colour = (255, 255, 255)
-    else:
-        colour = colour
 
     r = diameter // 2
     if picture is not None:
         pict = Image.open(picture, "r")
         img.paste(pict, (xy[0]-r, xy[1]-r))
     else:
-        ImageDraw.Draw(img).ellipse((xy[0]-r, xy[1]-r, xy[0]+r, xy[1]+r), fill=tuple(colour))
+        ImageDraw.Draw(img).ellipse((xy[0]-r, xy[1]-r, xy[0]+r, xy[1]+r), fill=colour)
 
 def _convert_pos(xy, image_size):
     """convert dot pos to pil image coordinates"""
@@ -87,12 +96,14 @@ def _convert_pos(xy, image_size):
 
 def _draw_convex_hull(img, convex_hull, convex_hull_colour):
     # plot convey hull
+
     hull = np.append(convex_hull, [convex_hull[0]], axis=0)
     last = None
     draw = ImageDraw.Draw(img)
     for p in hull:
         if last is not None:
             draw.line(np.append(last, p).tolist(),
-                      width=2, fill=convex_hull_colour)
+                      width=2,
+                      fill=Dot.convert_colour(convex_hull_colour))
         last = p
 

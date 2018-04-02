@@ -166,17 +166,18 @@ class DotList(object):
             return None
 
 
+
+
 class DotArray(DotList):
 
-    def __init__(self, max_array_radius, xy_positions=(), diameters=(), minimum_gap=1, colours = (),
-                 pictures=()):
+    def __init__(self, max_array_radius, minimum_gap=1):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
-        DotList.__init__(self, xy_positions=xy_positions, diameters=diameters)
+        DotList.__init__(self, xy_positions=(), diameters=())
         self.max_array_radius = max_array_radius
-        self.colours = np.array(colours)
-        self.pictures = np.array(pictures)
+        self.colours = np.array([[]])
+        self.pictures = np.array([])
         self.minimum_gap = minimum_gap
 
     def clear(self):
@@ -184,12 +185,16 @@ class DotArray(DotList):
         self.colours = np.array([[]])
         self.pictures = np.array([])
 
-    def append_numpy(self, xy, diameter, colour=None, picture=None):
-        """expert fucntion"""
+    def append(self, xy, diameter, colour=None, picture=None):
+        """append a single dot using numpy array"""
+
+        colour = Dot.convert_colour(colour)
+        if colour is None:
+            colour = [None]*3
+
         if len(self.xy)==0:
             self.xy = np.array([xy])
             self.colours = np.array([colour])
-
         else:
             self.xy = np.append(self.xy, [xy], axis=0)
             self.colours = np.append(self.colours, [colour], axis=0)
@@ -198,8 +203,8 @@ class DotArray(DotList):
         self.pictures = np.append(self.pictures, picture)
 
     def append_dot(self, dot):
-        self.append_numpy(xy=[dot.x, dot.y], diameter=dot.diameter,
-                          colour=dot.colour, picture=dot.picture)
+        self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
+                    colour=dot.colour, picture=dot.picture)
 
     def get_dot(self, index):
         return Dot(x=self.xy[index, 0], y=self.xy[index, 1], diameter=self.diameters[index],
@@ -228,6 +233,43 @@ class DotArray(DotList):
             for x in subset_dot_ids:
                 rtn.append_dot(self.get_dot(x))
             return rtn
+
+    def change_colours(self, colour, subset_dot_ids=None):
+        """ """
+
+        colour = Dot.convert_colour(colour)
+        if isinstance(subset_dot_ids, int):
+            subset_dot_ids = [subset_dot_ids]
+        elif subset_dot_ids is None:
+            subset_dot_ids = range(len(self.colours))
+
+        self.colours[subset_dot_ids, :] = colour
+
+    def change_colours_random_dots(self, colours, random_select_ratios=None):
+
+        if len(colours) != len(random_select_ratios):
+            raise RuntimeError("Please specifiy the same amunt of ratios and colours (rgb1, rgb2,..).")
+
+        # check random select ratios
+        try:
+            tmp = sum(random_select_ratios)
+        except:
+            tmp = 0
+        if tmp !=1:
+            raise RuntimeError("Error: sum(random_select_ratios) has to be 1!")
+
+        n_dots = np.array(np.round(self.prop_numerosity * np.array(random_select_ratios)), dtype=np.int)
+        idx = list(range(self.prop_numerosity))
+        random.shuffle(idx)
+        for c, n in zip(colours[:-1], n_dots[:-1]):
+            i = idx[:n]
+            idx[:n] = []
+            print(c)
+            self.change_colours(colour=c, subset_dot_ids=i)
+
+        self.change_colours(colour=colours[-1], subset_dot_ids=idx)
+
+
 
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
