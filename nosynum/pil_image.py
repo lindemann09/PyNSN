@@ -1,1 +1,1 @@
-from .lib.pil_image import create
+from ._lib.pil_image import create
