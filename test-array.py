@@ -30,7 +30,8 @@ if __name__ == "__main__":
                            logger= logger)
 
     max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
+    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
+    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
 
     if False:
 
@@ -47,15 +48,17 @@ if __name__ == "__main__":
                                        min_numerosity=10, logger=logger,
                                        sqeeze_factor=0.7)
         p.start()
-        #p1 = DASequenceGeneratorProcess(max_dot_array=max_da, method=DASequenceGenerator.CONVEX_HULL,
-        #                                min_numerosity=10, logger=logger)
-        #p1.start()
+        p1 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
+                                        min_numerosity=10, logger=logger)
+        p1.start()
+        p2 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
+                                        min_numerosity=10, logger=logger)
+        p2.start()
 
-        # print(p.da_sequence.dot_arrays[3].xy)
-        # print(p1.da_sequence.dot_arrays[13].xy)
-        x = p.da_sequence
-
-
+        p1.join()
+        p2.join()
+        p.join()
+        exit()
 
     control.set_develop_mode(True)
     exp = control.initialize()
