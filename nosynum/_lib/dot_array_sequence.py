@@ -55,7 +55,7 @@ class DASequence(object):
         csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False,
                            colour_column=False, picture_column=False)
-        return short_md5_hash(csv)
+        return short_md5_hash(csv, DotArray.OBJECT_ID_LENGTH)
 
     @property
     def property_names(self):
@@ -84,7 +84,7 @@ class DASequence(object):
             rtn[self.property_names[x]] = cor[x]
         return rtn
 
-    def get_property_string(self, variable_names=False):
+    def get_property_string(self, variable_names=True):
         rtn = ""
         if variable_names:
             rtn += "object_id, " + ", ".join(self.property_names) + "\n"

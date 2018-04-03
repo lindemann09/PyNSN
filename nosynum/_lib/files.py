@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
-from builtins import map, zip, filter
+
+from builtins import zip
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -7,7 +8,6 @@ import os
 import sys
 import time
 import numpy as np
-
 from . import __version__
 from multiprocessing import Process, Event, Queue
 from .dot_array import DotArray
@@ -15,15 +15,19 @@ from .dot_array_sequence import DASequence
 
 
 class GeneratorLogger(Process):
+    def __init__(self, log_filename,
+                 log_colours=False,
+                 num_format="%6.0f",
+                 override_log_files=False,
+                 properties_different_colour=False):
 
-    def __init__(self, log_filename, log_colours=False, num_format="%6.0f",
-                 override_log_files=False):
         super(GeneratorLogger, self).__init__()
 
         self.log_filename_arrays = log_filename + ".array.csv"
         self.log_filename_properties = log_filename + ".prop.csv"
         self.num_format = num_format
         self.log_colours = log_colours
+        self.properties_different_colour = properties_different_colour
 
         if override_log_files:
             self.write_mode = "w+"
@@ -32,7 +36,8 @@ class GeneratorLogger(Process):
 
         try:
             os.makedirs(os.path.split(log_filename)[0])
-        except: pass
+        except:
+            pass
 
         self._quit_event = Event()
         self._varname_written = Event()
@@ -45,18 +50,22 @@ class GeneratorLogger(Process):
     def log(self, dot_array_object):
 
         if isinstance(dot_array_object, (DASequence, DotArray)) and not self._quit_event.is_set():
-            txt = dot_array_object.get_property_string(variable_names=not self._varname_written.is_set())
-            self._log_queue_prop.put(txt)
-            self._new_data_avaiable.set()
 
             if isinstance(dot_array_object, DotArray):
+                prop_txt = dot_array_object.get_property_string(
+                    variable_names=not self._varname_written.is_set(),
+                    properties_different_colour=self.properties_different_colour)
                 txt = dot_array_object.get_csv(colour_column=self.log_colours,
                                                num_format=self.num_format,
                                                variable_names=not self._varname_written.is_set())
             else:  # DASequence
+                prop_txt = dot_array_object.get_property_string(
+                    variable_names=not self._varname_written.is_set())
                 txt = dot_array_object.get_csv(colour_column=self.log_colours,
                                                num_format=self.num_format,
                                                variable_names=not self._varname_written.is_set())
+            self._log_queue_prop.put(prop_txt)
+            self._new_data_avaiable.set()
             self._log_queue_array.put(txt)
             self._new_data_avaiable.set()
             self._varname_written.set()
@@ -72,7 +81,7 @@ class GeneratorLogger(Process):
         logfile_prop = open(self.log_filename_properties, self.write_mode)
 
         comment = "# NoSyNum {}, {}, main: {}\n".format(__version__, time.asctime(),
-                            os.path.split(sys.argv[0])[1])
+                                                        os.path.split(sys.argv[0])[1])
 
         logfile_prop.write(comment)
         logfile_arrays.write(comment)
@@ -113,12 +122,11 @@ class GeneratorLogger(Process):
 
 
 class LogFileReader(object):
-
     def __init__(self, filename, colours=False, pictures=False,
-                 comment = "#", first_line_variable_names=True, zipped=False): #todo: zip
+                 comment="#", first_line_variable_names=True, zipped=False):  # todo: zip
         self.filename = filename
-        self.has_colours= colours
-        self.has_pictures= pictures
+        self.has_colours = colours
+        self.has_pictures = pictures
         self.zipped = zipped
         self.comment = comment
         self.first_line_variable_names = first_line_variable_names
@@ -127,12 +135,11 @@ class LogFileReader(object):
     def unload(self):
         self.xy = []
         self.diameters = []
-        self.colours =[]
+        self.colours = []
         self.pictures = []
         self.object_ids = []
         self.num_ids = []
         self.unique_object_ids = []
-
 
     def load(self):
 
@@ -142,7 +149,7 @@ class LogFileReader(object):
             diameters = []
             colours = []
             pictures = []
-            object_ids= []
+            object_ids = []
             num_ids = []
             first_line = True
             for l in fl:
@@ -181,7 +188,6 @@ class LogFileReader(object):
         if len(self.unique_object_ids) == 0:
             raise RuntimeError("Operation not possible. Please first load log file (LogFileReader.load()).")
 
-
     def get_object_type(self, object_id):
 
         l = len(self.get_unique_num_ids(object_id))
@@ -192,7 +198,6 @@ class LogFileReader(object):
         else:
             return None
 
-
     def get_unique_num_ids(self, object_id):
 
         self._check_loaded()
@@ -201,7 +206,6 @@ class LogFileReader(object):
             return np.sort(np.unique(self.num_ids[ids]))
         else:
             return np.array([])
-
 
     def _get_dot_array(self, idx, max_array_radius):
         """Please do not use and use get_object()
@@ -226,8 +230,7 @@ class LogFileReader(object):
 
         return rtn
 
-
-    def get_object(self, object_id, max_array_radius): #todo: save max radius?
+    def get_object(self, object_id, max_array_radius):  # todo: save max radius?
 
         self._check_loaded()
         if object_id in self.unique_object_ids:
@@ -246,6 +249,5 @@ class LogFileReader(object):
                     rtn.append_dot_arrays(da)
 
                 return rtn
-
 
         return None

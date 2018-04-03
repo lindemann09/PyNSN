@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function, division
 
-import math
-import random
-import numpy as np
-from time import sleep
-from copy import deepcopy
-import nosynum
-from nosynum import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, colours
-import expyriment
 from expyriment import misc, control
-import copy
+
+from nosynum import expyriment_stimulus, DotArrayGenerator, \
+    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger
 
 if __name__ == "__main__":
     cl = misc.Clock()
@@ -19,7 +12,7 @@ if __name__ == "__main__":
     maxnumber = 200
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
-                             log_colours=True)
+                             log_colours=True, properties_different_colour=True)
     generator = DotArrayGenerator(
         max_array_radius=300,
         dot_diameter_mean=7,
@@ -34,9 +27,10 @@ if __name__ == "__main__":
     if True:
 
         x = generator.make(n_dots=100, inhibit_logging=True)
-        #x.change_colours_random_dots(colours=["lightgreen", "#aa00cc"],
-        #                             random_select_ratios=[0.7, 0.3])
+        x.change_colours_random_dots(colours=["lightgreen", "green", "#aa00cc"],
+                                     random_select_ratios=[0.5, 0.2, 0.3])
         logger.log(x)
+        print(x.get_property_string(variable_names=True, properties_different_colour=True))
 
 
     else:
@@ -52,14 +46,15 @@ if __name__ == "__main__":
         p1.start()
         x = p.da_sequence
 
+    # exit()
 
-    #print(x.get_csv(colour_column=True))
+    # print(x.get_csv(colour_column=True))
     control.set_develop_mode(True)
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)
 
     stim = expyriment_stimulus.ExprimentDotArray(x,
-                                                 colour_area=(100, 100, 100),
+                                                 colour_area="dimgray",
                                                  # colour_convex_hull_dots=(255, 0, 0),
                                                  # colour_convex_hull_positions=(255, 200, 0),
                                                  # colour_center_of_mass=(255, 0, 0),

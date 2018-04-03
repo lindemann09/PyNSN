@@ -2,6 +2,7 @@
 Dot Array
 """
 from __future__ import absolute_import, print_function, division
+
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -16,26 +17,8 @@ from .colours import convert_colour
 
 TWO_PI = 2 * np.pi
 
-
-def polar2cartesian(polar):
-    """polar is an 2d-array representing polar coordinates (radius, angle)"""
-    polar = np.array(polar)
-    return np.array([polar[:, 0] * np.cos(polar[:, 1]),
-                     polar[:, 0] * np.sin(polar[:, 1])]).T
-
-
-def cartesian2polar(xy, radii_only=False):
-    xy = np.array(xy)
-    radii = np.hypot(xy[:, 0], xy[:, 1])
-    if radii_only:
-        return radii
-    else:
-        return np.array([radii, np.arctan2(xy[:, 1], xy[:, 0])]).T
-
-
-def short_md5_hash(unicode, hash_length=8):
+def short_md5_hash(unicode, hash_length):
     return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
-
 
 class DotList(object):
     """Numpy Position list for optimized for numpy calculations
@@ -53,8 +36,21 @@ class DotList(object):
         self.xy = np.array([[]])
         self.diameters = np.array([])
 
-    def polar(self):
-        return cartesian2polar(self.xy)
+    @staticmethod
+    def polar2cartesian(polar):
+        """polar is an 2d-array representing polar coordinates (radius, angle)"""
+        polar = np.array(polar)
+        return np.array([polar[:, 0] * np.cos(polar[:, 1]),
+                         polar[:, 0] * np.sin(polar[:, 1])]).T
+
+    @staticmethod
+    def cartesian2polar(xy, radii_only=False):
+        xy = np.array(xy)
+        radii = np.hypot(xy[:, 0], xy[:, 1])
+        if radii_only:
+            return radii
+        else:
+            return np.array([radii, np.arctan2(xy[:, 1], xy[:, 0])]).T
 
     def distances(self, xy, diameter):
         """Distances toward a single point (xy, diameter) """
@@ -102,9 +98,9 @@ class DotList(object):
         """this convex_hull takes into account the dot diameter"""
         idx = ConvexHull(self.xy).vertices
         center = self.center_of_outer_positions
-        polar_centered = cartesian2polar(self.xy[idx, :] - center)
+        polar_centered = DotList.cartesian2polar(self.xy[idx, :] - center)
         polar_centered[:, 0] = polar_centered[:, 0] + (self.diameters[idx] / 2)
-        xy = polar2cartesian(polar_centered) + center
+        xy = DotList.polar2cartesian(polar_centered) + center
         return xy
 
     def _jitter_identical_positions(self, jitter_size=0.1):
@@ -115,7 +111,7 @@ class DotList(object):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self.xy[x, :] -= polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self.xy[x, :] -= DotList.polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point"""
@@ -130,9 +126,9 @@ class DotList(object):
                     np.all(self.xy[idx,] == self.xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
+            tmp_polar = DotList.cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = polar2cartesian(tmp_polar)
+            xy = DotList.polar2cartesian(tmp_polar)
             self.xy[idx, :] = np.array([self.xy[idx, 0] + xy[:, 0], self.xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
@@ -172,6 +168,9 @@ class DotList(object):
 
 
 class DotArray(DotList):
+
+    OBJECT_ID_LENGTH = 8
+
     def __init__(self, max_array_radius, minimum_gap=1):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
@@ -203,9 +202,33 @@ class DotArray(DotList):
         self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
                     colour=dot.colour, picture=dot.picture)
 
-    def get_dot(self, index):
+    def get_single_dot(self, index):
+        """get a single dot
+        returns Dot"""
         return Dot(x=self.xy[index, 0], y=self.xy[index, 1], diameter=self.diameters[index],
-                   picture=self.pictures[index], colour=self.colours[index], )
+                   picture=self.pictures[index], colour=self.colours[index])
+
+    def get_dots(self, indices):
+        """returns list of dots """
+        return list(map(lambda x: self.get_single_dot(x), indices))
+
+    def get_all_dots(self, diameter=None, colour=None, picture=None):
+        """returns all dots
+         filtering possible:
+         if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
+
+         """
+        rtn = []
+        for xy, dia, col, pict in zip(self.xy, self.diameters,
+                                      self.colours, self.pictures):
+            if (diameter is not None and dia != diameter) or \
+                    (colour is not None and col != colour) or \
+                    (picture is not None and pict != picture):
+                continue
+
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia,
+                           colour=col, picture=pict))
+        return rtn
 
     def delete_dot(self, index):
         self.xy = np.delete(self.xy, index, axis=0)
@@ -228,7 +251,7 @@ class DotArray(DotList):
             if isinstance(subset_dot_ids, int):
                 subset_dot_ids = [subset_dot_ids]
             for x in subset_dot_ids:
-                rtn.append_dot(self.get_dot(x))
+                rtn.append_dot(self.get_single_dot(x))
             return rtn
 
     def change_colours(self, colour, subset_dot_ids=None):
@@ -264,7 +287,6 @@ class DotArray(DotList):
         for c, n in zip(colours[:-1], n_dots[:-1]):
             i = idx[:n]
             idx[:n] = []
-            print(c)
             self.change_colours(colour=c, subset_dot_ids=i)
 
         self.change_colours(colour=colours[-1], subset_dot_ids=idx)
@@ -282,27 +304,27 @@ class DotArray(DotList):
         error = False
 
         # from inner to outer remove overlaps
-        for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
+        for i in np.argsort(DotList.cartesian2polar(self.xy, radii_only=True)):
             if self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
                 shift_required = True
 
         # sqeeze in points that pop out of the stimulus area radius
         cnt = 0
         while True:
-            radii = cartesian2polar(self.xy, radii_only=True)
+            radii = DotList.cartesian2polar(self.xy, radii_only=True)
             too_far = np.where((radii + self.diameters // 2) > self.max_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
-                polar = cartesian2polar([self.xy[too_far[0], :]])[0]
+                polar = DotList.cartesian2polar([self.xy[too_far[0], :]])[0]
                 polar[0] = self.max_array_radius - self.diameters[too_far[0]] // 2 - 0.000000001  # new radius
-                new_xy = polar2cartesian([polar])[0]
+                new_xy = DotList.polar2cartesian([polar])[0]
                 self.xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
                 self.xy -= new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
-                for i in np.argsort(cartesian2polar(self.xy, radii_only=True)):
+                for i in np.argsort(DotList.cartesian2polar(self.xy, radii_only=True)):
                     self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap)
                 # new pos for outlyer
                 self.xy += new_xy  # move back to old position
@@ -333,13 +355,31 @@ class DotArray(DotList):
         return [self.prop_numerosity, self.prop_mean_dot_diameter, self.prop_total_surface_area,
                 self.prop_convex_hull_area, self.prop_density, self.prop_total_circumference]
 
-    def get_property_string(self, variable_names=False):
+    def split_array_by_colour(self):
+        """returns a list of arrays
+        each array contains all dots of with particular colour"""
+        rtn = []
+        for c in np.unique(self.colours):
+            if c is not None:
+                da = DotArray(max_array_radius=self.max_array_radius,
+                              minimum_gap=self.minimum_gap)
+                for d in self.get_all_dots(colour=c):
+                    da.append_dot(d)
+                rtn.append(da)
+        return rtn
+
+    def get_property_string(self, variable_names=True, properties_different_colour=False):
         rtn = ""
         if variable_names:
             rtn += "object_id, " + ", ".join(self.property_names) + "\n"
 
         rtn += self.object_id + ","
         rtn += str(self.properties).replace("[", "").replace("]", "") + "\n"
+        if properties_different_colour:
+            obj_id = self.object_id
+            for da in self.split_array_by_colour():
+                rtn += obj_id + da.colours[0]  # newhash
+                rtn += da.get_property_string(variable_names=False)[DotArray.OBJECT_ID_LENGTH:]
         return rtn
 
     @property
@@ -354,7 +394,7 @@ class DotArray(DotList):
         csv = self.get_csv(num_format="%7.2f", object_id_column=False,
                            variable_names=False, num_idx_column=False,
                            colour_column=False, picture_column=False)
-        return short_md5_hash(csv)
+        return short_md5_hash(csv, hash_length=self.OBJECT_ID_LENGTH)
 
     def __str__(self):
         return self.get_csv()
@@ -401,14 +441,6 @@ class DotArray(DotList):
             rtn += "\n"
         return rtn
 
-    def get_all_dots(self):
-        rtn = []
-        for xy, dia, col, pict in zip(self.xy, self.diameters,
-                                      self.colours, self.pictures):
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia,
-                           colour=col, picture=pict))
-        return rtn
-
     def random_free_dot_position(self, dot_diameter,
                                  ignore_overlapping=False):
         """moves a dot to an available random position
@@ -420,7 +452,7 @@ class DotArray(DotList):
             cnt += 1
             proposal_polar = np.random.random(2) * \
                              (self.max_array_radius - (dot_diameter / 2.0), TWO_PI)
-            proposal_xy = polar2cartesian([proposal_polar])[0]
+            proposal_xy = DotList.polar2cartesian([proposal_polar])[0]
 
             bad_position = False
             if not ignore_overlapping:
@@ -467,7 +499,7 @@ class DotArray(DotList):
                     deviant.delete_dot(rnd)
                 else:
                     # add
-                    d = self.get_dot(rnd)  # copy a random dot
+                    d = self.get_single_dot(rnd)  # copy a random dot
                     d.xy = self.random_free_dot_position(dot_diameter=d.diameter)
                     deviant.append_dot(d)
 
@@ -510,12 +542,12 @@ class DotArray(DotList):
 
         # centered  points
         old_center = self.center_of_outer_positions
-        centered_polar = cartesian2polar(self.xy - old_center)
+        centered_polar = DotList.cartesian2polar(self.xy - old_center)
 
         while abs(current - convex_hull_area) > precision:
             scale += step
 
-            self.xy = polar2cartesian(centered_polar * [scale, 1])
+            self.xy = DotList.polar2cartesian(centered_polar * [scale, 1])
             current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \
