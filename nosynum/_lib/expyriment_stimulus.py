@@ -9,7 +9,7 @@ import pygame
 from expyriment.stimuli import Canvas
 from expyriment.misc import Clock
 from . import pil_image
-from .dot_array import Dot
+from .colours import convert_colour
 
 class ExprimentDotArray(Canvas):
 
@@ -25,12 +25,12 @@ class ExprimentDotArray(Canvas):
 
         Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
-        self.colour_convex_hull_positions  = Dot.convert_colour(colour_convex_hull_positions)
-        self.colour_convex_hull_dots  = Dot.convert_colour(colour_convex_hull_dots)
-        self.colour_center_of_mass = Dot.convert_colour(colour_center_of_mass)
-        self. colour_center_of_outer_positions = Dot.convert_colour(colour_center_of_outer_positions)
-        self.colour_area = Dot.convert_colour(colour_area)
-        self.colour_background = Dot.convert_colour(colour_background)
+        self.colour_convex_hull_positions  = convert_colour(colour_convex_hull_positions)
+        self.colour_convex_hull_dots  = convert_colour(colour_convex_hull_dots)
+        self.colour_center_of_mass = convert_colour(colour_center_of_mass)
+        self. colour_center_of_outer_positions = convert_colour(colour_center_of_outer_positions)
+        self.colour_area = convert_colour(colour_area)
+        self.colour_background = convert_colour(colour_background)
         self.antialiasing = antialiasing
 
 
@@ -58,8 +58,8 @@ class ExpyrimentDASequence(object):
                  antialiasing=None,
                  colour_background=(0, 0, 0)):
 
-        colour_area = Dot.convert_colour(colour_area)
-        colour_background = Dot.convert_colour(colour_background)
+        colour_area = convert_colour(colour_area)
+        colour_background = convert_colour(colour_background)
         self.da_sequence = da_sequence
         self.stimuli = []
         for da in self.da_sequence.dot_arrays:

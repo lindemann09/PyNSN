@@ -7,10 +7,7 @@ from builtins import *
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
-try:
-    from PIL.ImageColor import getrgb
-except:
-    getrgb = None
+from .colours import convert_colour
 
 class Dot(object):
 
@@ -44,25 +41,7 @@ class Dot(object):
 
     @colour.setter
     def colour(self, value):
-        self._colour = Dot.convert_colour(value)
-
-    @staticmethod
-    def convert_colour(value):
-        """use this method to check colors"""
-
-
-        if value is None:
-            return (None, None, None)
-        try:
-            return getrgb(value)
-        except: pass
-        try:
-            rgb = tuple(value) #e.g.to avoid numpy arrays or other list types
-            if len(rgb) == 3:
-                return rgb
-        except: pass
-
-        raise RuntimeError("Incorrect colour. Use tuple representing RGB colour or install pillow and use PIL colours.")
+        self._colour = convert_colour(value)
 
     def __repr__(self):
         rtn = "[{0},{1}], d={2}".format(self._x, self._y, self.diameter)

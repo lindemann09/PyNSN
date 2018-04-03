@@ -163,14 +163,11 @@ class LogFileReader(object):
                 diameters.append(float(arr[4]))
                 i = 5
                 if self.has_colours:
-                    c = []
-                    for x in range(3):
-                        c.append(float(arr[i+x]))
-                        i += 1
-                    colours.append(c)
+                    colours.append(arr[i].strip())
+                    i += 1
 
                 if self.has_pictures:
-                    pictures.append(arr[i])
+                    pictures.append(arr[i].strip())
 
         self.xy = np.array(xy)
         self.diameters = np.array(diameters)
@@ -215,7 +212,7 @@ class LogFileReader(object):
         xy = self.xy[idx, :]
         dia = self.diameters[idx]
         if self.has_colours:
-            col = self.colours[idx, :]
+            col = self.colours[idx]
         else:
             col = [None] * len(xy)
         if self.pictures:

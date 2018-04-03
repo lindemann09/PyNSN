@@ -10,7 +10,7 @@ from scipy.spatial import ConvexHull
 
 import nosynum
 from nosynum import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArray, DASequence
+    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArray, DASequence, colours
 import expyriment
 from expyriment import misc, control
 import copy
@@ -19,14 +19,15 @@ import copy
 if __name__ == "__main__":
     cl = misc.Clock()
 
-    reader = nosynum.LogFileReader("test.array.csv")
+    reader = nosynum.LogFileReader("log/test.array.csv", colours=True)
     reader.load()
     for x in reader.unique_object_ids:
         print((x, reader.get_object_type(x) ))
 
-    x = reader.get_object("b7e47a90", max_array_radius=400) #f24e98ab, 73d95768
+    x = reader.get_object("855b4884", max_array_radius=400) #f24e98ab, 73d95768
     reader.unload()
-
+    print(x.get_csv(colour_column=True))
+    exit()
     control.set_develop_mode(True)
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)

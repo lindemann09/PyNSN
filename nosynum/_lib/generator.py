@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from . import random_beta
 from multiprocessing import Process, Event, Queue
 from .dot_array import DotArray
-from .dot import Dot
+from .colours import convert_colour
 from .dot_array_sequence import DASequence
 from .files import GeneratorLogger
 
@@ -50,7 +50,7 @@ class DotArrayGenerator(object):
         self.dot_diameter_range = dot_diameter_range
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
-        self.dot_colour = Dot.convert_colour(dot_colour)
+        self.dot_colour = convert_colour(dot_colour)
         self.dot_picture = dot_picture
         self.set_logger(logger)
 
