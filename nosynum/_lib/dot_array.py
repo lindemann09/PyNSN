@@ -111,8 +111,10 @@ class DotList(object):
                     if x != idx:
                         self.xy[x, :] -= DotList.polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
-    def remove_overlap_for_dot(self, dot_id, minimum_gap):
-        """remove overlap for one point"""
+    def _remove_overlap_for_dot(self, dot_id, minimum_gap):
+        """remove overlap for one point
+        helper function, please use realign
+        """
 
         dist = self.distances(self.xy[dot_id, :], self.diameters[dot_id])
 
@@ -241,6 +243,14 @@ class DotArray(DotList):
         self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
                     colour=dot.colour, picture=dot.picture)
 
+    def join(self, dot_array, realign=True):
+        """add another dot arrays"""
+
+        self.append(xy=dot_array.xy, diameter=dot_array.diameters,
+                    colour=dot_array.colours, picture=dot_array.pictures)
+        if realign:
+            self.realign()
+
     def get_single_dot(self, index):
         """get a single dot
         returns Dot"""
@@ -275,6 +285,16 @@ class DotArray(DotList):
         self.colours = np.delete(self.colours, index)
         self.pictures = np.delete(self.pictures, index)
 
+    def change_colours(self, colour, subset_dot_ids=None):
+        """ """
+
+        if isinstance(subset_dot_ids, int):
+            subset_dot_ids = [subset_dot_ids]
+        elif subset_dot_ids is None:
+            subset_dot_ids = range(len(self.colours))
+
+        self.colours[subset_dot_ids] = convert_colour(colour)
+
     def copy(self, subset_dot_ids=None):
         """returns a (deep) copy of the dot array.
 
@@ -293,8 +313,6 @@ class DotArray(DotList):
                 rtn.append_dot(self.get_single_dot(x))
             return rtn
 
-    def join(self, dot_array):
-        """join two dot arrays"""
 
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
@@ -310,7 +328,7 @@ class DotArray(DotList):
 
         # from inner to outer remove overlaps
         for i in np.argsort(DotList.cartesian2polar(self.xy, radii_only=True)):
-            if self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
+            if self._remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
                 shift_required = True
 
         # sqeeze in points that pop out of the stimulus area radius
@@ -330,7 +348,7 @@ class DotArray(DotList):
                 self.xy -= new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
                 for i in np.argsort(DotList.cartesian2polar(self.xy, radii_only=True)):
-                    self.remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap)
+                    self._remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap)
                 # new pos for outlyer
                 self.xy += new_xy  # move back to old position
                 shift_required = True

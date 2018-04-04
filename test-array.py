@@ -15,8 +15,8 @@ if __name__ == "__main__":
                              log_colours=True, properties_different_colour=True)
     generator = DotArrayGenerator(
         max_array_radius=300,
-        dot_diameter_mean=13,
-        dot_diameter_range=(5, 35),
+        dot_diameter_mean=25,
+        dot_diameter_range=(5, 40),
         dot_diameter_std=2,
         dot_colour="skyblue",
         minimum_gap=1,
@@ -27,9 +27,12 @@ if __name__ == "__main__":
 
     if True:
 
-        x = generator.make(n_dots=50, inhibit_logging=True)
-        #x.change_colours_random_dots(colours=["lightgreen", "green", "#aa00cc"],
-        #                             random_select_ratios=[0.5, 0.2, 0.3])
+        a = generator.make(n_dots=20, inhibit_logging=True)
+        b = generator.make(n_dots=40, inhibit_logging=True)
+        b.change_colours("green")
+        x = a.copy()
+        x.join(b)
+
         logger.log(x)
         print(x.get_property_string(variable_names=True, properties_different_colour=True))
 
@@ -54,7 +57,7 @@ if __name__ == "__main__":
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)
 
-    stim = expyriment_stimulus.ExprimentDotArray(x,
+    stimx = expyriment_stimulus.ExprimentDotArray(x,
                                                  colour_area="dimgray",
                                                  # colour_convex_hull_dots=(255, 0, 0),
                                                  # colour_convex_hull_positions=(255, 200, 0),
@@ -62,7 +65,23 @@ if __name__ == "__main__":
                                                  #  colour_center_of_outer_positions=(0,0,200),
                                                  antialiasing=True)
 
-    stim.present()
+    stimx.present()
     exp.keyboard.wait()
+
+
+    stima = expyriment_stimulus.ExprimentDotArray(a, colour_area="dimgray", antialiasing=True)
+    stimb = expyriment_stimulus.ExprimentDotArray(b, colour_area="dimgray",antialiasing=True)
+    stimx.preload()
+    stima.preload()
+    stimb.preload()
+    while True:
+        stima.present()
+        exp.keyboard.wait()
+        stimx.present()
+        exp.keyboard.wait()
+        stimb.present()
+        exp.keyboard.wait()
+        stimx.present()
+        exp.keyboard.wait()
 
     control.end()
