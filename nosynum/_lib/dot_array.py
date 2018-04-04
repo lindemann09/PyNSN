@@ -1,7 +1,7 @@
 """
 Dot Array
 """
-from __future__ import absolute_import, print_function, division
+from __future__ import print_function, division
 
 from builtins import *
 
@@ -11,14 +11,12 @@ import random
 from copy import deepcopy, copy
 from hashlib import md5
 import numpy as np
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull, distance
 from .dot import Dot
 from .colours import convert_colour
 
 TWO_PI = 2 * np.pi
 
-def short_md5_hash(unicode, hash_length):
-    return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
 
 class DotList(object):
     """Numpy Position list for optimized for numpy calculations
@@ -166,9 +164,29 @@ class DotList(object):
         except:
             return None
 
+    def get_distance_matrix(self, between_positions=False):
+        """between position ignores the dot size"""
+        dist = distance.cdist(self.xy, self.xy)  # matrix with all distance between all points
+        if not between_positions:
+            # subtract dot diameter
+            radii_mtx = np.ones((self.prop_numerosity, 1)) + self.diameters[:, np.newaxis].T / 2
+            dist -= radii_mtx  # for each row
+            dist -= radii_mtx.T  # each each column
+        return dist
+
+    @property
+    def expension(self):
+        """ maximal distance between to points plus diameter of the two points"""
+
+        dist = self.get_distance_matrix(between_positions=True)
+        # add dot diameter
+        radii_mtx = np.ones((self.prop_numerosity, 1)) + self.diameters[:, np.newaxis].T / 2
+        dist += radii_mtx  # add to each row
+        dist += radii_mtx.T  # add two each column
+        return np.max(dist)
+
 
 class DotArray(DotList):
-
     OBJECT_ID_LENGTH = 8
 
     def __init__(self, max_array_radius, minimum_gap=1):
@@ -187,16 +205,37 @@ class DotArray(DotList):
         self.pictures = np.array([])
 
     def append(self, xy, diameter, colour=None, picture=None):
-        """append a single dot using numpy array"""
+        """append dots using numpy array"""
+
+        # ensure numpy array
+        diameter = numpy_vector(diameter)
+        picture = numpy_vector(picture)
+        colour = numpy_vector(colour)
+
+        # ensure xy is a 2d array
+        xy = np.array(xy)
+        if xy.ndim == 1 and len(xy) == 2:
+            xy = xy.reshape((1, 2))
+        if xy.ndim != 2:
+            raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+
+        if xy.shape[0] != len(diameter):
+            bad_shape = "xy has not the same length as diameter"
+        elif (colour is not None and len(colour) != len(diameter)) or \
+                (picture is not None and len(picture) != len(diameter)):
+            bad_shape = "colour and/or picture has not the same length as diameter"
+        else:
+            bad_shape = None
+        if bad_shape is not None:
+            raise RuntimeError("Bad shaped data: " + bad_shape)
 
         if len(self.xy) == 0:
-            self.xy = np.array([xy])
-        else:
-            self.xy = np.append(self.xy, [xy], axis=0)
-
-        self.colours = np.append(self.colours, convert_colour(colour))
+            self.xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
+        self.xy = np.append(self.xy, xy, axis=0)
         self.diameters = np.append(self.diameters, diameter)
         self.pictures = np.append(self.pictures, picture)
+        for c in colour:
+            self.colours = np.append(self.colours, convert_colour(c))
 
     def append_dot(self, dot):
         self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
@@ -254,42 +293,8 @@ class DotArray(DotList):
                 rtn.append_dot(self.get_single_dot(x))
             return rtn
 
-    def change_colours(self, colour, subset_dot_ids=None):
-        """ """
-
-        if isinstance(subset_dot_ids, int):
-            subset_dot_ids = [subset_dot_ids]
-        elif subset_dot_ids is None:
-            subset_dot_ids = range(len(self.colours))
-
-        self.colours[subset_dot_ids] = convert_colour(colour)
-
-    def change_colours_random_dots(self, colours, random_select_ratios=None):
-        """change color of a part of the dots
-
-        Tip: inhibit automatic logging and log manually, to get colous
-        """
-
-        if len(colours) != len(random_select_ratios):
-            raise RuntimeError("Please specifiy the same amunt of ratios and colours (rgb1, rgb2,..).")
-
-        # check random select ratios
-        try:
-            tmp = sum(random_select_ratios)
-        except:
-            tmp = 0
-        if tmp != 1:
-            raise RuntimeError("Error: sum(random_select_ratios) has to be 1!")
-
-        n_dots = np.array(np.round(self.prop_numerosity * np.array(random_select_ratios)), dtype=np.int)
-        idx = list(range(self.prop_numerosity))
-        random.shuffle(idx)
-        for c, n in zip(colours[:-1], n_dots[:-1]):
-            i = idx[:n]
-            idx[:n] = []
-            self.change_colours(colour=c, subset_dot_ids=i)
-
-        self.change_colours(colour=colours[-1], subset_dot_ids=idx)
+    def join(self, dot_array):
+        """join two dot arrays"""
 
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
@@ -577,3 +582,26 @@ class DotArray(DotList):
 
         self.match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
                                     precision=precision)
+
+################### helper functions ###########################
+
+def short_md5_hash(unicode, hash_length):
+    return md5(unicode.encode('utf-8')).hexdigest()[:hash_length]
+
+
+
+def numpy_vector(x):
+    """helper function:
+    make an numpy vector from any element (list, arrays, and single data (str, numeric))
+    nut None will not be procesed and returns None"""
+
+    if x is None:
+        return None
+
+    x = np.array(x)
+    if x.ndim == 1:
+        return x
+    elif x.ndim == 0:
+        return x.reshape(1)  # if one element only, make a array with one element
+    else:
+        return x.flatten()

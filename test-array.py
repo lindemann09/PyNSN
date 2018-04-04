@@ -9,26 +9,27 @@ from nosynum import expyriment_stimulus, DotArrayGenerator, \
 if __name__ == "__main__":
     cl = misc.Clock()
 
-    maxnumber = 200
+    maxnumber = 20
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
     generator = DotArrayGenerator(
         max_array_radius=300,
-        dot_diameter_mean=7,
-        dot_diameter_range=(5, 15),
+        dot_diameter_mean=13,
+        dot_diameter_range=(5, 35),
         dot_diameter_std=2,
         dot_colour="skyblue",
         minimum_gap=1,
         logger=logger)
 
     max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
+    print(max_da.expension)
 
     if True:
 
-        x = generator.make(n_dots=100, inhibit_logging=True)
-        x.change_colours_random_dots(colours=["lightgreen", "green", "#aa00cc"],
-                                     random_select_ratios=[0.5, 0.2, 0.3])
+        x = generator.make(n_dots=50, inhibit_logging=True)
+        #x.change_colours_random_dots(colours=["lightgreen", "green", "#aa00cc"],
+        #                             random_select_ratios=[0.5, 0.2, 0.3])
         logger.log(x)
         print(x.get_property_string(variable_names=True, properties_different_colour=True))
 

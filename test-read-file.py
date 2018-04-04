@@ -24,18 +24,18 @@ if __name__ == "__main__":
     for x in reader.unique_object_ids:
         print((x, reader.get_object_type(x) ))
 
-    x = reader.get_object("855b4884", max_array_radius=400) #f24e98ab, 73d95768
+    x = reader.get_object("64860e3f", max_array_radius=None) #f24e98ab, 73d95768
     reader.unload()
     print(x.get_csv(colour_column=True))
-    exit()
+
     control.set_develop_mode(True)
     exp = control.initialize()
     control.start(exp, skip_ready_screen=True)
 
     #print(x.get_property_string(variable_names=True))
 
-    print(x.dot_arrays[-1].get_property_string(variable_names=True))
-    stim = expyriment_stimulus.ExprimentDotArray(x.dot_arrays[-1],
+    #print(x.dot_arrays[-1].get_property_string(variable_names=True))
+    stim = expyriment_stimulus.ExprimentDotArray(x,
                                           colour_area=(100, 100, 100),
                                            colour_convex_hull_dots=(255, 0, 0),
                                           #colour_convex_hull_positions=(255, 200, 0),
@@ -46,20 +46,6 @@ if __name__ == "__main__":
 
     stim.present()
     exp.keyboard.wait()
-
-    print(x.dot_arrays[0].get_property_string(variable_names=False))
-    stim = expyriment_stimulus.ExprimentDotArray(x.dot_arrays[0],
-                                          colour_area=(100, 100, 100),
-                                           colour_convex_hull_dots=(255, 0, 0),
-                                          #colour_convex_hull_positions=(255, 200, 0),
-                                          #colour_center_of_mass=(255, 0, 0),
-                                          #  colour_center_of_outer_positions=(0,0,200),
-                                                     antialiasing=True)
-
-
-    stim.present()
-    exp.keyboard.wait()
-
 
 
     control.end()

@@ -1,6 +1,6 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import print_function, division
 
-from builtins import zip
+from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -227,10 +227,14 @@ class LogFileReader(object):
         rtn = DotArray(max_array_radius=max_array_radius)
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], diameter=x[1], colour=x[2], picture=x[3])
-
+        if max_array_radius is None:
+            # adjust max_radius if not defined
+            radii = rtn.cartesian2polar(rtn.xy, radii_only=True) + rtn.diameters/2
+            rtn.max_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 
-    def get_object(self, object_id, max_array_radius):  # todo: save max radius?
+    def get_object(self, object_id, max_array_radius=None):  # todo: save max radius?
+        """if max_array_radius=None find minimal required radius"""
 
         self._check_loaded()
         if object_id in self.unique_object_ids:
@@ -243,10 +247,19 @@ class LogFileReader(object):
             elif ot == DASequence:
                 rtn = DASequence()
 
+                array_radii = []
                 for num_id in self.get_unique_num_ids(object_id):
                     tmp = o_idx & (self.num_ids == num_id)
                     da = self._get_dot_array(tmp, max_array_radius=max_array_radius)
                     rtn.append_dot_arrays(da)
+                    if max_array_radius is None:
+                        array_radii.append(da.max_array_radius)
+
+                if max_array_radius is None:
+                    # just all area radii to largest
+                    tmp = np.max(array_radii)
+                    for i in range(len(rtn.dot_arrays)):
+                        rtn.dot_arrays[i].max_array_radius = tmp
 
                 return rtn
 
