@@ -82,14 +82,14 @@ class DotList(object):
 
 
     @staticmethod
-    def polar2cartesian(polar):
+    def _polar2cartesian(polar):
         """polar is an 2d-array representing polar coordinates (radius, angle)"""
         polar = np.array(polar)
         return np.array([polar[:, 0] * np.cos(polar[:, 1]),
                          polar[:, 0] * np.sin(polar[:, 1])]).T
 
     @staticmethod
-    def cartesian2polar(xy, radii_only=False):
+    def _cartesian2polar(xy, radii_only=False):
         xy = np.array(xy)
         radii = np.hypot(xy[:, 0], xy[:, 1])
         if radii_only:
@@ -143,9 +143,9 @@ class DotList(object):
         """this convex_hull takes into account the dot diameter"""
         idx = ConvexHull(self.xy).vertices
         center = self.center_of_outer_positions
-        polar_centered = DotList.cartesian2polar(self.xy[idx, :] - center)
+        polar_centered = DotList._cartesian2polar(self.xy[idx, :] - center)
         polar_centered[:, 0] = polar_centered[:, 0] + (self.diameters[idx] / 2)
-        xy = DotList.polar2cartesian(polar_centered) + center
+        xy = DotList._polar2cartesian(polar_centered) + center
         return xy
 
     def _jitter_identical_positions(self, jitter_size=0.1):
@@ -156,7 +156,7 @@ class DotList(object):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self.xy[x, :] -= DotList.polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self.xy[x, :] -= DotList._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
@@ -173,9 +173,9 @@ class DotList(object):
                     np.all(self.xy[idx,] == self.xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = DotList.cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
+            tmp_polar = DotList._cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = DotList.polar2cartesian(tmp_polar)
+            xy = DotList._polar2cartesian(tmp_polar)
             self.xy[idx, :] = np.array([self.xy[idx, 0] + xy[:, 0], self.xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 

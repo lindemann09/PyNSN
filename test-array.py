@@ -7,6 +7,8 @@ from nosynum import expyriment_stimulus, DotArrayGenerator, \
     DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotListProperties
 from hashlib import md5
 
+
+
 if __name__ == "__main__":
     cl = misc.Clock()
 

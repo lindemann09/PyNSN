@@ -66,20 +66,11 @@ class DASequence(object):
                 rtn[i].append(prop[i])
         return rtn
 
-    @property
-    def property_correlations(self):
+    def get_numerosity_correlations(self):
         prop = self.get_properties()
-        return np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
-
-    @property
-    def variances(self):
-        prop = self.get_properties()
-        return np.var(prop.np_array, axis=0) #FIXME
-
-    @property
-    def numerosity_correlations(self): #FIXME
-        cor = self.property_correlations[0, :]
-        names = DotListProperties.get_np_array_column_names()
+        cor = np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
+        cor = cor[0, :]
+        names = prop.get_np_array_column_names()
         rtn = {}
         for x in range(1, len(cor)):
             rtn[names[x]] = cor[x]
