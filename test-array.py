@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         a = generator.make(n_dots=20, inhibit_logging=True)
         b = generator.make(n_dots=40, inhibit_logging=True)
-        b.change_colours("blue")
+        b.change_colour("blue")
         x = a.copy()
         x.join(b)
         logger.log(x)

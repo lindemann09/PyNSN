@@ -111,31 +111,32 @@ class DotArray(DotList):
         self.colours = np.delete(self.colours, index)
         self.pictures = np.delete(self.pictures, index)
 
-    def change_colours(self, colour, subset_dot_ids=None):
-        """ """
+    def change_colour(self, colour, indices=None):
+        """allows usung color names and rgb array, since it
+        converts colour """
 
-        if isinstance(subset_dot_ids, int):
-            subset_dot_ids = [subset_dot_ids]
-        elif subset_dot_ids is None:
-            subset_dot_ids = range(len(self.colours))
+        if isinstance(indices, int):
+            indices = [indices]
+        elif indices is None:
+            indices = range(len(self.colours))
 
-        self.colours[subset_dot_ids] = convert_colour(colour)
+        self.colours[indices] = convert_colour(colour)
 
-    def copy(self, subset_dot_ids=None):
+    def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
 
         """
 
-        if subset_dot_ids is None:
-            subset_dot_ids = list(range(self.prop_numerosity))
+        if indices is None:
+            indices = list(range(self.prop_numerosity))
 
         rtn = copy(self)
-        rtn.xy = self.xy[subset_dot_ids,:].copy()
-        rtn.diameters = self.diameters[subset_dot_ids].copy()
-        rtn.colours = self.colours[subset_dot_ids].copy()
-        rtn.pictures = self.pictures[subset_dot_ids].copy()
+        rtn.xy = self.xy[indices, :].copy()
+        rtn.diameters = self.diameters[indices].copy()
+        rtn.colours = self.colours[indices].copy()
+        rtn.pictures = self.pictures[indices].copy()
         return rtn
 
 
@@ -165,7 +166,7 @@ class DotArray(DotList):
 
                 # squeeze in outlier
                 polar = DotList._cartesian2polar([self.xy[too_far[0], :]])[0]
-                polar[0] = self.max_array_radius - self.diameters[too_far[0]] // 2 - 0.000000001  # new radius
+                polar[0] = self.max_array_radius - self.diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = DotList._polar2cartesian([polar])[0]
                 self.xy[too_far[0], :] = new_xy
 
