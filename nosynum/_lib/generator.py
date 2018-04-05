@@ -1,4 +1,4 @@
-from __future__ import  print_function, division
+from __future__ import  print_function, division, unicode_literals
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -9,7 +9,6 @@ from .dot_array import DotArray
 from .colours import convert_colour
 from .dot_array_sequence import DASequence
 from .files import GeneratorLogger
-
 
 class DotArrayGenerator(object):
 
@@ -95,14 +94,14 @@ class DotArrayGenerator(object):
 
 class DASequenceGenerator(object):
 
-    NO_FITTING = "NF"
-    CONVEX_HULL = "CH"
-    DENSITY = "DE"
-    DENSITY_ONLY_CONVEX_HULL ="DE_C"
-    DENSITY_ONLY_AREA ="DE_A"
-    MEAN_DIAMETER = "MD"
-    TOTAL_AREA = "TA"
-    TOTAL_CIRCUMFERENCE = "TC"
+    NO_FITTING = u"NF"
+    CONVEX_HULL = u"CH"
+    DENSITY = u"DE"
+    DENSITY_ONLY_CONVEX_HULL = u"DE_C"
+    DENSITY_ONLY_AREA = u"DE_A"
+    MEAN_DIAMETER = u"MD"
+    TOTAL_AREA = u"TA"
+    TOTAL_CIRCUMFERENCE = u"TC"
 
     ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY, NO_FITTING,
                    DENSITY_ONLY_CONVEX_HULL, DENSITY_ONLY_AREA]
@@ -127,7 +126,7 @@ class DASequenceGenerator(object):
     def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a GeneratorLogger")
+            raise RuntimeError(u"logger has to be None or a GeneratorLogger")
 
     def set_max_dot_array(self, max_dot_array):
 
@@ -144,7 +143,7 @@ class DASequenceGenerator(object):
         # check compatible combinations
         for dep in DASequenceGenerator._DEPENDENCIES:
             if sum(list(map(lambda x: x in dep, match_properties))) > 1:
-                raise RuntimeError("Incompatible properties to match: {}".format(match_properties))
+                raise RuntimeError(u"Incompatible properties to match: {}".format(match_properties))
                 return False
         return True
 
@@ -197,7 +196,7 @@ class DASequenceGenerator(object):
                 elif mp == self.NO_FITTING:
                     pass
                 else:
-                    raise Warning("Unknown method {}. Using NO_FITTING.".format(mp))
+                    raise Warning(u"Unknown method {}. Using NO_FITTING.".format(mp))
 
             cnt = 0
             while True:
@@ -208,7 +207,7 @@ class DASequenceGenerator(object):
                     break
 
                 if cnt > 10:
-                    error = "ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
+                    error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
 
             da_sequence.append(da)
             if error is not None:
@@ -228,7 +227,7 @@ class DASequenceGenerator(object):
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity, match_method, extra_space,
+    def __init__(self, max_dot_array, min_numerosity, match_methods, extra_space,
                  n_trials=3, logger=None):
 
         """
@@ -243,9 +242,9 @@ class DASequenceGeneratorProcess(Process):
         self._data_queue = Queue()
         self._da_sequence = None
 
-        if isinstance(match_method, (tuple, list)):
-            DASequenceGenerator.check_match_method_compatibility(match_method)
-        self.match_method = match_method
+        if isinstance(match_methods, (tuple, list)):
+            DASequenceGenerator.check_match_method_compatibility(match_methods)
+        self.match_methods = match_methods
         self.max_dot_array = max_dot_array
         self.min_numerosity = min_numerosity
         self.extra_space = extra_space
@@ -257,7 +256,7 @@ class DASequenceGeneratorProcess(Process):
 
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a GeneratorLogger")
+            raise RuntimeError(u"logger has to be None or a GeneratorLogger")
 
     @property
     def da_sequence(self):
@@ -282,7 +281,7 @@ class DASequenceGeneratorProcess(Process):
 
         while cnt<self._n_trails:
             cnt += 1
-            da_seq = generator.make(match_methods=self.match_method,
+            da_seq = generator.make(match_methods=self.match_methods,
                                     extra_space=self.extra_space,
                                     min_numerosity=self.min_numerosity)
             if da_seq.error is None:

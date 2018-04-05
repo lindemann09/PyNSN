@@ -1,97 +1,88 @@
 """
 Dot Array Sequence
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-
+from hashlib import md5
 import numpy as np
-from .dot_array import DotArray, short_md5_hash
+from .dot_list import DotListProperties
+from .dot_array import DotArray
 
 
 class DASequence(object):
 
     def __init__(self):
-        """ docu the use of numerosity_idx see get_array_numerosity"""
+        """ docu the use of numerosity_idx see get_array_numerosity
+        dot array, please use append_dot_array and delete_array to modify the list
 
-        self._dot_arrays = []
+        """
+
+        self.dot_arrays = []
         self.method = None
         self.error = None
         self.numerosity_idx = {}
 
-    @property
-    def dot_arrays(self):
-        """ dot array, please use append_dot_array and delete_array to modify the list"""
-        return self._dot_arrays
-
     def append_dot_arrays(self, arr):
         if isinstance(arr, DotArray):
             arr = [arr]
-        self._dot_arrays.extend(arr)
-        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self._dot_arrays)}
+        self.dot_arrays.extend(arr)
+        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
-        self._dot_arrays.pop(array_id)
-        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self._dot_arrays)}
+        self.dot_arrays.pop(array_id)
+        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def get_array_numerosity(self, number_of_dots):
         """returns array with a particular numerosity"""
 
         try:
-            return self._dot_arrays[self.numerosity_idx[number_of_dots]]
+            return self.dot_arrays[self.numerosity_idx[number_of_dots]]
         except:
             return None
 
     @property
     def min_max_numerosity(self):
-        return (self._dot_arrays[0].prop_numerosity, self._dot_arrays[-1].prop_numerosity)
+        return (self.dot_arrays[0].prop_numerosity, self.dot_arrays[-1].prop_numerosity)
 
     @property
     def object_id(self):
-        """md5_hash of csv (n_dots, counter, position, diameter only)"""
+        """meta hash of all of csv (n_dots, counter, position, diameter only)"""
 
-        csv = self.get_csv(num_format="%7.2f", object_id_column=False,
-                           variable_names=False,
-                           colour_column=False, picture_column=False)
-        return short_md5_hash(csv, DotArray.OBJECT_ID_LENGTH)
+        m = md5()
+        for da in self.dot_arrays:
+            m.update(da.object_id.encode("UTF-8"))
+        return m.hexdigest()[:DotArray.OBJECT_ID_LENGTH]
 
-    @property
-    def property_names(self):
-        return self._dot_arrays[0].property_names
+    def get_properties(self):
+        """named tuple with arrays"""
+        rtn = DotListProperties._make_arrays()
 
-    @property
-    def properties(self):
-        rtn = []
-        for da in self._dot_arrays:
-            rtn.append(da.properties)
-        return np.array(rtn)
+        for da in self.dot_arrays:
+            prop = da.get_properties()
+            for i in range(len(rtn)):
+                rtn[i].append(prop[i])
+        return rtn
 
     @property
     def property_correlations(self):
-        return np.corrcoef(np.round(self.properties, 2), rowvar=False)
+        prop = self.get_properties()
+        return np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
 
     @property
     def variances(self):
-        return np.var(self.properties, axis=0)
+        prop = self.get_properties()
+        return np.var(prop.np_array, axis=0) #FIXME
 
     @property
-    def numerosity_correlations(self):
+    def numerosity_correlations(self): #FIXME
         cor = self.property_correlations[0, :]
+        names = DotListProperties.get_np_array_column_names()
         rtn = {}
         for x in range(1, len(cor)):
-            rtn[self.property_names[x]] = cor[x]
-        return rtn
-
-    def get_property_string(self, variable_names=True):
-        rtn = ""
-        if variable_names:
-            rtn += "object_id, " + ", ".join(self.property_names) + "\n"
-        obj_id = self.object_id
-        for da in self._dot_arrays:
-            rtn += obj_id + "," + str(da.properties).replace("[", "").replace("]", "\n")
-
+            rtn[names[x]] = cor[x]
         return rtn
 
     def __str__(self):
@@ -102,7 +93,7 @@ class DASequence(object):
 
         rtn = ""
         tmp_var_names = variable_names
-        for da in self._dot_arrays:
+        for da in self.dot_arrays:
             rtn += da.get_csv(num_idx_column=True, object_id_column=False,
                               variable_names=tmp_var_names,
                               num_format=num_format, colour_column=colour_column,

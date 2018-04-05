@@ -1,4 +1,5 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
+
 
 from builtins import *
 
@@ -51,16 +52,19 @@ class GeneratorLogger(Process):
 
         if isinstance(dot_array_object, (DASequence, DotArray)) and not self._quit_event.is_set():
 
+            prop = dot_array_object.get_properties()
+            prop_txt = prop.get_csv(variable_names=not self._varname_written.is_set())
             if isinstance(dot_array_object, DotArray):
-                prop_txt = dot_array_object.get_property_string(
-                    variable_names=not self._varname_written.is_set(),
-                    properties_different_colour=self.properties_different_colour)
+                if self.properties_different_colour:
+                    prop = dot_array_object.get_properties_split_by_colours()
+                if prop is not None:
+                    prop_txt += prop.get_csv(variable_names=False)
+
                 txt = dot_array_object.get_csv(colour_column=self.log_colours,
                                                num_format=self.num_format,
                                                variable_names=not self._varname_written.is_set())
             else:  # DASequence
-                prop_txt = dot_array_object.get_property_string(
-                    variable_names=not self._varname_written.is_set())
+
                 txt = dot_array_object.get_csv(colour_column=self.log_colours,
                                                num_format=self.num_format,
                                                variable_names=not self._varname_written.is_set())
@@ -80,7 +84,7 @@ class GeneratorLogger(Process):
         logfile_arrays = open(self.log_filename_arrays, self.write_mode)
         logfile_prop = open(self.log_filename_properties, self.write_mode)
 
-        comment = "# NoSyNum {}, {}, main: {}\n".format(__version__, time.asctime(),
+        comment = u"# NoSyNum {}, {}, main: {}\n".format(__version__, time.asctime(),
                                                         os.path.split(sys.argv[0])[1])
 
         logfile_prop.write(comment)

@@ -4,7 +4,8 @@ from __future__ import absolute_import, print_function, division
 from expyriment import misc, control
 
 from nosynum import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger
+    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotListProperties
+from hashlib import md5
 
 if __name__ == "__main__":
     cl = misc.Clock()
@@ -21,20 +22,31 @@ if __name__ == "__main__":
         dot_colour="skyblue",
         minimum_gap=1,
         logger=logger)
+    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
 
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
-    print(max_da.expension)
+    g = DASequenceGenerator(max_dot_array=max_da,  logger=logger)
+    ds = g.make(extra_space=100, match_methods=DASequenceGenerator.NO_FITTING,
+
+                                       #match_methods=[DASequenceGenerator.CONVEX_HULL,
+                                       #              DASequenceGenerator.DENSITY_ONLY_AREA],
+                                       min_numerosity=10)
+
+    prop = ds.get_properties()
+    #print(ds.property_correlations)
+    #print(ds.variances)
+    #print(ds.numerosity_correlations)
+
+
 
     if True:
 
         a = generator.make(n_dots=20, inhibit_logging=True)
         b = generator.make(n_dots=40, inhibit_logging=True)
-        b.change_colours("green")
+        b.change_colours("blue")
         x = a.copy()
         x.join(b)
-
         logger.log(x)
-        print(x.get_property_string(variable_names=True, properties_different_colour=True))
+        print(x.get_properties_split_by_colours().get_csv())
 
 
     else:
