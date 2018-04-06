@@ -84,7 +84,7 @@ class GeneratorLogger(Process):
         logfile_arrays = open(self.log_filename_arrays, self.write_mode)
         logfile_prop = open(self.log_filename_properties, self.write_mode)
 
-        comment = u"# NoSyNum {}, {}, main: {}\n".format(__version__, time.asctime(),
+        comment = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
                                                         os.path.split(sys.argv[0])[1])
 
         logfile_prop.write(comment)

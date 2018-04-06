@@ -8,8 +8,8 @@ from time import sleep
 from copy import deepcopy
 from scipy.spatial import ConvexHull
 
-import nosynum
-from nosynum import expyriment_stimulus, DotArrayGenerator, \
+import pynsn
+from pynsn import expyriment_stimulus, DotArrayGenerator, \
     DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArray, DASequence, colours
 import expyriment
 from expyriment import misc, control
@@ -19,7 +19,7 @@ import copy
 if __name__ == "__main__":
     cl = misc.Clock()
 
-    reader = nosynum.LogFileReader("log/test.array.csv", colours=True)
+    reader = pynsn.LogFileReader("log/test.array.csv", colours=True)
     reader.load()
     for x in reader.unique_object_ids:
         print((x, reader.get_object_type(x) ))

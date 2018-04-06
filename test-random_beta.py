@@ -1,7 +1,7 @@
 from matplotlib.pyplot import *
 import random as _random
 import numpy as np
-from nosynum import *
+from pynsn import *
 
 def random_norm(a, b, sigma = None):
     """normal distributed random value between a and b """

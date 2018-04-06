@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
 
-from nosynum import expyriment_stimulus, DotArrayGenerator, \
+from pynsn import expyriment_stimulus, DotArrayGenerator, \
     DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotListProperties
 from hashlib import md5
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import time
 from expyriment import control, design, io, stimuli, misc
-import nosynum
-from nosynum import expyriment_stimulus, pil_image
+import pynsn
+from pynsn import expyriment_stimulus, pil_image
 from turning_knob import numerosity_production
 
 control.set_develop_mode(True)
 
 cl = misc.Clock()
 
-generator =  nosynum.DotArrayGenerator(
+generator =  pynsn.DotArrayGenerator(
                        max_array_radius= 400,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
@@ -18,7 +18,7 @@ generator =  nosynum.DotArrayGenerator(
 
 
 def prepare_processes(trials, forerun):
-    processes = nosynum.ProcessContainer(forerun=forerun)
+    processes = pynsn.ProcessContainer(forerun=forerun)
     for tr in trials:
         maxnumber = tr.get_factor("maxnumber")
         method = tr.get_factor("method")
@@ -42,8 +42,8 @@ def prepare_processes(trials, forerun):
 exp = control.initialize()
 
 bl = design.Block()
-for m in [nosynum.M_TOTAL_CIRCUMFERENCE, nosynum.M_DENSITY, nosynum.M_NO_FITTING,\
-            nosynum.M_CONVEX_HULL, nosynum.M_TOTAL_AREA]:
+for m in [pynsn.M_TOTAL_CIRCUMFERENCE, pynsn.M_DENSITY, pynsn.M_NO_FITTING, \
+          pynsn.M_CONVEX_HULL, pynsn.M_TOTAL_AREA]:
     tr = design.Trial()
     tr.set_factor("maxnumber", 200)
     tr.set_factor("method", m)
