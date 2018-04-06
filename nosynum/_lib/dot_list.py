@@ -62,22 +62,69 @@ class DotList(object):
 
     OBJECT_ID_LENGTH = 8
 
-    def __init__(self, xy_positions=(), diameters=()):
+    def __init__(self, xy=None, diameters=None):
 
-        self.xy = np.array(xy_positions)
-        self.diameters = np.array(diameters)
+        self._xy = np.array([])
+        self._diameters = np.array([])
+        if (xy, diameters) != (None, None):
+            self.append(xy, diameters)
+
+    @property
+    def xy(self):
+        return self._xy
+
+    @property
+    def diameters(self):
+        return self._diameters
+
+    def append(self, xy, diameters):
+        """append dots using numpy array"""
+
+        # ensure numpy array
+        diameters = numpy_vector(diameters)
+        # ensure xy is a 2d array
+        xy = np.array(xy)
+        if xy.ndim == 1 and len(xy) == 2:
+            xy = xy.reshape((1, 2))
+        if xy.ndim != 2:
+            raise RuntimeError(u"Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+
+        if xy.shape[0] != len(diameters):
+            raise RuntimeError(u"Bad shaped data: " + u"xy has not the same length as diameter")
+
+        if len(self._xy) == 0:
+            self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
+        self._xy = np.append(self._xy, xy, axis=0)
+        self._diameters = np.append(self._diameters, diameters)
 
     def clear(self):
-        self.xy = np.array([[]])
-        self.diameters = np.array([])
+        self._xy = np.array([[]])
+        self._diameters = np.array([])
+
+    def delete(self, index):
+        self._xy = np.delete(self._xy, index, axis=0)
+        self._diameters = np.delete(self._diameters, index)
+
+    def copy(self, indices=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+        if indices is None:
+            indices = list(range(self.prop_numerosity))
+
+        return DotList(xy=self._xy[indices, :].copy(),
+                       diameters=self._diameters[indices].copy())
+
 
     @property
     def object_id(self):
         """md5_hash of position, diameter"""
 
         m = md5()
-        m.update(self.xy.tobytes())
-        m.update(self.diameters.tobytes())
+        m.update(self._xy.tobytes())
+        m.update(self._diameters.tobytes())
         return m.hexdigest()[:DotList.OBJECT_ID_LENGTH]
 
 
@@ -99,91 +146,91 @@ class DotList(object):
 
     def distances(self, xy, diameter):
         """Distances toward a single point (xy, diameter) """
-        if len(self.xy) == 0:
+        if len(self._xy) == 0:
             return np.array([])
         else:
-            return np.hypot(self.xy[:, 0] - xy[0], self.xy[:, 1] - xy[1]) - \
-                   ((self.diameters + diameter) / 2.0)
+            return np.hypot(self._xy[:, 0] - xy[0], self._xy[:, 1] - xy[1]) - \
+                   ((self._diameters + diameter) / 2.0)
 
     @property
     def rounded_xy(self):
         """rounded to integer"""
-        return np.array(np.round(self.xy), dtype=np.int32)
+        return np.array(np.round(self._xy), dtype=np.int32)
 
     @property
     def rounded_diameters(self):
         """rounded to integer"""
-        return np.array(np.round(self.diameters), dtype=np.int32)
+        return np.array(np.round(self._diameters), dtype=np.int32)
 
     @property
     def center_of_outer_positions(self):
-        minmax = np.array((np.min(self.xy, axis=0), np.max(self.xy, axis=0)))
+        minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
 
     @property
     def center_of_mass(self):
-        weighted_sum = np.sum(self.xy * self.diameters[:, np.newaxis], axis=0)
-        return weighted_sum / np.sum(self.diameters)
+        weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
+        return weighted_sum / np.sum(self._diameters)
 
     @property
     def surface_areas(self):
-        return np.pi * (self.diameters ** 2) / 4.0
+        return np.pi * (self._diameters ** 2) / 4.0
 
     @property
     def circumferences(self):
-        return np.pi * self.diameters
+        return np.pi * self._diameters
 
     @property
     def convex_hull_positions(self):
-        x = ConvexHull(self.xy).vertices
-        return self.xy[x, :]
+        x = ConvexHull(self._xy).vertices
+        return self._xy[x, :]
 
     @property
     def convex_hull(self):
         """this convex_hull takes into account the dot diameter"""
-        idx = ConvexHull(self.xy).vertices
+        idx = ConvexHull(self._xy).vertices
         center = self.center_of_outer_positions
-        polar_centered = DotList._cartesian2polar(self.xy[idx, :] - center)
-        polar_centered[:, 0] = polar_centered[:, 0] + (self.diameters[idx] / 2)
+        polar_centered = DotList._cartesian2polar(self._xy[idx, :] - center)
+        polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
         xy = DotList._polar2cartesian(polar_centered) + center
         return xy
 
     def _jitter_identical_positions(self, jitter_size=0.1):
         """jitters points with identical position"""
 
-        for idx, ref_dot in enumerate(self.xy):
-            identical = np.where(np.all(np.equal(self.xy, ref_dot), axis=1))[0]  # find identical positions
+        for idx, ref_dot in enumerate(self._xy):
+            identical = np.where(np.all(np.equal(self._xy, ref_dot), axis=1))[0]  # find identical positions
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self.xy[x, :] -= DotList._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self._xy[x, :] -= DotList._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
         helper function, please use realign
         """
 
-        dist = self.distances(self.xy[dot_id, :], self.diameters[dot_id])
+        dist = self.distances(self._xy[dot_id, :], self._diameters[dot_id])
 
         shift_required = False
         idx = np.where(dist < minimum_gap)[0].tolist()  # overlapping dot ids
         if len(idx) > 1:
             idx.remove(dot_id)  # don't move yourself
             if np.sum(
-                    np.all(self.xy[idx,] == self.xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
+                    np.all(self._xy[idx,] == self._xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = DotList._cartesian2polar(self.xy[idx, :] - self.xy[dot_id, :])
+            tmp_polar = DotList._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
             xy = DotList._polar2cartesian(tmp_polar)
-            self.xy[idx, :] = np.array([self.xy[idx, 0] + xy[:, 0], self.xy[idx, 1] + xy[:, 1]]).T
+            self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
         return shift_required
 
     @property
     def prop_mean_dot_diameter(self):
-        return self.diameters.mean()
+        return self._diameters.mean()
 
     @property
     def prop_total_surface_area(self):
@@ -195,7 +242,7 @@ class DotList(object):
 
     @property
     def prop_convex_hull_area_positions(self):
-        return ConvexHull(self.xy).area
+        return ConvexHull(self._xy).area
 
     @property
     def prop_convex_hull_area(self):
@@ -203,7 +250,7 @@ class DotList(object):
 
     @property
     def prop_numerosity(self):
-        return len(self.xy)
+        return len(self._xy)
 
     @property
     def prop_density(self):
@@ -222,10 +269,10 @@ class DotList(object):
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
-        dist = distance.cdist(self.xy, self.xy)  # matrix with all distance between all points
+        dist = distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
         if not between_positions:
             # subtract dot diameter
-            radii_mtx = np.ones((self.prop_numerosity, 1)) + self.diameters[:, np.newaxis].T / 2
+            radii_mtx = np.ones((self.prop_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
             dist -= radii_mtx  # for each row
             dist -= radii_mtx.T  # each each column
         return dist
@@ -236,7 +283,26 @@ class DotList(object):
 
         dist = self.get_distance_matrix(between_positions=True)
         # add dot diameter
-        radii_mtx = np.ones((self.prop_numerosity, 1)) + self.diameters[:, np.newaxis].T / 2
+        radii_mtx = np.ones((self.prop_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
         dist += radii_mtx  # add to each row
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
+
+
+################### helper functions ###########################
+
+def numpy_vector(x):
+    """helper function:
+    make an numpy vector from any element (list, arrays, and single data (str, numeric))
+    nut None will not be procesed and returns None"""
+
+    if x is None:
+        return None
+
+    x = np.array(x)
+    if x.ndim == 1:
+        return x
+    elif x.ndim == 0:
+        return x.reshape(1)  # if one element only, make a array with one element
+    else:
+        return x.flatten()

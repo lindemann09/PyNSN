@@ -230,10 +230,10 @@ class LogFileReader(object):
 
         rtn = DotArray(max_array_radius=max_array_radius)
         for x in zip(xy, dia, col, pict):
-            rtn.append(xy=x[0], diameter=x[1], colour=x[2], picture=x[3])
+            rtn.append(xy=x[0], diameters=x[1], colours=x[2], pictures=x[3])
         if max_array_radius is None:
             # adjust max_radius if not defined
-            radii = rtn._cartesian2polar(rtn.xy, radii_only=True) + rtn.diameters / 2
+            radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
             rtn.max_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 

@@ -11,70 +11,92 @@ import random
 from copy import deepcopy, copy
 import numpy as np
 from .dot import Dot
-from .dot_list import DotList, DotListProperties
+from .dot_list import DotList, DotListProperties, numpy_vector
 from .colours import convert_colour
 
 TWO_PI = 2 * np.pi
 
+
 class DotArray(DotList):
 
-    def __init__(self, max_array_radius, minimum_gap=1):
+    def __init__(self, max_array_radius, minimum_gap=1, xy=None,
+                 diameters=None, colours=None, pictures=None):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
-        DotList.__init__(self, xy_positions=(), diameters=())
+        DotList.__init__(self)
         self.max_array_radius = max_array_radius
-        self.colours = np.array([])
-        self.pictures = np.array([])
         self.minimum_gap = minimum_gap
+        self._colours = np.array([])
+        self._pictures = np.array([])
+        if (xy, diameters, colours, pictures) != (None, None, None, None):
+            self.append(xy, diameters, colours=colours, pictures=pictures)
+
+    @property
+    def colours(self):
+        return self._colours
+
+    @property
+    def pictures(self):
+        return self._pictures
 
     def clear(self):
         DotList.clear(self)
-        self.colours = np.array([])
-        self.pictures = np.array([])
+        self._colours = np.array([])
+        self._pictures = np.array([])
 
-    def append(self, xy, diameter, colour=None, picture=None):
+    def append(self, xy, diameters, colours=None, pictures=None):
         """append dots using numpy array"""
 
-        # ensure numpy array
-        diameter = numpy_vector(diameter)
-        picture = numpy_vector(picture)
-        colour = numpy_vector(colour)
+        # ensure good numpy array or None
+        diameters = numpy_vector(diameters)
+        pictures = numpy_vector(pictures)
+        colours = numpy_vector(colours)
+        if (colours is not None and len(colours) != len(diameters)) or \
+                (pictures is not None and len(pictures) != len(diameters)):
+            raise RuntimeError(u"Bad shaped data: " + u"colour and/or picture has not the same length as diameter")
 
-        # ensure xy is a 2d array
-        xy = np.array(xy)
-        if xy.ndim == 1 and len(xy) == 2:
-            xy = xy.reshape((1, 2))
-        if xy.ndim != 2:
-            raise RuntimeError(u"Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+        DotList.append(self, xy, diameters)
 
-        if xy.shape[0] != len(diameter):
-            bad_shape = u"xy has not the same length as diameter"
-        elif (colour is not None and len(colour) != len(diameter)) or \
-                (picture is not None and len(picture) != len(diameter)):
-            bad_shape = u"colour and/or picture has not the same length as diameter"
-        else:
-            bad_shape = None
-        if bad_shape is not None:
-            raise RuntimeError(u"Bad shaped data: " + bad_shape)
+        if pictures is None:
+            pictures = [None]*len(diameters)
+        self._pictures = np.append(self._pictures, pictures)
 
-        if len(self.xy) == 0:
-            self.xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
-        self.xy = np.append(self.xy, xy, axis=0)
-        self.diameters = np.append(self.diameters, diameter)
-        self.pictures = np.append(self.pictures, picture)
-        for c in colour:
-            self.colours = np.append(self.colours, convert_colour(c))
+        if colours is None:
+            colours = [None]*len(diameters)
+        for c in colours:
+            self._colours = np.append(self._colours, convert_colour(c))
+
+    def delete(self, index):
+        DotList.delete(self, index)
+        self._colours = np.delete(self._colours, index)
+        self._pictures = np.delete(self._pictures, index)
+
+    def copy(self, indices=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+        if indices is None:
+            indices = list(range(self.prop_numerosity))
+
+        return DotArray(max_array_radius=self.max_array_radius,
+                        minimum_gap=self.minimum_gap,
+                        xy=self._xy[indices, :].copy(),
+                        diameters=self._diameters[indices].copy(),
+                        colours=self._colours[indices].copy(),
+                        pictures=self._pictures[indices].copy())
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], diameter=dot.diameter,
-                    colour=dot.colour, picture=dot.picture)
+        self.append(xy=[dot.x, dot.y], diameters=dot.diameter,
+                    colours=dot.colour, pictures=dot.picture)
 
     def join(self, dot_array, realign=True):
         """add another dot arrays"""
 
-        self.append(xy=dot_array.xy, diameter=dot_array.diameters,
-                    colour=dot_array.colours, picture=dot_array.pictures)
+        self.append(xy=dot_array._xy, diameters=dot_array._diameters,
+                    colours=dot_array._colours, pictures=dot_array._pictures)
         if realign:
             self.realign()
 
@@ -88,12 +110,12 @@ class DotArray(DotList):
         i = -1
         if indices is not None:
             try:
-                indices = list(indices) # check if iterable
+                indices = list(indices)  # check if iterable
             except:
                 indices = [indices]
 
-        for xy, dia, col, pict in zip(self.xy, self.diameters,
-                                      self.colours, self.pictures):
+        for xy, dia, col, pict in zip(self._xy, self._diameters,
+                                      self._colours, self._pictures):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
@@ -105,12 +127,6 @@ class DotArray(DotList):
                            colour=col, picture=pict))
         return rtn
 
-    def delete_dot(self, index):
-        self.xy = np.delete(self.xy, index, axis=0)
-        self.diameters = np.delete(self.diameters, index)
-        self.colours = np.delete(self.colours, index)
-        self.pictures = np.delete(self.pictures, index)
-
     def change_colour(self, colour, indices=None):
         """allows usung color names and rgb array, since it
         converts colour """
@@ -118,27 +134,9 @@ class DotArray(DotList):
         if isinstance(indices, int):
             indices = [indices]
         elif indices is None:
-            indices = range(len(self.colours))
+            indices = range(len(self._colours))
 
-        self.colours[indices] = convert_colour(colour)
-
-    def copy(self, indices=None):
-        """returns a (deep) copy of the dot array.
-
-        It allows to copy a subset of dot only.
-
-        """
-
-        if indices is None:
-            indices = list(range(self.prop_numerosity))
-
-        rtn = copy(self)
-        rtn.xy = self.xy[indices, :].copy()
-        rtn.diameters = self.diameters[indices].copy()
-        rtn.colours = self.colours[indices].copy()
-        rtn.pictures = self.pictures[indices].copy()
-        return rtn
-
+        self._colours[indices] = convert_colour(colour)
 
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
@@ -153,30 +151,31 @@ class DotArray(DotList):
         error = False
 
         # from inner to outer remove overlaps
-        for i in np.argsort(DotList._cartesian2polar(self.xy, radii_only=True)):
+        for i in np.argsort(DotList._cartesian2polar(self._xy, radii_only=True)):
             if self._remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap):
                 shift_required = True
 
         # sqeeze in points that pop out of the stimulus area radius
         cnt = 0
         while True:
-            radii = DotList._cartesian2polar(self.xy, radii_only=True)
-            too_far = np.where((radii + self.diameters // 2) > self.max_array_radius)[0]  # find outlier
+            radii = DotList._cartesian2polar(self._xy, radii_only=True)
+            too_far = np.where((radii + self._diameters // 2) > self.max_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
-                polar = DotList._cartesian2polar([self.xy[too_far[0], :]])[0]
-                polar[0] = self.max_array_radius - self.diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
+                polar = DotList._cartesian2polar([self._xy[too_far[0], :]])[0]
+                polar[0] = self.max_array_radius - self._diameters[
+                    too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = DotList._polar2cartesian([polar])[0]
-                self.xy[too_far[0], :] = new_xy
+                self._xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
-                self.xy -= new_xy
+                self._xy -= new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
-                for i in np.argsort(DotList._cartesian2polar(self.xy, radii_only=True)):
+                for i in np.argsort(DotList._cartesian2polar(self._xy, radii_only=True)):
                     self._remove_overlap_for_dot(dot_id=i, minimum_gap=self.minimum_gap)
                 # new pos for outlyer
-                self.xy += new_xy  # move back to old position
+                self._xy += new_xy  # move back to old position
                 shift_required = True
             else:
                 break  # end while loop
@@ -203,7 +202,7 @@ class DotArray(DotList):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self.colours):
+        for c in np.unique(self._colours):
             if c is not None:
                 da = DotArray(max_array_radius=self.max_array_radius,
                               minimum_gap=self.minimum_gap)
@@ -214,13 +213,13 @@ class DotArray(DotList):
 
     def get_properties_split_by_colours(self):
         """returns is unicolor or no color"""
-        if len(np.unique(self.colours)) == 1:
+        if len(np.unique(self._colours)) == 1:
             return None
 
         rtn = DotListProperties._make_arrays()
         for da in self.split_array_by_colour():
             prop = da.get_properties()
-            rtn[0].append(self.object_id + str(da.colours[0]))
+            rtn[0].append(self.object_id + str(da._colours[0]))
             for i in range(1, len(rtn)):
                 rtn[i].append(prop[i])
         return rtn
@@ -256,17 +255,17 @@ class DotArray(DotList):
         if object_id_column:
             obj_id = self.object_id
 
-        for cnt in range(len(self.xy)):
+        for cnt in range(len(self._xy)):
             if object_id_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
                 rtn += "{},".format(self.prop_numerosity)
-            rtn += num_format % self.xy[cnt, 0] + "," + num_format % self.xy[cnt, 1] + "," + \
-                   num_format % self.diameters[cnt]
+            rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
+                   num_format % self._diameters[cnt]
             if colour_column:
-                rtn += ", {}".format(self.colours[cnt])
+                rtn += ", {}".format(self._colours[cnt])
             if picture_column:
-                rtn += ", {}".format(self.pictures[cnt])
+                rtn += ", {}".format(self._pictures[cnt])
             rtn += "\n"
         return rtn
 
@@ -299,16 +298,16 @@ class DotArray(DotList):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
-        diameters = self.diameters
-        self.diameters = np.array([])
-        self.xy = np.array([])
+        diameters = self._diameters
+        self._diameters = np.array([])
+        self._xy = np.array([])
         for d in diameters:
             xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
-            self.diameters = np.append(self.diameters, d)
-            if len(self.xy) == 0:
-                self.xy = np.array([xy])
+            self._diameters = np.append(self._diameters, d)
+            if len(self._xy) == 0:
+                self._xy = np.array([xy])
             else:
-                self.xy = np.append(self.xy, [xy], axis=0)
+                self._xy = np.append(self._xy, [xy], axis=0)
 
     def number_deviant(self, change_numerosity):
         """number deviant
@@ -321,30 +320,31 @@ class DotArray(DotList):
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                rnd = random.randint(0, deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                rnd = random.randint(0,
+                                     deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
                 if change_numerosity < 0:
                     # remove dots
-                    deviant.delete_dot(rnd)
+                    deviant.delete(rnd)
                 else:
                     # copy a random dot
-                    deviant.append(xy=self.random_free_dot_position(dot_diameter=self.diameters[rnd]),
-                                   diameter = self.diameters[rnd],
-                                   colour = self.colours[rnd],
-                                   picture= self.pictures[rnd])
+                    deviant.append(xy=self.random_free_dot_position(dot_diameter=self._diameters[rnd]),
+                                   diameters=self._diameters[rnd],
+                                   colours=self._colours[rnd],
+                                   pictures=self._pictures[rnd])
 
         return deviant
 
     def match_total_surface_area(self, surface_area):
         # changes diameter
         a_scale = (surface_area / self.prop_total_surface_area)
-        self.diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
+        self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
 
     def match_mean_dot_diameter(self, mean_dot_diameter):
         # changes diameter
 
         scale = mean_dot_diameter / self.prop_mean_dot_diameter
-        self.diameters = self.diameters * scale
+        self._diameters = self._diameters * scale
 
     def match_total_circumference(self, total_circumference):
         # linear to fit_mean_dot_diameter, but depends on numerosity
@@ -371,12 +371,12 @@ class DotArray(DotList):
 
         # centered  points
         old_center = self.center_of_outer_positions
-        centered_polar = DotList._cartesian2polar(self.xy - old_center)
+        centered_polar = DotList._cartesian2polar(self._xy - old_center)
 
         while abs(current - convex_hull_area) > precision:
             scale += step
 
-            self.xy = DotList._polar2cartesian(centered_polar * [scale, 1])
+            self._xy = DotList._polar2cartesian(centered_polar * [scale, 1])
             current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \
@@ -384,7 +384,7 @@ class DotArray(DotList):
                 step *= -0.2  # change direction and finer grain
 
         if not center_array:
-            self.xy += old_center
+            self._xy += old_center
 
     def match_density(self, density, precision=0.001, ratio_convex_hull2area_adaptation=0.5):
         """this function changes the area and remixes to get a desired density
@@ -406,22 +406,3 @@ class DotArray(DotList):
 
         self.match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
                                     precision=precision)
-
-
-################### helper functions ###########################
-
-def numpy_vector(x):
-    """helper function:
-    make an numpy vector from any element (list, arrays, and single data (str, numeric))
-    nut None will not be procesed and returns None"""
-
-    if x is None:
-        return None
-
-    x = np.array(x)
-    if x.ndim == 1:
-        return x
-    elif x.ndim == 0:
-        return x.reshape(1)  # if one element only, make a array with one element
-    else:
-        return x.flatten()
