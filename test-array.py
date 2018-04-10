@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from expyriment import misc, control
 
 from pynsn import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotListProperties
+    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArrayProperties
 from hashlib import md5
 
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         dot_diameter_range=(5, 40),
         dot_diameter_std=2,
         dot_colour="skyblue",
-        minimum_gap=1,
+        minimum_gap=5,
         logger=logger)
     max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
 
@@ -45,6 +45,7 @@ if __name__ == "__main__":
         a = generator.make(n_dots=20, inhibit_logging=True)
         b = generator.make(n_dots=40, inhibit_logging=True)
         b.change_colour("blue")
+        # b.match(mean_dot_diameter=83, convex_hull_area=523)
         x = a.copy()
         x.join(b)
         logger.log(x)

@@ -14,7 +14,7 @@ from scipy.spatial import ConvexHull, distance
 
 TWO_PI = 2 * np.pi
 
-class DotListProperties(namedtuple("DAProperties",["object_id", "numerosity", "mean_dot_diameter",
+class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
                                                 "total_surface_area", "convex_hull_area",
                                                 "density", "total_circumference"])):
     __slots__ = ()
@@ -28,6 +28,10 @@ class DotListProperties(namedtuple("DAProperties",["object_id", "numerosity", "m
     @classmethod
     def get_np_array_column_names(cls):
         return cls._fields[1:]
+
+    @property
+    def property_names(self):
+        return self._fields[1:]
 
     @property
     def np_array(self):
@@ -53,7 +57,7 @@ class DotListProperties(namedtuple("DAProperties",["object_id", "numerosity", "m
         return rtn
 
 
-class DotList(object):
+class SimpleDotArray(object):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -114,8 +118,8 @@ class DotList(object):
         if indices is None:
             indices = list(range(self.prop_numerosity))
 
-        return DotList(xy=self._xy[indices, :].copy(),
-                       diameters=self._diameters[indices].copy())
+        return SimpleDotArray(xy=self._xy[indices, :].copy(),
+                              diameters=self._diameters[indices].copy())
 
 
     @property
@@ -125,7 +129,7 @@ class DotList(object):
         m = md5()
         m.update(self._xy.tobytes())
         m.update(self._diameters.tobytes())
-        return m.hexdigest()[:DotList.OBJECT_ID_LENGTH]
+        return m.hexdigest()[:SimpleDotArray.OBJECT_ID_LENGTH]
 
 
     @staticmethod
@@ -190,9 +194,9 @@ class DotList(object):
         """this convex_hull takes into account the dot diameter"""
         idx = ConvexHull(self._xy).vertices
         center = self.center_of_outer_positions
-        polar_centered = DotList._cartesian2polar(self._xy[idx, :] - center)
+        polar_centered = SimpleDotArray._cartesian2polar(self._xy[idx, :] - center)
         polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
-        xy = DotList._polar2cartesian(polar_centered) + center
+        xy = SimpleDotArray._polar2cartesian(polar_centered) + center
         return xy
 
     def _jitter_identical_positions(self, jitter_size=0.1):
@@ -203,7 +207,7 @@ class DotList(object):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] -= DotList._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self._xy[x, :] -= SimpleDotArray._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
@@ -220,9 +224,9 @@ class DotList(object):
                     np.all(self._xy[idx,] == self._xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = DotList._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
+            tmp_polar = SimpleDotArray._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = DotList._polar2cartesian(tmp_polar)
+            xy = SimpleDotArray._polar2cartesian(tmp_polar)
             self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
@@ -262,9 +266,9 @@ class DotList(object):
 
     def get_properties(self):
         """returns a named tuple """
-        return DotListProperties(self.object_id, self.prop_numerosity, self.prop_mean_dot_diameter,
-                                 self.prop_total_surface_area, self.prop_convex_hull_area, self.prop_density,
-                                 self.prop_total_circumference)
+        return DotArrayProperties(self.object_id, self.prop_numerosity, self.prop_mean_dot_diameter,
+                                  self.prop_total_surface_area, self.prop_convex_hull_area, self.prop_density,
+                                  self.prop_total_circumference)
 
 
     def get_distance_matrix(self, between_positions=False):
@@ -287,6 +291,145 @@ class DotList(object):
         dist += radii_mtx  # add to each row
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
+
+
+    def match(self, total_surface_area=None,
+              mean_dot_diameter=None,
+              total_circumference=None,
+              convex_hull_area=None,
+              density=None,
+              convex_hull_precision=0.01,
+              density_adaptation_CH2TA_ratio=0.5,
+              center_array=True):
+        """TODO
+        """
+
+        TA = u"total surface area"
+        MD = u"mean dot diameter"
+        TC = u"total circumference"
+        CH = u"convex hull"
+        DE = u"density"
+        DEPENDENCIES = [[CH, DE], [MD, TC, TA]]
+
+        adapt = []
+        if total_surface_area is not None:
+            adapt.append(TA)
+        if mean_dot_diameter is not None:
+            adapt.append(MD)
+        if total_circumference is not None:
+            adapt.append(TC)
+        if convex_hull_area is not None:
+            adapt.append(CH)
+        if density is not None:
+            adapt.append(DE)
+
+        # check dependencies
+        for dep in DEPENDENCIES:
+            if sum(list(map(lambda x: x in dep, adapt))) > 1:
+                raise RuntimeError(u"Incompatible properties to match: " + ", ".join(adapt))
+
+        if DE in adapt and density_adaptation_CH2TA_ratio != 1:
+            if MD in adapt or TC in adapt or TA in adapt:
+                raise RuntimeError(u"Density_adaptation_CH2TA_ration has to be 1, if matching: " + ", ".join(adapt))
+
+        # Adapt
+        for method in adapt:
+            if method == TA:
+                self._match_total_surface_area(surface_area=total_surface_area)
+            elif method == MD:
+                self._match_mean_dot_diameter(mean_dot_diameter=mean_dot_diameter)
+            elif method == TC:
+                self._match_total_circumference(total_circumference=total_circumference)
+            elif method == CH:
+                self._match_convex_hull_area(convex_hull_area=convex_hull_area, precision=convex_hull_precision)
+            elif method == DE:
+                self._match_density(density=density, precision=convex_hull_precision,
+                                    adaptation_CH2TA_ratio=density_adaptation_CH2TA_ratio)
+
+        if center_array:
+            self._xy -= self.center_of_outer_positions
+
+    def _match_total_surface_area(self, surface_area):
+        # changes diameter
+        a_scale = (surface_area / self.prop_total_surface_area)
+        self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
+            np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+
+    def _match_mean_dot_diameter(self, mean_dot_diameter):
+        # changes diameter
+
+        scale = mean_dot_diameter / self.prop_mean_dot_diameter
+        self._diameters = self._diameters * scale
+
+    def _match_total_circumference(self, total_circumference):
+        # linear to fit_mean_dot_diameter, but depends on numerosity
+        mean_dot_diameter = total_circumference / (self.prop_numerosity * np.pi)
+        self._match_mean_dot_diameter(mean_dot_diameter)
+
+    def _match_convex_hull_area(self, convex_hull_area, precision=0.001):
+        """changes the convex hull area to a desired size with certain precision
+
+        iterative method can takes some time.
+        """
+
+        current = self.prop_convex_hull_area
+
+        if current is None:
+            return  # not defined
+
+        # iteratively determine scale
+        scale = 1  # find good scale
+        step = 0.1
+        if convex_hull_area < current:  # current too larger
+            step *= -1
+
+        # centered  points
+        old_center = self.center_of_outer_positions
+        centered_polar = SimpleDotArray._cartesian2polar(self._xy - old_center)
+
+        while abs(current - convex_hull_area) > precision:
+            scale += step
+
+            self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
+            current = self.prop_convex_hull_area
+
+            if (current < convex_hull_area and step < 0) or \
+                    (current > convex_hull_area and step > 0):
+                step *= -0.2  # change direction and finer grain
+
+        self._xy += old_center
+
+    def _match_density(self, density, precision=0.001, adaptation_CH2TA_ratio=0.5):
+        """this function changes the area and remixes to get a desired density
+        precision in percent between 1 < 0
+
+        ratio_area_convex_hull_adaptation:
+            ratio of adaptation via area or via convex_hull (between 0 and 1)
+
+        """
+
+        # dens = convex_hull_area / total_surface_area
+        if adaptation_CH2TA_ratio < 0 or adaptation_CH2TA_ratio > 1:
+            adaptation_CH2TA_ratio = 0.5
+
+        area_change100 = (self.prop_convex_hull_area / density) - self.prop_total_surface_area
+        d_change_area = area_change100 * (1 - adaptation_CH2TA_ratio)
+        if abs(d_change_area) > 0:
+            self._match_total_surface_area(surface_area=self.prop_total_surface_area + d_change_area)
+
+        self._match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
+                                     precision=precision)
+
+
+    def remove_overlap_from_inner_to_outer(self, minimum_gap):
+
+        shift_required = False
+        # from inner to outer remove overlaps
+        for i in np.argsort(SimpleDotArray._cartesian2polar(self._xy, radii_only=True)):
+            if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
+                shift_required = True
+
+        return shift_required
 
 
 ################### helper functions ###########################

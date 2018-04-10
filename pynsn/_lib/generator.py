@@ -94,21 +94,21 @@ class DotArrayGenerator(object):
 
 class DASequenceGenerator(object):
 
-    NO_FITTING = u"NF"
     CONVEX_HULL = u"CH"
-    DENSITY = u"DE"
-    DENSITY_ONLY_CONVEX_HULL = u"DE_C"
-    DENSITY_ONLY_AREA = u"DE_A"
+    DENSITY50_50 = u"DE"
     MEAN_DIAMETER = u"MD"
     TOTAL_AREA = u"TA"
     TOTAL_CIRCUMFERENCE = u"TC"
+    NO_FITTING = u"NF"
+    DENSITY_ONLY_CONVEX_HULL = u"DE_C"
+    DENSITY_ONLY_AREA = u"DE_A"
 
-    ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY, NO_FITTING,
+    ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY50_50, NO_FITTING,
                    DENSITY_ONLY_CONVEX_HULL, DENSITY_ONLY_AREA]
 
-    _DEPENDENCIES =[ [CONVEX_HULL, DENSITY, DENSITY_ONLY_CONVEX_HULL],
-                     [DENSITY, DENSITY_ONLY_AREA, MEAN_DIAMETER, TOTAL_CIRCUMFERENCE, TOTAL_AREA ],
-                     [DENSITY, DENSITY_ONLY_AREA, DENSITY_ONLY_CONVEX_HULL]]
+    _DEPENDENCIES =[[CONVEX_HULL, DENSITY50_50, DENSITY_ONLY_CONVEX_HULL],
+                    [DENSITY50_50, DENSITY_ONLY_AREA, MEAN_DIAMETER, TOTAL_CIRCUMFERENCE, TOTAL_AREA ],
+                    [DENSITY50_50, DENSITY_ONLY_AREA, DENSITY_ONLY_CONVEX_HULL]]
 
     def __init__(self, max_dot_array, logger=None):
         """  makes sequence of deviants by subtracting dots
@@ -144,7 +144,6 @@ class DASequenceGenerator(object):
         for dep in DASequenceGenerator._DEPENDENCIES:
             if sum(list(map(lambda x: x in dep, match_properties))) > 1:
                 raise RuntimeError(u"Incompatible properties to match: {}".format(match_properties))
-                return False
         return True
 
 
@@ -172,26 +171,26 @@ class DASequenceGenerator(object):
             da = da.number_deviant(change_numerosity=-1)
 
             for mp in match_methods:
-                if mp == DASequenceGenerator.DENSITY:
-                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=0.5)
-
-                elif mp == DASequenceGenerator.DENSITY_ONLY_AREA:
-                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=0)
-
-                elif mp == DASequenceGenerator.DENSITY_ONLY_CONVEX_HULL:
-                    da.match_density(density=self._dens, ratio_convex_hull2area_adaptation=1)
-
-                elif mp == DASequenceGenerator.CONVEX_HULL:
-                    da.match_convex_hull_area(convex_hull_area=self._cha)
-
-                elif mp == DASequenceGenerator.MEAN_DIAMETER:
-                    da.match_mean_dot_diameter(mean_dot_diameter=self._dia)
+                if mp == DASequenceGenerator.MEAN_DIAMETER:
+                    da._match_mean_dot_diameter(mean_dot_diameter=self._dia)
 
                 elif mp == DASequenceGenerator.TOTAL_AREA:
-                    da.match_total_surface_area(surface_area=self._total_area)
+                    da._match_total_surface_area(surface_area=self._total_area)
 
                 elif mp == DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-                    da.match_total_circumference(total_circumference=self._circumference)
+                    da._match_total_circumference(total_circumference=self._circumference)
+
+                elif mp == DASequenceGenerator.DENSITY50_50:
+                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=0.5)
+
+                elif mp == DASequenceGenerator.DENSITY_ONLY_AREA:
+                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=0)
+
+                elif mp == DASequenceGenerator.DENSITY_ONLY_CONVEX_HULL:
+                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=1)
+
+                elif mp == DASequenceGenerator.CONVEX_HULL:
+                    da._match_convex_hull_area(convex_hull_area=self._cha)
 
                 elif mp == self.NO_FITTING:
                     pass

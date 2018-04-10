@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
 import numpy as np
-from .dot_list import DotListProperties
+from .simple_dot_array import DotArrayProperties
 from .dot_array import DotArray
 
 
@@ -58,7 +58,7 @@ class DASequence(object):
 
     def get_properties(self):
         """named tuple with arrays"""
-        rtn = DotListProperties._make_arrays()
+        rtn = DotArrayProperties._make_arrays()
 
         for da in self.dot_arrays:
             prop = da.get_properties()

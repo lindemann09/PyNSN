@@ -36,16 +36,16 @@ def compare_stimulus(n_left, n_right,
         a = da_right
         b = da_left
 
-    if match_method == pynsn.DASequenceGenerator.DENSITY:
-        a.match_density(density=b.density, ratio_convex_hull2area_adaptation=0.5)
+    if match_method == pynsn.DASequenceGenerator.DENSITY50_50:
+        a._match_density(density=b.density, adaptation_CH2TA_ratio=0.5)
     elif match_method == pynsn.DASequenceGenerator.CONVEX_HULL:
-        a.match_convex_hull_area(convex_hull_area=b.convex_hull_area)
+        a._match_convex_hull_area(convex_hull_area=b.convex_hull_area)
     elif match_method == pynsn.DASequenceGenerator.MEAN_DIAMETER:
-        a.match_mean_dot_diameter(b.mean_dot_diameter)
+        a._match_mean_dot_diameter(b.mean_dot_diameter)
     elif match_method == pynsn.DASequenceGenerator.TOTAL_AREA:
         a.match_total_area(total_area=b.total_area)
     elif match_method == pynsn.DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-        a.match_total_circumference(total_circumference=b.total_circumference)
+        a._match_total_circumference(total_circumference=b.total_circumference)
     elif match_method == pynsn.DASequenceGenerator.NO_FITTING:
         pass
     else:
