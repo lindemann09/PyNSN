@@ -8,7 +8,6 @@ from builtins import *
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import random
-from copy import deepcopy, copy
 import numpy as np
 from .dot import Dot
 from .simple_dot_array import SimpleDotArray, DotArrayProperties, numpy_vector
@@ -161,8 +160,7 @@ class DotArray(SimpleDotArray):
 
                 # squeeze in outlier
                 polar = SimpleDotArray._cartesian2polar([self._xy[too_far[0], :]])[0]
-                polar[0] = self.max_array_radius - self._diameters[
-                    too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
+                polar[0] = self.max_array_radius - self._diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = SimpleDotArray._polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 

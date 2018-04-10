@@ -18,5 +18,4 @@ from ._lib import colours
 
 # TODO:
 #
-#  * other shapes
-# * rectangluar array
+#  target area
