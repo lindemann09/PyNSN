@@ -2,7 +2,6 @@
 Dot Array
 """
 from __future__ import print_function, division, unicode_literals
-
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
