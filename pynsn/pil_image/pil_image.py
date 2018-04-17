@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from PIL import Image, ImageDraw
 import numpy as np
-from .._lib.colours import convert_colour
+from .._lib.colour import Colour
 
 
 def create(dot_array,
@@ -35,50 +35,53 @@ def create(dot_array,
         except:
             aa = 1
 
-    colour_area = convert_colour(colour_area)
-    colour_convex_hull_positions = convert_colour(colour_convex_hull_positions)
-    colour_convex_hull_dots = convert_colour(colour_convex_hull_dots)
-    colour_center_of_mass = convert_colour(colour_center_of_mass)
-    colour_center_of_outer_positions = convert_colour(colour_center_of_outer_positions)
-
     image_size = int(round(dot_array.max_array_radius * 2)) * aa
     img = Image.new("RGBA", (image_size, image_size),
-                    color=convert_colour(colour_background))
+                    color=Colour(colour_background).colour)
 
-    if colour_area is not None:
+    tmp_colour = Colour(colour_area).colour
+    if tmp_colour is not None:
         _draw_dot(img, xy=_convert_pos(np.zeros(2), image_size),
-                  diameter=image_size, colour=colour_area)
+                  diameter=image_size,
+                  colour=tmp_colour)
 
+    #draw dots
+    default_dot_colour = Colour(default_dot_colour)
     for xy, d, c in zip(_convert_pos(dot_array.rounded_xy*aa, image_size),
                         dot_array.rounded_diameters*aa,
-                        dot_array.colours):
-        if c is None:
-            c = convert_colour(default_dot_colour)
-        _draw_dot(img, xy=xy, diameter=d, colour=c)
+                        dot_array.features.colours):
+        if c.colour is None:
+            c = default_dot_colour
+        _draw_dot(img, xy=xy, diameter=d, colour=c.colour) # todo draw pictures
 
-    if colour_convex_hull_positions is not None:
+    tmp_colour = Colour(colour_convex_hull_positions).colour
+    if tmp_colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull = _convert_pos(dot_array.convex_hull_positions*aa, image_size),
-                          convex_hull_colour=colour_convex_hull_positions)
+                          convex_hull_colour = tmp_colour)
 
-    if colour_convex_hull_dots is not None:
+    tmp_colour = Colour(colour_convex_hull_dots).colour
+    if tmp_colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull = _convert_pos(dot_array.convex_hull * aa, image_size),
-                          convex_hull_colour=colour_convex_hull_dots)
+                          convex_hull_colour = tmp_colour)
 
-    if colour_center_of_mass is not None:
+    tmp_colour = Colour(colour_center_of_mass).colour
+    if tmp_colour is not None:
         _draw_dot(img, xy=_convert_pos(dot_array.center_of_mass*aa, image_size),
-                  diameter=10*aa, colour=colour_center_of_mass)
+                  diameter=10*aa, colour = tmp_colour)
 
-    if colour_center_of_outer_positions is not None:
+    tmp_colour = Colour(colour_center_of_outer_positions).colour
+    if tmp_colour is not None:
         _draw_dot(img, xy=_convert_pos(dot_array.center_of_outer_positions*aa, image_size),
-                  diameter=10*aa, colour=colour_center_of_outer_positions)
+                  diameter=10*aa, colour = tmp_colour)
 
     if aa!=1:
         image_size = int(image_size / aa)
         img = img.resize((image_size, image_size), Image.LANCZOS)
+
     return img
 
 def _convert_pos(xy, image_size):

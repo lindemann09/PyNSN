@@ -10,7 +10,7 @@ import random
 import numpy as np
 from .dot import Dot
 from .simple_dot_array import SimpleDotArray, DotArrayProperties, numpy_vector
-from .colours import convert_colour
+from .item_features import ItemFeaturesList, ItemFeatures
 
 TWO_PI = 2 * np.pi
 
@@ -18,57 +18,43 @@ TWO_PI = 2 * np.pi
 class DotArray(SimpleDotArray):
 
     def __init__(self, max_array_radius, minimum_gap=1, xy=None,
-                 diameters=None, colours=None, pictures=None):
+                 diameters=None, features=None):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
         SimpleDotArray.__init__(self)
+        self.features = ItemFeaturesList()
         self.max_array_radius = max_array_radius
         self.minimum_gap = minimum_gap
-        self._colours = np.array([])
-        self._pictures = np.array([])
-        if xy is not None or diameters is not None or colours is not None or pictures is not None:
-            self.append(xy, diameters, colours=colours, pictures=pictures)
-
-    @property
-    def colours(self):
-        return self._colours
-
-    @property
-    def pictures(self):
-        return self._pictures
+        if xy is not None or diameters is not None or features is not None:
+            self.append(xy, diameters, features = features)
 
     def clear(self):
         SimpleDotArray.clear(self)
-        self._colours = np.array([])
-        self._pictures = np.array([])
+        self.features.clear()
 
-    def append(self, xy, diameters, colours=None, pictures=None):
-        """append dots using numpy array"""
+    def append(self, xy, diameters, features=None):
+        """append dots using numpy array
+        features None, ItemFeatureList of ItemFeatures"""
 
-        # ensure good numpy array or None
         diameters = numpy_vector(diameters)
-        pictures = numpy_vector(pictures)
-        colours = numpy_vector(colours)
-        if (colours is not None and len(colours) != len(diameters)) or \
-                (pictures is not None and len(pictures) != len(diameters)):
+        SimpleDotArray.append(self, xy=xy, diameters=diameters)
+
+        if features is None:
+            features = ItemFeaturesList(colours=[None] * len(diameters))
+        elif len(diameters)>1 and isinstance(features, ItemFeatures):
+            tmp = ItemFeaturesList()
+            tmp.append_features(features)
+            features = tmp.repeat(len(diameters))
+
+        self.features.append_features(features=features)
+
+        if (self.features.length != len(self._diameters)):
             raise RuntimeError(u"Bad shaped data: " + u"colour and/or picture has not the same length as diameter")
-
-        SimpleDotArray.append(self, xy, diameters)
-
-        if pictures is None:
-            pictures = [None]*len(diameters)
-        self._pictures = np.append(self._pictures, pictures)
-
-        if colours is None:
-            colours = [None]*len(diameters)
-        for c in colours:
-            self._colours = np.append(self._colours, convert_colour(c))
 
     def delete(self, index):
         SimpleDotArray.delete(self, index)
-        self._colours = np.delete(self._colours, index)
-        self._pictures = np.delete(self._pictures, index)
+        self.features.delete(index)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -83,22 +69,19 @@ class DotArray(SimpleDotArray):
                         minimum_gap=self.minimum_gap,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
-                        colours=self._colours[indices].copy(),
-                        pictures=self._pictures[indices].copy())
+                        features=self.features.copy())
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], diameters=dot.diameter,
-                    colours=dot.colour, pictures=dot.picture)
+        self.append(xy=[dot.x, dot.y], diameters=dot.diameter, features=dot.features)
 
     def join(self, dot_array, realign=True):
         """add another dot arrays"""
 
-        self.append(xy=dot_array._xy, diameters=dot_array._diameters,
-                    colours=dot_array._colours, pictures=dot_array._pictures)
+        self.append(xy=dot_array._xy, diameters=dot_array._diameters,features=dot_array.features)
         if realign:
             self.realign()
 
-    def get_dots(self, indices=None, diameter=None, colour=None, picture=None):
+    def get_dots(self, indices=None, diameter=None, colour=None, picture=None): # todo: search by features
         """returns all dots
          filtering possible:
          if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
@@ -112,29 +95,16 @@ class DotArray(SimpleDotArray):
             except:
                 indices = [indices]
 
-        for xy, dia, col, pict in zip(self._xy, self._diameters,
-                                      self._colours, self._pictures):
+        for xy, dia, feat in zip(self._xy, self._diameters, self.features):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
-                    (colour is not None and col != colour) or \
-                    (picture is not None and pict != picture):
+                    (colour is not None and feat.colour != colour) or \
+                    (picture is not None and feat.picture != picture):
                 continue
 
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia,
-                           colour=col, picture=pict))
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, features=feat))
         return rtn
-
-    def change_colour(self, colour, indices=None):
-        """allows usung color names and rgb array, since it
-        converts colour """
-
-        if isinstance(indices, int):
-            indices = [indices]
-        elif indices is None:
-            indices = range(len(self._colours))
-
-        self._colours[indices] = convert_colour(colour)
 
     def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
@@ -195,7 +165,7 @@ class DotArray(SimpleDotArray):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self._colours):
+        for c in np.unique(self.features.colours):
             if c is not None:
                 da = DotArray(max_array_radius=self.max_array_radius,
                               minimum_gap=self.minimum_gap)
@@ -206,13 +176,13 @@ class DotArray(SimpleDotArray):
 
     def get_properties_split_by_colours(self):
         """returns is unicolor or no color"""
-        if len(np.unique(self._colours)) == 1:
+        if len(np.unique(self.features.colours)) == 1:
             return None
 
         rtn = DotArrayProperties._make_arrays()
         for da in self.split_array_by_colour():
             prop = da.get_properties()
-            rtn[0].append(self.object_id + str(da._colours[0]))
+            rtn[0].append(self.object_id + str(da.features.colours[0]))
             for i in range(1, len(rtn)):
                 rtn[i].append(prop[i])
         return rtn
@@ -222,7 +192,7 @@ class DotArray(SimpleDotArray):
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
                 object_id_column=True, num_idx_column=True,
-                colour_column=False, picture_column=False):
+                colour_column=False, picture_column=False): # todo print features
         """Return the dot array as csv text
 
         Parameter
@@ -256,9 +226,9 @@ class DotArray(SimpleDotArray):
             rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
                    num_format % self._diameters[cnt]
             if colour_column:
-                rtn += ", {}".format(self._colours[cnt])
+                rtn += ", {}".format(self.features.colours[cnt])
             if picture_column:
-                rtn += ", {}".format(self._pictures[cnt])
+                rtn += ", {}".format(self.features.pictures[cnt])
             rtn += "\n"
         return rtn
 
@@ -323,7 +293,7 @@ class DotArray(SimpleDotArray):
                     # copy a random dot
                     deviant.append(xy=self.random_free_dot_position(dot_diameter=self._diameters[rnd]),
                                    diameters=self._diameters[rnd],
-                                   colours=self._colours[rnd],
-                                   pictures=self._pictures[rnd])
+                                   colours=self.features.colours[rnd],
+                                   pictures=self.features.pictures[rnd])
 
         return deviant

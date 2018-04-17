@@ -7,8 +7,8 @@ from builtins import *
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
-from .colours import convert_colour
-
+from .colour import Colour
+from .item_features import ItemFeatures
 
 class Coordinate2D(object):
 
@@ -102,29 +102,9 @@ class Coordinate2D(object):
 
 
 
-class ItemFeatures(object):
+class Dot(Coordinate2D): #TODO becomes maybe an item
 
-    def __init__(self, colour=None, picture=None):
-        """Item feature of an Item
-        """
-
-        self.picture = picture
-        self.colour = colour
-
-    @property
-    def colour(self):
-        """RGB colour """
-        return self._colour
-
-    @colour.setter
-    def colour(self, value):
-        self._colour = convert_colour(value)
-
-
-
-class Dot(Coordinate2D, ItemFeatures):
-
-    def __init__(self, x=0, y=0, diameter=1, colour=None, picture=None):
+    def __init__(self, x=0, y=0, diameter=1, features=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -135,21 +115,17 @@ class Dot(Coordinate2D, ItemFeatures):
         x : numeric (default=0)
         y : numeric (default=0)
         diameter : numeric (default=1)
-        colour : rgb colour (default=None)
-        picture : todo
-
+        features : ItemFeatures
         """
 
-        Coordinate2D.__init__(x=x, y=y)
-        ItemFeatures.__init__(self, colour=colour, picture=picture)
-
+        Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
-
-    def __repr__(self):
-        rtn = "[{0},{1}], d={2}".format(self._x, self._y, self.diameter)
-        if self.colour is not None:
-            rtn += ", c={0}".format(self.colour)
-        return "(" + rtn + ")"
+        if features is None:
+            self.features = ItemFeatures(colours=None, picture=None)
+        elif not isinstance(features, ItemFeatures):
+            raise TypeError(u"features must be a ItemFeatures, not {}".format(type(features)))
+        else:
+            self.features = features
 
 
     def distance(self, d):
@@ -178,8 +154,9 @@ class Dot(Coordinate2D, ItemFeatures):
         return math.pi * self.diameter
 
 
-class Rectangle(Coordinate2D, ItemFeatures):
-    def __init__(self, x=0, y=0, width=0, height=0, colour=None, picture=None):
+
+class Rectangle(Coordinate2D):
+    def __init__(self, x=0, y=0, width=0, height=0, features=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -191,12 +168,13 @@ class Rectangle(Coordinate2D, ItemFeatures):
         y : numeric (default=0)
         width : numeric (default=1)
         height : numeric (default=1)
-        colour : rgb colour (default=None)
-        picture : todo
         """
 
         Coordinate2D.__init__(self, x=x, y=y)
-        ItemFeatures.__init__(self, colour=colour, picture=picture)
+        if features is None:
+            self.features = ItemFeaturesList(colour=None)
+        else:
+            self.features = features
 
         self.height = height
         self.width = width
@@ -214,12 +192,6 @@ class Rectangle(Coordinate2D, ItemFeatures):
         rtn = list(self.left_top)
         rtn.extend(self.right_bottom)
         return rtn
-
-    def __repr__(self):
-        rtn = "[{0},{1}], w={2}, h={3}".format(self._x, self._y, self.width, self.height)
-        if self.colour is not None:
-            rtn += ", c={0}".format(self.colour)
-        return "(" + rtn + ")"
 
     def distance(self, r):
         """Return Euclidean distance to the dot d. The function take the
@@ -240,7 +212,7 @@ class Rectangle(Coordinate2D, ItemFeatures):
         l2, t2 = r.left_top
         r2, b2 = r.right_bottom
 
-        return Coordinate2D.distance(self, d)
+        return Coordinate2D.distance(self, d) #TODO
 
 
     def gap_xy(self, other):

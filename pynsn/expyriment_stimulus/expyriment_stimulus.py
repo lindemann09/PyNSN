@@ -8,7 +8,7 @@ from expyriment.misc import Clock
 from expyriment.stimuli import Canvas
 
 from pynsn.pil_image import pil_image
-from .._lib.colours import convert_colour
+from .._lib.colour import Colour
 
 
 class ExprimentDotArray(Canvas):
@@ -25,12 +25,12 @@ class ExprimentDotArray(Canvas):
 
         Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
-        self.colour_convex_hull_positions  = convert_colour(colour_convex_hull_positions)
-        self.colour_convex_hull_dots  = convert_colour(colour_convex_hull_dots)
-        self.colour_center_of_mass = convert_colour(colour_center_of_mass)
-        self. colour_center_of_outer_positions = convert_colour(colour_center_of_outer_positions)
-        self.colour_area = convert_colour(colour_area)
-        self.colour_background = convert_colour(colour_background)
+        self.colour_convex_hull_positions  = Colour(colour_convex_hull_positions)
+        self.colour_convex_hull_dots  = Colour(colour_convex_hull_dots)
+        self.colour_center_of_mass = Colour(colour_center_of_mass)
+        self. colour_center_of_outer_positions = Colour(colour_center_of_outer_positions)
+        self.colour_area = Colour(colour_area)
+        self.colour_background = Colour(colour_background)
         self.antialiasing = antialiasing
 
 

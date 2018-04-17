@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from . import random_beta
 from multiprocessing import Process, Event, Queue
 from .dot_array import DotArray
-from .colours import convert_colour
+from .item_features import ItemFeatures
 from .dot_array_sequence import DASequence
 from .files import GeneratorLogger
 
@@ -17,8 +17,7 @@ class DotArrayGenerator(object):
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
-                 dot_picture = None,
-                 dot_colour=None,
+                 dot_colour = None,
                  minimum_gap=1,
                  logger=None):
 
@@ -49,8 +48,7 @@ class DotArrayGenerator(object):
         self.dot_diameter_range = dot_diameter_range
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
-        self.dot_colour = convert_colour(dot_colour)
-        self.dot_picture = dot_picture
+        self.item_feature = ItemFeatures(colour=dot_colour)
         self.set_logger(logger)
 
 
@@ -80,9 +78,7 @@ class DotArrayGenerator(object):
                     self.dot_diameter_range, parameter)
 
             xy = rtn.random_free_dot_position(dot_diameter=diameter)
-            rtn.append(xy=xy, diameters=diameter,
-                       colours=self.dot_colour,
-                       pictures=self.dot_picture)
+            rtn.append(xy=xy, diameters=diameter, features=self.item_feature)
 
         if not inhibit_logging and self.logger is not None:
             self.logger.log(rtn)

@@ -11,6 +11,7 @@ import time
 import numpy as np
 from . import __version__
 from multiprocessing import Process, Event, Queue
+from .item_features import ItemFeaturesList
 from .dot_array import DotArray
 from .dot_array_sequence import DASequence
 
@@ -151,7 +152,7 @@ class LogFileReader(object):
             self.unique_object_ids = []
             xy = []
             diameters = []
-            colours = []
+            colours = [] #TODO: features
             pictures = []
             object_ids = []
             num_ids = []
@@ -230,7 +231,8 @@ class LogFileReader(object):
 
         rtn = DotArray(max_array_radius=max_array_radius)
         for x in zip(xy, dia, col, pict):
-            rtn.append(xy=x[0], diameters=x[1], colours=x[2], pictures=x[3])
+            rtn.append(xy=x[0], diameters=x[1],
+                       features=ItemFeaturesList(colours=x[2], pictures=x[3]))
         if max_array_radius is None:
             # adjust max_radius if not defined
             radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2

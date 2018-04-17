@@ -28,7 +28,7 @@ def compare_stimulus(n_left, n_right,
 
     da_left = generator.make(n_dots=n_left)
     da_right= generator.make(n_dots=n_right)
-
+    da_right.features.change(colour="red")
     if match_the_left:
         b = da_right
         a = da_left

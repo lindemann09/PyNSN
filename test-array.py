@@ -2,10 +2,9 @@
 from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
-
+import pynsn
 from pynsn import expyriment_stimulus, DotArrayGenerator, \
     DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArrayProperties
-from hashlib import md5
 
 
 
@@ -44,7 +43,7 @@ if __name__ == "__main__":
 
         a = generator.make(n_dots=20, inhibit_logging=True)
         b = generator.make(n_dots=40, inhibit_logging=True)
-        b.change_colour("blue")
+        b.features.change(colour="blue")
         # b.match(mean_dot_diameter=83, convex_hull_area=523)
         x = a.copy()
         x.join(b)

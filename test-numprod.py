@@ -2,7 +2,7 @@
 import time
 from expyriment import control, design, io, stimuli, misc
 import pynsn
-from pynsn import expyriment_stimulus, pil_image
+from pynsn import expyriment_stimulus, pil_image, DASequenceGenerator
 from turning_knob import numerosity_production
 
 control.set_develop_mode(True)
@@ -14,36 +14,18 @@ generator =  pynsn.DotArrayGenerator(
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
-                       dot_colour=(230, 230, 230))
-
-
-def prepare_processes(trials, forerun):
-    processes = pynsn.ProcessContainer(forerun=forerun)
-    for tr in trials:
-        maxnumber = tr.get_factor("maxnumber")
-        method = tr.get_factor("method")
-        max_da = generator(n_dots=maxnumber)
-        make_process = pil_image.PILMakeDASequenceProcess(max_dot_array=max_da,
-                                                          min_numerosity=20,
-                                                          method=method,
-                                                          area_colour=(0, 0, 0),
-                                                          antialiasing=None,
-                                                          save_images=False,
-                                                          sqeeze_factor=.70)
-        processes.add_process(make_process)
-
-    while processes.data_avaiable < forerun:
-        time.sleep(1)
-
-    return processes
+                       dot_colour= pynsn.Colour() )
 
 
 #########################################
 exp = control.initialize()
 
 bl = design.Block()
-for m in [pynsn.M_TOTAL_CIRCUMFERENCE, pynsn.M_DENSITY, pynsn.M_NO_FITTING, \
-          pynsn.M_CONVEX_HULL, pynsn.M_TOTAL_AREA]:
+for m in [DASequenceGenerator.TOTAL_CIRCUMFERENCE,
+          DASequenceGenerator.DENSITY50_50,
+          DASequenceGenerator.NO_FITTING,
+          DASequenceGenerator.CONVEX_HULL,
+          DASequenceGenerator.TOTAL_AREA]:
     tr = design.Trial()
     tr.set_factor("maxnumber", 200)
     tr.set_factor("method", m)
