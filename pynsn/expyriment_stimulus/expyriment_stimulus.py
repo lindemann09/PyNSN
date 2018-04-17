@@ -58,8 +58,6 @@ class ExpyrimentDASequence(object):
                  antialiasing=None,
                  colour_background=(0, 0, 0)):
 
-        colour_area = convert_colour(colour_area)
-        colour_background = convert_colour(colour_background)
         self.da_sequence = da_sequence
         self.stimuli = []
         for da in self.da_sequence.dot_arrays:

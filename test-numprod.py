@@ -14,8 +14,9 @@ generator =  pynsn.DotArrayGenerator(
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
-                       dot_colour= pynsn.Colour() )
-
+                       dot_colour= pynsn.Colour(),
+                       logger= pynsn.GeneratorLogger(log_filename="log/test", override_log_files=True)
+                )
 
 #########################################
 exp = control.initialize()
@@ -27,7 +28,7 @@ for m in [DASequenceGenerator.TOTAL_CIRCUMFERENCE,
           DASequenceGenerator.CONVEX_HULL,
           DASequenceGenerator.TOTAL_AREA]:
     tr = design.Trial()
-    tr.set_factor("maxnumber", 200)
+    tr.set_factor("maxnumber", 150)
     tr.set_factor("method", m)
     for num in [20, 40, 60, 80, 100]:
         tr.set_factor("target", num)
@@ -44,27 +45,51 @@ stimuli.TextLine("Creating stimuli....please wait").present()
 
 blank = stimuli.BlankScreen()
 fixcross = stimuli.FixCross()
-da_raw_file = io.OutputFile(suffix=".da-raw.csv",directory="data")
-da_property_file = io.OutputFile(suffix=".da-prop.csv",directory="data")
 
 exp.mouse.hide_cursor(track_button_events=True, track_motion_events=False)
 
+def prepare_processes(trials):
+    processes = []
+    for tr in trials:
+        maxnumber = tr.get_factor("maxnumber")
+        method = tr.get_factor("method")
+        max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
+        make_process = pynsn.DASequenceGeneratorProcess(max_dot_array=max_da,
+                                                          min_numerosity=20,
+                                                          match_methods=method,
+                                                          extra_space=100,
+                                                          logger=generator.logger)
+        processes.append(make_process)
+    return processes
 
-processes = prepare_processes(exp.blocks[0].trials, forerun=1)
+def make_da_sequence(trial):
+    maxnumber = trial.get_factor("maxnumber")
+    method = trial.get_factor("method")
+    max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
+    da_gen = pynsn.DASequenceGenerator(max_dot_array=max_da,
+                                        logger=generator.logger)
+    return da_gen.make(min_numerosity=20, match_methods=method, extra_space=100)
+
+
+processes = prepare_processes(bl.trials)
+
 for tr_cnt, tr in enumerate(exp.blocks[0].trials):
 
-    make_process = processes.pop_processes()
-    if not make_process.data_available.is_set():
-        stimuli.TextLine("Please wait...").present()
+    if False: # process
+        make_process = processes.pop()
+        make_process.start()
+        if not make_process.data_available.is_set():
+            stimuli.TextLine("Please wait...").present()
+        da_sequence = make_process.da_sequence
+    else:
+        da_sequence = make_da_sequence(tr)
 
-    da_sequence = make_process.da_sequence
     print(da_sequence.min_max_numerosity[1])
 
     if da_sequence is not None: # error handling
         blank.present()
 
         da_expy = expyriment_stimulus.ExpyrimentDASequence(da_sequence)
-        da_expy.create_stimuli_from_pil_images()
         da_expy.preload(percent=60)
 
         fixcross.present()
@@ -85,10 +110,6 @@ for tr_cnt, tr in enumerate(exp.blocks[0].trials):
         da_expy.unload()
 
         # saving data
-        da_raw_file.write_line(da_sequence.get_csv(num_format="%6.0f", object_id_column=True,
-                                                   variable_names=(tr_cnt==0)))
-        da_property_file.write_line(da_sequence.get_property_string(variable_names=(tr_cnt == 0)))
-
         # print(da_sequence.get_csv(num_format="%6.0f"))
         # print(da_expy.da_sequence.numerosity_correlations)
 

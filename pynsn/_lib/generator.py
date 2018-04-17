@@ -245,9 +245,9 @@ class DASequenceGeneratorProcess(Process):
         self.extra_space = extra_space
 
         if n_trials<1:
-            self._n_trails = 1
+            self._n_tryouts = 1
         else:
-            self._n_trails = n_trials
+            self._n_tryouts = n_trials
 
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
@@ -274,7 +274,7 @@ class DASequenceGeneratorProcess(Process):
         generator = DASequenceGenerator(max_dot_array=self.max_dot_array,
                                         logger=self.logger)
 
-        while cnt<self._n_trails:
+        while cnt<self._n_tryouts:
             cnt += 1
             da_seq = generator.make(match_methods=self.match_methods,
                                     extra_space=self.extra_space,
