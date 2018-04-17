@@ -2,111 +2,99 @@
 # -*- coding: utf-8 -*-
 
 """
-ZetCode PyQt5 tutorial
-
-In this example, we position two push
-buttons in the bottom-right corner
-of the window.
-
-Author: Jan Bodnar
-Website: zetcode.com
-Last edited: August 2017
 """
 
 from __future__ import unicode_literals, absolute_import, print_function
 from builtins import zip, filter, range, super
 
 import sys
-import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib.generator import DotArrayGenerator, GeneratorLogger
+from .._lib.colour import Colour
 from .. import pil_image
 
 
 class MainWindow(QtGui.QMainWindow):
 
-    def __init__(self, pict_window):
+    def __init__(self):
         super(MainWindow, self).__init__()
         exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
 
-        self.statusBar()
+        #self.statusBar()
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
 
-        self.pict_window = pict_window
         self.form_widget = FormWidget(self)
         self.setCentralWidget(self.form_widget)
 
-        self.setGeometry(300, 300, 500, 600)
-        self.setWindowTitle('Menubar')
+        self.move(300, -300)
+        self.setWindowTitle('xxx')
+        self.form_widget.show_pict()
         self.show()
 
-class FormWidgetFull(QtGui.QWidget):
 
-    def __init__(self, parent):
+class LabeledInput(object):
 
-        super(FormWidgetFull, self).__init__(parent)
+    def __init__(self, label, text, width_label=180, width_edit=70):
 
-        self.logger = GeneratorLogger(log_filename="log/gui",
-                                      override_log_files=True,
-                                      log_colours=False,
-                                      properties_different_colour=False)
-        self.initUI()
+        self.label = QtGui.QLabel(label)
+        self.label.setFixedWidth(width_label)
+        self.edit = QtGui.QLineEdit()
+        self.edit.setFixedWidth(width_edit)
+        self.text = text
 
-    def make_stimulus(self, number):
-        generator = DotArrayGenerator(
-            max_array_radius=300,
-            dot_diameter_mean=25,
-            dot_diameter_range=(5, 40),
-            dot_diameter_std=2,
-            dot_colour="skyblue",
-            minimum_gap=5,
-            logger=self.logger)
-        return generator.make(n_dots=number)
+    @property
+    def text(self):
+        return str(self.edit.text())
 
-    def initUI(self):
-        button1 = QtGui.QPushButton("Button 1")
-        button1.clicked.connect(self.show_pict)
+    @text.setter
+    def text(self, v):
+        self.edit.setText(str(v))
 
-
-        layout = QtGui.QVBoxLayout(self)
-        self.pixmap = QtGui.QPixmap()
-
-        self.pic = QtGui.QLabel(self)
-        self.pic.setFixedSize(600, 600)
-
-        layout.addWidget(button1)
-        layout.addWidget(self.pic)
-
-        self.setLayout(layout)
-
-        #self.move(300, 200)
-        self.setWindowTitle('Red Rock')
-        self.show()
-
-    def show_pict(self):
-        da = self.make_stimulus(number=80)
-        im = pil_image.create(da,
-                         colour_area=None,
-                         colour_convex_hull_positions=None,
-                         colour_convex_hull_dots=None,
-                         colour_center_of_mass = None,
-                         colour_center_of_outer_positions=None,
-                         antialiasing=True,
-                         colour_background=(0, 0, 0),
-                         default_dot_colour="lightgreen")
+    def layout(self, vertical=False):
+        if vertical:
+            layout = QtGui.QVBoxLayout()
+        else:
+            layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(self.edit)
+        return layout
 
 
-        qtim = ImageQt(im)
-        pixmap = QtGui.QPixmap.fromImage(qtim)
-        self.pic.setPixmap(pixmap)
-        #print(dir(self.pixmap))
+class LabeledNumberInput(LabeledInput):
+
+    def __init__(self, label, value, width_label=180, width_edit=70,
+                 integer_only=True):
+
+        LabeledInput.__init__(self, label=label, text="", width_label=width_label,
+                              width_edit=width_edit)
+        self.integer_only = integer_only
+        if integer_only is not None:
+            self.edit.setValidator(QtGui.QIntValidator())
+        else:
+            self.edit.setValidator(QtGui.QDoubleValidator())
+        self.value = value
+
+    @property
+    def value(self):
+        if self.integer_only:
+            return int(self.edit.text())
+        else:
+            return float(self.edit.text())
+
+    @value.setter
+    def value(self, v):
+        if self.integer_only:
+            v = int(v)
+        else:
+            v = float(v)
+        self.edit.setText(str(v))
 
 
 class FormWidget(QtGui.QWidget):
@@ -122,76 +110,119 @@ class FormWidget(QtGui.QWidget):
         self.initUI()
 
     def make_stimulus(self, number):
+        try:
+            dot_colour = Colour(self.dot_colour.text)
+        except:
+            dot_colour = "green"
+            self.dot_colour.text = "green"
+
         generator = DotArrayGenerator(
-            max_array_radius=300,
-            dot_diameter_mean=25,
-            dot_diameter_range=(5, 40),
-            dot_diameter_std=2,
-            dot_colour="skyblue",
-            minimum_gap=5,
+            max_array_radius=self.max_array_radius.value,
+            dot_diameter_mean=self.dot_diameter_mean.value,
+            dot_diameter_range=(self.dot_diameter_range_from.value,
+                                self.dot_diameter_range_to.value),
+            dot_diameter_std=self.dot_diameter_std.value,
+            dot_colour=dot_colour,
+            minimum_gap=self.minimum_gap.value,
             logger=self.logger)
         return generator.make(n_dots=number)
 
     def initUI(self):
-        button1 = QtGui.QPushButton("Button 1")
+        button1 = QtGui.QPushButton(" Display")
         button1.clicked.connect(self.show_pict)
 
+        self.number = LabeledNumberInput("Number", 80)
+        self.max_array_radius = LabeledNumberInput("max array radius", 200)
+        self.dot_diameter_mean = LabeledNumberInput("mean diameter", 25)
+        self.dot_diameter_range_from = LabeledNumberInput("diameter range from", 5)
+        self.dot_diameter_range_to = LabeledNumberInput("diameter range to", 40)
+        self.dot_diameter_std = LabeledNumberInput("diameter range std", 2)
+        self.minimum_gap = LabeledNumberInput("minimum gap", 2)
 
-        layout = QtGui.QVBoxLayout(self)
-        layout.addWidget(button1)
-        self.setLayout(layout)
+        self.dot_colour = LabeledInput("colour", text="skyblue")
+        self.colour_area = LabeledInput("Area colour", text="None")
+        self.colour_convex_hull_positions = LabeledInput("Convex hull colour positions", text="None")
+        self.colour_convex_hull_dots = LabeledInput("Convex hull colour dots", text="None")
+        self.colour_background = LabeledInput("Background colour", text="black")
+        antialiasing = True #Todo
+
+        crtl = QtGui.QVBoxLayout()
+        crtl.addWidget(button1)
+        crtl.addLayout(self.number.layout())
+        crtl.addLayout(self.max_array_radius.layout())
+        crtl.addLayout(self.dot_diameter_mean.layout())
+        crtl.addLayout(self.dot_diameter_range_from.layout())
+        crtl.addLayout(self.dot_diameter_range_to.layout())
+        crtl.addLayout(self.dot_diameter_std.layout())
+        crtl.addLayout(self.dot_colour.layout())
+        crtl.addLayout(self.minimum_gap.layout())
+
+        crtl.addLayout(self.colour_area.layout())
+        crtl.addLayout(self.colour_convex_hull_positions.layout())
+        crtl.addLayout(self.colour_convex_hull_dots.layout())
+        crtl.addLayout(self.colour_background.layout())
+
+
+        self.picture_field = QtGui.QLabel(self)
+        self.picture_field.setFixedSize(600, 600)
+
+        hlayout = QtGui.QHBoxLayout()
+        hlayout.addLayout(crtl)
+        hlayout.addWidget(self.picture_field)
+
+        self.setLayout(hlayout)
 
         #self.move(300, 200)
         self.setWindowTitle('Red Rock')
         self.show()
 
-
     def show_pict(self):
-        da = self.make_stimulus(number=80)
+        da = self.make_stimulus(number=self.number.value)
+        self.picture_field.setFixedSize(self.max_array_radius.value*2,
+                                        self.max_array_radius.value*2)
+
+        try:
+            colour_area = Colour(self.colour_area.text)
+        except:
+            colour_area = None
+            self.colour_area.text = "None"
+        try:
+            colour_convex_hull_positions = Colour(self.colour_convex_hull_positions.text)
+        except:
+            colour_convex_hull_positions = None
+            self.colour_convex_hull_positions.text = "None"
+        try:
+            colour_convex_hull_dots = Colour(self.colour_convex_hull_dots.text)
+        except:
+            colour_convex_hull_dots = None
+            self.colour_convex_hull_dots.text = "None"
+        try:
+            colour_background = Colour(self.colour_background.text)
+        except:
+            colour_background = None
+            self.colour_background.text = "None"
+
         im = pil_image.create(da,
-                         colour_area=None,
-                         colour_convex_hull_positions=None,
-                         colour_convex_hull_dots=None,
+                         colour_area=colour_area,
+                         colour_convex_hull_positions=colour_convex_hull_positions,
+                         colour_convex_hull_dots=colour_convex_hull_dots,
                          colour_center_of_mass = None,
                          colour_center_of_outer_positions=None,
                          antialiasing=True,
-                         colour_background=(0, 0, 0),
-                         default_dot_colour="lightgreen")
-
+                         colour_background=colour_background)
 
         qtim = ImageQt(im)
         pixmap = QtGui.QPixmap.fromImage(qtim)
-        #self.pic.setPixmap(pixmap)
+        self.picture_field.setPixmap(pixmap)
         #print(dir(self.pixmap))
-
-
-
-class PictureWindow(QtGui.QWidget):
-
-    def __init__(self, parent=None):
-
-        super(PictureWindow, self).__init__(parent)
-        self.initUI()
-
-    def initUI(self):
-
-        self.pic = QtGui.QLabel(self)
-        self.pic.setFixedSize(600, 600)
-
-        layout = QtGui.QVBoxLayout(self)
-        layout.addWidget(self.pic)
-        self.setLayout(layout)
-
-        #self.move(300, 200)
-        self.setWindowTitle('XX')
-        self.show()
+        self.adjustSize()
+        self.parent().adjustSize()
 
 
 def start():
     app = QtGui.QApplication(sys.argv)
-    pw = PictureWindow()
-    ex = MainWindow(pict_window=pw)
-    pw.show()
+    ex = MainWindow()
+    ex.show()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
