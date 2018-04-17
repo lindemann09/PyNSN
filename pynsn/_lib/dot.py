@@ -102,15 +102,12 @@ class Coordinate2D(object):
 
 
 
-class _Item(Coordinate2D):
+class ItemFeatures(object):
 
-    def __init__(self, x=0, y=0, colour=None, picture=None):
-        """Base class for dot and rectangles
-
-        has a colour and/or a picture
+    def __init__(self, colour=None, picture=None):
+        """Item feature of an Item
         """
 
-        Coordinate2D.__init__(self, x=x, y=y)
         self.picture = picture
         self.colour = colour
 
@@ -125,7 +122,7 @@ class _Item(Coordinate2D):
 
 
 
-class Dot(_Item):
+class Dot(Coordinate2D, ItemFeatures):
 
     def __init__(self, x=0, y=0, diameter=1, colour=None, picture=None):
         """Initialize a point
@@ -143,7 +140,8 @@ class Dot(_Item):
 
         """
 
-        _Item.__init__(self, x=x, y=y, colour=colour, picture=picture)
+        Coordinate2D.__init__(x=x, y=y)
+        ItemFeatures.__init__(self, colour=colour, picture=picture)
 
         self.diameter = diameter
 
@@ -180,7 +178,7 @@ class Dot(_Item):
         return math.pi * self.diameter
 
 
-class Rectangle(_Item):
+class Rectangle(Coordinate2D, ItemFeatures):
     def __init__(self, x=0, y=0, width=0, height=0, colour=None, picture=None):
         """Initialize a point
 
@@ -197,7 +195,8 @@ class Rectangle(_Item):
         picture : todo
         """
 
-        _Item.__init__(self, x=x, y=y, colour=colour, picture=picture)
+        Coordinate2D.__init__(self, x=x, y=y)
+        ItemFeatures.__init__(self, colour=colour, picture=picture)
 
         self.height = height
         self.width = width
