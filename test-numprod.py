@@ -10,11 +10,11 @@ control.set_develop_mode(True)
 cl = misc.Clock()
 
 generator =  pynsn.DotArrayGenerator(
-                       max_array_radius= 400,
+                       max_array_radius= 200,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
-                       dot_colour= pynsn.Colour(),
+                       dot_colour= None,
                        logger= pynsn.GeneratorLogger(log_filename="log/test", override_log_files=True)
                 )
 
@@ -28,7 +28,7 @@ for m in [DASequenceGenerator.TOTAL_CIRCUMFERENCE,
           DASequenceGenerator.CONVEX_HULL,
           DASequenceGenerator.TOTAL_AREA]:
     tr = design.Trial()
-    tr.set_factor("maxnumber", 150)
+    tr.set_factor("maxnumber", 100)
     tr.set_factor("method", m)
     for num in [20, 40, 60, 80, 100]:
         tr.set_factor("target", num)
@@ -75,7 +75,7 @@ processes = prepare_processes(bl.trials)
 
 for tr_cnt, tr in enumerate(exp.blocks[0].trials):
 
-    if False: # process
+    if True: # process
         make_process = processes.pop()
         make_process.start()
         if not make_process.data_available.is_set():

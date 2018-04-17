@@ -11,7 +11,7 @@ from collections import namedtuple
 from hashlib import md5
 import numpy as np
 from scipy.spatial import ConvexHull, distance
-from item_features import numpy_vector
+from .item_features import numpy_vector
 
 TWO_PI = 2 * np.pi
 
