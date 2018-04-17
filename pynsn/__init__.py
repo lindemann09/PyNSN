@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
-__version__ = '0.7.10'
+__version__ = '0.7.11'
 
 from ._lib.dot import Dot
 from ._lib.simple_dot_array import SimpleDotArray, DotArrayProperties
