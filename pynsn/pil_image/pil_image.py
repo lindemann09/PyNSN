@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from PIL import Image, ImageDraw
 import numpy as np
-from .colours import convert_colour
+from .._lib.colours import convert_colour
 
 
 def create(dot_array,

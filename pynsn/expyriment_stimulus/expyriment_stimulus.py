@@ -1,14 +1,15 @@
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-
 import math
-import pygame
 
-from expyriment.stimuli import Canvas
+import pygame
 from expyriment.misc import Clock
-from . import pil_image
-from .colours import convert_colour
+from expyriment.stimuli import Canvas
+
+from pynsn.pil_image import pil_image
+from .._lib.colours import convert_colour
+
 
 class ExprimentDotArray(Canvas):
 
@@ -36,13 +37,13 @@ class ExprimentDotArray(Canvas):
     def _create_surface(self):
 
         image = pil_image.create(dot_array=self.dot_array,
-                                      colour_area=self.colour_area,
-                                      colour_convex_hull_positions=self.colour_convex_hull_positions,
-                                      colour_convex_hull_dots=self.colour_convex_hull_dots,
-                                      colour_center_of_mass=self.colour_center_of_mass,
-                                      colour_center_of_outer_positions=self.colour_center_of_outer_positions,
-                                      antialiasing=self.antialiasing,
-                                      colour_background=self.colour_background)
+                                 colour_area=self.colour_area,
+                                 colour_convex_hull_positions=self.colour_convex_hull_positions,
+                                 colour_convex_hull_dots=self.colour_convex_hull_dots,
+                                 colour_center_of_mass=self.colour_center_of_mass,
+                                 colour_center_of_outer_positions=self.colour_center_of_outer_positions,
+                                 antialiasing=self.antialiasing,
+                                 colour_background=self.colour_background)
 
         self._size = image.size
         return pygame.image.frombuffer(image.tobytes(),
