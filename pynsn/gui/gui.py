@@ -12,7 +12,23 @@ from PIL.ImageQt import ImageQt
 from .._lib.generator import DotArrayGenerator, GeneratorLogger
 from .. import pil_image
 from .layout import MainWidget
-from .parameter import ICON
+from .. import pil_image
+
+
+ICON = pil_image.RandomDotImageParameter(number=11,
+                           max_array_radius=200,
+                           dot_colour="expyriment_orange",
+                           dot_diameter_mean=35,
+                           dot_diameter_range=[5, 80],
+                           dot_diameter_std=20,
+                           minimum_gap=2,
+                           colour_area="#3e3e3e",
+                           colour_convex_hull_positions=None,
+                           colour_convex_hull_dots="expyriment_purple",
+                           colour_center_of_mass=None,
+                           colour_center_of_outer_positions=None,
+                           antialiasing=True,
+                           colour_background=None)
 
 
 class PyNSN_GUI(QtGui.QMainWindow):
@@ -20,12 +36,18 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def __init__(self):
         super(PyNSN_GUI, self).__init__()
 
-        self.logger = GeneratorLogger(log_filename="log/gui",
+        self.set_loging(False) #False
+        self.initUI()
+        self.show()
+
+    def set_loging(self, onoff):
+        if onoff:
+            self.logger = GeneratorLogger(log_filename="log/gui",
                                       override_log_files=True,
                                       log_colours=False,
                                       properties_different_colour=False)
-        self.initUI()
-        self.show()
+        else:
+            self.logger = None
 
     def initUI(self):
         # menues
@@ -57,27 +79,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def make_pixmap(self, para):
 
-        generator = DotArrayGenerator(
-            max_array_radius= para.max_array_radius,
-            dot_diameter_mean=para.dot_diameter_mean,
-            dot_diameter_range=para.dot_diameter_range,
-            dot_diameter_std=para.dot_diameter_std,
-            dot_colour=para.dot_colour,
-            minimum_gap=para.minimum_gap,
-            logger=self.logger)
-
-        da = generator.make(n_dots=para.number)
-        self.main_widget.picture_field.setFixedSize(para.max_array_radius*2,
-                                        para.max_array_radius*2)
-        im = pil_image.create(da,
-                         colour_area=para.colour_area,
-                         colour_convex_hull_positions=para.colour_convex_hull_positions,
-                         colour_convex_hull_dots=para.colour_convex_hull_dots,
-                         colour_center_of_mass = para.colour_center_of_mass,
-                         colour_center_of_outer_positions=para.colour_center_of_outer_positions,
-                         antialiasing=para.colour_center_of_outer_positions,
-                         colour_background=para.colour_background)
-
+        im = pil_image.generate_random_dot_array_image(para, logger=self.logger)
         return QtGui.QPixmap.fromImage(ImageQt(im))
 
     def show_pixmap(self, pixmap):
@@ -86,7 +88,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.adjustSize()
 
     def action_display_btn(self):
-        pixmap = self.make_pixmap(self.main_widget.all_parameter)
+        para = self.main_widget.all_parameter
+        pixmap = self.make_pixmap(para)
+        self.main_widget.picture_field.setFixedSize(para.max_array_radius*2,
+                                        para.max_array_radius*2)
         self.show_pixmap(pixmap)
 
 

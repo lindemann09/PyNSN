@@ -3,10 +3,19 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+from collections import namedtuple
 from PIL import Image, ImageDraw
 import numpy as np
 from .._lib.colour import Colour
+from .._lib.generator import DotArrayGenerator
 
+
+RandomDotImageParameter= namedtuple("DotPixmapParameter", # all paramter of da generator and pil image
+                                "number max_array_radius dot_colour dot_diameter_mean " +
+                                "dot_diameter_range dot_diameter_std minimum_gap colour_area " +
+                                 "colour_convex_hull_positions colour_convex_hull_dots colour_center_of_mass "+
+                                 "colour_center_of_outer_positions antialiasing colour_background") #TODO maybe as part of the library
+RandomDotImageParameter.__new__.__defaults__ = (None,) * len(RandomDotImageParameter._fields)
 
 def create(dot_array,
            colour_area=None,
@@ -112,3 +121,34 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
                       fill=convex_hull_colour)
         last = p
 
+
+
+def generate_random_dot_array_image(para, logger=None):
+    """
+    Generate randam Dor Array from RandomDotImageParameter
+    para: RandomDotImageParameter
+    logger has to be a GeneratorLogger
+    """
+
+    if not isinstance(para, RandomDotImageParameter):
+        raise TypeError("para has to be RandomDotImageParameter, but not {}".format(type(para)))
+
+
+    generator = DotArrayGenerator(
+        max_array_radius= para.max_array_radius,
+        dot_diameter_mean=para.dot_diameter_mean,
+        dot_diameter_range=para.dot_diameter_range,
+        dot_diameter_std=para.dot_diameter_std,
+        dot_colour=para.dot_colour,
+        minimum_gap=para.minimum_gap,
+        logger=logger)
+
+    da = generator.make(n_dots=para.number)
+    return create(da,
+                     colour_area=para.colour_area,
+                     colour_convex_hull_positions=para.colour_convex_hull_positions,
+                     colour_convex_hull_dots=para.colour_convex_hull_dots,
+                     colour_center_of_mass = para.colour_center_of_mass,
+                     colour_center_of_outer_positions=para.colour_center_of_outer_positions,
+                     antialiasing=para.colour_center_of_outer_positions,
+                     colour_background=para.colour_background)

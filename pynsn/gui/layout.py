@@ -5,10 +5,10 @@ from __future__ import unicode_literals, absolute_import, print_function
 from builtins import zip, filter, range, super
 
 from PyQt4 import QtGui,  QtCore
-from .parameter import RandomDotArrayImageAllParameter
+from .. import pil_image
 from .._lib.colour import Colour
 
-DEFAULT = RandomDotArrayImageAllParameter(number=40,
+DEFAULT_ARRAY = pil_image.RandomDotImageParameter(number=40,
                            max_array_radius=200,
                            dot_colour="skyblue",
                            dot_diameter_mean=25,
@@ -144,22 +144,22 @@ class MainWidget(QtGui.QWidget):
 
         self.btn_display = QtGui.QPushButton(" Display")
 
-        self.number = LabeledNumberInput("Number", DEFAULT.number)
-        self.max_array_radius = LabeledNumberInput("Max radius", DEFAULT.max_array_radius)
-        self.dot_diameter_mean = LabeledNumberInput("Mean diameter", DEFAULT.dot_diameter_mean)
-        self.dot_diameter_std = LabeledNumberInput("Diameter range std", DEFAULT.dot_diameter_std)
+        self.number = LabeledNumberInput("Number", DEFAULT_ARRAY.number)
+        self.max_array_radius = LabeledNumberInput("Max radius", DEFAULT_ARRAY.max_array_radius)
+        self.dot_diameter_mean = LabeledNumberInput("Mean diameter", DEFAULT_ARRAY.dot_diameter_mean)
+        self.dot_diameter_std = LabeledNumberInput("Diameter range std", DEFAULT_ARRAY.dot_diameter_std)
         self.dot_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                              value1=DEFAULT.dot_diameter_range[0],
-                                                              value2=DEFAULT.dot_diameter_range[1])
+                                                              value1=DEFAULT_ARRAY.dot_diameter_range[0],
+                                                              value2=DEFAULT_ARRAY.dot_diameter_range[1])
 
-        self.minimum_gap = LabeledNumberInput("Minimum gap", DEFAULT.minimum_gap)
+        self.minimum_gap = LabeledNumberInput("Minimum gap", DEFAULT_ARRAY.minimum_gap)
 
-        self.dot_colour = LabeledInput("Colour", text=DEFAULT.dot_colour, case_sensitive=False)
-        self.colour_area = LabeledInput("Area", text=DEFAULT.colour_area, case_sensitive=False)
-        self.colour_background = LabeledInput("Background", text=DEFAULT.colour_background, case_sensitive=False)
-        self.colour_convex_hull_positions = LabeledInput("Colour positions CH", text=DEFAULT.colour_convex_hull_positions, case_sensitive=False)
-        self.colour_convex_hull_dots = LabeledInput("Colour dots CH", text=DEFAULT.colour_convex_hull_dots, case_sensitive=False)
-        antialiasing = DEFAULT.colour_convex_hull_dots #Todo
+        self.dot_colour = LabeledInput("Colour", text=DEFAULT_ARRAY.dot_colour, case_sensitive=False)
+        self.colour_area = LabeledInput("Area", text=DEFAULT_ARRAY.colour_area, case_sensitive=False)
+        self.colour_background = LabeledInput("Background", text=DEFAULT_ARRAY.colour_background, case_sensitive=False)
+        self.colour_convex_hull_positions = LabeledInput("Colour positions CH", text=DEFAULT_ARRAY.colour_convex_hull_positions, case_sensitive=False)
+        self.colour_convex_hull_dots = LabeledInput("Colour dots CH", text=DEFAULT_ARRAY.colour_convex_hull_dots, case_sensitive=False)
+        antialiasing = DEFAULT_ARRAY.colour_convex_hull_dots #Todo
 
         ctrl = QtGui.QVBoxLayout()
         ctrl.addWidget(self.btn_display)
@@ -225,7 +225,7 @@ class MainWidget(QtGui.QWidget):
             colour_background = None
             self.colour_background.text = "None"
 
-        return RandomDotArrayImageAllParameter(
+        return pil_image.RandomDotImageParameter(
                            number=self.number.value,
                            max_array_radius=self.max_array_radius.value,
                            dot_colour=colour_dot,
