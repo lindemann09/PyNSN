@@ -55,10 +55,19 @@ class PyNSN_GUI(QtGui.QMainWindow):
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
+
+
+        printxyAction= QtGui.QAction('&Print array', self)
+        printxyAction.triggered.connect(self.action_print_xy)
+
+
         #self.statusBar()
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAction)
+
+        toolMenu = menubar.addMenu('&Tools')
+        toolMenu.addAction(printxyAction)
 
         #main widget
         self.main_widget = MainWidget(self)
@@ -71,7 +80,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # dot array
-        pixmap, _ = self.make_pixmap(ICON)
+        pixmap = self.make_pixmap(ICON)
         self.setWindowIcon(QtGui.QIcon(pixmap))
 
         self.action_display_btn()
@@ -80,7 +89,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def make_pixmap(self, para):
 
         im, da = pil_image.generate_random_dot_array_image(para, logger=self.logger)
-        return QtGui.QPixmap.fromImage(ImageQt(im)), da
+        self.current_data_array = da
+        return QtGui.QPixmap.fromImage(ImageQt(im))
 
     def show_pixmap(self, pixmap):
         self.main_widget.picture_field.setPixmap(pixmap)
@@ -89,15 +99,19 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_display_btn(self):
         para = self.main_widget.all_parameter
-        pixmap, da = self.make_pixmap(para)
+        pixmap = self.make_pixmap(para)
         self.main_widget.resize_fields(width= para.max_array_radius*2,
                                        text_height=150)
         self.show_pixmap(pixmap)
 
-        txt = "--\n"
-        for l in da.get_properties().get_nice_text().split("\n"):
-            txt += "  " + l + "\n"
-        self.main_widget.text_field.append(txt)  # time maybe
+        prop = self.current_data_array.get_properties()
+        txt = prop.get_nice_text()
+        self.main_widget.text_field.append(txt)
+
+    def action_print_xy(self):
+
+        txt = self.current_data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
+        self.main_widget.text_field.append(txt)
 
 
 def start():
