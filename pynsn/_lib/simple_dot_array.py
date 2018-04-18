@@ -12,6 +12,7 @@ from hashlib import md5
 import numpy as np
 from scipy.spatial import ConvexHull, distance
 from .item_features import numpy_vector
+from . import constants as const
 
 TWO_PI = 2 * np.pi
 
@@ -319,45 +320,38 @@ class SimpleDotArray(object):
         """TODO
         """
 
-        TA = u"total surface area"
-        MD = u"mean dot diameter"
-        TC = u"total circumference"
-        CH = u"convex hull"
-        DE = u"density"
-        DEPENDENCIES = [[CH, DE], [MD, TC, TA]]
-
         adapt = []
         if total_surface_area is not None:
-            adapt.append(TA)
+            adapt.append(const.P_AREA)
         if mean_dot_diameter is not None:
-            adapt.append(MD)
+            adapt.append(const.P_DIAMETER)
         if total_circumference is not None:
-            adapt.append(TC)
+            adapt.append(const.P_CIRCUMFERENCE)
         if convex_hull_area is not None:
-            adapt.append(CH)
+            adapt.append(const.P_CONVEX_HULL)
         if density is not None:
-            adapt.append(DE)
+            adapt.append(const.P_DENSITY)
 
         # check dependencies
-        for dep in DEPENDENCIES:
+        for dep in const.PROPERTY_DEPENDENCIES:
             if sum(list(map(lambda x: x in dep, adapt))) > 1:
                 raise RuntimeError(u"Incompatible properties to match: " + ", ".join(adapt))
 
-        if DE in adapt and density_adaptation_CH2TA_ratio != 1:
-            if MD in adapt or TC in adapt or TA in adapt:
+        if const.P_DENSITY in adapt and density_adaptation_CH2TA_ratio != 1:
+            if const.P_DIAMETER in adapt or const.P_CIRCUMFERENCE in adapt or const.P_AREA in adapt:
                 raise RuntimeError(u"Density_adaptation_CH2TA_ration has to be 1, if matching: " + ", ".join(adapt))
 
         # Adapt
         for method in adapt:
-            if method == TA:
+            if method == const.P_AREA:
                 self._match_total_surface_area(surface_area=total_surface_area)
-            elif method == MD:
+            elif method == const.P_DIAMETER:
                 self._match_mean_dot_diameter(mean_dot_diameter=mean_dot_diameter)
-            elif method == TC:
+            elif method == const.P_CIRCUMFERENCE:
                 self._match_total_circumference(total_circumference=total_circumference)
-            elif method == CH:
+            elif method == const.P_CONVEX_HULL:
                 self._match_convex_hull_area(convex_hull_area=convex_hull_area, precision=convex_hull_precision)
-            elif method == DE:
+            elif method == const.P_DENSITY:
                 self._match_density(density=density, precision=convex_hull_precision,
                                     adaptation_CH2TA_ratio=density_adaptation_CH2TA_ratio)
 

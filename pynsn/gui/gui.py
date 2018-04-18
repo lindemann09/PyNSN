@@ -12,7 +12,8 @@ from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib.generator import DotArrayGenerator, GeneratorLogger
 from .. import pil_image
-from .layout import MainWidget
+from .main_widget import MainWidget
+from .dialogs import MatchPropertyDialog
 from .. import pil_image
 
 
@@ -64,6 +65,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
         printxyAction= QtGui.QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
 
+        matchAction= QtGui.QAction('&Match property', self)
+        matchAction.triggered.connect(self.action_match)
 
         #self.statusBar()
         menubar = self.menuBar()
@@ -74,6 +77,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         fileMenu.addAction(exitAction)
 
         toolMenu = menubar.addMenu('&Tools')
+        toolMenu.addAction(matchAction)
         toolMenu.addAction(printxyAction)
 
         #main widget
@@ -126,6 +130,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
             self, 'Save file', filter=self.tr(".png")) #TODO multiple file formats FIXME formats selection
         print(extension)
         self.current_image.save(filename, format=extension[1:].upper())
+
+    def action_match(self):
+        prop = self.current_data_array.get_properties()
+        print(MatchPropertyDialog.get_response(self, prop))
 
 def start():
     app = QtGui.QApplication(sys.argv)
