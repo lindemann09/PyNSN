@@ -6,6 +6,7 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from builtins import zip, filter, range, super
 
+import os
 import sys
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
@@ -17,14 +18,14 @@ from .. import pil_image
 
 ICON = pil_image.RandomDotImageParameter(number=11,
                            max_array_radius=200,
-                           dot_colour="expyriment_orange",
+                           dot_colour="lime",
                            dot_diameter_mean=35,
                            dot_diameter_range=[5, 80],
                            dot_diameter_std=20,
                            minimum_gap=2,
                            colour_area="#3e3e3e",
                            colour_convex_hull_positions=None,
-                           colour_convex_hull_dots="expyriment_purple",
+                           colour_convex_hull_dots="expyriment_orange",
                            colour_center_of_mass=None,
                            colour_center_of_outer_positions=None,
                            antialiasing=True,
@@ -56,6 +57,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
 
+        saveAction = QtGui.QAction('&Save stimulus', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.triggered.connect(self.save_pixmap)
 
         printxyAction= QtGui.QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
@@ -63,7 +67,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         #self.statusBar()
         menubar = self.menuBar()
+
         fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(saveAction)
+        fileMenu.addSeparator()
         fileMenu.addAction(exitAction)
 
         toolMenu = menubar.addMenu('&Tools')
@@ -80,17 +87,16 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # dot array
-        pixmap = self.make_pixmap(ICON)
+        pixmap = self.make_image(ICON)
         self.setWindowIcon(QtGui.QIcon(pixmap))
 
         self.action_display_btn()
 
 
-    def make_pixmap(self, para):
-
-        im, da = pil_image.generate_random_dot_array_image(para, logger=self.logger)
-        self.current_data_array = da
-        return QtGui.QPixmap.fromImage(ImageQt(im))
+    def make_image(self, para):
+        """returns pix map"""
+        self.current_image, self.current_data_array = pil_image.generate_random_dot_array_image(para, logger=self.logger)
+        return QtGui.QPixmap.fromImage(ImageQt(self.current_image))
 
     def show_pixmap(self, pixmap):
         self.main_widget.picture_field.setPixmap(pixmap)
@@ -99,7 +105,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_display_btn(self):
         para = self.main_widget.all_parameter
-        pixmap = self.make_pixmap(para)
+        pixmap = self.make_image(para)
         self.main_widget.resize_fields(width= para.max_array_radius*2,
                                        text_height=150)
         self.show_pixmap(pixmap)
@@ -113,6 +119,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
         txt = self.current_data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_field.append(txt)
 
+
+    def save_pixmap(self):
+        #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
+            self, 'Save file', filter=self.tr(".png")) #TODO multiple file formats FIXME formats selection
+        print(extension)
+        self.current_image.save(filename, format=extension[1:].upper())
 
 def start():
     app = QtGui.QApplication(sys.argv)
