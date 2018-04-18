@@ -207,5 +207,7 @@ class Colour(object):
         'white': '#FFFFFF',
         'whitesmoke': '#F5F5F5',
         'yellow': '#FFFF00',
-        'yellowgreen': '#9ACD32'
+        'yellowgreen': '#9ACD32',
+        'expyriment_orange' : '#FF9632',
+        'expyriment_purple' : '#A046FA'
     }
