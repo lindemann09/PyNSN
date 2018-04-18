@@ -57,6 +57,17 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
 
         return rtn
 
+    def get_nice_text(self, spacing_char="."):
+        txt = ""
+        for k,v in self._asdict().items():
+            name = k
+            try:
+                value = "{0:.2f}\n".format(v) # try rounding
+            except:
+                value = "{}\n".format(v)
+
+            txt += name + (spacing_char*(25-len(name))) + (" "*(10-len(value))) + value
+        return txt
 
 class SimpleDotArray(object):
     """Numpy Position list for optimized for numpy calculations

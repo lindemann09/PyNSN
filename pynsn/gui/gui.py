@@ -71,7 +71,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # dot array
-        pixmap = self.make_pixmap(ICON)
+        pixmap, _ = self.make_pixmap(ICON)
         self.setWindowIcon(QtGui.QIcon(pixmap))
 
         self.action_display_btn()
@@ -79,8 +79,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def make_pixmap(self, para):
 
-        im = pil_image.generate_random_dot_array_image(para, logger=self.logger)
-        return QtGui.QPixmap.fromImage(ImageQt(im))
+        im, da = pil_image.generate_random_dot_array_image(para, logger=self.logger)
+        return QtGui.QPixmap.fromImage(ImageQt(im)), da
 
     def show_pixmap(self, pixmap):
         self.main_widget.picture_field.setPixmap(pixmap)
@@ -89,11 +89,15 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_display_btn(self):
         para = self.main_widget.all_parameter
-        pixmap = self.make_pixmap(para)
-        self.main_widget.picture_field.setFixedSize(para.max_array_radius*2,
-                                        para.max_array_radius*2)
+        pixmap, da = self.make_pixmap(para)
+        self.main_widget.resize_fields(width= para.max_array_radius*2,
+                                       text_height=150)
         self.show_pixmap(pixmap)
 
+        txt = "--\n"
+        for l in da.get_properties().get_nice_text().split("\n"):
+            txt += "  " + l + "\n"
+        self.main_widget.text_field.append(txt)  # time maybe
 
 
 def start():

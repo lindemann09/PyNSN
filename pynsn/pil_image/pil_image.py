@@ -128,6 +128,8 @@ def generate_random_dot_array_image(para, logger=None):
     Generate randam Dor Array from RandomDotImageParameter
     para: RandomDotImageParameter
     logger has to be a GeneratorLogger
+
+    returns image and dot_array
     """
 
     if not isinstance(para, RandomDotImageParameter):
@@ -143,8 +145,8 @@ def generate_random_dot_array_image(para, logger=None):
         minimum_gap=para.minimum_gap,
         logger=logger)
 
-    da = generator.make(n_dots=para.number)
-    return create(da,
+    dot_array = generator.make(n_dots=para.number)
+    image = create(dot_array,
                      colour_area=para.colour_area,
                      colour_convex_hull_positions=para.colour_convex_hull_positions,
                      colour_convex_hull_dots=para.colour_convex_hull_dots,
@@ -152,3 +154,5 @@ def generate_random_dot_array_image(para, logger=None):
                      colour_center_of_outer_positions=para.colour_center_of_outer_positions,
                      antialiasing=para.colour_center_of_outer_positions,
                      colour_background=para.colour_background)
+
+    return image, dot_array

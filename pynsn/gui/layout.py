@@ -185,16 +185,31 @@ class MainWidget(QtGui.QWidget):
         ctrl.addLayout(self.colour_convex_hull_dots.layout())
         ctrl.addStretch(1)
 
+        # Add text field
+        fields = QtGui.QVBoxLayout()
+        self.text_field = QtGui.QTextBrowser(self)
+        self.text_field.setFont(QtGui.QFont("Courier New", 8))
+        self.text_field.setReadOnly(True)
+        self.text_field.setWordWrapMode(False)
+        self.text_field.setVerticalScrollBar(QtGui.QScrollBar())
+        self.text_field.setHorizontalScrollBar(QtGui.QScrollBar())
         self.picture_field = QtGui.QLabel(self)
-        self.picture_field.setFixedSize(600, 600)
+        self.resize_fields(400)
+        fields.addWidget(self.picture_field)
+        fields.addWidget(self.text_field)
+
 
         hlayout = QtGui.QHBoxLayout()
         hlayout.addLayout(ctrl)
-        hlayout.addWidget(self.picture_field)
-
+        hlayout.addLayout(fields)
         self.setLayout(hlayout)
 
-        self.show() #TODO required?
+    def resize_fields(self, width, text_height=150, minium_text_width=300):
+        self.picture_field.setFixedSize(width, width)
+        if width<minium_text_width:
+            width=minium_text_width
+        self.text_field.setFixedSize(width, text_height)
+
 
     @property
     def all_parameter(self):
