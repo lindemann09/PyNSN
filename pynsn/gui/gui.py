@@ -99,7 +99,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def make_image(self, para):
         """returns pix map"""
-        self.current_image, self.current_data_array = pil_image.generate_random_dot_array_image(para, logger=self.logger)
+        self.current_image, self.current_data_array = pil_image.generate_random_dot_array_image(
+                            para, logger=self.logger)
         return QtGui.QPixmap.fromImage(ImageQt(self.current_image))
 
     def show_pixmap(self, pixmap):
@@ -128,8 +129,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
             self, 'Save file', filter=self.tr(".png")) #TODO multiple file formats FIXME formats selection
-        print(extension)
-        self.current_image.save(filename, format=extension[1:].upper())
+        self.current_image.save(filename + extension, format=str(extension[1:]).upper())
 
     def action_match(self):
         prop = self.current_data_array.get_properties()
