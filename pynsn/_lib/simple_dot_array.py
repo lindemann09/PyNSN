@@ -58,6 +58,18 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
 
         return rtn
 
+    @property
+    def split(self):
+        """list of DotArrayProperties objects instead
+        one DotArrayProperties object with lists for each property"""
+        rtn = []
+        for i in range(len(self[0])):
+            tmp = []
+            for f in range(len(self._fields)):
+                tmp.append(self[f][i])
+            rtn.append(DotArrayProperties._make(tmp))
+        return rtn
+
     def get_nice_text(self, spacing_char="."):
         txt = None
         for k,v in self._asdict().items():

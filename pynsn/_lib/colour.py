@@ -2,10 +2,13 @@
 The named colour used are based on the named colours of matplotlib.
    see https://matplotlib.org/examples/color/named_colors.html
 """
+from functools import total_ordering
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
+
+@total_ordering
 class Colour(object):
 
     def __init__(self, colour=None):
@@ -14,13 +17,11 @@ class Colour(object):
     def __repr__(self):
         return str(self.colour)
 
-    def __cmp__(self, other):
-        if self._colour < other._colour:
-            return -1
-        elif self._colour > other._colour:
-            return 1
-        else:
-            return 0
+    def __lt__(self, other):
+        return self._colour < other._colour
+
+    def __eq__(self, other):
+        return self._colour == other._colour
 
     @property
     def colour(self):

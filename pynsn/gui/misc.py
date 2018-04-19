@@ -42,6 +42,11 @@ class LabeledInput(object):
         layout.addWidget(self.edit)
         return layout
 
+    def setVisible(self, bool):
+        self.edit.setVisible(bool)
+        self.label.setVisible(bool)
+
+
 
 class LabeledNumberInput(LabeledInput):
     def __init__(self, label, value, width_label=180, width_edit=70,

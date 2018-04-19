@@ -284,16 +284,14 @@ class DotArray(SimpleDotArray):
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                rnd = random.randint(0,
-                                     deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                rnd = random.randint(0, deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
                 if change_numerosity < 0:
                     # remove dots
                     deviant.delete(rnd)
                 else:
                     # copy a random dot
-                    deviant.append(xy=self.random_free_dot_position(dot_diameter=self._diameters[rnd]),
-                                   diameters=self._diameters[rnd],
-                                   colours=self.features.colours[rnd],
-                                   pictures=self.features.pictures[rnd])
+                    deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd]),
+                                   diameters=deviant._diameters[rnd],
+                                   features=deviant.features[rnd])
 
         return deviant

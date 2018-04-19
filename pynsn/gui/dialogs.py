@@ -8,7 +8,6 @@ from PyQt4 import QtGui,  QtCore
 from . import misc
 from .._lib import constants as const
 
-
 class MatchPropertyDialog(QtGui.QDialog):
     def __init__(self, parent, properties):
         super(MatchPropertyDialog, self).__init__(parent)
@@ -65,3 +64,44 @@ class MatchPropertyDialog(QtGui.QDialog):
             return (True, True)
         else:
             return (None, None)
+
+
+class SettingsDialog(QtGui.QDialog):
+
+    def __init__(self, parent, default_array):
+
+        super(SettingsDialog, self).__init__(parent)
+
+        self.setWindowTitle("Match Dot Array Property")
+
+        self.colour_area = misc.LabeledInput("Area", text=default_array.colour_area, case_sensitive=False)
+        self.colour_background = misc.LabeledInput("Background", text=default_array.colour_background, case_sensitive=False)
+        self.colour_convex_hull_positions = misc.LabeledInput("Colour positions CH", text=default_array.colour_convex_hull_positions, case_sensitive=False)
+        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH", text=default_array.colour_convex_hull_dots, case_sensitive=False)
+        self.antialiasing = QtGui.QCheckBox("Antialiasing")
+        self.antialiasing.setChecked(default_array.antialiasing)
+
+        self.bicoloured = QtGui.QCheckBox("bicoloured")
+        self.bicoloured.setChecked(False)
+
+
+        vlayout = QtGui.QVBoxLayout()
+        vlayout.addWidget(misc.heading("Colour"))
+        vlayout.addLayout(self.colour_area.layout())
+        vlayout.addLayout(self.colour_background.layout())
+
+        vlayout.addWidget(misc.heading("Convex hull"))
+        vlayout.addLayout(self.colour_convex_hull_positions.layout())
+        vlayout.addLayout(self.colour_convex_hull_dots.layout())
+        vlayout.addSpacing(10)
+        vlayout.addWidget(self.antialiasing)
+        vlayout.addWidget(self.bicoloured)
+        vlayout.addStretch(1)
+
+
+        # OK and Cancel buttons
+        buttons = QtGui.QDialogButtonBox( QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
+        buttons.accepted.connect(self.accept)
+
+        vlayout.addWidget(buttons)
+        self.setLayout(vlayout)
