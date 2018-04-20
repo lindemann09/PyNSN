@@ -15,6 +15,7 @@ from ._lib.dot_array_sequence import DASequence
 from ._lib.generator import DotArrayGenerator, DASequenceGenerator, DASequenceGeneratorProcess
 from ._lib.files import GeneratorLogger, LogFileReader
 from ._lib.colour import Colour
+from ._lib import continuous_property
 
 
 # TODO:

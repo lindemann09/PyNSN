@@ -1,7 +1,7 @@
 """
 Dot Array
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -121,9 +121,10 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
         Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
         if features is None:
-            self.features = ItemFeatures(colours=None, picture=None)
+            self.features = ItemFeatures(colour=None, picture=None)
         elif not isinstance(features, ItemFeatures):
-            raise TypeError(u"features must be a ItemFeatures, not {}".format(type(features)))
+            raise TypeError("features must be a ItemFeatures, not {}".format(
+                type(features).__name__))
         else:
             self.features = features
 

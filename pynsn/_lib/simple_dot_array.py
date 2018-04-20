@@ -1,18 +1,19 @@
 """
 Dot Array
 """
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function, division
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import random
+from copy import copy
 from collections import namedtuple
 from hashlib import md5
 import numpy as np
 from scipy.spatial import ConvexHull, distance
 from .item_features import numpy_vector
-from . import constants as const
+from . import continuous_property as cp
 
 TWO_PI = 2 * np.pi
 
@@ -119,10 +120,10 @@ class SimpleDotArray(object):
         if xy.ndim == 1 and len(xy) == 2:
             xy = xy.reshape((1, 2))
         if xy.ndim != 2:
-            raise RuntimeError(u"Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+            raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
 
         if xy.shape[0] != len(diameters):
-            raise RuntimeError(u"Bad shaped data: " + u"xy has not the same length as diameter")
+            raise RuntimeError("Bad shaped data: " + u"xy has not the same length as diameter")
 
         if len(self._xy) == 0:
             self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
@@ -321,51 +322,46 @@ class SimpleDotArray(object):
         return np.max(dist)
 
 
-    def match(self, total_surface_area=None,
-              mean_dot_diameter=None,
-              total_circumference=None,
-              convex_hull_area=None,
-              density=None,
-              convex_hull_precision=0.01,
-              density_adaptation_CH2TA_ratio=0.5,
-              center_array=True):
-        """TODO
+    def match(self, match_properties, center_array=True, match_dot_array=None):
+        """
+        match_properties: continuous property or list of continuous properties
+        several properties to be matched
+
+        if match dot array is specified, array will be match to match_dot_array, otherwise
+        the values defined in match_properties are used.
         """
 
-        adapt = []
-        if total_surface_area is not None:
-            adapt.append(const.P_AREA)
-        if mean_dot_diameter is not None:
-            adapt.append(const.P_DIAMETER)
-        if total_circumference is not None:
-            adapt.append(const.P_CIRCUMFERENCE)
-        if convex_hull_area is not None:
-            adapt.append(const.P_CONVEX_HULL)
-        if density is not None:
-            adapt.append(const.P_DENSITY)
+        # type check
+        if not isinstance(match_properties, (list, tuple)):
+            match_properties = [match_properties]
 
-        # check dependencies
-        for dep in const.PROPERTY_DEPENDENCIES:
-            if sum(list(map(lambda x: x in dep, adapt))) > 1:
-                raise RuntimeError(u"Incompatible properties to match: " + ", ".join(adapt))
+        cp.check_list_continuous_properties(match_properties, check_set_value=match_dot_array is None)
 
-        if const.P_DENSITY in adapt and density_adaptation_CH2TA_ratio != 1:
-            if const.P_DIAMETER in adapt or const.P_CIRCUMFERENCE in adapt or const.P_AREA in adapt:
-                raise RuntimeError(u"Density_adaptation_CH2TA_ration has to be 1, if matching: " + ", ".join(adapt))
+        # copy and change values to match this stimulus
+        if match_dot_array is None:
+            match_props = match_properties
+        else:
+            match_props = []
+            for m in match_properties:
+                m = copy(m)
+                m.set_value(match_dot_array)
+                match_props.append(m)
 
         # Adapt
-        for method in adapt:
-            if method == const.P_AREA:
-                self._match_total_surface_area(surface_area=total_surface_area)
-            elif method == const.P_DIAMETER:
-                self._match_mean_dot_diameter(mean_dot_diameter=mean_dot_diameter)
-            elif method == const.P_CIRCUMFERENCE:
-                self._match_total_circumference(total_circumference=total_circumference)
-            elif method == const.P_CONVEX_HULL:
-                self._match_convex_hull_area(convex_hull_area=convex_hull_area, precision=convex_hull_precision)
-            elif method == const.P_DENSITY:
-                self._match_density(density=density, precision=convex_hull_precision,
-                                    adaptation_CH2TA_ratio=density_adaptation_CH2TA_ratio)
+        for cont_prop in match_props:
+            if isinstance(cont_prop, cp.SurfaceArea):
+                self._match_total_surface_area(surface_area=cont_prop.value)
+            elif isinstance(cont_prop, cp.MeanDotDiameter):
+                self._match_mean_dot_diameter(mean_dot_diameter=cont_prop.value)
+            elif isinstance(cont_prop, cp.TotalCircumference):
+                self._match_total_circumference(total_circumference=cont_prop.value)
+            elif isinstance(cont_prop, cp.ConvexHull):
+                self._match_convex_hull_area(convex_hull_area=cont_prop.value,
+                                             precision=cont_prop.match_presision)
+            elif isinstance(cont_prop, cp.Density):
+                self._match_density(density=cont_prop.value,
+                                    precision=cont_prop.convex_hull_precision,
+                                    adaptation_CH2TA_ratio=cont_prop.match_ratio_convhull2area)
 
         if center_array:
             self._xy -= self.center_of_outer_positions

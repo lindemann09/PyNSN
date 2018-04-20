@@ -6,7 +6,7 @@ from builtins import zip, filter, range, super
 
 from PyQt4 import QtGui,  QtCore
 from . import misc
-from .._lib import constants as const
+from .._lib import continuous_property as cp
 
 class MatchPropertyDialog(QtGui.QDialog):
     def __init__(self, parent, properties):
@@ -16,15 +16,15 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         self.properties = properties
         self.comboBox = QtGui.QComboBox(self)
-        self.comboBox.addItem(const.P_DIAMETER) #0
-        self.comboBox.addItem(const.P_DENSITY) #1
-        self.comboBox.addItem(const.P_CONVEX_HULL) #2
-        self.comboBox.addItem(const.P_AREA) #3
-        self.comboBox.addItem(const.P_CIRCUMFERENCE) #4
+        self.comboBox.addItem(cp.MeanDotDiameter().long_label) #0
+        self.comboBox.addItem(cp.Density().long_label) #1
+        self.comboBox.addItem(cp.ConvexHull().long_label) #2
+        self.comboBox.addItem(cp.SurfaceArea().long_label) #3
+        self.comboBox.addItem(cp.TotalCircumference().long_label) #4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(const.P_DIAMETER)
+        self.choice(cp.MeanDotDiameter().long_label)
 
         vlayout = QtGui.QVBoxLayout(self)
         hlayout = QtGui.QHBoxLayout()
@@ -44,15 +44,15 @@ class MatchPropertyDialog(QtGui.QDialog):
 
     def choice(self, selection):
 
-        if selection == const.P_DIAMETER:
+        if selection == cp.MeanDotDiameter().long_label:
             self.num_input.value = self.properties.mean_dot_diameter
-        elif selection == const.P_DENSITY:
+        elif selection == cp.Density().long_label:
             self.num_input.value = self.properties.density
-        elif selection == const.P_CONVEX_HULL:
+        elif selection == cp.ConvexHull().long_label:
             self.num_input.value = self.properties.convex_hull_area
-        elif selection == const.P_CIRCUMFERENCE:
+        elif selection == cp.TotalCircumference().long_label:
             self.num_input.value = self.properties.total_circumference
-        elif selection == const.P_AREA:
+        elif selection == cp.SurfaceArea().long_label:
             self.num_input.value = self.properties.total_surface_area
 
     @staticmethod
@@ -72,7 +72,7 @@ class SettingsDialog(QtGui.QDialog):
 
         super(SettingsDialog, self).__init__(parent)
 
-        self.setWindowTitle("Match Dot Array Property")
+        self.setWindowTitle("Dot Array Property")
 
         self.colour_area = misc.LabeledInput("Area", text=default_array.colour_area, case_sensitive=False)
         self.colour_background = misc.LabeledInput("Background", text=default_array.colour_background, case_sensitive=False)
@@ -102,6 +102,31 @@ class SettingsDialog(QtGui.QDialog):
         # OK and Cancel buttons
         buttons = QtGui.QDialogButtonBox( QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
         buttons.accepted.connect(self.accept)
+
+        vlayout.addWidget(buttons)
+        self.setLayout(vlayout)
+
+
+class SequenceDialog(QtGui.QDialog):
+
+    def __init__(self, parent):
+
+        super(SequenceDialog, self).__init__(parent)
+
+        self.setWindowTitle("Sequence Dialog")
+
+        self.match_diameter = QtGui.QCheckBox("Diameter")
+
+        # OK and Cancel buttons
+        buttons = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
+            QtCore.Qt.Horizontal, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        vlayout = QtGui.QVBoxLayout()
+        vlayout.addWidget(misc.heading("Matching"))
+        vlayout.addWidget(self.match_diameter)
 
         vlayout.addWidget(buttons)
         self.setLayout(vlayout)

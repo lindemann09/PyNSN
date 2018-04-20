@@ -23,7 +23,7 @@ generator = pynsn.DotArrayGenerator(
 def compare_stimulus(n_left, n_right,
                      pos_left=(-300,0),
                      pos_right=(300,0),
-                     match_method=pynsn.DASequenceGenerator.NO_FITTING,
+                     match_methods=None,
                      match_the_left=True):
 
     da_left = generator.make(n_dots=n_left)
@@ -35,6 +35,8 @@ def compare_stimulus(n_left, n_right,
     else:
         a = da_right
         b = da_left
+
+    a.match(match_methods)
 
     if match_method == pynsn.DASequenceGenerator.DENSITY50_50:
         a._match_density(density=b.density, adaptation_CH2TA_ratio=0.5)
@@ -71,7 +73,7 @@ control.start(skip_ready_screen=True)
 c.reset_stopwatch()
 
 stim = compare_stimulus(20, 120,
-                        match_method=pynsn.DASequenceGenerator.NO_FITTING,
+                        match_method=None,
                         match_the_left=True)
 
 stim.present()

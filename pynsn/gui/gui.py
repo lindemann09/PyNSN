@@ -53,7 +53,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def __init__(self):
         super(PyNSN_GUI, self).__init__()
 
-        self._current_image = None
+        self._image = None
+        self.data_array = None
+        self.da_sequence = None
         self.set_loging(False) #False
         self.settings = dialogs.SettingsDialog(self, DEFAULT_ARRAY)
         self.initUI()
@@ -88,6 +90,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         matchAction= QtGui.QAction('&Match property', self)
         matchAction.triggered.connect(self.action_match)
 
+        sequenceAction= QtGui.QAction('&Make sequence', self)
+        sequenceAction.triggered.connect(self.action_make_sequence)
+
+
         #self.statusBar()
         menubar = self.menuBar()
 
@@ -97,6 +103,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         fileMenu.addAction(exitAction)
 
         toolMenu = menubar.addMenu('&Tools')
+        toolMenu.addAction(sequenceAction)
         toolMenu.addAction(settingsAction)
         toolMenu.addAction(matchAction)
         toolMenu.addAction(printxyAction)
@@ -112,9 +119,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # ICON
-        self._current_image, _ = pil_image.generate_random_dot_array_image(ICON, logger=None)
-        self.setWindowIcon(QtGui.QIcon(self.current_pixmap()))
-        self._current_image = None
+        self._image, _ = pil_image.generate_random_dot_array_image(ICON, logger=None)
+        self.setWindowIcon(QtGui.QIcon(self.pixmap()))
+        self._image = None
 
         self.action_generate_btn()
 
@@ -132,30 +139,30 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         if self.settings.bicoloured.isChecked():
             n2 = self.main_widget.number2.value
-            self.current_data_array = generator.make(n_dots=para.number + n2)
-            self.current_data_array.features.change(indices=list(range(n2)),
-                            colour=self.main_widget.dot_colour2.text)
+            self.data_array = generator.make(n_dots=para.number + n2)
+            self.data_array.features.change(indices=list(range(n2)),
+                                            colour=self.main_widget.dot_colour2.text)
         else:
-            self.current_data_array = generator.make(n_dots=para.number)
+            self.data_array = generator.make(n_dots=para.number)
 
 
-        self._current_image = None
+        self._image = None
 
 
-    def current_image(self):
-        if self._current_image is not None:
-            return self._current_image
+    def image(self):
+        if self._image is not None:
+            return self._image
         else:
             para = self.image_parameter()
-            self._current_image = pil_image.create(self.current_data_array,
-                       colour_area=para.colour_area,
-                       colour_convex_hull_positions=para.colour_convex_hull_positions,
-                       colour_convex_hull_dots=para.colour_convex_hull_dots,
-                       colour_center_of_mass=para.colour_center_of_mass,
-                       colour_center_of_outer_positions=para.colour_center_of_outer_positions,
-                       antialiasing=para.antialiasing,
-                       colour_background=para.colour_background)
-            return self._current_image
+            self._image = pil_image.create(self.data_array,
+                                           colour_area=para.colour_area,
+                                           colour_convex_hull_positions=para.colour_convex_hull_positions,
+                                           colour_convex_hull_dots=para.colour_convex_hull_dots,
+                                           colour_center_of_mass=para.colour_center_of_mass,
+                                           colour_center_of_outer_positions=para.colour_center_of_outer_positions,
+                                           antialiasing=para.antialiasing,
+                                           colour_background=para.colour_background)
+            return self._image
 
     def image_parameter(self):
         # check colour input
@@ -202,15 +209,15 @@ class PyNSN_GUI(QtGui.QMainWindow):
                            antialiasing=self.settings.antialiasing.isChecked(),
                            colour_background= colour_background)
 
-    def current_pixmap(self):
-        return QtGui.QPixmap.fromImage(ImageQt(self.current_image()))
+    def pixmap(self):
+        return QtGui.QPixmap.fromImage(ImageQt(self.image()))
 
     def show_current_image(self, remake_image=False):
         if remake_image:
-            self._current_image = None
+            self._image = None
         w = self.image_parameter().max_array_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
-        self.main_widget.picture_field.setPixmap(self.current_pixmap())
+        self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
         self.adjustSize()
 
@@ -219,17 +226,17 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.show_current_image()
         self.main_widget.updateUI()
 
-        prop = self.current_data_array.get_properties()
+        prop = self.data_array.get_properties()
         txt = prop.get_nice_text()
         if self.settings.bicoloured.isChecked():
-            prop = self.current_data_array.get_properties_split_by_colours()
+            prop = self.data_array.get_properties_split_by_colours()
             for p in prop.split:
                 txt += p.get_nice_text()
         self.main_widget.text_field.append(txt)
 
     def action_print_xy(self):
 
-        txt = self.current_data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
+        txt = self.data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_field.append(txt)
 
 
@@ -237,10 +244,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
             self, 'Save file', filter=self.tr(".png")) #TODO multiple file formats FIXME formats selection
-        self.current_image.save(filename + extension, format=str(extension[1:]).upper())
+        self.image.save(filename + extension, format=str(extension[1:]).upper())
 
     def action_match(self):
-        prop = self.current_data_array.get_properties()
+        prop = self.data_array.get_properties()
         print(dialogs.MatchPropertyDialog.get_response(self, prop)) #TODO
 
     def action_settings(self):
@@ -249,14 +256,17 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.show_current_image(remake_image=True)
 
     def action_dot_colour_change(self):
-        self.current_data_array.features.change(colour=self.image_parameter().dot_colour)
+        self.data_array.features.change(colour=self.image_parameter().dot_colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
-        change = self.main_widget.number.value - self.current_data_array.prop_numerosity
-        self.current_data_array = self.current_data_array.number_deviant(change)
+        change = self.main_widget.number.value - self.data_array.prop_numerosity
+        self.data_array = self.data_array.number_deviant(change)
         self.show_current_image(remake_image=True)
         # todo slider does not work correctly for multi colour arrays
+
+    def action_make_sequence(self):
+        result = dialogs.SequenceDialog(self).exec_()
 
 def start():
     app = QtGui.QApplication(sys.argv)

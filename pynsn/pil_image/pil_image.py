@@ -156,7 +156,8 @@ def generate_random_dot_array_image(para, logger=None):
     """
 
     if not isinstance(para, RandomDotImageParameter):
-        raise TypeError("para has to be RandomDotImageParameter, but not {}".format(type(para)))
+        raise TypeError("para has to be RandomDotImageParameter, but not {}".format(
+                                type(para).__name__))
 
     generator = DotArrayGenerator(
         max_array_radius=para.max_array_radius,

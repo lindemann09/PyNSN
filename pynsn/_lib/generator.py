@@ -1,14 +1,16 @@
-from __future__ import  print_function, division, unicode_literals
+from __future__ import  print_function, division
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from . import random_beta
+from copy import copy
 from multiprocessing import Process, Event, Queue
 from .dot_array import DotArray
 from .item_features import ItemFeatures
 from .dot_array_sequence import DASequence
 from .files import GeneratorLogger
+from . import continuous_property as cp
 
 class DotArrayGenerator(object):
 
@@ -90,22 +92,6 @@ class DotArrayGenerator(object):
 
 class DASequenceGenerator(object):
 
-    CONVEX_HULL = u"CH"
-    DENSITY50_50 = u"DE"
-    MEAN_DIAMETER = u"MD"
-    TOTAL_AREA = u"TA"
-    TOTAL_CIRCUMFERENCE = u"TC"
-    NO_FITTING = u"NF"
-    DENSITY_ONLY_CONVEX_HULL = u"DE_C"
-    DENSITY_ONLY_AREA = u"DE_A"
-
-    ALL_METHODS = [MEAN_DIAMETER, CONVEX_HULL, TOTAL_AREA, DENSITY50_50, NO_FITTING,
-                   DENSITY_ONLY_CONVEX_HULL, DENSITY_ONLY_AREA]
-
-    _DEPENDENCIES =[[CONVEX_HULL, DENSITY50_50, DENSITY_ONLY_CONVEX_HULL],
-                    [DENSITY50_50, DENSITY_ONLY_AREA, MEAN_DIAMETER, TOTAL_CIRCUMFERENCE, TOTAL_AREA ],
-                    [DENSITY50_50, DENSITY_ONLY_AREA, DENSITY_ONLY_CONVEX_HULL]]
-
     def __init__(self, max_dot_array, logger=None):
         """  makes sequence of deviants by subtracting dots
 
@@ -115,48 +101,55 @@ class DASequenceGenerator(object):
         Stimulus will be center before making variants
 
         """
-        self._da = []
-        self.set_max_dot_array(max_dot_array=max_dot_array)
-        self.set_logger(logger)
-
-    def set_logger(self, logger):
+        self.max_dot_array=max_dot_array
         self.logger = logger
-        if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError(u"logger has to be None or a GeneratorLogger")
 
-    def set_max_dot_array(self, max_dot_array):
+    @property
+    def logger(self):
+        return self._logger
 
-        self._da = max_dot_array.copy()
-        # auxiliary variables
-        self._dia = self._da.prop_mean_dot_diameter
-        self._cha = self._da.prop_convex_hull_area
-        self._dens = self._da.prop_density
-        self._total_area = self._da.prop_total_surface_area
-        self._circumference = self._da.prop_total_circumference
+    @logger.setter
+    def logger(self, x):
+        if not isinstance(x, (type(None), GeneratorLogger)):
+            raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
+                type(x).__name__))
+        self._logger = x
 
-    @staticmethod
-    def check_match_method_compatibility(match_properties):
-        # check compatible combinations
-        for dep in DASequenceGenerator._DEPENDENCIES:
-            if sum(list(map(lambda x: x in dep, match_properties))) > 1:
-                raise RuntimeError(u"Incompatible properties to match: {}".format(match_properties))
-        return True
+    @property
+    def max_dot_array(self):
+        return self._da
+
+    @max_dot_array.setter
+    def max_dot_array(self, x):
+        if not isinstance(x, DotArray):
+            raise TypeError("Max_dot_array has to be DotArray, but not {}".format(
+                            type(x).__name__))
+        self._da = x.copy()
 
 
-
-
-    def make(self, match_methods, min_numerosity,
-             extra_space, # fitting convex hull and density might result in enlarged arrays
+    def make(self, match_properties, min_numerosity,
+             extra_space,  # fitting convex hull and density might result in enlarged arrays
              inhibit_logging=False):
         """Methods takes take , you might use make Process
-
+            match_properties:
+                    continuous property or list of continuous properties to be match
+                    or None
          returns False is error occured (see self.error)
         """
 
-        if isinstance(match_methods, (tuple, list)):
-            DASequenceGenerator.check_match_method_compatibility(match_methods)
-        else:
-            match_methods = [match_methods]
+        if match_properties is None:
+            match_properties = []
+        elif not isinstance(match_properties, (tuple, list)):
+            match_properties = [match_properties]
+
+        cp.check_list_continuous_properties(match_properties, check_set_value=False)
+
+        # copy and change values to match this stimulus
+        match_props = []
+        for m in match_properties:
+            m = copy(m)
+            m.set_value(self._da)
+            match_props.append(m)
 
         da = self._da.copy()
         da.max_array_radius += (extra_space // 2)
@@ -166,32 +159,8 @@ class DASequenceGenerator(object):
         while (da.prop_numerosity > min_numerosity):
             da = da.number_deviant(change_numerosity=-1)
 
-            for mp in match_methods:
-                if mp == DASequenceGenerator.MEAN_DIAMETER:
-                    da._match_mean_dot_diameter(mean_dot_diameter=self._dia)
-
-                elif mp == DASequenceGenerator.TOTAL_AREA:
-                    da._match_total_surface_area(surface_area=self._total_area)
-
-                elif mp == DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-                    da._match_total_circumference(total_circumference=self._circumference)
-
-                elif mp == DASequenceGenerator.DENSITY50_50:
-                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=0.5)
-
-                elif mp == DASequenceGenerator.DENSITY_ONLY_AREA:
-                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=0)
-
-                elif mp == DASequenceGenerator.DENSITY_ONLY_CONVEX_HULL:
-                    da._match_density(density=self._dens, adaptation_CH2TA_ratio=1)
-
-                elif mp == DASequenceGenerator.CONVEX_HULL:
-                    da._match_convex_hull_area(convex_hull_area=self._cha)
-
-                elif mp == self.NO_FITTING:
-                    pass
-                else:
-                    raise Warning(u"Unknown method {}. Using NO_FITTING.".format(mp))
+            if len(match_props)>0:
+                da.match(match_props, center_array=True) # TODO center array OK?
 
             cnt = 0
             while True:
@@ -210,7 +179,7 @@ class DASequenceGenerator(object):
 
         rtn = DASequence()
         rtn.append_dot_arrays(list(reversed(da_sequence)))
-        rtn.method = match_methods
+        rtn.method = match_props
         rtn.error = error
 
         if not inhibit_logging and self.logger is not None:
@@ -222,7 +191,7 @@ class DASequenceGenerator(object):
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity, match_methods, extra_space,
+    def __init__(self, max_dot_array, min_numerosity, match_properties, extra_space,
                  n_trials=3, logger=None):
 
         """
@@ -237,9 +206,10 @@ class DASequenceGeneratorProcess(Process):
         self._data_queue = Queue()
         self._da_sequence = None
 
-        if isinstance(match_methods, (tuple, list)):
-            DASequenceGenerator.check_match_method_compatibility(match_methods)
-        self.match_methods = match_methods
+        if not isinstance(match_properties, (tuple, list)):
+            match_properties = [match_properties]
+        cp.check_list_continuous_properties(match_properties)
+        self.match_properties = match_properties
         self.max_dot_array = max_dot_array
         self.min_numerosity = min_numerosity
         self.extra_space = extra_space
@@ -276,7 +246,7 @@ class DASequenceGeneratorProcess(Process):
 
         while cnt<self._n_tryouts:
             cnt += 1
-            da_seq = generator.make(match_methods=self.match_methods,
+            da_seq = generator.make(match_properties=self.match_properties,
                                     extra_space=self.extra_space,
                                     min_numerosity=self.min_numerosity)
             if da_seq.error is None:

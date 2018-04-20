@@ -2,6 +2,7 @@
 import time
 from expyriment import control, design, io, stimuli, misc
 import pynsn
+from pynsn import continuous_property as cp
 from pynsn import expyriment_stimulus, pil_image, DASequenceGenerator
 from turning_knob import numerosity_production
 
@@ -22,7 +23,8 @@ generator =  pynsn.DotArrayGenerator(
 exp = control.initialize()
 
 bl = design.Block()
-for m in [DASequenceGenerator.TOTAL_CIRCUMFERENCE,
+for m in [cp.TotalCircumference(),
+    DASequenceGenerator.TOTAL_CIRCUMFERENCE,
           DASequenceGenerator.DENSITY50_50,
           DASequenceGenerator.NO_FITTING,
           DASequenceGenerator.CONVEX_HULL,
@@ -68,7 +70,7 @@ def make_da_sequence(trial):
     max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
     da_gen = pynsn.DASequenceGenerator(max_dot_array=max_da,
                                         logger=generator.logger)
-    return da_gen.make(min_numerosity=20, match_methods=method, extra_space=100)
+    return da_gen.make(min_numerosity=20, match_properties=method, extra_space=100)
 
 
 processes = prepare_processes(bl.trials)
