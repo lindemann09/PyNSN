@@ -27,13 +27,12 @@ if __name__ == "__main__":
 
     g = DASequenceGenerator(max_dot_array=max_da,  logger=logger)
     ds = g.make(extra_space=100, match_properties=None,
-
                 #match_methods=[DASequenceGenerator.CONVEX_HULL,
                 #              DASequenceGenerator.DENSITY_ONLY_AREA],
                 min_numerosity=10)
 
     prop = ds.get_properties()
-    print(ds.get_numerosity_correlations())
+    #print(ds.get_numerosity_correlations())
     #print(ds.variances)
     #print(ds.numerosity_correlations)
 

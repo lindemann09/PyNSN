@@ -15,13 +15,22 @@ class Colour(object):
         self.colour = colour
 
     def __repr__(self):
-        return str(self.colour)
+        return "Colour({})".format(self.colour)
+
+    def __str__(self):
+        return self._colour
+
+    def __hash__(self):
+        return hash(self._colour)
 
     def __lt__(self, other):
         return self._colour < other._colour
 
     def __eq__(self, other):
         return self._colour == other._colour
+
+    def __ne__(self, other):
+        return self._colour != other._colour
 
     @property
     def colour(self):
@@ -212,3 +221,7 @@ class Colour(object):
         'expyriment_orange' : '#FF9632',
         'expyriment_purple' : '#A046FA'
     }
+
+
+a = Colour("red")
+b = Colour("red")

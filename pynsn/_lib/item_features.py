@@ -71,8 +71,8 @@ class ItemFeaturesList(object):
         """
 
         if isinstance(features, ItemFeatures):
-            self.append(colours=[features.colour],
-                        pictures=[features.picture])
+            self.append(colours=features.colour,
+                        pictures=features.picture)
         else:
             self.append(colours=features.colours,
                     pictures=features.pictures)
