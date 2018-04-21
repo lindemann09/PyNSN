@@ -1,14 +1,14 @@
 """
 Dot Array
 """
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function, division
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
 from .colour import Colour
-from .item_features import ItemFeatures
+from .item_features import ItemFeatures, ItemFeaturesList
 
 class Coordinate2D(object):
 
@@ -156,7 +156,7 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
 
 
 
-class Rectangle(Coordinate2D):
+class Rectangle(Coordinate2D): #todo
     def __init__(self, x=0, y=0, width=0, height=0, features=None):
         """Initialize a point
 

@@ -70,7 +70,7 @@ class DASequence(object):
         prop = self.get_properties()
         cor = np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
         cor = cor[0, :]
-        names = prop.get_np_array_column_names()
+        names = prop.property_names
         rtn = {}
         for x in range(1, len(cor)):
             rtn[names[x]] = cor[x]

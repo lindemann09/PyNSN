@@ -23,7 +23,7 @@ generator =  pynsn.DotArrayGenerator(
 exp = control.initialize()
 
 bl = design.Block()
-for m in [cp.TotalCircumference(),
+for m in [cp.Circumference(),
     DASequenceGenerator.TOTAL_CIRCUMFERENCE,
           DASequenceGenerator.DENSITY50_50,
           DASequenceGenerator.NO_FITTING,

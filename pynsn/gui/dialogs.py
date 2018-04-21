@@ -16,15 +16,15 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         self.properties = properties
         self.comboBox = QtGui.QComboBox(self)
-        self.comboBox.addItem(cp.MeanDotDiameter().long_label) #0
+        self.comboBox.addItem(cp.DotDiameter().long_label) #0
         self.comboBox.addItem(cp.Density().long_label) #1
         self.comboBox.addItem(cp.ConvexHull().long_label) #2
         self.comboBox.addItem(cp.SurfaceArea().long_label) #3
-        self.comboBox.addItem(cp.TotalCircumference().long_label) #4
+        self.comboBox.addItem(cp.Circumference().long_label) #4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(cp.MeanDotDiameter().long_label)
+        self.choice(cp.DotDiameter().long_label)
 
         vlayout = QtGui.QVBoxLayout(self)
         hlayout = QtGui.QHBoxLayout()
@@ -44,13 +44,13 @@ class MatchPropertyDialog(QtGui.QDialog):
 
     def choice(self, selection):
 
-        if selection == cp.MeanDotDiameter().long_label:
+        if selection == cp.DotDiameter().long_label:
             self.num_input.value = self.properties.mean_dot_diameter
         elif selection == cp.Density().long_label:
             self.num_input.value = self.properties.density
         elif selection == cp.ConvexHull().long_label:
             self.num_input.value = self.properties.convex_hull_area
-        elif selection == cp.TotalCircumference().long_label:
+        elif selection == cp.Circumference().long_label:
             self.num_input.value = self.properties.total_circumference
         elif selection == cp.SurfaceArea().long_label:
             self.num_input.value = self.properties.total_surface_area

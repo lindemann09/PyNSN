@@ -1,5 +1,8 @@
-from functools import total_ordering
+
+from __future__ import division
+from copy import copy
 import itertools
+from functools import total_ordering
 
 @total_ordering
 class _ContinuousProperty(object):
@@ -30,32 +33,43 @@ class _ContinuousProperty(object):
         else:
             return _ContinuousProperty._LABELS[self._type]
 
-    def __str__(self):
-        return self.long_label
-
     def __lt__(self, other):
         return self.value < other.value
 
     def __eq__(self, other):
         return self.value == other.value
 
-    @property
-    def _dependencies(self): #todo should be defined in childen classes
-        if isinstance(self, (MeanDotDiameter, TotalCircumference, SurfaceArea)):
-            return [_ContinuousProperty._DIAMETER,
-                    _ContinuousProperty._CIRCUMFERENCE,
-                    _ContinuousProperty._AREA]
-        elif isinstance(self, ConvexHull):
-            return [_ContinuousProperty._CONVEX_HULL]
-        elif isinstance(self, Density):
-            dep = [_ContinuousProperty._DENSITY]
-            if self.match_ratio_convhull2area <1: #area involved
-                dep.extend(SurfaceArea()._dependencies)
-            if self.match_ratio_convhull2area>0: # convex hull involved
-                dep.extend(ConvexHull()._dependencies)
-            return dep
-        return []
+    def __add__(self, other):
+        rtn = copy(self)
+        rtn.value += other.value
+        return rtn
 
+    def __sub__(self, other):
+        rtn = copy(self)
+        rtn.value += other.value
+        return rtn
+
+    def __mul__(self, other):
+        rtn = copy(self)
+        rtn.value *= other.value
+        return rtn
+
+    def __truediv__(self, other):
+        rtn = copy(self)
+        rtn.value /= other.value
+        return rtn
+
+    def __int__(self):
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
+
+    @property
+    def _dependencies(self):
+
+        return []
 
     def is_dependent(self, other):
 
@@ -70,8 +84,12 @@ class SurfaceArea(_ContinuousProperty):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_total_surface_area
 
+    @property
+    def _dependencies(self):
+        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
+                    _ContinuousProperty._AREA]
 
-class MeanDotDiameter(_ContinuousProperty):
+class DotDiameter(_ContinuousProperty):
     """"""
     def __init__(self, value=None):
         _ContinuousProperty.__init__(self, _ContinuousProperty._DIAMETER, value)
@@ -79,8 +97,12 @@ class MeanDotDiameter(_ContinuousProperty):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_mean_dot_diameter
 
+    @property
+    def _dependencies(self):
+        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
+                    _ContinuousProperty._AREA]
 
-class TotalCircumference(_ContinuousProperty):
+class Circumference(_ContinuousProperty):
     """"""
     def __init__(self, value=None):
         _ContinuousProperty.__init__(self, _ContinuousProperty._CIRCUMFERENCE, value)
@@ -88,6 +110,10 @@ class TotalCircumference(_ContinuousProperty):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_total_circumference
 
+    @property
+    def _dependencies(self):
+        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
+                    _ContinuousProperty._AREA]
 
 class ConvexHull(_ContinuousProperty):
     """"""
@@ -97,6 +123,10 @@ class ConvexHull(_ContinuousProperty):
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_convex_hull_area
+
+    @property
+    def _dependencies(self):
+        return [_ContinuousProperty._CONVEX_HULL]
 
 
 class Density(_ContinuousProperty):
@@ -123,6 +153,15 @@ class Density(_ContinuousProperty):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_density
 
+    @property
+    def _dependencies(self):
+        dep = [_ContinuousProperty._DENSITY]
+        if self.match_ratio_convhull2area <1: #area involved
+            dep.extend(SurfaceArea()._dependencies)
+        if self.match_ratio_convhull2area>0: # convex hull involved
+            dep.extend(ConvexHull()._dependencies)
+        return dep
+
 
 ## helper function
 def check_list_continuous_properties(lcp, check_set_value=False):
@@ -145,4 +184,3 @@ def check_list_continuous_properties(lcp, check_set_value=False):
         if not a.is_independent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                                     type(a).__name__, type(b).__name__))
-

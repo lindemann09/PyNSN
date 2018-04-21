@@ -28,10 +28,6 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
         n_prop = len(cls._fields)
         return cls._make(map(lambda _: [], range(n_prop)))
 
-    @classmethod
-    def get_np_array_column_names(cls):
-        return cls._fields[1:]
-
     @property
     def property_names(self):
         return self._fields[1:]
@@ -351,9 +347,9 @@ class SimpleDotArray(object):
         for cont_prop in match_props:
             if isinstance(cont_prop, cp.SurfaceArea):
                 self._match_total_surface_area(surface_area=cont_prop.value)
-            elif isinstance(cont_prop, cp.MeanDotDiameter):
+            elif isinstance(cont_prop, cp.DotDiameter):
                 self._match_mean_dot_diameter(mean_dot_diameter=cont_prop.value)
-            elif isinstance(cont_prop, cp.TotalCircumference):
+            elif isinstance(cont_prop, cp.Circumference):
                 self._match_total_circumference(total_circumference=cont_prop.value)
             elif isinstance(cont_prop, cp.ConvexHull):
                 self._match_convex_hull_area(convex_hull_area=cont_prop.value,
