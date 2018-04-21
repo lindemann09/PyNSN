@@ -11,7 +11,6 @@ from pynsn import expyriment_stimulus, DotArrayGenerator, \
 if __name__ == "__main__":
     cl = misc.Clock()
 
-    maxnumber = 20
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
@@ -23,15 +22,19 @@ if __name__ == "__main__":
         dot_colour="skyblue",
         minimum_gap=5,
         logger=logger)
-    max_da = generator.make(n_dots=maxnumber, inhibit_logging=False)
 
-    g = DASequenceGenerator(max_dot_array=max_da,  logger=logger)
-    ds = g.make(extra_space=100, match_properties=None,
+    reference = generator.make(n_dots=25, inhibit_logging=False)
+
+    g = DASequenceGenerator(reference_dot_array=reference, logger=logger)
+    ds = g.make(extra_space=100,
+                match_properties=[pynsn.Circumference(), pynsn.ConvexHull()],
                 #match_methods=[DASequenceGenerator.CONVEX_HULL,
                 #              DASequenceGenerator.DENSITY_ONLY_AREA],
-                min_numerosity=10)
+                min_max_numerosity=[10, 30])
 
     prop = ds.get_properties()
+    print(prop.get_nice_text())
+    exit()
     #print(ds.get_numerosity_correlations())
     #print(ds.variances)
     #print(ds.numerosity_correlations)
@@ -51,13 +54,13 @@ if __name__ == "__main__":
 
 
     else:
-        p = DASequenceGeneratorProcess(max_dot_array=max_da,
+        p = DASequenceGeneratorProcess(max_dot_array=reference,
                                        match_method=[DASequenceGenerator.CONVEX_HULL,
                                                      DASequenceGenerator.DENSITY_ONLY_AREA],
                                        min_numerosity=10, logger=logger,
                                        extra_space=100)
         p.start()
-        p1 = DASequenceGeneratorProcess(max_dot_array=max_da, match_method=DASequenceGenerator.CONVEX_HULL,
+        p1 = DASequenceGeneratorProcess(max_dot_array=reference, match_method=DASequenceGenerator.CONVEX_HULL,
                                         min_numerosity=10, logger=logger,
                                         extra_space=100)
         p1.start()

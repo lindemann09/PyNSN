@@ -1,4 +1,4 @@
-from __future__ import  print_function, division
+from __future__ import print_function, division
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -12,6 +12,7 @@ from .dot_array_sequence import DASequence
 from .log_file import GeneratorLogger
 from . import continuous_property as cp
 
+
 class DotArrayGenerator(object):
 
     def __init__(self,
@@ -19,7 +20,7 @@ class DotArrayGenerator(object):
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
-                 dot_colour = None,
+                 dot_colour=None,
                  minimum_gap=1,
                  logger=None):
 
@@ -43,7 +44,7 @@ class DotArrayGenerator(object):
                 (dot_diameter_mean <= dot_diameter_range[0] or
                  dot_diameter_mean >= dot_diameter_range[1] or
                  dot_diameter_range[0] >= dot_diameter_range[1]):
-                raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
+            raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
         self.minimum_gap = minimum_gap
         self.max_array_radius = max_array_radius
@@ -53,21 +54,19 @@ class DotArrayGenerator(object):
         self.item_feature = ItemFeatures(colour=dot_colour)
         self.set_logger(logger)
 
-
     def set_logger(self, logger):
         self.logger = logger
         if not isinstance(logger, (type(None), GeneratorLogger)):
             raise RuntimeError("logger has to be None or a GeneratorLogger")
 
-
     def make(self, n_dots, inhibit_logging=False):
 
-        rtn = DotArray(max_array_radius= self.max_array_radius,  # - distance_field_edge ?
+        rtn = DotArray(max_array_radius=self.max_array_radius,  # - distance_field_edge ?
                        minimum_gap=self.minimum_gap)
 
         for _ in range(n_dots):
 
-            #diameter
+            # diameter
             if self.dot_diameter_range is None or self.dot_diameter_std is None:
                 # constant diameter
                 diameter = self.dot_diameter_mean
@@ -88,11 +87,9 @@ class DotArrayGenerator(object):
         return rtn
 
 
-
-
 class DASequenceGenerator(object):
 
-    def __init__(self, max_dot_array, logger=None):
+    def __init__(self, reference_dot_array, logger=None):
         """  makes sequence of deviants by subtracting dots
 
             sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
@@ -101,7 +98,7 @@ class DASequenceGenerator(object):
         Stimulus will be center before making variants
 
         """
-        self.max_dot_array=max_dot_array
+        self.reference_diot_array = reference_dot_array
         self.logger = logger
 
     @property
@@ -116,18 +113,18 @@ class DASequenceGenerator(object):
         self._logger = x
 
     @property
-    def max_dot_array(self):
+    def reference_diot_array(self):
         return self._da
 
-    @max_dot_array.setter
-    def max_dot_array(self, x):
+    @reference_diot_array.setter
+    def reference_diot_array(self, x):
         if not isinstance(x, DotArray):
             raise TypeError("Max_dot_array has to be DotArray, but not {}".format(
-                            type(x).__name__))
-        self._da = x.copy()
+                type(x).__name__))
+        self._da = x
 
-
-    def make(self, match_properties, min_numerosity,
+    def make(self, match_properties,
+             min_max_numerosity,
              extra_space,  # fitting convex hull and density might result in enlarged arrays
              inhibit_logging=False):
         """Methods takes take , you might use make Process
@@ -136,6 +133,13 @@ class DASequenceGenerator(object):
                     or None
          returns False is error occured (see self.error)
         """
+
+        try:
+            l = len(min_max_numerosity)
+        except:
+            l = 0
+        if l != 2:
+            raise ValueError("min_max_numerosity has to be a pair of (min, max)")
 
         if match_properties is None:
             match_properties = []
@@ -151,47 +155,76 @@ class DASequenceGenerator(object):
             m.set_value(self._da)
             match_props.append(m)
 
-        da = self._da.copy()
-        da.max_array_radius += (extra_space // 2)
-        da_sequence = [da]
-        error = None
-
-        while (da.prop_numerosity > min_numerosity):
-            da = da.number_deviant(change_numerosity=-1)
-
-            if len(match_props)>0:
-                da.match(match_props, center_array=True) # TODO center array OK?
-
-            cnt = 0
-            while True:
-                cnt += 1
-
-                ok, mesg = da.realign()
-                if ok:
-                    break
-
-                if cnt > 10:
-                    error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
-
-            da_sequence.append(da)
-            if error is not None:
-                break
-
         rtn = DASequence()
-        rtn.append_dot_arrays(list(reversed(da_sequence)))
         rtn.method = match_props
-        rtn.error = error
+
+        min, max = sorted(min_max_numerosity)
+        # decreasing
+        if min < self._da.prop_numerosity:
+            da_sequence, error = self.__make_sequence_one_direction(match_props=match_props,
+                                                                    target_numerosity=min,
+                                                                    extra_space=extra_space)
+            rtn.append_dot_arrays(list(reversed(da_sequence)))
+            if error is not None:
+                rtn.error = error
+        # reference
+        rtn.append_dot_arrays(self._da.copy())
+        # increasing
+        if max > self._da.prop_numerosity:
+            da_sequence, error = self.__make_sequence_one_direction(match_props=match_props,
+                                                                    target_numerosity=max,
+                                                                    extra_space=extra_space)
+            rtn.append_dot_arrays(da_sequence)
+            if error is not None:
+                rtn.error = error
 
         if not inhibit_logging and self.logger is not None:
             self.logger.log(rtn)
 
         return rtn
 
+    def __make_sequence_one_direction(self, match_props, target_numerosity,
+                                      extra_space):
+        """helper function. Do not use this method. Please use make"""
+
+        if self._da.prop_numerosity == target_numerosity:
+            return
+        if self._da.prop_numerosity > target_numerosity:
+            change = -1
+        else:
+            change = 1
+
+        da = self._da.copy()
+        da.max_array_radius += (extra_space // 2)
+        da_sequence = []
+
+        error = None
+        while True:
+
+            da = da.number_deviant(change_numerosity=change)
+
+            if len(match_props) > 0:
+                da.match(match_props, center_array=True)  # TODO center array OK?
+
+            cnt = 0
+            while True:
+                cnt += 1
+                ok, mesg = da.realign()
+                if ok:
+                    break
+                if cnt > 10:
+                    error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
+
+            da_sequence.append(da)
+            if error is not None or da.prop_numerosity == target_numerosity:
+                break
+
+        return da_sequence, error
 
 
 class DASequenceGeneratorProcess(Process):
 
-    def __init__(self, max_dot_array, min_numerosity, match_properties, extra_space,
+    def __init__(self, reference_dot_array, min_max_numerosity, match_properties, extra_space,
                  n_trials=3, logger=None):
 
         """
@@ -201,7 +234,6 @@ class DASequenceGeneratorProcess(Process):
 
         super(DASequenceGeneratorProcess, self).__init__()
 
-
         self.data_available = Event()
         self._data_queue = Queue()
         self._da_sequence = None
@@ -210,11 +242,11 @@ class DASequenceGeneratorProcess(Process):
             match_properties = [match_properties]
         cp.check_list_continuous_properties(match_properties)
         self.match_properties = match_properties
-        self.max_dot_array = max_dot_array
-        self.min_numerosity = min_numerosity
+        self.reference_dot_array = reference_dot_array
+        self.min_max_numerosity = min_max_numerosity
         self.extra_space = extra_space
 
-        if n_trials<1:
+        if n_trials < 1:
             self._n_tryouts = 1
         else:
             self._n_tryouts = n_trials
@@ -241,14 +273,14 @@ class DASequenceGeneratorProcess(Process):
     def run(self):
         cnt = 0
         da_seq = None
-        generator = DASequenceGenerator(max_dot_array=self.max_dot_array,
+        generator = DASequenceGenerator(reference_dot_array=self.reference_dot_array,
                                         logger=self.logger)
 
-        while cnt<self._n_tryouts:
+        while cnt < self._n_tryouts:
             cnt += 1
             da_seq = generator.make(match_properties=self.match_properties,
                                     extra_space=self.extra_space,
-                                    min_numerosity=self.min_numerosity)
+                                    min_max_numerosity=self.min_max_numerosity)
             if da_seq.error is None:
                 break
             # print("remix")

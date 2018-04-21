@@ -4,7 +4,7 @@ import itertools
 from functools import total_ordering
 
 
-@total_ordering
+#@total_ordering
 class _ContinuousProperty(object):
     """"""
     long_label = "undefined"
@@ -12,14 +12,14 @@ class _ContinuousProperty(object):
     def __init__(self, value=None):
         self.value = value
 
-    def __lt__(self, other):
-        return self.value < other.value
+    #def __lt__(self, other):
+    #    return self.value < other.value
 
-    def __eq__(self, other):
-        return self.value == other.value
+    #def __eq__(self, other):
+    #    return self.value == other.value
 
-    def __ne__(self, other):
-        return self.value != other.value
+    #def __ne__(self, other):
+    #    return self.value != other.value
 
     def __add__(self, other):
         rtn = copy(self)

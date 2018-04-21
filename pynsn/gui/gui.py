@@ -285,7 +285,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
         # todo slider does not work correctly for multi colour arrays
 
     def action_make_sequence(self):
-        result = dialogs.SequenceDialog(self).exec_()
+        match_methods, match_range = dialogs.SequenceDialog.get_response(self)
+
 
 def start():
 

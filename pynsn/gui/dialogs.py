@@ -1,7 +1,7 @@
 """
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 from builtins import zip, filter, range, super
 
 from PyQt4 import QtGui,  QtCore
@@ -127,12 +127,16 @@ class SequenceDialog(QtGui.QDialog):
                                                            integer_only=False)
         self.match_density_ratio = misc.LabeledNumberInput("Ratio convex_hull/area",
                                                            value=cp.Density().match_ratio_convhull2area,
-                                                           integer_only=False)
-        self.match_area.toggled.connect(self.check_input)
-        self.match_convex_hull.toggled.connect(self.check_input)
-        self.match_diameter.toggled.connect(self.check_input)
-        self.match_circumference.toggled.connect(self.check_input)
-        self.match_density.toggled.connect(self.check_input)
+                                                           integer_only=False, min=0, max=1)
+        self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range", value1=10, value2=100)
+
+        self.match_area.toggled.connect(self.ui_update)
+        self.match_convex_hull.toggled.connect(self.ui_update)
+        self.match_diameter.toggled.connect(self.ui_update)
+        self.match_circumference.toggled.connect(self.ui_update)
+        self.match_density.toggled.connect(self.ui_update)
+        self.match_ch_presision.edit.editingFinished.connect(self.ui_update)
+        self.match_density_ratio.edit.editingFinished.connect(self.ui_update)
 
 
         # OK and Cancel buttons
@@ -149,38 +153,74 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addWidget(self.match_circumference)
         vlayout.addWidget(self.match_convex_hull)
         vlayout.addWidget(self.match_density)
-        vlayout.addSpacing(20)
+        vlayout.addSpacing(10)
         vlayout.addWidget(misc.heading("Matching parameter"))
         vlayout.addLayout(self.match_ch_presision.layout())
         vlayout.addLayout(self.match_density_ratio.layout())
+        vlayout.addLayout(self.match_range.layout())
+        vlayout.addSpacing(20)
 
         vlayout.addWidget(buttons)
         self.setLayout(vlayout)
+        self.ui_update()
 
-    def check_input(self):
+    def ui_update(self):
         # get methods
-        mm = []
+        selected = []
+        all = [cp.DotDiameter()]
         if self.match_diameter.isChecked():
-            mm.append(cp.DotDiameter())
+            selected.append(all[-1])
+
+        all.append(cp.Circumference())
         if self.match_circumference.isChecked():
-            mm.append(cp.Circumference())
+            selected.append(all[-1])
+
+        all.append(cp.SurfaceArea())
         if self.match_area.isChecked():
-            mm.append(cp.SurfaceArea())
+            selected.append(all[-1])
+
+        all.append(cp.ConvexHull(match_presision=self.match_ch_presision.value))
         if self.match_convex_hull.isChecked():
-            mm.append(cp.ConvexHull(match_presision=self.match_ch_presision.value))
-        if self.match_density.isChecked():
-            mm.append(cp.Density(match_ratio_convhull2area=self.match_density_ratio.value,
+            selected.append(all[-1])
+
+        all.append(cp.Density(match_ratio_convhull2area=self.match_density_ratio.value,
                                  convex_hull_precision=self.match_ch_presision.value))
-        try:
-            cp.check_list_continuous_properties(mm)
-            self.match_methods = mm
-        except: # todo error message
-             # reset to old methods
-             mm_types = list(map(lambda x:type(x), self.match_methods))
-             self.match_diameter.setChecked(cp.DotDiameter in mm_types)
-             self.match_area.setChecked(cp.SurfaceArea in mm_types)
-             self.match_circumference.setChecked(cp.Circumference in mm_types)
-             self.match_convex_hull.setChecked(cp.ConvexHull in mm_types)
-             self.match_density.setChecked(cp.Density in mm_types)
+        if self.match_density.isChecked():
+            selected.append(all[-1])
 
+        self.match_diameter.setEnabled(True)
+        self.match_area.setEnabled(True)
+        self.match_circumference.setEnabled(True)
+        self.match_density.setEnabled(True)
+        self.match_convex_hull.setEnabled(True)
+        for x in all:
+            if x not in selected:
+                if sum(map(lambda s:s.is_dependent(x), selected))>0: # any dependency
+                    if isinstance(x, cp.DotDiameter):
+                        self.match_diameter.setEnabled(False)
+                        self.match_diameter.setChecked(False)
+                    if isinstance(x, cp.SurfaceArea):
+                        self.match_area.setEnabled(False)
+                        self.match_area.setChecked(False)
+                    if isinstance(x, cp.Circumference):
+                        self.match_circumference.setEnabled(False)
+                        self.match_circumference.setChecked(False)
+                    if isinstance(x, cp.ConvexHull):
+                        self.match_convex_hull.setEnabled(False)
+                        self.match_convex_hull.setChecked(False)
+                    if isinstance(x, cp.Density):
+                        self.match_density.setEnabled(False)
+                        self.match_density.setChecked(False)
 
+        self.match_methods = selected
+
+    @staticmethod
+    def get_response(parent):
+
+        dialog = SequenceDialog(parent)
+        result = dialog.exec_()
+        if result == QtGui.QDialog.Accepted:
+
+            return (dialog.match_methods, [dialog.match_range.value1, dialog.match_range.value2])
+        else:
+            return (None, None)

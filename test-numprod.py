@@ -56,11 +56,11 @@ def prepare_processes(trials):
         maxnumber = tr.get_factor("maxnumber")
         method = tr.get_factor("method")
         max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
-        make_process = pynsn.DASequenceGeneratorProcess(max_dot_array=max_da,
-                                                          min_numerosity=20,
-                                                          match_methods=method,
-                                                          extra_space=100,
-                                                          logger=generator.logger)
+        make_process = pynsn.DASequenceGeneratorProcess(reference_dot_array=max_da,
+                                                        min_numerosity=20,
+                                                        match_methods=method,
+                                                        extra_space=100,
+                                                        logger=generator.logger)
         processes.append(make_process)
     return processes
 
@@ -68,8 +68,8 @@ def make_da_sequence(trial):
     maxnumber = trial.get_factor("maxnumber")
     method = trial.get_factor("method")
     max_da = generator.make(n_dots=maxnumber, inhibit_logging=True)
-    da_gen = pynsn.DASequenceGenerator(max_dot_array=max_da,
-                                        logger=generator.logger)
+    da_gen = pynsn.DASequenceGenerator(reference_dot_array=max_da,
+                                       logger=generator.logger)
     return da_gen.make(min_numerosity=20, match_properties=method, extra_space=100)
 
 

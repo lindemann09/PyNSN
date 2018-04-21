@@ -50,26 +50,40 @@ class LabeledInput(object):
 
 class LabeledNumberInput(LabeledInput):
     def __init__(self, label, value, width_label=180, width_edit=70,
-                 integer_only=True):
+                 integer_only=True, min = None, max = None):
 
         LabeledInput.__init__(self, label=label, text="", width_label=width_label,
                               width_edit=width_edit)
         self.integer_only = integer_only
-        if integer_only is not None:
+        if integer_only:
             self.edit.setValidator(QtGui.QIntValidator())
         else:
             self.edit.setValidator(QtGui.QDoubleValidator())
+        self.min = min
+        self.max = max
         self.value = value
 
     @property
     def value(self):
         if self.integer_only:
-            return int(self.edit.text())
+            rtn = int(self.edit.text())
         else:
-            return float(self.edit.text())
+            rtn = float(self.edit.text())
+        if self.min is not None and rtn<self.min:
+            rtn = self.min
+            self.value = rtn
+        if self.max is not None and rtn>self.max:
+            rtn = self.max
+            self.value = rtn
+
+        return rtn
 
     @value.setter
     def value(self, v):
+        if self.min is not None and v<self.min:
+            v = self.min
+        if self.max is not None and v>self.max:
+            v = self.max
         if self.integer_only:
             v = int(v)
         else:
@@ -119,7 +133,7 @@ def heading(text):
 
 class NumberInput(object):
 
-    def __init__(self, value, width_edit=70, integer_only=False):
+    def __init__(self, value, width_edit=70, integer_only=False, min=None, max=None):
 
         self.edit = QtGui.QLineEdit()
         self.edit.setFixedWidth(width_edit)
@@ -129,17 +143,31 @@ class NumberInput(object):
             self.edit.setValidator(QtGui.QIntValidator())
         else:
             self.edit.setValidator(QtGui.QDoubleValidator())
+        self.min = min
+        self.max = max
         self.value = value
 
     @property
     def value(self):
         if self.integer_only:
-            return int(self.edit.text())
+            rtn = int(self.edit.text())
         else:
-            return float(self.edit.text())
+            rtn = float(self.edit.text())
+        if self.min is not None and rtn<self.min:
+            rtn = self.min
+            self.value = rtn
+        if self.max is not None and rtn>self.max:
+            rtn = self.max
+            self.value = rtn
+
+        return rtn
 
     @value.setter
     def value(self, v):
+        if self.min is not None and v<self.min:
+            v = self.min
+        if self.max is not None and v>self.max:
+            v = self.max
         if self.integer_only:
             v = int(v)
         else:
