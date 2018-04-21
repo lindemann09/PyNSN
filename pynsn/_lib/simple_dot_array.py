@@ -11,7 +11,7 @@ from copy import copy
 from collections import namedtuple
 from hashlib import md5
 import numpy as np
-from scipy.spatial import ConvexHull, distance
+from scipy import spatial
 from .item_features import numpy_vector
 from . import continuous_property as cp
 
@@ -95,6 +95,7 @@ class SimpleDotArray(object):
 
         self._xy = np.array([])
         self._diameters = np.array([])
+        self._ch = EfficientConvexHull(self._xy, self._diameters)
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
 
@@ -125,14 +126,17 @@ class SimpleDotArray(object):
             self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
         self._xy = np.append(self._xy, xy, axis=0)
         self._diameters = np.append(self._diameters, diameters)
+        self._ch = EfficientConvexHull(self._xy, self._diameters)
 
     def clear(self):
         self._xy = np.array([[]])
         self._diameters = np.array([])
+        self._ch = EfficientConvexHull(self._xy, self._diameters)
 
     def delete(self, index):
         self._xy = np.delete(self._xy, index, axis=0)
         self._diameters = np.delete(self._diameters, index)
+        self._ch = EfficientConvexHull(self._xy, self._diameters)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -211,18 +215,13 @@ class SimpleDotArray(object):
 
     @property
     def convex_hull_positions(self):
-        x = ConvexHull(self._xy).vertices
+        x = self._ch.convex_hull_object.vertices
         return self._xy[x, :]
 
     @property
-    def convex_hull(self):
+    def convex_hull(self): #FIXME
         """this convex_hull takes into account the dot diameter"""
-        idx = ConvexHull(self._xy).vertices
-        center = self.center_of_outer_positions
-        polar_centered = SimpleDotArray._cartesian2polar(self._xy[idx, :] - center)
-        polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
-        xy = SimpleDotArray._polar2cartesian(polar_centered) + center
-        return xy
+        return self._ch.full_xy
 
     def _jitter_identical_positions(self, jitter_size=0.1):
         """jitters points with identical position"""
@@ -271,11 +270,11 @@ class SimpleDotArray(object):
 
     @property
     def prop_convex_hull_area_positions(self):
-        return ConvexHull(self._xy).area
+        return self._ch.convex_hull_object.area
 
     @property
     def prop_convex_hull_area(self):
-        return ConvexHull(self.convex_hull).area
+        return self._ch.full_area
 
     @property
     def prop_numerosity(self):
@@ -298,7 +297,7 @@ class SimpleDotArray(object):
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
-        dist = distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
+        dist = spatial.distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
         if not between_positions:
             # subtract dot diameter
             radii_mtx = np.ones((self.prop_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
@@ -444,3 +443,41 @@ class SimpleDotArray(object):
 
         return shift_required
 
+########## helper
+
+class EfficientConvexHull(object):
+    """helper class for efficent (and not repeated) calulations convex hull"""
+
+    def __init__(self, xy, diameters):
+        self._xy = xy
+        self._diameters = diameters
+        self._positions_ch_object = None
+        self._full_xy = None
+        self._full_area = None
+
+    @property
+    def convex_hull_object(self):
+        if self._positions_ch_object is None:
+            self._positions_ch_object = spatial.ConvexHull(self._xy)
+        return self._positions_ch_object
+
+    @property
+    def full_xy(self):
+        """this convex_hull takes into account the dot diameter"""
+        if self._full_xy is None:
+            idx = self.convex_hull_object.vertices
+
+            minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
+            center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2) # center outer positions
+
+            polar_centered = SimpleDotArray._cartesian2polar(self._xy[idx, :] - center)
+            polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
+            self._full_xy = SimpleDotArray._polar2cartesian(polar_centered) + center
+
+        return self._full_xy
+
+    @property
+    def full_area(self):
+        if self._full_area is None:
+            self._full_area = spatial.ConvexHull(self.full_xy).area
+        return self._full_area
