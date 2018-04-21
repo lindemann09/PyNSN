@@ -1,37 +1,16 @@
-
 from __future__ import division
 from copy import copy
 import itertools
 from functools import total_ordering
 
+
 @total_ordering
 class _ContinuousProperty(object):
     """"""
-    _AREA = "TA"
-    _DIAMETER = "MD"
-    _CIRCUMFERENCE = "TC"
-    _CONVEX_HULL = "CH"
-    _DENSITY = "DE"
-    _LABELS = {_AREA: "Total surface area",
-               _DIAMETER: "Mean dot diameter",
-               _CIRCUMFERENCE: "Total circumference",
-               _CONVEX_HULL: "Convex hull",
-               _DENSITY: "Density"}
+    long_label = "undefined"
 
-    def __init__(self, type_code, value):
-        self._type = type_code
+    def __init__(self, value=None):
         self.value = value
-
-    @property
-    def type_code(self):
-        return self._type
-
-    @property
-    def long_label(self):
-        if self._type is None:
-            return "undefined"
-        else:
-            return _ContinuousProperty._LABELS[self._type]
 
     def __lt__(self, other):
         return self.value < other.value
@@ -68,75 +47,74 @@ class _ContinuousProperty(object):
     def __float__(self):
         return float(self.value)
 
-
     @property
     def _dependencies(self):
-
         return []
 
     def is_dependent(self, other):
-
-        return other._type in self._dependencies
+        return type(other) in self._dependencies or \
+               type(self) in other._dependencies
 
 
 class SurfaceArea(_ContinuousProperty):
     """"""
-    def __init__(self, value=None):
-        _ContinuousProperty.__init__(self, _ContinuousProperty._AREA, value)
+    long_label = "Total surface area"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_total_surface_area
 
     @property
     def _dependencies(self):
-        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
-                    _ContinuousProperty._AREA]
+        return [DotDiameter, Circumference, SurfaceArea]
+
 
 class DotDiameter(_ContinuousProperty):
     """"""
-    def __init__(self, value=None):
-        _ContinuousProperty.__init__(self, _ContinuousProperty._DIAMETER, value)
+    long_label = "Mean dot diameter"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_mean_dot_diameter
 
     @property
     def _dependencies(self):
-        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
-                    _ContinuousProperty._AREA]
+        return [DotDiameter, Circumference, SurfaceArea]
+
 
 class Circumference(_ContinuousProperty):
     """"""
-    def __init__(self, value=None):
-        _ContinuousProperty.__init__(self, _ContinuousProperty._CIRCUMFERENCE, value)
+    long_label = "Total circumference"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_total_circumference
 
     @property
     def _dependencies(self):
-        return [_ContinuousProperty._DIAMETER,_ContinuousProperty._CIRCUMFERENCE,
-                    _ContinuousProperty._AREA]
+        return [DotDiameter, Circumference, SurfaceArea]
+
 
 class ConvexHull(_ContinuousProperty):
     """"""
+    long_label = "Convex hull area"
+
     def __init__(self, value=None, match_presision=0.01):
-        _ContinuousProperty.__init__(self, _ContinuousProperty._CONVEX_HULL, value)
+        _ContinuousProperty.__init__(self, value)
         self.match_presision = match_presision
+
+    @property
+    def _dependencies(self):
+        return [ConvexHull]
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_convex_hull_area
 
-    @property
-    def _dependencies(self):
-        return [_ContinuousProperty._CONVEX_HULL]
-
 
 class Density(_ContinuousProperty):
     """"""
+    long_label = "Density"
+
     def __init__(self, value=None, match_ratio_convhull2area=0.5, convex_hull_precision=None):
 
-        _ContinuousProperty.__init__(self, _ContinuousProperty._DENSITY, value)
+        _ContinuousProperty.__init__(self, value)
         self.match_ratio_convhull2area = match_ratio_convhull2area
         if convex_hull_precision is None:
             self.convex_hull_precision = ConvexHull().match_presision
@@ -150,7 +128,7 @@ class Density(_ContinuousProperty):
     @match_ratio_convhull2area.setter
     def match_ratio_convhull2area(self, v):
         self._match_ratio_convhull2area = v
-        if v<0 or v>1:
+        if v < 0 or v > 1:
             raise RuntimeError("Match_ratio_convhull2area has to be between 0 and 1.")
 
     def set_value(self, reference_dot_array):
@@ -158,10 +136,10 @@ class Density(_ContinuousProperty):
 
     @property
     def _dependencies(self):
-        dep = [_ContinuousProperty._DENSITY]
-        if self.match_ratio_convhull2area <1: #area involved
+        dep = [Density]
+        if self.match_ratio_convhull2area < 1:  # area involved
             dep.extend(SurfaceArea()._dependencies)
-        if self.match_ratio_convhull2area>0: # convex hull involved
+        if self.match_ratio_convhull2area > 0:  # convex hull involved
             dep.extend(ConvexHull()._dependencies)
         return dep
 
@@ -176,14 +154,15 @@ def check_list_continuous_properties(lcp, check_set_value=False):
     """
     for x in lcp:
         if not isinstance(x, _ContinuousProperty):
-            raise TypeError("Parameter is not a continuous properties or a " +\
+            raise TypeError("Parameter is not a continuous properties or a " + \
                             "list of continuous properties")
         elif check_set_value and x.value is None:
             raise RuntimeError("Value of continuous property {} is not defined.".format(
-                        type(x).__name__))
+                type(x).__name__))
 
     # check dependencies
-    for a,b in itertools.combinations(lcp, 2):
-        if not a.is_independent(b):
+    for a, b in itertools.combinations(lcp, 2):
+        if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
-                                    type(a).__name__, type(b).__name__))
+                type(a).__name__, type(b).__name__))
+

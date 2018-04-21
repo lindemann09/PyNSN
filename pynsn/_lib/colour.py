@@ -221,7 +221,3 @@ class Colour(object):
         'expyriment_orange' : '#FF9632',
         'expyriment_purple' : '#A046FA'
     }
-
-
-a = Colour("red")
-b = Colour("red")

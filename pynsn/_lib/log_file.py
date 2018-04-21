@@ -9,7 +9,7 @@ import os
 import sys
 import time
 import numpy as np
-from . import __version__
+from .. import __version__
 from multiprocessing import Process, Event, Queue
 from .item_features import ItemFeaturesList
 from .dot_array import DotArray
@@ -213,9 +213,9 @@ class LogFileReader(object):
             return np.array([])
 
     def _get_dot_array(self, idx, max_array_radius):
-        """Please do not use and use get_object()
+        """Please do not use this method and use get_object()
 
-        helper function with plausibility check
+        helper method with plausibility check
         """
 
         xy = self.xy[idx, :]
@@ -240,7 +240,9 @@ class LogFileReader(object):
         return rtn
 
     def get_object(self, object_id, max_array_radius=None):  # todo: save max radius?
-        """if max_array_radius=None find minimal required radius"""
+        """if max_array_radius=None find minimal required radius
+
+        :returns dot array or dot array sequence"""
 
         self._check_loaded()
         if object_id in self.unique_object_ids:

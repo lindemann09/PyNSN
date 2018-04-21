@@ -9,7 +9,7 @@ from multiprocessing import Process, Event, Queue
 from .dot_array import DotArray
 from .item_features import ItemFeatures
 from .dot_array_sequence import DASequence
-from .files import GeneratorLogger
+from .log_file import GeneratorLogger
 from . import continuous_property as cp
 
 class DotArrayGenerator(object):

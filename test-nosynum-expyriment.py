@@ -36,23 +36,8 @@ def compare_stimulus(n_left, n_right,
         a = da_right
         b = da_left
 
-    a.match(match_methods)
-
-    if match_method == pynsn.DASequenceGenerator.DENSITY50_50:
-        a._match_density(density=b.density, adaptation_CH2TA_ratio=0.5)
-    elif match_method == pynsn.DASequenceGenerator.CONVEX_HULL:
-        a._match_convex_hull_area(convex_hull_area=b.convex_hull_area)
-    elif match_method == pynsn.DASequenceGenerator.MEAN_DIAMETER:
-        a._match_mean_dot_diameter(b.mean_dot_diameter)
-    elif match_method == pynsn.DASequenceGenerator.TOTAL_AREA:
-        a.match_total_area(total_area=b.total_area)
-    elif match_method == pynsn.DASequenceGenerator.TOTAL_CIRCUMFERENCE:
-        a._match_total_circumference(total_circumference=b.total_circumference)
-    elif match_method == pynsn.DASequenceGenerator.NO_FITTING:
-        pass
-    else:
-        raise Warning("Unknown method {}. Using NO_FITTING.".format(match_method))
-
+    if match_methods is not None:
+        a.match(match_methods)
 
     ok, mesg = a.realign()
 
@@ -73,7 +58,7 @@ control.start(skip_ready_screen=True)
 c.reset_stopwatch()
 
 stim = compare_stimulus(20, 120,
-                        match_method=None,
+                        match_methods=[],
                         match_the_left=True)
 
 stim.present()
