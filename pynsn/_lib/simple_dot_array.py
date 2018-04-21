@@ -214,12 +214,12 @@ class SimpleDotArray(object):
         return np.pi * self._diameters
 
     @property
-    def convex_hull_positions(self):
+    def convex_hull_positions(self): #FIXME not defined for l<3
         x = self._ch.convex_hull_object.vertices
         return self._xy[x, :]
 
     @property
-    def convex_hull(self): #FIXME
+    def convex_hull(self): #FIXME not defined for l<3
         """this convex_hull takes into account the dot diameter"""
         return self._ch.full_xy
 
@@ -269,11 +269,11 @@ class SimpleDotArray(object):
         return np.sum(self.circumferences)
 
     @property
-    def prop_convex_hull_area_positions(self):
+    def prop_convex_hull_area_positions(self): #FIXME not defined for l<3
         return self._ch.convex_hull_object.area
 
     @property
-    def prop_convex_hull_area(self):
+    def prop_convex_hull_area(self): #FIXME not defined for l<3
         return self._ch.full_area
 
     @property
@@ -281,7 +281,7 @@ class SimpleDotArray(object):
         return len(self._xy)
 
     @property
-    def prop_density(self):
+    def prop_density(self): #FIXME not defined for l<3
         """density takes into account the convex hull"""
         try:
             return self.prop_convex_hull_area / self.prop_total_surface_area  # todo: positions conved hull
@@ -459,6 +459,7 @@ class EfficientConvexHull(object):
     def convex_hull_object(self):
         if self._positions_ch_object is None:
             self._positions_ch_object = spatial.ConvexHull(self._xy)
+
         return self._positions_ch_object
 
     @property
@@ -480,4 +481,5 @@ class EfficientConvexHull(object):
     def full_area(self):
         if self._full_area is None:
             self._full_area = spatial.ConvexHull(self.full_xy).area
+
         return self._full_area

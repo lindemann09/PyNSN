@@ -98,7 +98,7 @@ class DASequenceGenerator(object):
         Stimulus will be center before making variants
 
         """
-        self.reference_diot_array = reference_dot_array
+        self.reference_dot_array = reference_dot_array
         self.logger = logger
 
     @property
@@ -113,13 +113,13 @@ class DASequenceGenerator(object):
         self._logger = x
 
     @property
-    def reference_diot_array(self):
+    def reference_dot_array(self):
         return self._da
 
-    @reference_diot_array.setter
-    def reference_diot_array(self, x):
+    @reference_dot_array.setter
+    def reference_dot_array(self, x):
         if not isinstance(x, DotArray):
-            raise TypeError("Max_dot_array has to be DotArray, but not {}".format(
+            raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
                 type(x).__name__))
         self._da = x
 
@@ -155,25 +155,35 @@ class DASequenceGenerator(object):
             m.set_value(self._da)
             match_props.append(m)
 
+        # adjust reference (basically centering)
+        reference_da, error = DASequenceGenerator._make_matched_deviants(reference_da=self._da,
+                                                                         match_props=match_props,
+                                                                         target_numerosity=self._da.prop_numerosity,
+                                                                         extra_space=extra_space)  # add extra space
+        # and mathich
+        reference_da = reference_da[0]
+
         rtn = DASequence()
         rtn.method = match_props
 
         min, max = sorted(min_max_numerosity)
         # decreasing
         if min < self._da.prop_numerosity:
-            da_sequence, error = self.__make_sequence_one_direction(match_props=match_props,
-                                                                    target_numerosity=min,
-                                                                    extra_space=extra_space)
+            da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
+                                                              match_props=match_props,
+                                                              target_numerosity=min,
+                                                              extra_space=extra_space)
             rtn.append_dot_arrays(list(reversed(da_sequence)))
             if error is not None:
                 rtn.error = error
         # reference
-        rtn.append_dot_arrays(self._da.copy())
+        rtn.append_dot_arrays(reference_da)
         # increasing
         if max > self._da.prop_numerosity:
-            da_sequence, error = self.__make_sequence_one_direction(match_props=match_props,
-                                                                    target_numerosity=max,
-                                                                    extra_space=extra_space)
+            da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
+                                                              match_props=match_props,
+                                                              target_numerosity=max,
+                                                              extra_space=extra_space)
             rtn.append_dot_arrays(da_sequence)
             if error is not None:
                 rtn.error = error
@@ -183,18 +193,18 @@ class DASequenceGenerator(object):
 
         return rtn
 
-    def __make_sequence_one_direction(self, match_props, target_numerosity,
-                                      extra_space):
+    @staticmethod
+    def _make_matched_deviants(reference_da, match_props, target_numerosity, extra_space):
         """helper function. Do not use this method. Please use make"""
 
-        if self._da.prop_numerosity == target_numerosity:
-            return
-        if self._da.prop_numerosity > target_numerosity:
+        if reference_da.prop_numerosity == target_numerosity:
+            change = 0
+        elif reference_da.prop_numerosity > target_numerosity:
             change = -1
         else:
             change = 1
 
-        da = self._da.copy()
+        da = reference_da.copy()
         da.max_array_radius += (extra_space // 2)
         da_sequence = []
 

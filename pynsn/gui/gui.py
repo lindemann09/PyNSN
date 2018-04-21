@@ -56,7 +56,6 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         self._image = None
         self.data_array = None
-        self.da_sequence = None
         self.set_loging(False)  # todo checkbox in settings
         self.settings = dialogs.SettingsDialog(self, DEFAULT_ARRAY)
         self.initUI()
@@ -279,16 +278,17 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_make_sequence(self):
         match_methods, match_range = dialogs.SequenceDialog.get_response(self)
-        print("processing")  # Todo processing dialog
-        para = self.get_parameter()
-        gen = DASequenceGenerator(reference_dot_array=self.da_sequence, logger=self.logger)
-        sequence = gen.make(match_properties=match_methods,
-                 min_max_numerosity=match_range,
-                 extra_space=100  # todo dialog field
-                 )
-        print("done")
         if match_methods is not None:
-            SequenceDisplay(self, da_sequence=self.sequence).exec_()
+            print("processing")  # Todo processing dialog
+            gen = DASequenceGenerator(reference_dot_array=self.data_array, logger=self.logger)
+            sequence = gen.make(match_properties=match_methods,
+                                min_max_numerosity=match_range,
+                                extra_space=0  # todo dialog field
+                                )
+            print("done")
+            SequenceDisplay(self, da_sequence=sequence,
+                            start_numerosity=self.data_array.prop_numerosity,
+                            image_parameter=self.get_parameter()).exec_()
 
 
 def start():
