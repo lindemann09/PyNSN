@@ -95,9 +95,13 @@ class SimpleDotArray(object):
 
         self._xy = np.array([])
         self._diameters = np.array([])
-        self._ch = EfficientConvexHull(self._xy, self._diameters)
+        self._ch = None
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
+        self.set_array_modified()
+
+    def set_array_modified(self):
+        self._ch = EfficientConvexHull(self._xy, self._diameters)
 
     @property
     def xy(self):
@@ -126,17 +130,17 @@ class SimpleDotArray(object):
             self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
         self._xy = np.append(self._xy, xy, axis=0)
         self._diameters = np.append(self._diameters, diameters)
-        self._ch = EfficientConvexHull(self._xy, self._diameters)
+        self.set_array_modified()
 
     def clear(self):
         self._xy = np.array([[]])
         self._diameters = np.array([])
-        self._ch = EfficientConvexHull(self._xy, self._diameters)
+        self.set_array_modified()
 
     def delete(self, index):
         self._xy = np.delete(self._xy, index, axis=0)
         self._diameters = np.delete(self._diameters, index)
-        self._ch = EfficientConvexHull(self._xy, self._diameters)
+        self.set_array_modified()
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -360,18 +364,21 @@ class SimpleDotArray(object):
 
         if center_array:
             self._xy -= self.center_of_outer_positions
+        self.set_array_modified()
 
     def _match_total_surface_area(self, surface_area):
         # changes diameter
         a_scale = (surface_area / self.prop_total_surface_area)
         self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+        self.set_array_modified()
 
     def _match_mean_dot_diameter(self, mean_dot_diameter):
         # changes diameter
 
         scale = mean_dot_diameter / self.prop_mean_dot_diameter
         self._diameters = self._diameters * scale
+        self.set_array_modified()
 
     def _match_total_circumference(self, total_circumference):
         # linear to fit_mean_dot_diameter, but depends on numerosity
@@ -383,7 +390,6 @@ class SimpleDotArray(object):
 
         iterative method can takes some time.
         """
-
         current = self.prop_convex_hull_area
 
         if current is None:
@@ -400,9 +406,11 @@ class SimpleDotArray(object):
         centered_polar = SimpleDotArray._cartesian2polar(self._xy - old_center)
 
         while abs(current - convex_hull_area) > precision:
+
             scale += step
 
             self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
+            self.set_array_modified()
             current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \
@@ -410,6 +418,7 @@ class SimpleDotArray(object):
                 step *= -0.2  # change direction and finer grain
 
         self._xy += old_center
+        self.set_array_modified()
 
     def _match_density(self, density, precision=0.001, adaptation_CH2TA_ratio=0.5):
         """this function changes the area and remixes to get a desired density

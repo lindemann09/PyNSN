@@ -226,6 +226,7 @@ class DASequenceGenerator(object):
                     error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
 
             da_sequence.append(da)
+
             if error is not None or da.prop_numerosity == target_numerosity:
                 break
 

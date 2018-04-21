@@ -53,8 +53,7 @@ class SequenceDisplay(QtGui.QDialog):
 
     def updateUI(self):
         num = self.slider.value()
-        print(num) #todo depict somewhere
-        #print(self.da_sequence[self.da_sequence.numerosity_idx[num]].prop_numerosity) #todo test fitting
+        #print("{}-{}".format(num, self.da_sequence.dot_arrays[self.da_sequence.numerosity_idx[num]].prop_numerosity)) #todo depict somewhere
         im = self.pixmaps[self.da_sequence.numerosity_idx[num]]
 
         self.picture_field.setPixmap(im)

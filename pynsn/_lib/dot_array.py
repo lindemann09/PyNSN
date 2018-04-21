@@ -154,6 +154,7 @@ class DotArray(SimpleDotArray):
         if not shift_required:
             return True, ""
         else:
+            self.set_array_modified()
             return self.realign()  # recursion
 
     @property
@@ -265,6 +266,8 @@ class DotArray(SimpleDotArray):
         diameters = self._diameters
         self._diameters = np.array([])
         self._xy = np.array([])
+        self.set_array_modified()
+
         for d in diameters:
             xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
             self._diameters = np.append(self._diameters, d)
@@ -272,6 +275,7 @@ class DotArray(SimpleDotArray):
                 self._xy = np.array([xy])
             else:
                 self._xy = np.append(self._xy, [xy], axis=0)
+
 
     def number_deviant(self, change_numerosity):
         """number deviant
