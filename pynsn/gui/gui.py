@@ -51,6 +51,7 @@ ICON = pil_image.RandomDotImageParameter(number=11,
 class PyNSN_GUI(QtGui.QMainWindow):
 
     def __init__(self):
+
         super(PyNSN_GUI, self).__init__()
 
         self._image = None
@@ -61,7 +62,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.initUI()
         self.show()
 
+
     def set_loging(self, onoff):
+
         if onoff:
             self.logger = GeneratorLogger(log_filename="log/gui",
                                       override_log_files=True,
@@ -70,7 +73,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
         else:
             self.logger = None
 
+
     def initUI(self):
+
         # menues
         exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -84,10 +89,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         settingsAction = QtGui.QAction('&Settings', self)
         settingsAction.triggered.connect(self.action_settings)
 
-        printxyAction= QtGui.QAction('&Print array', self)
+        printxyAction = QtGui.QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
 
-        matchAction= QtGui.QAction('&Match property', self)
+        matchAction = QtGui.QAction('&Match property', self)
         matchAction.triggered.connect(self.action_match)
 
         sequenceAction= QtGui.QAction('&Make sequence', self)
@@ -108,7 +113,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         toolMenu.addAction(matchAction)
         toolMenu.addAction(printxyAction)
 
-        #main widget
+        # main widget
         self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY)
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
@@ -127,6 +132,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
 
     def make_new_array(self):
+
         para = self.image_parameter()
         generator = DotArrayGenerator(
             max_array_radius=para.max_array_radius,
@@ -166,6 +172,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def image_parameter(self):
         # check colour input
+
         try:
             colour_dot = Colour(self.main_widget.dot_colour.text)
         except:
@@ -213,6 +220,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         return QtGui.QPixmap.fromImage(ImageQt(self.image()))
 
     def show_current_image(self, remake_image=False):
+        """"""
         if remake_image:
             self._image = None
         w = self.image_parameter().max_array_radius * 2
@@ -222,57 +230,70 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.adjustSize()
 
     def action_generate_btn(self):
+        """"""
         self.make_new_array()
         self.show_current_image()
         self.main_widget.updateUI()
+        self.write_properties()
 
+    def write_properties(self, clear_field=True):
         prop = self.data_array.get_properties()
         txt = prop.get_nice_text()
         if self.settings.bicoloured.isChecked():
             prop = self.data_array.get_properties_split_by_colours()
             for p in prop.split:
                 txt += p.get_nice_text()
+        if clear_field:
+            self.main_widget.text_field.clear()
         self.main_widget.text_field.append(txt)
 
     def action_print_xy(self):
-
-        txt = self.data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
+        """"""
+        txt = self.current_data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_field.append(txt)
 
 
     def save_pixmap(self):
-        #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        """"""
+        # name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
-            self, 'Save file', filter=self.tr(".png")) #TODO multiple file formats FIXME formats selection
-        self.image.save(filename + extension, format=str(extension[1:]).upper())
+            self, 'Save file', filter=self.tr(".png"))  # TODO multiple file formats FIXME formats selection
+        self.current_image.save(filename + extension, format=str(extension[1:]).upper())
 
     def action_match(self):
-        prop = self.data_array.get_properties()
+        """"""
+        prop = self.current_data_array.get_properties()
         print(dialogs.MatchPropertyDialog.get_response(self, prop)) #TODO
 
     def action_settings(self):
+        """"""
         result = self.settings.exec_()
         self.main_widget.updateUI()
         self.show_current_image(remake_image=True)
 
     def action_dot_colour_change(self):
+        """"""
         self.data_array.features.change(colour=self.image_parameter().dot_colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
+        """"""
         change = self.main_widget.number.value - self.data_array.prop_numerosity
         self.data_array = self.data_array.number_deviant(change)
         self.show_current_image(remake_image=True)
+        self.write_properties()
         # todo slider does not work correctly for multi colour arrays
 
     def action_make_sequence(self):
         result = dialogs.SequenceDialog(self).exec_()
 
 def start():
+
     app = QtGui.QApplication(sys.argv)
     ex = PyNSN_GUI()
     ex.show()
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     start()
