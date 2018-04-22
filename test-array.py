@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     g = DASequenceGenerator(reference_dot_array=reference, logger=logger)
     ds = g.make(extra_space=100,
-                match_properties=[pynsn.Circumference(), pynsn.ConvexHull()],
+                match_properties=[pynsn.Density()],
                 #match_methods=[DASequenceGenerator.CONVEX_HULL,
                 #              DASequenceGenerator.DENSITY_ONLY_AREA],
                 min_max_numerosity=[10, 30])

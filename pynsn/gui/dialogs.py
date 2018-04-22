@@ -4,9 +4,10 @@
 from __future__ import absolute_import
 from builtins import zip, filter, range, super
 
-from PyQt4 import QtGui,  QtCore
+from PyQt4 import QtGui, QtCore
 from . import misc
 from .._lib import continuous_property as cp
+
 
 class MatchPropertyDialog(QtGui.QDialog):
     def __init__(self, parent, properties):
@@ -16,11 +17,11 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         self.properties = properties
         self.comboBox = QtGui.QComboBox(self)
-        self.comboBox.addItem(cp.DotDiameter().long_label) #0
-        self.comboBox.addItem(cp.Density().long_label) #1
-        self.comboBox.addItem(cp.ConvexHull().long_label) #2
-        self.comboBox.addItem(cp.SurfaceArea().long_label) #3
-        self.comboBox.addItem(cp.Circumference().long_label) #4
+        self.comboBox.addItem(cp.DotDiameter().long_label)  # 0
+        self.comboBox.addItem(cp.Density().long_label)  # 1
+        self.comboBox.addItem(cp.ConvexHull().long_label)  # 2
+        self.comboBox.addItem(cp.SurfaceArea().long_label)  # 3
+        self.comboBox.addItem(cp.Circumference().long_label)  # 4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
@@ -67,23 +68,24 @@ class MatchPropertyDialog(QtGui.QDialog):
 
 
 class SettingsDialog(QtGui.QDialog):
-
     def __init__(self, parent, default_array):
-
         super(SettingsDialog, self).__init__(parent)
 
         self.setWindowTitle("Dot Array Property")
 
         self.colour_area = misc.LabeledInput("Area", text=default_array.colour_area, case_sensitive=False)
-        self.colour_background = misc.LabeledInput("Background", text=default_array.colour_background, case_sensitive=False)
-        self.colour_convex_hull_positions = misc.LabeledInput("Colour positions CH", text=default_array.colour_convex_hull_positions, case_sensitive=False)
-        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH", text=default_array.colour_convex_hull_dots, case_sensitive=False)
+        self.colour_background = misc.LabeledInput("Background", text=default_array.colour_background,
+                                                   case_sensitive=False)
+        self.colour_convex_hull_positions = misc.LabeledInput("Colour positions CH",
+                                                              text=default_array.colour_convex_hull_positions,
+                                                              case_sensitive=False)
+        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH", text=default_array.colour_convex_hull_dots,
+                                                         case_sensitive=False)
         self.antialiasing = QtGui.QCheckBox("Antialiasing")
         self.antialiasing.setChecked(default_array.antialiasing)
 
         self.bicoloured = QtGui.QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)
-
 
         vlayout = QtGui.QVBoxLayout()
         vlayout.addWidget(misc.heading("Colour"))
@@ -98,9 +100,8 @@ class SettingsDialog(QtGui.QDialog):
         vlayout.addWidget(self.bicoloured)
         vlayout.addStretch(1)
 
-
         # OK and Cancel buttons
-        buttons = QtGui.QDialogButtonBox( QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
+        buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
         buttons.accepted.connect(self.accept)
 
         vlayout.addWidget(buttons)
@@ -108,7 +109,6 @@ class SettingsDialog(QtGui.QDialog):
 
 
 class SequenceDialog(QtGui.QDialog):
-
     def __init__(self, parent):
 
         super(SequenceDialog, self).__init__(parent)
@@ -123,12 +123,14 @@ class SequenceDialog(QtGui.QDialog):
         self.match_density = QtGui.QCheckBox(cp.Density.long_label)
         self.match_convex_hull = QtGui.QCheckBox(cp.ConvexHull.long_label)
         self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
-                                                           value=cp.ConvexHull().match_presision,
-                                                           integer_only=False)
+                                                          value=cp.ConvexHull().match_presision,
+                                                          integer_only=False)
         self.match_density_ratio = misc.LabeledNumberInput("Ratio convex_hull/area",
                                                            value=cp.Density().match_ratio_convhull2area,
                                                            integer_only=False, min=0, max=1)
         self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range", value1=10, value2=100)
+        self.match_extra_space = misc.LabeledNumberInput("Extra space",
+                                                           value=50, integer_only=True, min=0)
 
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
@@ -137,7 +139,6 @@ class SequenceDialog(QtGui.QDialog):
         self.match_density.toggled.connect(self.ui_update)
         self.match_ch_presision.edit.editingFinished.connect(self.ui_update)
         self.match_density_ratio.edit.editingFinished.connect(self.ui_update)
-
 
         # OK and Cancel buttons
         buttons = QtGui.QDialogButtonBox(
@@ -158,6 +159,8 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addLayout(self.match_ch_presision.layout())
         vlayout.addLayout(self.match_density_ratio.layout())
         vlayout.addLayout(self.match_range.layout())
+        vlayout.addSpacing(10)
+        vlayout.addLayout(self.match_extra_space.layout())
         vlayout.addSpacing(20)
 
         vlayout.addWidget(buttons)
@@ -184,7 +187,7 @@ class SequenceDialog(QtGui.QDialog):
             selected.append(all[-1])
 
         all.append(cp.Density(match_ratio_convhull2area=self.match_density_ratio.value,
-                                 convex_hull_precision=self.match_ch_presision.value))
+                              convex_hull_precision=self.match_ch_presision.value))
         if self.match_density.isChecked():
             selected.append(all[-1])
 
@@ -195,7 +198,7 @@ class SequenceDialog(QtGui.QDialog):
         self.match_convex_hull.setEnabled(True)
         for x in all:
             if x not in selected:
-                if sum(map(lambda s:s.is_dependent(x), selected))>0: # any dependency
+                if sum(map(lambda s: s.is_dependent(x), selected)) > 0:  # any dependency
                     if isinstance(x, cp.DotDiameter):
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
@@ -221,6 +224,7 @@ class SequenceDialog(QtGui.QDialog):
         result = dialog.exec_()
         if result == QtGui.QDialog.Accepted:
 
-            return (dialog.match_methods, [dialog.match_range.value1, dialog.match_range.value2])
+            return (dialog.match_methods, [dialog.match_range.value1, dialog.match_range.value2],
+                    dialog.match_extra_space.value)
         else:
-            return (None, None)
+            return (None, None, None)

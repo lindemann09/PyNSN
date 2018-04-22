@@ -219,8 +219,12 @@ class SimpleDotArray(object):
 
     @property
     def convex_hull_positions(self): #FIXME not defined for l<3
-        x = self._ch.convex_hull_object.vertices
-        return self._xy[x, :]
+        return self._xy[self.convex_hull_indices, :]
+
+    @property
+    def convex_hull_indices(self): #FIXME not defined for l<3
+        """this convex_hull takes into account the dot diameter"""
+        return self._ch.convex_hull_object.vertices
 
     @property
     def convex_hull(self): #FIXME not defined for l<3
@@ -410,6 +414,7 @@ class SimpleDotArray(object):
             scale += step
 
             self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
+            self.set_array_modified()  # required to recalc convex hull
             current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \

@@ -165,4 +165,3 @@ def check_list_continuous_properties(lcp, check_set_value=False):
         if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                 type(a).__name__, type(b).__name__))
-

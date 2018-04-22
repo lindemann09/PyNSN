@@ -277,13 +277,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
         # todo slider does not work correctly for multi colour arrays
 
     def action_make_sequence(self):
-        match_methods, match_range = dialogs.SequenceDialog.get_response(self)
+        match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
         if match_methods is not None:
-            print("processing")  # Todo processing dialog
+            # print("processing")
             gen = DASequenceGenerator(reference_dot_array=self.data_array, logger=self.logger)
             sequence = gen.make(match_properties=match_methods,
                                 min_max_numerosity=match_range,
-                                extra_space=100  # todo dialog field
+                                extra_space=extra_space  # todo dialog field
                                 )
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.prop_numerosity,

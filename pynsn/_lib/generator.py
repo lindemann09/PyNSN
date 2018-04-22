@@ -164,6 +164,13 @@ class DASequenceGenerator(object):
             reference_da.set_array_modified()
 
         # matched deviants
+        prefer_keeping_convex_hull = False
+        for x in match_properties:
+            if isinstance(x, cp.ConvexHull) or \
+               (isinstance(x, cp.Density) and x.match_ratio_convhull2area>0):
+                prefer_keeping_convex_hull = True
+                break
+
         rtn = DASequence()
         rtn.method = match_props
 
@@ -172,7 +179,8 @@ class DASequenceGenerator(object):
         if min < self._da.prop_numerosity:
             da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
                                                               match_props=match_props,
-                                                              target_numerosity=min)
+                                                              target_numerosity=min,
+                                                             prefer_keeping_convex_hull=prefer_keeping_convex_hull)
             rtn.append_dot_arrays(list(reversed(da_sequence)))
             if error is not None:
                 rtn.error = error
@@ -182,7 +190,8 @@ class DASequenceGenerator(object):
         if max > self._da.prop_numerosity:
             da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
                                                               match_props=match_props,
-                                                              target_numerosity=max)
+                                                              target_numerosity=max,
+                                                             prefer_keeping_convex_hull=prefer_keeping_convex_hull)
             rtn.append_dot_arrays(da_sequence)
             if error is not None:
                 rtn.error = error
@@ -193,7 +202,8 @@ class DASequenceGenerator(object):
         return rtn
 
     @staticmethod
-    def _make_matched_deviants(reference_da, match_props, target_numerosity): # TODO center array OK?
+    def _make_matched_deviants(reference_da, match_props, target_numerosity,
+                               prefer_keeping_convex_hull): # TODO center array OK?
         """helper function. Do not use this method. Please use make"""
 
         if reference_da.prop_numerosity == target_numerosity:
@@ -208,8 +218,8 @@ class DASequenceGenerator(object):
 
         error = None
         while True:
-
-            da = da.number_deviant(change_numerosity=change)
+            da = da.number_deviant(change_numerosity=change,
+                                   prefer_keeping_convex_hull=prefer_keeping_convex_hull)
 
             if len(match_props) > 0:
                 da.match(match_props, center_array=False)

@@ -8,6 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import random
 import numpy as np
+from scipy import spatial
 from .dot import Dot
 from .simple_dot_array import SimpleDotArray, DotArrayProperties, numpy_vector
 from .item_features import ItemFeaturesList, ItemFeatures
@@ -235,11 +236,16 @@ class DotArray(SimpleDotArray):
 
 
     def random_free_dot_position(self, dot_diameter,
-                                 ignore_overlapping=False):
+                                 ignore_overlapping=False,
+                                 prefer_inside_convex_hull=False):
         """moves a dot to an available random position
 
         raise exception if not found"""
-
+        try_out_inside_convex_hull = 1000
+        if prefer_inside_convex_hull:
+            delaunay = spatial.Delaunay(self.convex_hull_positions)
+        else:
+            delaunay = None
         cnt = 0
         while True:
             cnt += 1
@@ -248,7 +254,10 @@ class DotArray(SimpleDotArray):
             proposal_xy = SimpleDotArray._polar2cartesian([proposal_polar])[0]
 
             bad_position = False
-            if not ignore_overlapping:
+            if prefer_inside_convex_hull and cnt < try_out_inside_convex_hull:
+                bad_position = delaunay.find_simplex(proposal_xy)<0
+
+            if not bad_position and not ignore_overlapping:
                 # find bad_positions
                 dist = self.distances(proposal_xy, dot_diameter)
                 idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
@@ -277,10 +286,11 @@ class DotArray(SimpleDotArray):
                 self._xy = np.append(self._xy, [xy], axis=0)
 
 
-    def number_deviant(self, change_numerosity):
+    def number_deviant(self, change_numerosity, prefer_keeping_convex_hull=False):
         """number deviant
         """
 
+        try_out = 100
         # make a copy for the deviant
         deviant = self.copy()
         if self.prop_numerosity + change_numerosity <= 0:
@@ -288,13 +298,22 @@ class DotArray(SimpleDotArray):
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                rnd = random.randint(0, deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                if prefer_keeping_convex_hull:
+                    ch = deviant.convex_hull_indices
+                else:
+                    ch = []
+                for x in range(try_out):
+                    rnd = random.randint(0, deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                    if rnd not in ch or change_numerosity >0:
+                        break
+
                 if change_numerosity < 0:
                     # remove dots
                     deviant.delete(rnd)
                 else:
                     # copy a random dot
-                    deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd]),
+                    deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
+                                                        prefer_inside_convex_hull=prefer_keeping_convex_hull),
                                    diameters=deviant._diameters[rnd],
                                    features=deviant.features[rnd])
 
