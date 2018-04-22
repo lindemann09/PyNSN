@@ -173,3 +173,22 @@ class NumberInput(object):
         else:
             v = float(v)
         self.edit.setText(str(v))
+
+
+def progressbar(data, label, win_title):
+    # iterator function with prgress bar
+    dialog = QtGui.QProgressDialog()
+    dialog.setMaximum(100)
+    dialog.setLabelText(label)
+    dialog.setWindowTitle(win_title)
+    dialog.open()
+    l = len(data)
+    for cnt, item in enumerate(data):
+        p = (cnt * 100) // l
+        QtCore.QCoreApplication.instance().processEvents()
+        if dialog.wasCanceled():
+            raise StopIteration
+        dialog.setValue(p)
+        yield (item)
+
+    dialog.close()

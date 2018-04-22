@@ -283,9 +283,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
             gen = DASequenceGenerator(reference_dot_array=self.data_array, logger=self.logger)
             sequence = gen.make(match_properties=match_methods,
                                 min_max_numerosity=match_range,
-                                extra_space=0  # todo dialog field
+                                extra_space=100  # todo dialog field
                                 )
-            print("done")
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.prop_numerosity,
                             image_parameter=self.get_parameter()).exec_()

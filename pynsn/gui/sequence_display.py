@@ -7,7 +7,7 @@ from builtins import zip, filter, range, super
 from PyQt4 import QtGui,  QtCore
 from PIL.ImageQt import ImageQt
 from .. import pil_image
-
+from . import misc
 
 class SequenceDisplay(QtGui.QDialog):
 
@@ -17,7 +17,7 @@ class SequenceDisplay(QtGui.QDialog):
 
         self.setWindowTitle("Dot Array Sequence")
         self.da_sequence = da_sequence
-        self.pixmap_width = image_parameter.max_array_radius * 2
+        self.pixmap_width = da_sequence.dot_arrays[0].max_array_radius * 2
 
         self.picture_field = QtGui.QLabel(self)
         self.picture_field.setFixedSize(self.pixmap_width, self.pixmap_width)
@@ -35,9 +35,9 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        print("making images") #TODO
         self.pixmaps = []
-        for da in self.da_sequence.dot_arrays:
+        for da in misc.progressbar(self.da_sequence.dot_arrays, label="make images",
+                              win_title="Dot Array Sequence"): #todo cancle iterator not tested
             im = pil_image.create(da,
                                            colour_area=image_parameter.colour_area,
                                            colour_convex_hull_positions=image_parameter.colour_convex_hull_positions,
@@ -47,7 +47,6 @@ class SequenceDisplay(QtGui.QDialog):
                                            antialiasing=image_parameter.antialiasing,
                                            colour_background=image_parameter.colour_background)
             self.pixmaps.append(QtGui.QPixmap.fromImage(ImageQt(im)))
-        print("Done") #TODO
 
         self.updateUI()
 

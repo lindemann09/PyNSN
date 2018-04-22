@@ -158,11 +158,10 @@ class DASequenceGenerator(object):
         # adjust reference (basically centering)
         reference_da, error = DASequenceGenerator._make_matched_deviants(reference_da=self._da,
                                                                          match_props=match_props,
-                                                                         target_numerosity=self._da.prop_numerosity,
-                                                                         extra_space=extra_space)  # add extra space
+                                                                         target_numerosity=self._da.prop_numerosity)
         # and mathich
         reference_da = reference_da[0]
-
+        reference_da.max_array_radius  += (extra_space // 2) # add extra space
         rtn = DASequence()
         rtn.method = match_props
 
@@ -171,8 +170,7 @@ class DASequenceGenerator(object):
         if min < self._da.prop_numerosity:
             da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
                                                               match_props=match_props,
-                                                              target_numerosity=min,
-                                                              extra_space=extra_space)
+                                                              target_numerosity=min)
             rtn.append_dot_arrays(list(reversed(da_sequence)))
             if error is not None:
                 rtn.error = error
@@ -182,8 +180,7 @@ class DASequenceGenerator(object):
         if max > self._da.prop_numerosity:
             da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
                                                               match_props=match_props,
-                                                              target_numerosity=max,
-                                                              extra_space=extra_space)
+                                                              target_numerosity=max)
             rtn.append_dot_arrays(da_sequence)
             if error is not None:
                 rtn.error = error
@@ -194,7 +191,7 @@ class DASequenceGenerator(object):
         return rtn
 
     @staticmethod
-    def _make_matched_deviants(reference_da, match_props, target_numerosity, extra_space):
+    def _make_matched_deviants(reference_da, match_props, target_numerosity):
         """helper function. Do not use this method. Please use make"""
 
         if reference_da.prop_numerosity == target_numerosity:
@@ -205,7 +202,6 @@ class DASequenceGenerator(object):
             change = 1
 
         da = reference_da.copy()
-        da.max_array_radius += (extra_space // 2)
         da_sequence = []
 
         error = None
@@ -214,7 +210,7 @@ class DASequenceGenerator(object):
             da = da.number_deviant(change_numerosity=change)
 
             if len(match_props) > 0:
-                da.match(match_props, center_array=True)  # TODO center array OK?
+                da.match(match_props, center_array=False)  # TODO center array OK?
 
             cnt = 0
             while True:
