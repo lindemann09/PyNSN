@@ -167,7 +167,7 @@ class DASequenceGenerator(object):
         prefer_keeping_convex_hull = False
         for x in match_properties:
             if isinstance(x, cp.ConvexHull) or \
-               (isinstance(x, cp.Density) and x.match_ratio_convhull2area>0):
+               (isinstance(x, cp.Density) and x.match_ratio_convhull2area<1):
                 prefer_keeping_convex_hull = True
                 break
 
