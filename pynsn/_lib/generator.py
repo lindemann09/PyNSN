@@ -126,7 +126,8 @@ class DASequenceGenerator(object):
     def make(self, match_properties,
              min_max_numerosity,
              extra_space,  # fitting convex hull and density might result in enlarged arrays
-             inhibit_logging=False):
+             inhibit_logging=False,
+             center_array=True):
         """Methods takes take , you might use make Process
             match_properties:
                     continuous property or list of continuous properties to be match
@@ -156,12 +157,13 @@ class DASequenceGenerator(object):
             match_props.append(m)
 
         # adjust reference (basically centering)
-        reference_da, error = DASequenceGenerator._make_matched_deviants(reference_da=self._da,
-                                                                         match_props=match_props,
-                                                                         target_numerosity=self._da.prop_numerosity)
-        # and mathich
-        reference_da = reference_da[0]
+        reference_da = self._da.copy()
         reference_da.max_array_radius  += (extra_space // 2) # add extra space
+        if center_array:
+            reference_da._xy -= reference_da.center_of_outer_positions
+            reference_da.set_array_modified()
+
+        # matched deviants
         rtn = DASequence()
         rtn.method = match_props
 
@@ -191,7 +193,7 @@ class DASequenceGenerator(object):
         return rtn
 
     @staticmethod
-    def _make_matched_deviants(reference_da, match_props, target_numerosity):
+    def _make_matched_deviants(reference_da, match_props, target_numerosity): # TODO center array OK?
         """helper function. Do not use this method. Please use make"""
 
         if reference_da.prop_numerosity == target_numerosity:
@@ -210,7 +212,7 @@ class DASequenceGenerator(object):
             da = da.number_deviant(change_numerosity=change)
 
             if len(match_props) > 0:
-                da.match(match_props, center_array=False)  # TODO center array OK?
+                da.match(match_props, center_array=False)
 
             cnt = 0
             while True:

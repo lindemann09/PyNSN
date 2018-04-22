@@ -364,7 +364,7 @@ class SimpleDotArray(object):
 
         if center_array:
             self._xy -= self.center_of_outer_positions
-        self.set_array_modified()
+            self.set_array_modified()
 
     def _match_total_surface_area(self, surface_area):
         # changes diameter
@@ -410,7 +410,6 @@ class SimpleDotArray(object):
             scale += step
 
             self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
-            self.set_array_modified()
             current = self.prop_convex_hull_area
 
             if (current < convex_hull_area and step < 0) or \
