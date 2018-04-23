@@ -12,14 +12,9 @@ class _ContinuousProperty(object):
     def __init__(self, value=None):
         self.value = value
 
-    #def __lt__(self, other):
-    #    return self.value < other.value
-
-    #def __eq__(self, other):
-    #    return self.value == other.value
-
-    #def __ne__(self, other):
-    #    return self.value != other.value
+    @property
+    def type(self):
+        return type(self).__name__
 
     def __add__(self, other):
         rtn = copy(self)
@@ -56,7 +51,7 @@ class _ContinuousProperty(object):
                type(self) in other._dependencies
 
     def as_dict(self):
-        return {"type": type(self).__name__,
+        return {"type": self.type,
                 "value": self.value}
 
 

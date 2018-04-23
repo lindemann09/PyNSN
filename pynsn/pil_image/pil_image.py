@@ -16,8 +16,7 @@ class ImageParameter(object):
                  colour_center_of_outer_positions=None,
                  antialiasing=None,
                  colour_background=None,
-                 default_dot_colour="lightgreen",
-                 **kwargs):
+                 default_dot_colour="lightgreen"):
 
         self.colour_area = Colour(colour_area)
         self.colour_convex_hull_positions = Colour(colour_convex_hull_positions)

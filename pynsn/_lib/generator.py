@@ -21,8 +21,7 @@ class DotArrayGenerator(object):
                  dot_diameter_range=None,
                  dot_diameter_std=None,
                  dot_colour=None,  # todo feature
-                 minimum_gap=1,
-                 **kwargs):
+                 minimum_gap=1):
 
         """Specification of a Random Dot Array
 

@@ -65,7 +65,7 @@ class ExpyrimentDASequence(object):
                        position=position,
                        colour_area=colour_area,
                        antialiasing=antialiasing,
-                       colour_background=colour_background))
+                       colour_background=colour_background)) #TODO could be iterator
 
     def get_stimulus_numerosity(self, number_of_dots):
         """returns stimulus with a particular numerosity"""
@@ -107,7 +107,7 @@ class ExpyrimentDASequence(object):
         except:
             rtn = False
 
-        if do_not_return_earlier:
+        if do_not_return_earlier and time is not None:
             cl.wait(time - cl.time)
         return rtn
 
