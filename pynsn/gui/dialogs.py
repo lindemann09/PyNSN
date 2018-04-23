@@ -68,21 +68,25 @@ class MatchPropertyDialog(QtGui.QDialog):
 
 
 class SettingsDialog(QtGui.QDialog):
-    def __init__(self, parent, default_array):
+    def __init__(self, parent, image_parameter):
         super(SettingsDialog, self).__init__(parent)
 
         self.setWindowTitle("Dot Array Property")
 
-        self.colour_area = misc.LabeledInput("Area", text=default_array.colour_area, case_sensitive=False)
-        self.colour_background = misc.LabeledInput("Background", text=default_array.colour_background,
+        self.colour_area = misc.LabeledInput("Area",
+                                             text=image_parameter.colour_area.colour,
+                                             case_sensitive=False)
+        self.colour_background = misc.LabeledInput("Background",
+                                                   text=image_parameter.colour_background.colour,
                                                    case_sensitive=False)
         self.colour_convex_hull_positions = misc.LabeledInput("Colour positions CH",
-                                                              text=default_array.colour_convex_hull_positions,
+                                                              text=image_parameter.colour_convex_hull_positions.colour,
                                                               case_sensitive=False)
-        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH", text=default_array.colour_convex_hull_dots,
+        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH",
+                                                         text=image_parameter.colour_convex_hull_dots.colour,
                                                          case_sensitive=False)
         self.antialiasing = QtGui.QCheckBox("Antialiasing")
-        self.antialiasing.setChecked(default_array.antialiasing)
+        self.antialiasing.setChecked(image_parameter.antialiasing)
 
         self.bicoloured = QtGui.QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)

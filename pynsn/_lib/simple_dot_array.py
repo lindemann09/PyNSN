@@ -173,7 +173,7 @@ class SimpleDotArray(object):
         """md5_hash of position, diameter"""
 
         m = md5()
-        m.update(self._xy.tobytes())
+        m.update(self._xy.tobytes()) #to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self._diameters.tobytes())
         return m.hexdigest()[:SimpleDotArray.OBJECT_ID_LENGTH]
 

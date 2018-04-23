@@ -6,50 +6,46 @@
 from __future__ import unicode_literals, absolute_import, print_function
 from builtins import zip, filter, range, super
 
-import os
 import sys
+import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.generator import DotArrayGenerator, GeneratorLogger, DASequenceGenerator
+from .._lib.generator import DotArrayGenerator, GeneratorLogger, make_dot_array_sequence
 from .._lib.colour import Colour
 from .. import pil_image
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = pil_image.RandomDotImageParameter(number=40,
-                                                  max_array_radius=200,
-                                                  dot_colour="lime",
-                                                  dot_diameter_mean=15,
-                                                  dot_diameter_range=[5, 40],
-                                                  dot_diameter_std=8,
-                                                  minimum_gap=2,
-                                                  colour_area="#3e3e3e",
-                                                  colour_convex_hull_positions=None,
-                                                  colour_convex_hull_dots=None,
-                                                  colour_center_of_mass=None,
-                                                  colour_center_of_outer_positions=None,
-                                                  antialiasing=True,
-                                                  colour_background="gray")
+DEFAULT_ARRAY = (40, DotArrayGenerator(max_array_radius=200,
+                                       dot_colour="lime",
+                                       dot_diameter_mean=15,
+                                       dot_diameter_range=[5, 40],
+                                       dot_diameter_std=8,
+                                       minimum_gap=2),
+                 pil_image.ImageParameter(colour_area="#3e3e3e",
+                                          colour_convex_hull_positions=None,
+                                          colour_convex_hull_dots=None,
+                                          colour_center_of_mass=None,
+                                          colour_center_of_outer_positions=None,
+                                          antialiasing=True,
+                                          colour_background="gray"))
 
-ICON = pil_image.RandomDotImageParameter(number=11,
-                                         max_array_radius=200,
-                                         dot_colour="lime",
-                                         dot_diameter_mean=35,
-                                         dot_diameter_range=[5, 80],
-                                         dot_diameter_std=20,
-                                         minimum_gap=2,
-                                         colour_area="#3e3e3e",
-                                         colour_convex_hull_positions=None,
-                                         colour_convex_hull_dots="expyriment_orange",
-                                         colour_center_of_mass=None,
-                                         colour_center_of_outer_positions=None,
-                                         antialiasing=True,
-                                         colour_background=None)
+ICON = (11, DotArrayGenerator(max_array_radius=200,
+                              dot_colour="lime",
+                              dot_diameter_mean=35,
+                              dot_diameter_range=[5, 80],
+                              dot_diameter_std=20),
+        pil_image.ImageParameter(colour_area="#3e3e3e",
+                                 colour_convex_hull_positions=None,
+                                 colour_convex_hull_dots="expyriment_orange",
+                                 colour_center_of_mass=None,
+                                 colour_center_of_outer_positions=None,
+                                 antialiasing=True,
+                                 colour_background=None))
 
 
 class PyNSN_GUI(QtGui.QMainWindow):
-
     def __init__(self):
 
         super(PyNSN_GUI, self).__init__()
@@ -57,7 +53,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self._image = None
         self.data_array = None
         self.set_loging(False)  # todo checkbox in settings
-        self.settings = dialogs.SettingsDialog(self, DEFAULT_ARRAY)
+        self.settings = dialogs.SettingsDialog(self, DEFAULT_ARRAY[2])
         self.initUI()
         self.show()
 
@@ -88,6 +84,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         printxyAction = QtGui.QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
+        printparaAction = QtGui.QAction('&Print parameter', self)
+        printparaAction.triggered.connect(self.action_print_para)
 
         matchAction = QtGui.QAction('&Match property', self)
         matchAction.triggered.connect(self.action_match)
@@ -107,10 +105,11 @@ class PyNSN_GUI(QtGui.QMainWindow):
         toolMenu.addAction(sequenceAction)
         toolMenu.addAction(settingsAction)
         toolMenu.addAction(matchAction)
+        toolMenu.addAction(printparaAction)
         toolMenu.addAction(printxyAction)
 
         # main widget
-        self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY)
+        self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY[0], DEFAULT_ARRAY[1])
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
         self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
@@ -120,7 +119,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # ICON
-        self._image, _ = pil_image.generate_random_dot_array_image(ICON, logger=None)
+        self._image, _ = pil_image.generate_random_dot_array_image(number=ICON[0],
+                                                                   generator=ICON[1],
+                                                                   image_paramater=ICON[2],
+                                                                   logger=None)
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
         self._image = None
 
@@ -128,21 +130,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def make_new_array(self):
 
-        para = self.get_parameter()
-        generator = DotArrayGenerator(
-            max_array_radius=para.max_array_radius,
-            dot_diameter_mean=para.dot_diameter_mean,
-            dot_diameter_range=para.dot_diameter_range,
-            dot_diameter_std=para.dot_diameter_std,
-            dot_colour=para.dot_colour,
-            minimum_gap=para.minimum_gap)
-
-        self.data_array = generator.make(n_dots=para.number,  logger=self.logger)
+        generator = self.get_generator()
+        self.data_array = generator.make(n_dots=self.get_number(), logger=self.logger)
 
         if self.settings.bicoloured.isChecked():
             data_array2 = generator.make(n_dots=self.main_widget.number2.value,
                                          occupied_space=self.data_array,
-                                         logger = self.logger)
+                                         logger=self.logger)
             data_array2.features.change(colour=self.main_widget.dot_colour2.text)
             self.data_array.join(data_array2, realign=False)
 
@@ -152,7 +146,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         if self._image is not None:
             return self._image
         else:
-            para = self.get_parameter()
+            para = self.get_image_parameter()
             self._image = pil_image.create(self.data_array,
                                            colour_area=para.colour_area,
                                            colour_convex_hull_positions=para.colour_convex_hull_positions,
@@ -163,14 +157,28 @@ class PyNSN_GUI(QtGui.QMainWindow):
                                            colour_background=para.colour_background)
             return self._image
 
-    def get_parameter(self):
-        # check colour input
+    def get_number(self):
+        return self.main_widget.number.value
+
+    def get_generator(self):
 
         try:
             colour_dot = Colour(self.main_widget.dot_colour.text)
         except:
-            colour_dot = DEFAULT_ARRAY.dot_colour
+            colour_dot = DEFAULT_ARRAY[1].dot_colour
             self.main_widget.dot_colour.text = colour_dot
+
+        return DotArrayGenerator(max_array_radius=self.main_widget.max_array_radius.value,
+                                 dot_colour=colour_dot,
+                                 dot_diameter_mean=self.main_widget.dot_diameter_mean.value,
+                                 dot_diameter_range=[self.main_widget.dot_diameter_range.value1,
+                                                     self.main_widget.dot_diameter_range.value2],
+                                 dot_diameter_std=self.main_widget.dot_diameter_std.value,
+                                 minimum_gap=self.main_widget.minimum_gap.value)
+
+    def get_image_parameter(self):
+        # check colour input
+
         try:
             colour_area = Colour(self.settings.colour_area.text)
         except:
@@ -192,22 +200,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return pil_image.RandomDotImageParameter(
-            number=self.main_widget.number.value,
-            max_array_radius=self.main_widget.max_array_radius.value,
-            dot_colour=colour_dot,
-            dot_diameter_mean=self.main_widget.dot_diameter_mean.value,
-            dot_diameter_range=[self.main_widget.dot_diameter_range.value1,
-                                self.main_widget.dot_diameter_range.value2],
-            dot_diameter_std=self.main_widget.dot_diameter_std.value,
-            minimum_gap=self.main_widget.minimum_gap.value,
-            colour_area=colour_area,
-            colour_convex_hull_positions=colour_convex_hull_positions,
-            colour_convex_hull_dots=colour_convex_hull_dots,
-            colour_center_of_mass=None,
-            colour_center_of_outer_positions=None,
-            antialiasing=self.settings.antialiasing.isChecked(),
-            colour_background=colour_background)
+        return pil_image.ImageParameter(colour_area=colour_area,
+                                        colour_convex_hull_positions=colour_convex_hull_positions,
+                                        colour_convex_hull_dots=colour_convex_hull_dots,
+                                        colour_center_of_mass=None,
+                                        colour_center_of_outer_positions=None,
+                                        antialiasing=self.settings.antialiasing.isChecked(),
+                                        colour_background=colour_background)
 
     def pixmap(self):
         return QtGui.QPixmap.fromImage(ImageQt(self.image()))
@@ -216,7 +215,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         """"""
         if remake_image:
             self._image = None
-        w = self.get_parameter().max_array_radius * 2
+        w = self.get_generator().max_array_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
         self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
@@ -242,8 +241,14 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_print_xy(self):
         """"""
-        txt = self.current_data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
+        txt = self.data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_field.append(txt)
+
+    def action_print_para(self):
+        d = {'number': self.get_number()}
+        d['image_parameter'] = self.get_image_parameter().as_dict()
+        d['generator'] = self.get_generator().as_dict()
+        self.main_widget.text_field.append("# parameter\n" + yaml.dump(d, default_flow_style=False))
 
     def save_pixmap(self):
         """"""
@@ -265,7 +270,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.features.change(colour=self.get_parameter().dot_colour)
+        self.data_array.features.change(colour=self.get_generator().dot_colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
@@ -278,18 +283,23 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_make_sequence(self):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
+
+        d = {"match range": match_range, "extra_space": extra_space}
+        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))
+        self.main_widget.text_field.append("# Sequence\n" + \
+                                           yaml.dump(d, default_flow_style=False))
+
         if match_methods is not None:
             # print("processing")
-            gen = DASequenceGenerator(reference_dot_array=self.data_array, logger=self.logger)
-            sequence = gen.make(match_properties=match_methods,
-                                min_max_numerosity=match_range,
-                                extra_space=extra_space  # todo dialog field
-                                )
+            sequence = make_dot_array_sequence(reference_dot_array=self.data_array,
+                                               logger=self.logger,
+                                               match_properties=match_methods,
+                                               min_max_numerosity=match_range,
+                                               extra_space=extra_space  # todo dialog field
+                                               )
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.prop_numerosity,
-                            image_parameter=self.get_parameter()).exec_()
-
-
+                            image_parameter=self.get_image_parameter()).exec_()
 
 
 def start():

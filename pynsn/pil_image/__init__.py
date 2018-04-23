@@ -1,1 +1,1 @@
-from .pil_image import create, generate_random_dot_array_image, RandomDotImageParameter
+from .pil_image import create, generate_random_dot_array_image, ImageParameter

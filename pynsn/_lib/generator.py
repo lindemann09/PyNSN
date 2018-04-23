@@ -20,8 +20,9 @@ class DotArrayGenerator(object):
                  dot_diameter_mean,
                  dot_diameter_range=None,
                  dot_diameter_std=None,
-                 dot_colour=None,
-                 minimum_gap=1):
+                 dot_colour=None,  # todo feature
+                 minimum_gap=1,
+                 **kwargs):
 
         """Specification of a Random Dot Array
 
@@ -41,8 +42,8 @@ class DotArrayGenerator(object):
             dot_diameter_std = None
         if dot_diameter_range is not None and \
                 (dot_diameter_mean <= dot_diameter_range[0] or
-                 dot_diameter_mean >= dot_diameter_range[1] or
-                 dot_diameter_range[0] >= dot_diameter_range[1]):
+                         dot_diameter_mean >= dot_diameter_range[1] or
+                         dot_diameter_range[0] >= dot_diameter_range[1]):
             raise RuntimeError("dot_diameter_mean has to be inside the defined dot_diameter_range")
 
         self.minimum_gap = minimum_gap
@@ -82,163 +83,145 @@ class DotArrayGenerator(object):
 
         return rtn
 
+    def as_dict(self):
+        return {"max_array_radius": self.max_array_radius,
+             "dot_diameter_mean": self.dot_diameter_mean,
+             "dot_diameter_range": self.dot_diameter_range,
+             "dot_diameter_std": self.dot_diameter_std,
+             "dot_colour": self.item_feature.colour.colour,  ##todo feature
+             "minimum_gap": self.minimum_gap}
 
-class DASequenceGenerator(object):
 
-    def __init__(self, reference_dot_array, logger=None):
-        """  makes sequence of deviants by subtracting dots
+def make_dot_array_sequence(reference_dot_array,
+                            match_properties,
+                            min_max_numerosity,
+                            extra_space,  # fitting convex hull and density might result in enlarged arrays
+                            center_array=True,
+                            logger=None):
+    """Methods takes take , you might use make Process
+        match_properties:
+                continuous property or list of continuous properties to be match
+                or None
+     returns False is error occured (see self.error)
+    """
 
-            sqeeze factor: when adapting for convex hull, few point shift excentrically, it is
-                  therefore usefull to sqeeze the stimulus before. We do that therefore all stimuli
+    if not isinstance(reference_dot_array, DotArray):
+        raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
+            type(reference_dot_array).__name__))
 
-        Stimulus will be center before making variants
+    try:
+        l = len(min_max_numerosity)
+    except:
+        l = 0
+    if l != 2:
+        raise ValueError("min_max_numerosity has to be a pair of (min, max)")
 
-        """
-        self.reference_dot_array = reference_dot_array
-        self.logger = logger
+    if match_properties is None:
+        match_properties = []
+    elif not isinstance(match_properties, (tuple, list)):
+        match_properties = [match_properties]
 
-    @property
-    def logger(self):
-        return self._logger
+    cp.check_list_continuous_properties(match_properties, check_set_value=False)
 
-    @logger.setter
-    def logger(self, x):
-        if not isinstance(x, (type(None), GeneratorLogger)):
+    # copy and change values to match this stimulus
+    match_props = []
+    for m in match_properties:
+        m = copy(m)
+        m.set_value(reference_dot_array)
+        match_props.append(m)
+
+    # adjust reference (basically centering)
+    reference_da = reference_dot_array.copy()
+    reference_da.max_array_radius += (extra_space // 2)  # add extra space
+    if center_array:
+        reference_da._xy -= reference_da.center_of_outer_positions
+        reference_da.set_array_modified()
+
+    # matched deviants
+    prefer_keeping_convex_hull = False
+    for x in match_properties:
+        if isinstance(x, cp.ConvexHull) or \
+                (isinstance(x, cp.Density) and x.match_ratio_convhull2area < 1):
+            prefer_keeping_convex_hull = False
+            break
+
+    rtn = DASequence()
+    rtn.method = match_props
+
+    min, max = sorted(min_max_numerosity)
+    # decreasing
+    if min < reference_dot_array.prop_numerosity:
+        da_sequence, error = _make_matched_deviants(reference_da=reference_da,
+                                                    match_props=match_props,
+                                                    target_numerosity=min,
+                                                    prefer_keeping_convex_hull=prefer_keeping_convex_hull)
+        rtn.append_dot_arrays(list(reversed(da_sequence)))
+        if error is not None:
+            rtn.error = error
+    # reference
+    rtn.append_dot_arrays(reference_da)
+    # increasing
+    if max > reference_dot_array.prop_numerosity:
+        da_sequence, error = _make_matched_deviants(reference_da=reference_da,
+                                                    match_props=match_props,
+                                                    target_numerosity=max,
+                                                    prefer_keeping_convex_hull=prefer_keeping_convex_hull)
+        rtn.append_dot_arrays(da_sequence)
+        if error is not None:
+            rtn.error = error
+
+    if logger is not None:
+        if not isinstance(logger, GeneratorLogger):
             raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
-                type(x).__name__))
-        self._logger = x
+                type(logger).__name__))
 
-    @property
-    def reference_dot_array(self):
-        return self._da
+        logger.log(rtn)
 
-    @reference_dot_array.setter
-    def reference_dot_array(self, x):
-        if not isinstance(x, DotArray):
-            raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
-                type(x).__name__))
-        self._da = x
+    return rtn
 
-    def make(self, match_properties,
-             min_max_numerosity,
-             extra_space,  # fitting convex hull and density might result in enlarged arrays
-             inhibit_logging=False,
-             center_array=True):
-        """Methods takes take , you might use make Process
-            match_properties:
-                    continuous property or list of continuous properties to be match
-                    or None
-         returns False is error occured (see self.error)
-        """
 
-        try:
-            l = len(min_max_numerosity)
-        except:
-            l = 0
-        if l != 2:
-            raise ValueError("min_max_numerosity has to be a pair of (min, max)")
+def _make_matched_deviants(reference_da,
+                           match_props,
+                           target_numerosity,
+                           prefer_keeping_convex_hull):  # TODO center array OK?
+    """helper function. Do not use this method. Please use make"""
 
-        if match_properties is None:
-            match_properties = []
-        elif not isinstance(match_properties, (tuple, list)):
-            match_properties = [match_properties]
+    if reference_da.prop_numerosity == target_numerosity:
+        change = 0
+    elif reference_da.prop_numerosity > target_numerosity:
+        change = -1
+    else:
+        change = 1
 
-        cp.check_list_continuous_properties(match_properties, check_set_value=False)
+    da = reference_da.copy()
+    da_sequence = []
 
-        # copy and change values to match this stimulus
-        match_props = []
-        for m in match_properties:
-            m = copy(m)
-            m.set_value(self._da)
-            match_props.append(m)
+    error = None
+    while True:
+        da = da.number_deviant(change_numerosity=change,
+                               prefer_keeping_convex_hull=prefer_keeping_convex_hull)
 
-        # adjust reference (basically centering)
-        reference_da = self._da.copy()
-        reference_da.max_array_radius  += (extra_space // 2) # add extra space
-        if center_array:
-            reference_da._xy -= reference_da.center_of_outer_positions
-            reference_da.set_array_modified()
+        if len(match_props) > 0:
+            da.match(match_props, center_array=False)
 
-        # matched deviants
-        prefer_keeping_convex_hull = False
-        for x in match_properties:
-            if isinstance(x, cp.ConvexHull) or \
-               (isinstance(x, cp.Density) and x.match_ratio_convhull2area<1):
-                prefer_keeping_convex_hull = False
-                break
-
-        rtn = DASequence()
-        rtn.method = match_props
-
-        min, max = sorted(min_max_numerosity)
-        # decreasing
-        if min < self._da.prop_numerosity:
-            da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
-                                                              match_props=match_props,
-                                                              target_numerosity=min,
-                                                             prefer_keeping_convex_hull=prefer_keeping_convex_hull)
-            rtn.append_dot_arrays(list(reversed(da_sequence)))
-            if error is not None:
-                rtn.error = error
-        # reference
-        rtn.append_dot_arrays(reference_da)
-        # increasing
-        if max > self._da.prop_numerosity:
-            da_sequence, error = self._make_matched_deviants(reference_da=reference_da,
-                                                              match_props=match_props,
-                                                              target_numerosity=max,
-                                                             prefer_keeping_convex_hull=prefer_keeping_convex_hull)
-            rtn.append_dot_arrays(da_sequence)
-            if error is not None:
-                rtn.error = error
-
-        if not inhibit_logging and self.logger is not None:
-            self.logger.log(rtn)
-
-        return rtn
-
-    @staticmethod
-    def _make_matched_deviants(reference_da, match_props, target_numerosity,
-                               prefer_keeping_convex_hull): # TODO center array OK?
-        """helper function. Do not use this method. Please use make"""
-
-        if reference_da.prop_numerosity == target_numerosity:
-            change = 0
-        elif reference_da.prop_numerosity > target_numerosity:
-            change = -1
-        else:
-            change = 1
-
-        da = reference_da.copy()
-        da_sequence = []
-
-        error = None
+        cnt = 0
         while True:
-            da = da.number_deviant(change_numerosity=change,
-                                   prefer_keeping_convex_hull=prefer_keeping_convex_hull)
-
-            if len(match_props) > 0:
-                da.match(match_props, center_array=False)
-
-            cnt = 0
-            while True:
-                cnt += 1
-                ok, mesg = da.realign()
-                if ok:
-                    break
-                if cnt > 10:
-                    error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
-
-            da_sequence.append(da)
-
-            if error is not None or da.prop_numerosity == target_numerosity:
+            cnt += 1
+            ok, mesg = da.realign()
+            if ok:
                 break
+            if cnt > 10:
+                error = u"ERROR: realign, " + str(cnt) + ", " + str(da.prop_numerosity)
 
-        return da_sequence, error
+        da_sequence.append(da)
+
+        if error is not None or da.prop_numerosity == target_numerosity:
+            break
+
+    return da_sequence, error
 
 
-class DASequenceGeneratorProcess(Process):
-
+class DASequenceMakeProcess(Process):
     def __init__(self, reference_dot_array, min_max_numerosity, match_properties, extra_space,
                  n_trials=3, logger=None):
 
@@ -247,7 +230,7 @@ class DASequenceGeneratorProcess(Process):
         Event(): data_available
         """
 
-        super(DASequenceGeneratorProcess, self).__init__()
+        super(DASequenceMakeProcess, self).__init__()
 
         self.data_available = Event()
         self._data_queue = Queue()
@@ -277,7 +260,7 @@ class DASequenceGeneratorProcess(Process):
 
     def join(self, timeout=1):
         self._read_queue()
-        super(DASequenceGeneratorProcess, self).join(timeout)
+        super(DASequenceMakeProcess, self).join(timeout)
 
     def _read_queue(self):
         if self._da_sequence is not None:
@@ -288,17 +271,16 @@ class DASequenceGeneratorProcess(Process):
     def run(self):
         cnt = 0
         da_seq = None
-        generator = DASequenceGenerator(reference_dot_array=self.reference_dot_array,
-                                        logger=self.logger)
-
         while cnt < self._n_tryouts:
             cnt += 1
-            da_seq = generator.make(match_properties=self.match_properties,
-                                    extra_space=self.extra_space,
-                                    min_max_numerosity=self.min_max_numerosity)
+            da_seq = make_dot_array_sequence(reference_dot_array=self.reference_dot_array,
+                                             match_properties=self.match_properties,
+                                             extra_space=self.extra_space,
+                                             min_max_numerosity=self.min_max_numerosity,
+                                             logger=self.logger)
             if da_seq.error is None:
                 break
-            # print("remix")
+                # print("remix")
 
         self.data_available.set()
         self._data_queue.put(da_seq)

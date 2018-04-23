@@ -3,15 +3,12 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from collections import namedtuple
 from PIL import Image, ImageDraw
 import numpy as np
 from .._lib.colour import Colour
-from .._lib.generator import DotArrayGenerator
 
 
 class ImageParameter(object):
-
     def __init__(self, colour_area=None,
                  colour_convex_hull_positions=None,
                  colour_convex_hull_dots=None,
@@ -19,25 +16,27 @@ class ImageParameter(object):
                  colour_center_of_outer_positions=None,
                  antialiasing=None,
                  colour_background=None,
-                 default_dot_colour="lightgreen"):
-        self.colour_area = colour_area
-        self.colour_convex_hull_positions = colour_convex_hull_positions
-        self.colour_convex_hull_dots = colour_convex_hull_dots
-        self.colour_center_of_mass = colour_center_of_mass
-        self.colour_center_of_outer_positions = colour_center_of_outer_positions
+                 default_dot_colour="lightgreen",
+                 **kwargs):
+
+        self.colour_area = Colour(colour_area)
+        self.colour_convex_hull_positions = Colour(colour_convex_hull_positions)
+        self.colour_convex_hull_dots = Colour(colour_convex_hull_dots)
+        self.colour_center_of_mass = Colour(colour_center_of_mass)
+        self.colour_center_of_outer_positions = Colour(colour_center_of_outer_positions)
         self.antialiasing = antialiasing
-        self.colour_background = colour_background
-        self.default_dot_colour = default_dot_colour # used if no color specified in dot array
+        self.colour_background = Colour(colour_background)
+        self.default_dot_colour = Colour(default_dot_colour)  # used if no color specified in dot array
 
-#number
-# da_generator: max_array_radius dot_colour dot_diameter_mean dot_diameter_range dot_diameter_std minimum_gap
-
-RandomDotImageParameter = namedtuple("DotPixmapParameter",  # all paramter of da generator and pil image
-                                     "number max_array_radius dot_colour dot_diameter_mean " +
-                                     "dot_diameter_range dot_diameter_std minimum_gap colour_area " +
-                                     "colour_convex_hull_positions colour_convex_hull_dots colour_center_of_mass " +
-                                     "colour_center_of_outer_positions antialiasing colour_background")
-RandomDotImageParameter.__new__.__defaults__ = (None,) * len(RandomDotImageParameter._fields) # TODO use *args method
+    def as_dict(self):
+        return {"colour_area": self.colour_area.colour,
+                 "colour_convex_hull_positions": self.colour_convex_hull_positions.colour,
+                 "colour_convex_hull_dots": self.colour_convex_hull_dots.colour,
+                 "colour_center_of_mass": self.colour_center_of_mass.colour,
+                 "colour_center_of_outer_positions": self.colour_center_of_outer_positions.colour,
+                 "antialiasing": self.antialiasing,
+                 "colour_background": self.colour_background.colour,
+                 "default_dot_colour": self.default_dot_colour.colour}
 
 def create(dot_array,
            colour_area=None,
@@ -47,7 +46,7 @@ def create(dot_array,
            colour_center_of_outer_positions=None,
            antialiasing=True,
            colour_background=(0, 0, 0),
-           default_dot_colour="lightgreen"): #todo using *args and ImageParameter
+           default_dot_colour="lightgreen"):  # todo using *args and ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
     returns pil image
@@ -149,7 +148,7 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
 # class PILImageGenerator(DotArrayGenerator, ImageParameter): TODO
 
 
-def generate_random_dot_array_image(para, logger=None):
+def generate_random_dot_array_image(number, generator, image_paramater , logger=None):
     """
     Generate randam Dor Array from RandomDotImageParameter
     para: RandomDotImageParameter
@@ -158,19 +157,12 @@ def generate_random_dot_array_image(para, logger=None):
     returns image and dot_array
     """
 
-    if not isinstance(para, RandomDotImageParameter):
-        raise TypeError("para has to be RandomDotImageParameter, but not {}".format(
-                                type(para).__name__))
+    para = image_paramater
+    if not isinstance(para, ImageParameter):
+        raise TypeError("para has to be ImageParameter, but not {}".format(
+            type(para).__name__))
 
-    generator = DotArrayGenerator(
-        max_array_radius=para.max_array_radius,
-        dot_diameter_mean=para.dot_diameter_mean,
-        dot_diameter_range=para.dot_diameter_range,
-        dot_diameter_std=para.dot_diameter_std,
-        dot_colour=para.dot_colour,
-        minimum_gap=para.minimum_gap        )
-
-    dot_array = generator.make(n_dots=para.number, logger=logger)
+    dot_array = generator.make(n_dots=number, logger=logger)
     image = create(dot_array,
                    colour_area=para.colour_area,
                    colour_convex_hull_positions=para.colour_convex_hull_positions,
@@ -178,6 +170,7 @@ def generate_random_dot_array_image(para, logger=None):
                    colour_center_of_mass=para.colour_center_of_mass,
                    colour_center_of_outer_positions=para.colour_center_of_outer_positions,
                    antialiasing=para.antialiasing,
-                   colour_background=para.colour_background)
+                   colour_background=para.colour_background,
+                   default_dot_colour=para.default_dot_colour)
 
     return image, dot_array

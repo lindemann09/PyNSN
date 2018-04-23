@@ -217,9 +217,7 @@ class DotArray(SimpleDotArray):
                 rtn += u",file"
             rtn += u"\n"
 
-        if object_id_column:
-            obj_id = self.object_id
-
+        obj_id = self.object_id
         for cnt in range(len(self._xy)):
             if object_id_column:
                 rtn += "{0}, ".format(obj_id)
@@ -323,3 +321,17 @@ class DotArray(SimpleDotArray):
                                    features=deviant.features[rnd])
 
         return deviant
+
+    def yaml_dump(self, document_separator=True):
+        import yaml
+
+        if document_separator:
+            rtn = "---\n# {}, {}\n".format(self.object_id, self.prop_numerosity)
+        else:
+            rtn = ""
+        d = {"minimum_gap": self.minimum_gap,
+             "max_array_radius": self.max_array_radius,
+             "xy": self._xy.tolist(),
+             "diameter": self._diameters.tolist(),
+             "features": self.features.as_dict()}
+        return rtn + yaml.dump(d)

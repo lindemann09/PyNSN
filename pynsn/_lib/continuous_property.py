@@ -55,6 +55,10 @@ class _ContinuousProperty(object):
         return type(other) in self._dependencies or \
                type(self) in other._dependencies
 
+    def as_dict(self):
+        return {"type": type(self).__name__,
+                "value": self.value}
+
 
 class SurfaceArea(_ContinuousProperty):
     """"""
@@ -66,6 +70,7 @@ class SurfaceArea(_ContinuousProperty):
     @property
     def _dependencies(self):
         return [DotDiameter, Circumference, SurfaceArea]
+
 
 
 class DotDiameter(_ContinuousProperty):
@@ -107,6 +112,11 @@ class ConvexHull(_ContinuousProperty):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.prop_convex_hull_area
 
+    def as_dict(self):
+        d = _ContinuousProperty.as_dict(self)
+        d["match_presision"] = self.match_presision
+        return(d)
+
 
 class Density(_ContinuousProperty):
     """"""
@@ -143,6 +153,11 @@ class Density(_ContinuousProperty):
             dep.extend(ConvexHull()._dependencies)
         return dep
 
+    def as_dict(self):
+        d = _ContinuousProperty.as_dict(self)
+        d["match_ratio_convhull2area"] = self.match_ratio_convhull2area
+        d["convex_hull_precision"] = self.convex_hull_precision
+        return(d)
 
 ## helper function
 def check_list_continuous_properties(lcp, check_set_value=False):
@@ -165,3 +180,21 @@ def check_list_continuous_properties(lcp, check_set_value=False):
         if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                 type(a).__name__, type(b).__name__))
+
+def dict_to_property(d):
+    d = copy(d)
+    t = d["type"]
+    del d["type"]
+    if t == DotDiameter.__name__:
+        return DotDiameter(**d)
+    elif t == SurfaceArea.__name__:
+        return SurfaceArea(**d)
+    elif t == Circumference.__name__:
+        return Circumference(**d)
+    elif t == Density.__name__:
+        print("l")
+        return Density(**d)
+    elif t == ConvexHull.__name__:
+        return ConvexHull(**d)
+    return None
+

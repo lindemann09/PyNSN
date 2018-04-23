@@ -10,7 +10,7 @@ from scipy.spatial import ConvexHull
 
 import pynsn
 from pynsn import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArray, DASequence, colours
+    DASequenceMakeProcess, DASequenceGenerator, GeneratorLogger, DotArray, DASequence, colours
 import expyriment
 from expyriment import misc, control
 import copy

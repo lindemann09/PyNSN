@@ -4,13 +4,10 @@ from __future__ import absolute_import, print_function, division
 from expyriment import misc, control
 import pynsn
 from pynsn import expyriment_stimulus, DotArrayGenerator, \
-    DASequenceGeneratorProcess, DASequenceGenerator, GeneratorLogger, DotArrayProperties
-
-
+    DASequenceMakeProcess, make_dot_array_sequence, GeneratorLogger, DotArrayProperties
 
 if __name__ == "__main__":
     cl = misc.Clock()
-
 
     logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
@@ -22,28 +19,29 @@ if __name__ == "__main__":
         dot_colour="skyblue",
         minimum_gap=5)
 
-    reference = generator.make(n_dots=25, logger = None)
+    reference = generator.make(n_dots=25, logger=None)
 
-    g = DASequenceGenerator(reference_dot_array=reference, logger=logger)
-    ds = g.make(extra_space=100,
-                match_properties=[pynsn.Density()],
-                #match_methods=[DASequenceGenerator.CONVEX_HULL,
-                #              DASequenceGenerator.DENSITY_ONLY_AREA],
-                min_max_numerosity=[10, 30])
+    ds = make_dot_array_sequence(reference_dot_array=reference,
+                                 logger=logger,
+                                 extra_space=100,
+                                 match_properties=[pynsn.Density()],
+                                 # match_methods=[DASequenceGenerator.CONVEX_HULL,
+                                 #              DASequenceGenerator.DENSITY_ONLY_AREA],
+                                 min_max_numerosity=[10, 30])
 
     prop = ds.get_properties()
     print(prop.get_nice_text())
     exit()
-    #print(ds.get_numerosity_correlations())
-    #print(ds.variances)
-    #print(ds.numerosity_correlations)
+    # print(ds.get_numerosity_correlations())
+    # print(ds.variances)
+    # print(ds.numerosity_correlations)
 
 
 
     if True:
 
-        a = generator.make(n_dots=20,         logger=logger)
-        b = generator.make(n_dots=40,         logger=logger)
+        a = generator.make(n_dots=20, logger=logger)
+        b = generator.make(n_dots=40, logger=logger)
         b.features.change(colour="blue")
         # b.match(mean_dot_diameter=83, convex_hull_area=523)
         x = a.copy()
@@ -53,15 +51,15 @@ if __name__ == "__main__":
 
 
     else:
-        p = DASequenceGeneratorProcess(max_dot_array=reference,
-                                       match_method=[DASequenceGenerator.CONVEX_HULL,
+        p = DASequenceMakeProcess(max_dot_array=reference,
+                                  match_method=[DASequenceGenerator.CONVEX_HULL,
                                                      DASequenceGenerator.DENSITY_ONLY_AREA],
-                                       min_numerosity=10, logger=logger,
-                                       extra_space=100)
+                                  min_numerosity=10, logger=logger,
+                                  extra_space=100)
         p.start()
-        p1 = DASequenceGeneratorProcess(max_dot_array=reference, match_method=DASequenceGenerator.CONVEX_HULL,
-                                        min_numerosity=10, logger=logger,
-                                        extra_space=100)
+        p1 = DASequenceMakeProcess(max_dot_array=reference, match_method=DASequenceGenerator.CONVEX_HULL,
+                                   min_numerosity=10, logger=logger,
+                                   extra_space=100)
         p1.start()
         x = p.da_sequence
 
@@ -73,19 +71,18 @@ if __name__ == "__main__":
     control.start(exp, skip_ready_screen=True)
 
     stimx = expyriment_stimulus.ExprimentDotArray(x,
-                                                 colour_area="dimgray",
-                                                 # colour_convex_hull_dots=(255, 0, 0),
-                                                 # colour_convex_hull_positions=(255, 200, 0),
-                                                 # colour_center_of_mass=(255, 0, 0),
-                                                 #  colour_center_of_outer_positions=(0,0,200),
-                                                 antialiasing=True)
+                                                  colour_area="dimgray",
+                                                  # colour_convex_hull_dots=(255, 0, 0),
+                                                  # colour_convex_hull_positions=(255, 200, 0),
+                                                  # colour_center_of_mass=(255, 0, 0),
+                                                  #  colour_center_of_outer_positions=(0,0,200),
+                                                  antialiasing=True)
 
     stimx.present()
     exp.keyboard.wait()
 
-
     stima = expyriment_stimulus.ExprimentDotArray(a, colour_area="dimgray", antialiasing=True)
-    stimb = expyriment_stimulus.ExprimentDotArray(b, colour_area="dimgray",antialiasing=True)
+    stimb = expyriment_stimulus.ExprimentDotArray(b, colour_area="dimgray", antialiasing=True)
     stimx.preload()
     stima.preload()
     stimb.preload()

@@ -20,6 +20,10 @@ class ItemFeatures(object):
         return 'ItemFeatures(colour={}, picture={})'.format(
                     self.colour, self.picture)
 
+    def to_dict(self):
+        return {"colour": self.colour.colour,
+                "picture": self.picture}
+
 
 class ItemFeaturesList(object):
 
@@ -39,6 +43,11 @@ class ItemFeaturesList(object):
     def __getitem__(self, key):
         return ItemFeatures(colour=self.colours[key],
                             picture=self.pictures[key])
+
+    def as_dict(self):
+        col = map(lambda x:x._colour, self.colours)
+        return {"colours" : list(col),
+                "pictures" : self.pictures.tolist()}
 
     @property
     def length(self):

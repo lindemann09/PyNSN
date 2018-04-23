@@ -11,7 +11,6 @@ import numpy as np
 from .simple_dot_array import DotArrayProperties
 from .dot_array import DotArray
 
-
 class DASequence(object):
 
     def __init__(self):

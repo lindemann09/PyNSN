@@ -11,30 +11,30 @@ from . import dialogs
 
 class MainWidget(QtGui.QWidget):
 
-    def __init__(self, parent, settings, default_array):
+    def __init__(self, parent, settings, number, generator):
 
         super(MainWidget, self).__init__(parent)
         self.settings = settings
-        self.initUI(default_array)
+        self.initUI(number, generator)
 
 
-    def initUI(self, default_array):
+    def initUI(self, number, generator):
 
         self.btn_generate = QtGui.QPushButton("Generate new array")
 
-        self.number = LabeledNumberInput("Number", default_array.number)
+        self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 0)
 
-        self.max_array_radius = LabeledNumberInput("Max radius", default_array.max_array_radius)
-        self.dot_diameter_mean = LabeledNumberInput("Mean diameter", default_array.dot_diameter_mean)
-        self.dot_diameter_std = LabeledNumberInput("Diameter range std", default_array.dot_diameter_std)
+        self.max_array_radius = LabeledNumberInput("Max radius", generator.max_array_radius)
+        self.dot_diameter_mean = LabeledNumberInput("Mean diameter", generator.dot_diameter_mean)
+        self.dot_diameter_std = LabeledNumberInput("Diameter range std", generator.dot_diameter_std)
         self.dot_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                              value1=default_array.dot_diameter_range[0],
-                                                              value2=default_array.dot_diameter_range[1])
+                                                              value1=generator.dot_diameter_range[0],
+                                                              value2=generator.dot_diameter_range[1])
 
-        self.minimum_gap = LabeledNumberInput("Minimum gap", default_array.minimum_gap)
+        self.minimum_gap = LabeledNumberInput("Minimum gap", generator.minimum_gap)
 
-        self.dot_colour = LabeledInput("Colour", text=default_array.dot_colour, case_sensitive=False)
+        self.dot_colour = LabeledInput("Colour", text=generator.item_feature.colour, case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
         self.slider = QtGui.QSlider(QtCore.Qt.Vertical)
 
@@ -93,7 +93,7 @@ class MainWidget(QtGui.QWidget):
         self.picture_field.setFixedSize(width, width)
         if width<minium_text_width:
             width=minium_text_width
-        self.text_field.setFixedSize(width, text_height)
+        self.text_field.setMinimumSize(width, text_height)
 
     def action_slider_change(self):
         self.number.value = self.slider.value()
