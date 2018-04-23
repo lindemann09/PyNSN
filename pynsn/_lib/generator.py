@@ -142,7 +142,7 @@ def make_dot_array_sequence(reference_dot_array,
     for x in match_properties:
         if isinstance(x, cp.ConvexHull) or \
                 (isinstance(x, cp.Density) and x.match_ratio_convhull2area < 1):
-            prefer_keeping_convex_hull = False
+            prefer_keeping_convex_hull = True
             break
 
     rtn = DASequence()
