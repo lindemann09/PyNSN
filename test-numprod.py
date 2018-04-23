@@ -10,14 +10,13 @@ control.set_develop_mode(True)
 
 cl = misc.Clock()
 
+logger= pynsn.GeneratorLogger(log_filename="log/test", override_log_files=True)
 generator =  pynsn.DotArrayGenerator(
                        max_array_radius= 200,
                        dot_diameter_mean=10,
                        dot_diameter_range=(5, 15),
                        dot_diameter_std=1,
-                       dot_colour= None,
-                       logger= pynsn.GeneratorLogger(log_filename="log/test", override_log_files=True)
-                )
+                       dot_colour= None                )
 
 #########################################
 exp = control.initialize()

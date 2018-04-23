@@ -17,9 +17,10 @@ from . import continuous_property as cp
 
 TWO_PI = 2 * np.pi
 
+
 class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
-                                                "total_surface_area", "convex_hull_area",
-                                                "density", "total_circumference"])):
+                                                     "total_surface_area", "convex_hull_area",
+                                                     "density", "total_circumference"])):
     __slots__ = ()
 
     @classmethod
@@ -47,7 +48,7 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
         rtn = ""
         if variable_names:
             rtn += u", ".join(self._fields) + "\n"
-        if self.size>1:
+        if self.size > 1:
             for i, prop in enumerate(self.np_array):
                 rtn += self.object_id[i] + u", " + ", ".join(map(str, prop)) + "\n"
         else:
@@ -69,18 +70,31 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
 
     def get_nice_text(self, spacing_char="."):
         txt = None
-        for k,v in self._asdict().items():
+        for k, v in self._asdict().items():
             if txt is None:
                 txt = "- {}\n".format(self.object_id)
             else:
                 name = "  " + k
                 try:
-                    value = "{0:.2f}\n".format(v) # try rounding
+                    value = "{0:.2f}\n".format(v)  # try rounding
                 except:
                     value = "{}\n".format(v)
 
-                txt += name + (spacing_char*(23-len(name))) + (" "*(10-len(value))) + value
+                txt += name + (spacing_char * (23 - len(name))) + (" " * (10 - len(value))) + value
         return txt
+
+    def short_str(self, with_object_id=True):
+        if with_object_id:
+            rtn = "id: {}".format(self.object_id)
+        else:
+            rtn =""
+        rtn += "n: {}, DD:{}, TA: {}, TC: {}. CH: {}, DE: {:.3f}".format(self.numerosity,
+                                                                     int(self.mean_dot_diameter),
+                                                                     int(self.total_surface_area),
+                                                                     int(self.total_circumference),
+                                                                     int(self.convex_hull_area),
+                                                                     self.density)
+        return rtn
 
 class SimpleDotArray(object):
     """Numpy Position list for optimized for numpy calculations
@@ -154,7 +168,6 @@ class SimpleDotArray(object):
         return SimpleDotArray(xy=self._xy[indices, :].copy(),
                               diameters=self._diameters[indices].copy())
 
-
     @property
     def object_id(self):
         """md5_hash of position, diameter"""
@@ -163,7 +176,6 @@ class SimpleDotArray(object):
         m.update(self._xy.tobytes())
         m.update(self._diameters.tobytes())
         return m.hexdigest()[:SimpleDotArray.OBJECT_ID_LENGTH]
-
 
     @staticmethod
     def _polar2cartesian(polar):
@@ -218,16 +230,16 @@ class SimpleDotArray(object):
         return np.pi * self._diameters
 
     @property
-    def convex_hull_positions(self): #FIXME not defined for l<3
+    def convex_hull_positions(self):  # FIXME not defined for l<3
         return self._xy[self.convex_hull_indices, :]
 
     @property
-    def convex_hull_indices(self): #FIXME not defined for l<3
+    def convex_hull_indices(self):  # FIXME not defined for l<3
         """this convex_hull takes into account the dot diameter"""
         return self._ch.convex_hull_object.vertices
 
     @property
-    def convex_hull(self): #FIXME not defined for l<3
+    def convex_hull(self):  # FIXME not defined for l<3
         """this convex_hull takes into account the dot diameter"""
         return self._ch.full_xy
 
@@ -253,7 +265,8 @@ class SimpleDotArray(object):
         if len(idx) > 1:
             idx.remove(dot_id)  # don't move yourself
             if np.sum(
-                    np.all(self._xy[idx,] == self._xy[dot_id, :], axis=1)) > 0:  # check if there is an identical position
+                    np.all(self._xy[idx,] == self._xy[dot_id, :],
+                           axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
             tmp_polar = SimpleDotArray._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
@@ -277,11 +290,11 @@ class SimpleDotArray(object):
         return np.sum(self.circumferences)
 
     @property
-    def prop_convex_hull_area_positions(self): #FIXME not defined for l<3
+    def prop_convex_hull_area_positions(self):  # FIXME not defined for l<3
         return self._ch.convex_hull_object.area
 
     @property
-    def prop_convex_hull_area(self): #FIXME not defined for l<3
+    def prop_convex_hull_area(self):  # FIXME not defined for l<3
         return self._ch.full_area
 
     @property
@@ -289,7 +302,7 @@ class SimpleDotArray(object):
         return len(self._xy)
 
     @property
-    def prop_density(self): #FIXME not defined for l<3
+    def prop_density(self):  # FIXME not defined for l<3
         """density takes into account the convex hull"""
         try:
             return self.prop_convex_hull_area / self.prop_total_surface_area  # todo: positions conved hull
@@ -301,7 +314,6 @@ class SimpleDotArray(object):
         return DotArrayProperties(self.object_id, self.prop_numerosity, self.prop_mean_dot_diameter,
                                   self.prop_total_surface_area, self.prop_convex_hull_area, self.prop_density,
                                   self.prop_total_circumference)
-
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
@@ -323,7 +335,6 @@ class SimpleDotArray(object):
         dist += radii_mtx  # add to each row
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
-
 
     def match(self, match_properties, center_array=True, match_dot_array=None):
         """
@@ -445,7 +456,6 @@ class SimpleDotArray(object):
         self._match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
                                      precision=precision)
 
-
     def remove_overlap_from_inner_to_outer(self, minimum_gap):
 
         shift_required = False
@@ -455,6 +465,7 @@ class SimpleDotArray(object):
                 shift_required = True
 
         return shift_required
+
 
 ########## helper
 
@@ -482,7 +493,7 @@ class EfficientConvexHull(object):
             idx = self.convex_hull_object.vertices
 
             minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
-            center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2) # center outer positions
+            center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)  # center outer positions
 
             polar_centered = SimpleDotArray._cartesian2polar(self._xy[idx, :] - center)
             polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)

@@ -52,12 +52,11 @@ class SequenceDisplay(QtGui.QDialog):
 
     def updateUI(self):
         num = self.slider.value()
-        #print("{}-{}".format(num, self.da_sequence.dot_arrays[self.da_sequence.numerosity_idx[num]].prop_numerosity)) #todo depict somewhere
-        im = self.pixmaps[self.da_sequence.numerosity_idx[num]]
-
-        self.picture_field.setPixmap(im)
+        idx = self.da_sequence.numerosity_idx[num]
+        prop = self.da_sequence.dot_arrays[idx].get_properties()
+        self.setWindowTitle(prop.short_str(with_object_id=False))
+        self.picture_field.setPixmap(self.pixmaps[idx])
         self.adjustSize()
-
 
     def action_slider_change(self):
         self.updateUI()

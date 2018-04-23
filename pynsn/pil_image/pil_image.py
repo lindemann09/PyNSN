@@ -29,6 +29,9 @@ class ImageParameter(object):
         self.colour_background = colour_background
         self.default_dot_colour = default_dot_colour # used if no color specified in dot array
 
+#number
+# da_generator: max_array_radius dot_colour dot_diameter_mean dot_diameter_range dot_diameter_std minimum_gap
+
 RandomDotImageParameter = namedtuple("DotPixmapParameter",  # all paramter of da generator and pil image
                                      "number max_array_radius dot_colour dot_diameter_mean " +
                                      "dot_diameter_range dot_diameter_std minimum_gap colour_area " +
@@ -165,10 +168,9 @@ def generate_random_dot_array_image(para, logger=None):
         dot_diameter_range=para.dot_diameter_range,
         dot_diameter_std=para.dot_diameter_std,
         dot_colour=para.dot_colour,
-        minimum_gap=para.minimum_gap,
-        logger=logger)
+        minimum_gap=para.minimum_gap        )
 
-    dot_array = generator.make(n_dots=para.number)
+    dot_array = generator.make(n_dots=para.number, logger=logger)
     image = create(dot_array,
                    colour_area=para.colour_area,
                    colour_convex_hull_positions=para.colour_convex_hull_positions,

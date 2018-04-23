@@ -75,7 +75,7 @@ class DotArray(SimpleDotArray):
     def append_dot(self, dot):
         self.append(xy=[dot.x, dot.y], diameters=dot.diameter, features=dot.features)
 
-    def join(self, dot_array, realign=True):
+    def join(self, dot_array, realign=False):
         """add another dot arrays"""
 
         self.append(xy=dot_array._xy, diameters=dot_array._diameters,features=dot_array.features)
@@ -237,10 +237,13 @@ class DotArray(SimpleDotArray):
 
     def random_free_dot_position(self, dot_diameter,
                                  ignore_overlapping=False,
-                                 prefer_inside_convex_hull=False):
+                                 prefer_inside_convex_hull=False,
+                                 occupied_space=None):
         """moves a dot to an available random position
 
-        raise exception if not found"""
+        raise exception if not found
+        occupied space: see generator make
+        """
         try_out_inside_convex_hull = 1000
         if prefer_inside_convex_hull:
             delaunay = spatial.Delaunay(self.convex_hull_positions)
@@ -260,6 +263,8 @@ class DotArray(SimpleDotArray):
             if not bad_position and not ignore_overlapping:
                 # find bad_positions
                 dist = self.distances(proposal_xy, dot_diameter)
+                if occupied_space:
+                    dist = np.append(dist, occupied_space.distances(proposal_xy, dot_diameter))
                 idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
                 bad_position = len(idx) > 0
 

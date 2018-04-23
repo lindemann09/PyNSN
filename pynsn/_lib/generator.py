@@ -21,8 +21,7 @@ class DotArrayGenerator(object):
                  dot_diameter_range=None,
                  dot_diameter_std=None,
                  dot_colour=None,
-                 minimum_gap=1,
-                 logger=None):
+                 minimum_gap=1):
 
         """Specification of a Random Dot Array
 
@@ -52,14 +51,9 @@ class DotArrayGenerator(object):
         self.dot_diameter_mean = dot_diameter_mean
         self.dot_diameter_std = dot_diameter_std
         self.item_feature = ItemFeatures(colour=dot_colour)
-        self.set_logger(logger)
 
-    def set_logger(self, logger):
-        self.logger = logger
-        if not isinstance(logger, (type(None), GeneratorLogger)):
-            raise RuntimeError("logger has to be None or a GeneratorLogger")
-
-    def make(self, n_dots, inhibit_logging=False):
+    def make(self, n_dots, occupied_space=None, logger=None):
+        """occupied_space is a dot array (used for multicolour dot array (join after)"""
 
         rtn = DotArray(max_array_radius=self.max_array_radius,  # - distance_field_edge ?
                        minimum_gap=self.minimum_gap)
@@ -78,11 +72,13 @@ class DotArrayGenerator(object):
                 diameter = random_beta.random_beta(
                     self.dot_diameter_range, parameter)
 
-            xy = rtn.random_free_dot_position(dot_diameter=diameter)
+            xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
             rtn.append(xy=xy, diameters=diameter, features=self.item_feature)
 
-        if not inhibit_logging and self.logger is not None:
-            self.logger.log(rtn)
+        if logger is not None:
+            if not isinstance(logger, GeneratorLogger):
+                raise RuntimeError("logger has to be None or a GeneratorLogger")
+            logger.log(rtn)
 
         return rtn
 
@@ -168,7 +164,7 @@ class DASequenceGenerator(object):
         for x in match_properties:
             if isinstance(x, cp.ConvexHull) or \
                (isinstance(x, cp.Density) and x.match_ratio_convhull2area<1):
-                prefer_keeping_convex_hull = True
+                prefer_keeping_convex_hull = False
                 break
 
         rtn = DASequence()

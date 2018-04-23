@@ -135,16 +135,16 @@ class PyNSN_GUI(QtGui.QMainWindow):
             dot_diameter_range=para.dot_diameter_range,
             dot_diameter_std=para.dot_diameter_std,
             dot_colour=para.dot_colour,
-            minimum_gap=para.minimum_gap,
-            logger=self.logger)
+            minimum_gap=para.minimum_gap)
+
+        self.data_array = generator.make(n_dots=para.number,  logger=self.logger)
 
         if self.settings.bicoloured.isChecked():
-            n2 = self.main_widget.number2.value
-            self.data_array = generator.make(n_dots=para.number + n2)
-            self.data_array.features.change(indices=list(range(n2)),
-                                            colour=self.main_widget.dot_colour2.text)
-        else:
-            self.data_array = generator.make(n_dots=para.number)
+            data_array2 = generator.make(n_dots=self.main_widget.number2.value,
+                                         occupied_space=self.data_array,
+                                         logger = self.logger)
+            data_array2.features.change(colour=self.main_widget.dot_colour2.text)
+            self.data_array.join(data_array2, realign=False)
 
         self._image = None
 
@@ -288,6 +288,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.prop_numerosity,
                             image_parameter=self.get_parameter()).exec_()
+
+
 
 
 def start():

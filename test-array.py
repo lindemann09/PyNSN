@@ -20,10 +20,9 @@ if __name__ == "__main__":
         dot_diameter_range=(5, 40),
         dot_diameter_std=2,
         dot_colour="skyblue",
-        minimum_gap=5,
-        logger=logger)
+        minimum_gap=5)
 
-    reference = generator.make(n_dots=25, inhibit_logging=False)
+    reference = generator.make(n_dots=25, logger = None)
 
     g = DASequenceGenerator(reference_dot_array=reference, logger=logger)
     ds = g.make(extra_space=100,
@@ -43,8 +42,8 @@ if __name__ == "__main__":
 
     if True:
 
-        a = generator.make(n_dots=20, inhibit_logging=True)
-        b = generator.make(n_dots=40, inhibit_logging=True)
+        a = generator.make(n_dots=20,         logger=logger)
+        b = generator.make(n_dots=40,         logger=logger)
         b.features.change(colour="blue")
         # b.match(mean_dot_diameter=83, convex_hull_area=523)
         x = a.copy()
