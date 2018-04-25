@@ -23,26 +23,26 @@ DEFAULT_ARRAY = (40, DotArrayGenerator(max_array_radius=200,
                                        dot_diameter_range=[5, 40],
                                        dot_diameter_std=8,
                                        minimum_gap=2),
-                 pil_image.ImageParameter(colour_area="#3e3e3e",
-                                          colour_convex_hull_positions=None,
-                                          colour_convex_hull_dots=None,
-                                          colour_center_of_mass=None,
-                                          colour_center_of_outer_positions=None,
-                                          antialiasing=True,
-                                          colour_background="gray"))
+                 pil_image.PILImageGenerator(colour_area="#3e3e3e",
+                                             colour_convex_hull_positions=None,
+                                             colour_convex_hull_dots=None,
+                                             colour_center_of_mass=None,
+                                             colour_center_of_outer_positions=None,
+                                             antialiasing=True,
+                                             colour_background="gray"))
 
 ICON = (11, DotArrayGenerator(max_array_radius=200,
                               dot_colour="lime",
                               dot_diameter_mean=35,
                               dot_diameter_range=[5, 80],
                               dot_diameter_std=20),
-        pil_image.ImageParameter(colour_area="#3e3e3e",
-                                 colour_convex_hull_positions=None,
-                                 colour_convex_hull_dots="expyriment_orange",
-                                 colour_center_of_mass=None,
-                                 colour_center_of_outer_positions=None,
-                                 antialiasing=True,
-                                 colour_background=None))
+        pil_image.PILImageGenerator(colour_area="#3e3e3e",
+                                    colour_convex_hull_positions=None,
+                                    colour_convex_hull_dots="expyriment_orange",
+                                    colour_center_of_mass=None,
+                                    colour_center_of_outer_positions=None,
+                                    antialiasing=True,
+                                    colour_background=None))
 
 
 class PyNSN_GUI(QtGui.QMainWindow):
@@ -120,7 +120,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         # ICON
         self._image, _ = pil_image.generate_random_dot_array_image(number=ICON[0],
-                                                                   generator=ICON[1],
+                                                                   da_generator=ICON[1],
                                                                    image_paramater=ICON[2],
                                                                    logger=None)
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
@@ -200,13 +200,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return pil_image.ImageParameter(colour_area=colour_area,
-                                        colour_convex_hull_positions=colour_convex_hull_positions,
-                                        colour_convex_hull_dots=colour_convex_hull_dots,
-                                        colour_center_of_mass=None,
-                                        colour_center_of_outer_positions=None,
-                                        antialiasing=self.settings.antialiasing.isChecked(),
-                                        colour_background=colour_background)
+        return pil_image.PILImageGenerator(colour_area=colour_area,
+                                           colour_convex_hull_positions=colour_convex_hull_positions,
+                                           colour_convex_hull_dots=colour_convex_hull_dots,
+                                           colour_center_of_mass=None,
+                                           colour_center_of_outer_positions=None,
+                                           antialiasing=self.settings.antialiasing.isChecked(),
+                                           colour_background=colour_background)
 
     def pixmap(self):
         return QtGui.QPixmap.fromImage(ImageQt(self.image()))
