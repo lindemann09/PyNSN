@@ -10,11 +10,10 @@ from ..pil_image.pil_image import PILImageGenerator
 from .._lib.colour import Colour
 
 
-
-
 class ExprimentDotArray(Canvas):
 
     def __init__(self, dot_array,
+                 # pil_image_generator TODO better using generator
                  position=(0, 0),
                  colour_area=None,
                  colour_convex_hull_positions=None,
@@ -66,6 +65,7 @@ class ExprimentDotArray(Canvas):
 class ExpyrimentDASequence(object):
 
     def __init__(self, da_sequence,
+                 # pil_image_generator TODO better using generator
                  position=(0, 0),
                  colour_area=None,
                  antialiasing=None,
@@ -92,7 +92,7 @@ class ExpyrimentDASequence(object):
                 list(map(lambda x: x.make_pil_image(), self.stimuli))
                 self._make_image_process = None
             else:
-                if isinstance(multiprocessing, int):
+                if not isinstance(multiprocessing, bool):
                     p = Pool(multiprocessing)
                 else:
                     p = Pool()
@@ -100,6 +100,7 @@ class ExpyrimentDASequence(object):
                 for c, pil_im in enumerate(p.imap(ExpyrimentDASequence._make_stimuli_map_helper, self.stimuli)):
                     self.stimuli[c]._image = pil_im
                 p.close()
+                p.join()
 
     def get_stimulus_numerosity(self, number_of_dots):
         """returns stimulus with a particular numerosity"""

@@ -10,7 +10,7 @@ import sys
 import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.generator import DotArrayGenerator, GeneratorLogger, make_dot_array_sequence
+from .._lib.generator import DotArrayGenerator, GeneratorLogger, DASequenceGenerator
 from .._lib.colour import Colour
 from .. import pil_image
 from .main_widget import MainWidget
@@ -119,10 +119,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # ICON
-        self._image, _ = pil_image.generate_random_dot_array_image(number=ICON[0],
-                                                                   da_generator=ICON[1],
-                                                                   image_paramater=ICON[2],
-                                                                   logger=None)
+        pil_generator = ICON[2]
+        da_generator = ICON[1]
+        self._image = pil_generator.make(dot_array=da_generator.make(n_dots=ICON[0]))
+
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
         self._image = None
 
@@ -147,14 +147,15 @@ class PyNSN_GUI(QtGui.QMainWindow):
             return self._image
         else:
             para = self.get_image_parameter()
-            self._image = pil_image.create(self.data_array,
-                                           colour_area=para.colour_area,
+            pil_gen = pil_image.PILImageGenerator(colour_area=para.colour_area,
                                            colour_convex_hull_positions=para.colour_convex_hull_positions,
                                            colour_convex_hull_dots=para.colour_convex_hull_dots,
                                            colour_center_of_mass=para.colour_center_of_mass,
                                            colour_center_of_outer_positions=para.colour_center_of_outer_positions,
                                            antialiasing=para.antialiasing,
                                            colour_background=para.colour_background)
+
+            self._image = pil_gen.make(dot_array=self.data_array)
             return self._image
 
     def get_number(self):
@@ -291,12 +292,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         if match_methods is not None:
             # print("processing")
-            sequence = make_dot_array_sequence(reference_dot_array=self.data_array,
-                                               logger=self.logger,
-                                               match_properties=match_methods,
+            gen = DASequenceGenerator(match_properties=match_methods,
                                                min_max_numerosity=match_range,
-                                               extra_space=extra_space  # todo dialog field
-                                               )
+                                               extra_space=extra_space)
+            sequence = gen.make(reference_dot_array=self.data_array, logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.prop_numerosity,
                             image_parameter=self.get_image_parameter()).exec_()

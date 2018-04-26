@@ -1,1 +1,1 @@
-from .pil_image import generate_random_dot_array_image, PILImageGenerator
+from .pil_image import PILImageGenerator

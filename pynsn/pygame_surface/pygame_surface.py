@@ -5,6 +5,7 @@ import pygame
 
 from ..pil_image import pil_image
 
+# todo make PygameSurfaceGenerator
 
 def create(dot_array,
            colour_area=None,
@@ -15,13 +16,14 @@ def create(dot_array,
            antialiasing=True,
            colour_background=(0, 0, 0)):
 
-    img = pil_image.create(dot_array=dot_array,
-                           colour_area=colour_area,
+    gen = pil_image.PILImageGenerator(colour_area=colour_area,
                            colour_convex_hull_positions=colour_convex_hull_positions,
                            colour_convex_hull_dots=colour_convex_hull_dots,
                            colour_center_of_mass = colour_center_of_mass,
                            colour_center_of_outer_positions=colour_center_of_outer_positions,
                            antialiasing=antialiasing,
                            colour_background=colour_background)
+
+    img = gen.make(dot_array=dot_array)
 
     return pygame.image.fromstring(img.tobytes(), img.size, img.mode)

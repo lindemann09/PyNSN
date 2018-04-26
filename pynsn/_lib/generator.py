@@ -1,11 +1,11 @@
 from __future__ import print_function, division
-from builtins import *
+from builtins import map, filter, range, zip
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from . import random_beta
 from copy import copy
-from multiprocessing import Process, Event, Queue
+from multiprocessing import Pool
 from .dot_array import DotArray
 from .item_features import ItemFeatures
 from .dot_array_sequence import DASequence
@@ -84,11 +84,27 @@ class DotArrayGenerator(object):
 
     def as_dict(self):
         return {"max_array_radius": self.max_array_radius,
-             "dot_diameter_mean": self.dot_diameter_mean,
-             "dot_diameter_range": self.dot_diameter_range,
-             "dot_diameter_std": self.dot_diameter_std,
-             "dot_colour": self.item_feature.colour.colour,  ##todo feature
-             "minimum_gap": self.minimum_gap}
+                "dot_diameter_mean": self.dot_diameter_mean,
+                "dot_diameter_range": self.dot_diameter_range,
+                "dot_diameter_std": self.dot_diameter_std,
+                "dot_colour": self.item_feature.colour.colour,  ##todo feature
+                "minimum_gap": self.minimum_gap}
+
+
+    def make_iter(self, list_of_n_dots, occupied_space=None, logger=None, multiprocessing=False):  # TODO  never checked
+        args = map(lambda x: (self, x, occupied_space, logger), list_of_n_dots)
+
+        if multiprocessing:
+            return Pool().imap(DotArrayGenerator._make_imap_helper, args)
+        else:
+            return map(DotArrayGenerator._make_imap_helper, args)
+
+    @staticmethod
+    def _make_imap_helper(args):
+        generator = args[0]
+        return generator.make(reference_dot_array=args[1],
+                              occupied_space=args[2],
+                              logger=args[3])
 
 
 class DASequenceGenerator(object):
@@ -123,7 +139,8 @@ class DASequenceGenerator(object):
         self.extra_space = extra_space
         self.center_array = center_array
 
-    def make(self, reference_dot_array, logger=None):
+
+    def make(self, reference_dot_array, logger=None): # todo could be an iterator
         """Methods takes take , you might use make Process
             match_properties:
                     continuous property or list of continuous properties to be match
@@ -134,7 +151,6 @@ class DASequenceGenerator(object):
         if not isinstance(reference_dot_array, DotArray):
             raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
                 type(reference_dot_array).__name__))
-
 
         # copy and change values to match this stimulus
         match_props = []
@@ -156,7 +172,6 @@ class DASequenceGenerator(object):
             reference_da._xy -= reference_da.center_of_outer_positions
             reference_da.set_array_modified()
 
-
         # matched deviants
         rtn = DASequence()
         rtn.method = match_props
@@ -165,10 +180,10 @@ class DASequenceGenerator(object):
         # decreasing
         if min < reference_dot_array.prop_numerosity:
             da_sequence, error = DASequenceGenerator._make_matched_deviants(
-                                                        reference_da=reference_da,
-                                                        match_props=match_props,
-                                                        target_numerosity=min,
-                                                        prefer_keeping_convex_hull=prefer_keeping_convex_hull)
+                reference_da=reference_da,
+                match_props=match_props,
+                target_numerosity=min,
+                prefer_keeping_convex_hull=prefer_keeping_convex_hull)
             rtn.append_dot_arrays(list(reversed(da_sequence)))
             if error is not None:
                 rtn.error = error
@@ -177,10 +192,10 @@ class DASequenceGenerator(object):
         # increasing
         if max > reference_dot_array.prop_numerosity:
             da_sequence, error = DASequenceGenerator._make_matched_deviants(
-                                                        reference_da=reference_da,
-                                                        match_props=match_props,
-                                                        target_numerosity=max,
-                                                        prefer_keeping_convex_hull=prefer_keeping_convex_hull)
+                reference_da=reference_da,
+                match_props=match_props,
+                target_numerosity=max,
+                prefer_keeping_convex_hull=prefer_keeping_convex_hull)
             rtn.append_dot_arrays(da_sequence)
             if error is not None:
                 rtn.error = error
@@ -194,9 +209,8 @@ class DASequenceGenerator(object):
 
         return rtn
 
-
     @staticmethod
-    def _make_matched_deviants(reference_da,                               match_props,                               target_numerosity,
+    def _make_matched_deviants(reference_da, match_props, target_numerosity,
                                prefer_keeping_convex_hull):  # TODO center array OK?
         """helper function. Do not use this method. Please use make"""
 
@@ -300,43 +314,43 @@ class DASequenceGenerator(object):
 #         self._data_queue.put(da_seq)
 #
 
-class GeneratorProcess(Process):
-    # calls the make method of the generator
-    def __init__(self, generator, **kwargs):
-        Process.__init__(self)
-        self._generator = generator
-        self._kwargs = kwargs
-        self._queue = Queue()
-        self._result = None
-        self.data_available = Event()
-        self.deamon = True
-
-    @property
-    def result(self):
-        if self._result is not None:
-            return self._result
-        else:
-            try:
-                self._result = self._queue.get_nowait()
-            except:
-                pass
-        return self._result
-
-    def run(self):
-        #print(self)
-        rtn = self._generator.make(**self._kwargs)
-        self.data_available.set()
-        self._queue.put_nowait(rtn)
-
-    def join(self, timeout=1):
-
-        #print("wait join :" + str(self))
-        self._result = self.result  # ensure ready result
-        while True:
-            try:  # empty queque
-                self._queue.get_nowait()
-            except:
-                break
-        self.terminate()
-        Process.join(self, timeout=timeout)
-        #print("joined:" + str(self))
+# class GeneratorProcess(Process): # TODO required, better get building iterators is task_nsn_production
+#     # calls the make method of the generator
+#     def __init__(self, generator, **kwargs):
+#         Process.__init__(self)
+#         self._generator = generator
+#         self._kwargs = kwargs
+#         self._queue = Queue()
+#         self._result = None
+#         self.data_available = Event()
+#         self.deamon = True
+#
+#     @property
+#     def result(self):
+#         if self._result is not None:
+#             return self._result
+#         else:
+#             try:
+#                 self._result = self._queue.get_nowait()
+#             except:
+#                 pass
+#         return self._result
+#
+#     def run(self):
+#         # print(self)
+#         rtn = self._generator.make(**self._kwargs)
+#         self.data_available.set()
+#         self._queue.put_nowait(rtn)
+#
+#     def join(self, timeout=1):
+#
+#         # print("wait join :" + str(self))
+#         self._result = self.result  # ensure ready result
+#         while True:
+#             try:  # empty queque
+#                 self._queue.get_nowait()
+#             except:
+#                 break
+#         self.terminate()
+#         Process.join(self, timeout=timeout)
+#         # print("joined:" + str(self))

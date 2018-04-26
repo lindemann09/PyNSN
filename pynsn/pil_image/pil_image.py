@@ -138,21 +138,3 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
                       width=2,
                       fill=convex_hull_colour)
         last = p
-
-
-def generate_random_dot_array_image(number, da_generator, pil_image_generator, logger=None):  # needed?
-    """
-    Generate randam Dor Array from RandomDotImageParameter
-    para: RandomDotImageParameter
-    logger has to be a GeneratorLogger
-
-    returns image and dot_array
-    """
-
-    if not isinstance(pil_image_generator, PILImageGenerator):
-        raise TypeError("para has to be ImageParameter, but not {}".format(
-            type(pil_image_generator).__name__))
-
-    dot_array = da_generator.make(n_dots=number, logger=logger)
-
-    return pil_image_generator.make(dot_array), dot_array

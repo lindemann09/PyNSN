@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 from builtins import zip, filter, range, super
 
+from multiprocessing import Pool
 from PyQt4 import QtGui,  QtCore
 from PIL.ImageQt import ImageQt
 from .. import pil_image
@@ -35,20 +36,27 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        self.pixmaps = []
-        for da in misc.progressbar(self.da_sequence.dot_arrays, label="make images",
-                              win_title="Dot Array Sequence"): #todo cancle iterator not tested
-            im = pil_image.create(da,
-                                           colour_area=image_parameter.colour_area,
-                                           colour_convex_hull_positions=image_parameter.colour_convex_hull_positions,
-                                           colour_convex_hull_dots=image_parameter.colour_convex_hull_dots,
-                                           colour_center_of_mass=image_parameter.colour_center_of_mass,
-                                           colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
-                                           antialiasing=image_parameter.antialiasing,
-                                           colour_background=image_parameter.colour_background)
-            self.pixmaps.append(QtGui.QPixmap.fromImage(ImageQt(im)))
+        pil_generator = pil_image.PILImageGenerator(colour_area=image_parameter.colour_area,
+                                          colour_convex_hull_positions=image_parameter.colour_convex_hull_positions,
+                                          colour_convex_hull_dots=image_parameter.colour_convex_hull_dots,
+                                          colour_center_of_mass=image_parameter.colour_center_of_mass,
+                                          colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
+                                          antialiasing=image_parameter.antialiasing,
+                                          colour_background=image_parameter.colour_background)
+        pil_generator = [pil_generator] * len(self.da_sequence.dot_arrays)
 
+        iter_images = Pool().imap(SequenceDisplay._helper_map, zip(self.da_sequence.dot_arrays, pil_generator))
+        progbar_iter = misc.progressbar_iterator(iter_images,
+                                                 n_elements = len(self.da_sequence.dot_arrays),
+                                                 label="make images", win_title="Dot Array Sequence")
+
+        self.pixmaps = list(map(lambda im: QtGui.QPixmap.fromImage(ImageQt(im)), progbar_iter ))
         self.updateUI()
+
+    @staticmethod
+    def _helper_map(x):
+        da, gen = x
+        return gen.make(dot_array=da)
 
     def updateUI(self):
         num = self.slider.value()
@@ -60,5 +68,6 @@ class SequenceDisplay(QtGui.QDialog):
 
     def action_slider_change(self):
         self.updateUI()
+
 
 

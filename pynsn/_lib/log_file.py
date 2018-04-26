@@ -1,6 +1,5 @@
 from __future__ import print_function, division, unicode_literals
 
-
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -10,20 +9,18 @@ import sys
 import time
 import numpy as np
 from .. import __version__
-from multiprocessing import Process, Event, Queue
 from .item_features import ItemFeaturesList
 from .dot_array import DotArray
 from .dot_array_sequence import DASequence
+import atexit
 
+class GeneratorLogger(object):
 
-class GeneratorLogger(Process):
     def __init__(self, log_filename,
                  log_colours=False,
                  num_format="%6.0f",
                  override_log_files=False,
                  properties_different_colour=False):
-
-        super(GeneratorLogger, self).__init__()
 
         self.log_filename_arrays = log_filename + ".array.csv"
         self.log_filename_properties = log_filename + ".prop.csv"
@@ -32,98 +29,76 @@ class GeneratorLogger(Process):
         self.properties_different_colour = properties_different_colour
 
         if override_log_files:
-            self.write_mode = "w+"
+            write_mode = "w+"
         else:
-            self.write_mode = "a+"
+            write_mode = "a+"
 
         try:
             os.makedirs(os.path.split(log_filename)[0])
         except:
             pass
 
-        self._quit_event = Event()
-        self._varname_written = Event()
-        self._new_data_avaiable = Event()
-        self._log_queue_array = Queue()
-        self._log_queue_prop = Queue()
+        header = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
+                                                       os.path.split(sys.argv[0])[1])
 
-        self.start()
+        with open(self.log_filename_arrays, write_mode) as logfile_arrays:
+            logfile_arrays.write(header)
+        with open(self.log_filename_properties, write_mode) as logfile_prop:
+            logfile_prop.write(header)
+        self.logtext_prop = ""
+        self.logtext_arrays = ""
+
+        self._varname_written = False
+        atexit.register(self.save)
+
+    @staticmethod
+    def _logging_txt(dot_array_object,
+                     variable_names,
+                     num_format,
+                     properties_different_colour,
+                     log_colours):
+        """helper function: returns log for dot arry and log for properties"""
+
+        if isinstance(dot_array_object, (DASequence, DotArray)):
+
+            prop = dot_array_object.get_properties()
+            prop_log = prop.get_csv(variable_names=variable_names)
+            if isinstance(dot_array_object, DotArray):
+                if properties_different_colour:
+                    prop = dot_array_object.get_properties_split_by_colours()
+                if prop is not None:
+                    prop_log = prop.get_csv(variable_names=False)
+
+                da_log = dot_array_object.get_csv(colour_column=log_colours,
+                                                  num_format=num_format, variable_names=variable_names)
+            else:  # DASequence
+                da_log = dot_array_object.get_csv(colour_column=log_colours,
+                                                  num_format=num_format, variable_names=variable_names)
+        else:
+            da_log = ""
+            prop_log = ""
+
+        return da_log, prop_log
 
     def log(self, dot_array_object):
 
-        if isinstance(dot_array_object, (DASequence, DotArray)) and not self._quit_event.is_set():
+        da_log, prop_log = GeneratorLogger._logging_txt(dot_array_object=dot_array_object,
+                                                        variable_names=not self._varname_written,
+                                                        num_format=self.num_format,
+                                                        properties_different_colour=self.properties_different_colour,
+                                                        log_colours=self.log_colours)
+        self._varname_written = True
+        self.logtext_prop += prop_log
+        self.logtext_arrays += da_log
 
-            prop = dot_array_object.get_properties()
-            prop_txt = prop.get_csv(variable_names=not self._varname_written.is_set())
-            if isinstance(dot_array_object, DotArray):
-                if self.properties_different_colour:
-                    prop = dot_array_object.get_properties_split_by_colours()
-                if prop is not None:
-                    prop_txt += prop.get_csv(variable_names=False)
+    def save(self):
+        with open(self.log_filename_arrays, "a+") as logfile_arrays:
+            logfile_arrays.write(self.logtext_arrays)
+        with open(self.log_filename_properties, "a+") as logfile_prop:
+            logfile_prop.write(self.logtext_prop)
+        self.logtext_prop = ""
+        self.logtext_arrays = ""
 
-                txt = dot_array_object.get_csv(colour_column=self.log_colours,
-                                               num_format=self.num_format,
-                                               variable_names=not self._varname_written.is_set())
-            else:  # DASequence
-
-                txt = dot_array_object.get_csv(colour_column=self.log_colours,
-                                               num_format=self.num_format,
-                                               variable_names=not self._varname_written.is_set())
-            self._log_queue_prop.put(prop_txt)
-            self._new_data_avaiable.set()
-            self._log_queue_array.put(txt)
-            self._new_data_avaiable.set()
-            self._varname_written.set()
-
-    def join(self, timeout=10):
-        self._quit_event.set()
-        self._new_data_avaiable.set()
-        super(GeneratorLogger, self).join(timeout)
-
-    def run(self):
-
-        logfile_arrays = open(self.log_filename_arrays, self.write_mode)
-        logfile_prop = open(self.log_filename_properties, self.write_mode)
-
-        comment = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
-                                                        os.path.split(sys.argv[0])[1])
-
-        logfile_prop.write(comment)
-        logfile_arrays.write(comment)
-        while not self._quit_event.is_set():
-            self._new_data_avaiable.wait(timeout=1)
-            if self._new_data_avaiable.is_set():
-                prop_txt = []
-                array_txt = []
-                # read all queues
-                while True:
-                    new_data = False
-                    try:
-                        txt = self._log_queue_prop.get_nowait()
-                        prop_txt.append(txt)
-                        new_data = True
-                    except:
-                        pass
-
-                    try:
-                        txt = self._log_queue_array.get_nowait()
-                        array_txt.append(txt)
-                        new_data = True
-                    except:
-                        pass
-
-                    if not new_data:
-                        break
-
-                self._new_data_avaiable.clear()
-                # write files
-                for txt in prop_txt:
-                    logfile_prop.write(txt)
-                for txt in array_txt:
-                    logfile_arrays.write(txt)
-
-        logfile_arrays.close()
-        logfile_prop.close()
 
 
 class LogFileReader(object):
@@ -152,7 +127,7 @@ class LogFileReader(object):
             self.unique_object_ids = []
             xy = []
             diameters = []
-            colours = [] #TODO: features
+            colours = []  # TODO: features
             pictures = []
             object_ids = []
             num_ids = []

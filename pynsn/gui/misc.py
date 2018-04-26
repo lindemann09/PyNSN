@@ -175,16 +175,15 @@ class NumberInput(object):
         self.edit.setText(str(v))
 
 
-def progressbar(data, label, win_title):
+def progressbar_iterator(iteratable, n_elements, label, win_title):
     # iterator function with prgress bar
     dialog = QtGui.QProgressDialog()
     dialog.setMaximum(100)
     dialog.setLabelText(label)
     dialog.setWindowTitle(win_title)
     dialog.open()
-    l = len(data)
-    for cnt, item in enumerate(data):
-        p = (cnt * 100) // l
+    for cnt, item in enumerate(iteratable):
+        p = (cnt * 100) // n_elements
         QtCore.QCoreApplication.instance().processEvents()
         if dialog.wasCanceled():
             raise StopIteration
