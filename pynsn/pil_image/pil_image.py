@@ -6,6 +6,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from PIL import Image, ImageDraw
 import numpy as np
 from .._lib.colour import Colour
+from .._lib.misc import PYTHON3
 
 class PILImageGenerator(object):
 
@@ -138,3 +139,29 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
                       width=2,
                       fill=convex_hull_colour)
         last = p
+
+
+class PickleablePILImage(object): # todo redundant
+    """PIL Images under PYTHON 2 are not pickable. Use this class if you need a picklable.
+    Under PYTHON3 it doesn't do anything
+
+    """
+
+    def __init__(self, pil_image):
+
+        if True:
+            self._image = pil_image
+        else:
+            self._image = {'data': pil_image.tobytes(),
+                'size': pil_image.size,
+                'mode': pil_image.mode}
+
+    @property
+    def image(self):
+        if isinstance(self._image, dict):
+            return Image.frombytes(mode=self._image['mode'],
+                                    size=self._image['size'],
+                                    data=self._image['data'])
+        else:
+            return self._image
+

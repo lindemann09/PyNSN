@@ -3,7 +3,7 @@ from builtins import map, filter, range, zip
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from . import random_beta
+from . import misc
 from copy import copy
 from multiprocessing import Pool
 from .dot_array import DotArray
@@ -66,10 +66,10 @@ class DotArrayGenerator(object):
                 diameter = self.dot_diameter_mean
             else:
                 # draw diameter from beta distribution
-                parameter = random_beta.shape_parameter_beta(self.dot_diameter_range,
-                                                             self.dot_diameter_mean,
-                                                             self.dot_diameter_std)
-                diameter = random_beta.random_beta(
+                parameter = misc.shape_parameter_beta(self.dot_diameter_range,
+                                                      self.dot_diameter_mean,
+                                                      self.dot_diameter_std)
+                diameter = misc.random_beta(
                     self.dot_diameter_range, parameter)
 
             xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
@@ -95,16 +95,16 @@ class DotArrayGenerator(object):
         args = map(lambda x: (self, x, occupied_space, logger), list_of_n_dots)
 
         if multiprocessing:
-            return Pool().imap(DotArrayGenerator._make_imap_helper, args)
+            return Pool().imap(_make_imap_helper, args)
         else:
-            return map(DotArrayGenerator._make_imap_helper, args)
+            return map(_make_imap_helper, args)
 
-    @staticmethod
-    def _make_imap_helper(args):
-        generator = args[0]
-        return generator.make(reference_dot_array=args[1],
-                              occupied_space=args[2],
-                              logger=args[3])
+
+def _make_imap_helper(args):
+    generator = args[0]
+    return generator.make(reference_dot_array=args[1],
+                          occupied_space=args[2],
+                          logger=args[3])
 
 
 class DASequenceGenerator(object):

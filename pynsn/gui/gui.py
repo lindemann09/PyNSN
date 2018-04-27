@@ -286,7 +286,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
 
         d = {"match range": match_range, "extra_space": extra_space}
-        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))
+        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods)) #TODO <-- check ERROR
         self.main_widget.text_field.append("# Sequence\n" + \
                                            yaml.dump(d, default_flow_style=False))
 

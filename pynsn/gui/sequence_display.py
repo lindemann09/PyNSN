@@ -2,13 +2,22 @@
 """
 
 from __future__ import absolute_import
-from builtins import zip, filter, range, super
+from builtins import zip, filter, range, super, map
 
 from multiprocessing import Pool
+from itertools import imap
 from PyQt4 import QtGui,  QtCore
 from PIL.ImageQt import ImageQt
+from .._lib.misc import PYTHON3
 from .. import pil_image
 from . import misc
+
+
+def _map_make_image(x):
+    da, gen = x
+    return gen.make(dot_array=da)
+
+
 
 class SequenceDisplay(QtGui.QDialog):
 
@@ -45,7 +54,7 @@ class SequenceDisplay(QtGui.QDialog):
                                           colour_background=image_parameter.colour_background)
         pil_generator = [pil_generator] * len(self.da_sequence.dot_arrays)
 
-        iter_images = Pool().imap(SequenceDisplay._helper_map, zip(self.da_sequence.dot_arrays, pil_generator))
+        iter_images = Pool().imap(_map_make_image, zip(self.da_sequence.dot_arrays, pil_generator))
         progbar_iter = misc.progressbar_iterator(iter_images,
                                                  n_elements = len(self.da_sequence.dot_arrays),
                                                  label="make images", win_title="Dot Array Sequence")
@@ -53,10 +62,6 @@ class SequenceDisplay(QtGui.QDialog):
         self.pixmaps = list(map(lambda im: QtGui.QPixmap.fromImage(ImageQt(im)), progbar_iter ))
         self.updateUI()
 
-    @staticmethod
-    def _helper_map(x):
-        da, gen = x
-        return gen.make(dot_array=da)
 
     def updateUI(self):
         num = self.slider.value()

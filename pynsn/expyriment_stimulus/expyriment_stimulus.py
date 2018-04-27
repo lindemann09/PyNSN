@@ -92,10 +92,7 @@ class ExpyrimentDASequence(object):
                 list(map(lambda x: x.make_pil_image(), self.stimuli))
                 self._make_image_process = None
             else:
-                if not isinstance(multiprocessing, bool):
-                    p = Pool(multiprocessing)
-                else:
-                    p = Pool()
+                p = Pool()
 
                 for c, pil_im in enumerate(p.imap(ExpyrimentDASequence._make_stimuli_map_helper, self.stimuli)):
                     self.stimuli[c]._image = pil_im
