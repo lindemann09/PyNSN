@@ -6,7 +6,7 @@ from builtins import zip, filter, range, super
 
 from PyQt4 import QtGui, QtCore
 from . import misc
-from .._lib import continuous_property as cp
+from .._lib import features as cp
 
 
 class MatchPropertyDialog(QtGui.QDialog):
@@ -17,15 +17,15 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         self.properties = properties
         self.comboBox = QtGui.QComboBox(self)
-        self.comboBox.addItem(cp.DotDiameter().long_label)  # 0
-        self.comboBox.addItem(cp.Density().long_label)  # 1
-        self.comboBox.addItem(cp.ConvexHull().long_label)  # 2
-        self.comboBox.addItem(cp.SurfaceArea().long_label)  # 3
-        self.comboBox.addItem(cp.Perimeter().long_label)  # 4
+        self.comboBox.addItem(cp.ItemDiameter().long_label)  # 0
+        self.comboBox.addItem(cp.Coverage().long_label)  # 1
+        self.comboBox.addItem(cp.FieldArea().long_label)  # 2
+        self.comboBox.addItem(cp.TotalSurfaceArea().long_label)  # 3
+        self.comboBox.addItem(cp.ItemPerimeter().long_label)  # 4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(cp.DotDiameter().long_label)
+        self.choice(cp.ItemDiameter().long_label)
 
         vlayout = QtGui.QVBoxLayout(self)
         hlayout = QtGui.QHBoxLayout()
@@ -45,15 +45,15 @@ class MatchPropertyDialog(QtGui.QDialog):
 
     def choice(self, selection):
 
-        if selection == cp.DotDiameter().long_label:
+        if selection == cp.ItemDiameter().long_label:
             self.num_input.value = self.properties.mean_dot_diameter
-        elif selection == cp.Density().long_label:
+        elif selection == cp.Coverage().long_label:
             self.num_input.value = self.properties.density
-        elif selection == cp.ConvexHull().long_label:
+        elif selection == cp.FieldArea().long_label:
             self.num_input.value = self.properties.convex_hull_area
-        elif selection == cp.Perimeter().long_label:
+        elif selection == cp.ItemPerimeter().long_label:
             self.num_input.value = self.properties.total_perimeter
-        elif selection == cp.SurfaceArea().long_label:
+        elif selection == cp.TotalSurfaceArea().long_label:
             self.num_input.value = self.properties.total_surface_area
 
     @staticmethod
@@ -73,17 +73,17 @@ class SettingsDialog(QtGui.QDialog):
 
         self.setWindowTitle("Dot Array Property")
 
-        self.colour_area = misc.LabeledInput("Area",
-                                             text=image_parameter.colour_area.colour,
+        self.colour_area = misc.LabeledInput("Traget Area",
+                                             text=image_parameter.colour_target_area.colour,
                                              case_sensitive=False)
         self.colour_background = misc.LabeledInput("Background",
                                                    text=image_parameter.colour_background.colour,
                                                    case_sensitive=False)
-        self.colour_convex_hull_positions = misc.LabeledInput("Colour positions CH",
-                                                              text=image_parameter.colour_convex_hull_positions.colour,
+        self.colour_convex_hull_positions = misc.LabeledInput("Colour field area",
+                                                              text=image_parameter.colour_field_area.colour,
                                                               case_sensitive=False)
-        self.colour_convex_hull_dots = misc.LabeledInput("Colour dots CH",
-                                                         text=image_parameter.colour_convex_hull_dots.colour,
+        self.colour_convex_hull_dots = misc.LabeledInput("Colour field area outer",
+                                                         text=image_parameter.colour_field_area_outer.colour,
                                                          case_sensitive=False)
         self.antialiasing = QtGui.QCheckBox("Antialiasing")
         self.antialiasing.setChecked(image_parameter.antialiasing)
@@ -121,16 +121,16 @@ class SequenceDialog(QtGui.QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QtGui.QCheckBox(cp.DotDiameter.long_label)
-        self.match_area = QtGui.QCheckBox(cp.SurfaceArea.long_label)
-        self.match_perimeter = QtGui.QCheckBox(cp.Perimeter.long_label)
-        self.match_density = QtGui.QCheckBox(cp.Density.long_label)
-        self.match_convex_hull = QtGui.QCheckBox(cp.ConvexHull.long_label)
+        self.match_diameter = QtGui.QCheckBox(cp.ItemDiameter.long_label)
+        self.match_area = QtGui.QCheckBox(cp.TotalSurfaceArea.long_label)
+        self.match_perimeter = QtGui.QCheckBox(cp.ItemPerimeter.long_label)
+        self.match_density = QtGui.QCheckBox(cp.Coverage.long_label)
+        self.match_convex_hull = QtGui.QCheckBox(cp.FieldArea.long_label)
         self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
-                                                          value=cp.ConvexHull().match_presision,
+                                                          value=cp.FieldArea().match_presision,
                                                           integer_only=False)
         self.match_density_ratio = misc.LabeledNumberInput("Ratio convex_hull/area",
-                                                           value=cp.Density().match_ratio_convhull2area,
+                                                           value=cp.Coverage().match_ratio_fieldarea2totalarea,
                                                            integer_only=False, min=0, max=1)
         self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range", value1=10, value2=100)
         self.match_extra_space = misc.LabeledNumberInput("Extra space",
@@ -174,24 +174,24 @@ class SequenceDialog(QtGui.QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [cp.DotDiameter()]
+        all = [cp.ItemDiameter()]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Perimeter())
+        all.append(cp.ItemPerimeter())
         if self.match_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.SurfaceArea())
+        all.append(cp.TotalSurfaceArea())
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.ConvexHull(match_presision=self.match_ch_presision.value))
+        all.append(cp.FieldArea(match_presision=self.match_ch_presision.value))
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Density(match_ratio_convhull2area=self.match_density_ratio.value,
-                              convex_hull_precision=self.match_ch_presision.value))
+        all.append(cp.Coverage(match_ratio_fieldarea2totalarea=self.match_density_ratio.value,
+                               convex_hull_precision=self.match_ch_presision.value))
         if self.match_density.isChecked():
             selected.append(all[-1])
 
@@ -203,19 +203,19 @@ class SequenceDialog(QtGui.QDialog):
         for x in all:
             if x not in selected:
                 if sum(map(lambda s: s.is_dependent(x), selected)) > 0:  # any dependency
-                    if isinstance(x, cp.DotDiameter):
+                    if isinstance(x, cp.ItemDiameter):
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    if isinstance(x, cp.SurfaceArea):
+                    if isinstance(x, cp.TotalSurfaceArea):
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    if isinstance(x, cp.Perimeter):
+                    if isinstance(x, cp.ItemPerimeter):
                         self.match_perimeter.setEnabled(False)
                         self.match_perimeter.setChecked(False)
-                    if isinstance(x, cp.ConvexHull):
+                    if isinstance(x, cp.FieldArea):
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
-                    if isinstance(x, cp.Density):
+                    if isinstance(x, cp.Coverage):
                         self.match_density.setEnabled(False)
                         self.match_density.setChecked(False)
 

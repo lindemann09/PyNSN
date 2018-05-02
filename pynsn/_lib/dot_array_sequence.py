@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
 import numpy as np
-from .simple_dot_array import DotArrayProperties
+from .simple_dot_array import DotArrayFeature
 from .dot_array import DotArray
 
 class DASequence(object):
@@ -28,11 +28,11 @@ class DASequence(object):
         if isinstance(arr, DotArray):
             arr = [arr]
         self.dot_arrays.extend(arr)
-        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
         self.dot_arrays.pop(array_id)
-        self.numerosity_idx = {da.prop_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def get_array_numerosity(self, number_of_dots):
         """returns array with a particular numerosity"""
@@ -44,7 +44,7 @@ class DASequence(object):
 
     @property
     def min_max_numerosity(self):
-        return (self.dot_arrays[0].prop_numerosity, self.dot_arrays[-1].prop_numerosity)
+        return (self.dot_arrays[0].feature_numerosity, self.dot_arrays[-1].feature_numerosity)
 
     @property
     def object_id(self):
@@ -55,21 +55,21 @@ class DASequence(object):
             m.update(da.object_id.encode("UTF-8"))
         return m.hexdigest()[:DotArray.OBJECT_ID_LENGTH]
 
-    def get_properties(self):
+    def get_features(self):
         """named tuple with arrays"""
-        rtn = DotArrayProperties._make_arrays()
+        rtn = DotArrayFeature._make_arrays()
 
         for da in self.dot_arrays:
-            prop = da.get_properties()
+            prop = da.get_features()
             for i in range(len(rtn)):
                 rtn[i].append(prop[i])
         return rtn
 
     def get_numerosity_correlations(self):
-        prop = self.get_properties()
+        prop = self.get_features()
         cor = np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
         cor = cor[0, :]
-        names = prop.property_names
+        names = prop.feature_names
         rtn = {}
         for x in range(1, len(cor)):
             rtn[names[x]] = cor[x]

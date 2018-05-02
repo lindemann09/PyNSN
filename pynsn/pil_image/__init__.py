@@ -1,1 +1,1 @@
-from .pil_image import PILImageGenerator, PickleablePILImage
+from .pil_image import PILImageGenerator

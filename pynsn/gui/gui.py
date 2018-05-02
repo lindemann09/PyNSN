@@ -17,28 +17,28 @@ from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = (40, DotArrayGenerator(max_array_radius=200,
-                                       dot_colour="lime",
-                                       dot_diameter_mean=15,
-                                       dot_diameter_range=[5, 40],
-                                       dot_diameter_std=8,
+DEFAULT_ARRAY = (40, DotArrayGenerator(target_array_radius=200,
+                                       item_colour="lime",
+                                       item_diameter_mean=15,
+                                       item_diameter_range=[5, 40],
+                                       item_diameter_std=8,
                                        minimum_gap=2),
-                 pil_image.PILImageGenerator(colour_area="#3e3e3e",
-                                             colour_convex_hull_positions=None,
-                                             colour_convex_hull_dots=None,
+                 pil_image.PILImageGenerator(colour_target_area="#3e3e3e",
+                                             colour_field_area=None,
+                                             colour_field_area_outer=None,
                                              colour_center_of_mass=None,
                                              colour_center_of_outer_positions=None,
                                              antialiasing=True,
                                              colour_background="gray"))
 
-ICON = (11, DotArrayGenerator(max_array_radius=200,
-                              dot_colour="lime",
-                              dot_diameter_mean=35,
-                              dot_diameter_range=[5, 80],
-                              dot_diameter_std=20),
-        pil_image.PILImageGenerator(colour_area="#3e3e3e",
-                                    colour_convex_hull_positions=None,
-                                    colour_convex_hull_dots="expyriment_orange",
+ICON = (11, DotArrayGenerator(target_array_radius=200,
+                              item_colour="lime",
+                              item_diameter_mean=35,
+                              item_diameter_range=[5, 80],
+                              item_diameter_std=20),
+        pil_image.PILImageGenerator(colour_target_area="#3e3e3e",
+                                    colour_field_area=None,
+                                    colour_field_area_outer="expyriment_orange",
                                     colour_center_of_mass=None,
                                     colour_center_of_outer_positions=None,
                                     antialiasing=True,
@@ -147,13 +147,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
             return self._image
         else:
             para = self.get_image_parameter()
-            pil_gen = pil_image.PILImageGenerator(colour_area=para.colour_area,
-                                           colour_convex_hull_positions=para.colour_convex_hull_positions,
-                                           colour_convex_hull_dots=para.colour_convex_hull_dots,
-                                           colour_center_of_mass=para.colour_center_of_mass,
-                                           colour_center_of_outer_positions=para.colour_center_of_outer_positions,
-                                           antialiasing=para.antialiasing,
-                                           colour_background=para.colour_background)
+            pil_gen = pil_image.PILImageGenerator(colour_target_area=para.colour_target_area,
+                                                  colour_field_area=para.colour_field_area,
+                                                  colour_field_area_outer=para.colour_field_area_outer,
+                                                  colour_center_of_mass=para.colour_center_of_mass,
+                                                  colour_center_of_outer_positions=para.colour_center_of_outer_positions,
+                                                  antialiasing=para.antialiasing,
+                                                  colour_background=para.colour_background)
 
             self._image = pil_gen.make(dot_array=self.data_array)
             return self._image
@@ -169,12 +169,12 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_dot = DEFAULT_ARRAY[1].dot_colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return DotArrayGenerator(max_array_radius=self.main_widget.max_array_radius.value,
-                                 dot_colour=colour_dot,
-                                 dot_diameter_mean=self.main_widget.dot_diameter_mean.value,
-                                 dot_diameter_range=[self.main_widget.dot_diameter_range.value1,
-                                                     self.main_widget.dot_diameter_range.value2],
-                                 dot_diameter_std=self.main_widget.dot_diameter_std.value,
+        return DotArrayGenerator(target_array_radius=self.main_widget.target_array_radius.value,
+                                 item_colour=colour_dot,
+                                 item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                                 item_diameter_range=[self.main_widget.item_diameter_range.value1,
+                                                      self.main_widget.item_diameter_range.value2],
+                                 item_diameter_std=self.main_widget.item_diameter_std.value,
                                  minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_parameter(self):
@@ -201,9 +201,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return pil_image.PILImageGenerator(colour_area=colour_area,
-                                           colour_convex_hull_positions=colour_convex_hull_positions,
-                                           colour_convex_hull_dots=colour_convex_hull_dots,
+        return pil_image.PILImageGenerator(colour_target_area=colour_area,
+                                           colour_field_area=colour_convex_hull_positions,
+                                           colour_field_area_outer=colour_convex_hull_dots,
                                            colour_center_of_mass=None,
                                            colour_center_of_outer_positions=None,
                                            antialiasing=self.settings.antialiasing.isChecked(),
@@ -216,7 +216,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         """"""
         if remake_image:
             self._image = None
-        w = self.get_generator().max_array_radius * 2
+        w = self.get_generator().target_array_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
         self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
@@ -230,10 +230,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.write_properties()
 
     def write_properties(self, clear_field=True):
-        prop = self.data_array.get_properties()
+        prop = self.data_array.get_features()
         txt = prop.get_nice_text()
         if self.settings.bicoloured.isChecked():
-            prop = self.data_array.get_properties_split_by_colours()
+            prop = self.data_array.get_features_split_by_colours()
             for p in prop.split:
                 txt += p.get_nice_text()
         if clear_field:
@@ -260,7 +260,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.current_data_array.get_properties()
+        prop = self.current_data_array.get_features()
         print(dialogs.MatchPropertyDialog.get_response(self, prop))  # TODO
 
     def action_settings(self):
@@ -276,7 +276,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_slider_released(self):
         """"""
-        change = self.main_widget.number.value - self.data_array.prop_numerosity
+        change = self.main_widget.number.value - self.data_array.feature_numerosity
         self.data_array = self.data_array.number_deviant(change)
         self.show_current_image(remake_image=True)
         self.write_properties()
@@ -297,7 +297,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
                                                extra_space=extra_space)
             sequence = gen.make(reference_dot_array=self.data_array, logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.data_array.prop_numerosity,
+                            start_numerosity=self.data_array.feature_numerosity,
                             image_parameter=self.get_image_parameter()).exec_()
 
 

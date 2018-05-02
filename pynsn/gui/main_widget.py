@@ -25,12 +25,12 @@ class MainWidget(QtGui.QWidget):
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 0)
 
-        self.max_array_radius = LabeledNumberInput("Max radius", generator.max_array_radius)
-        self.dot_diameter_mean = LabeledNumberInput("Mean diameter", generator.dot_diameter_mean)
-        self.dot_diameter_std = LabeledNumberInput("Diameter range std", generator.dot_diameter_std)
-        self.dot_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                              value1=generator.dot_diameter_range[0],
-                                                              value2=generator.dot_diameter_range[1])
+        self.target_array_radius = LabeledNumberInput("Max radius", generator.target_array_radius)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", generator.item_diameter_mean)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", generator.item_diameter_std)
+        self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
+                                                               value1=generator.item_diameter_range[0],
+                                                               value2=generator.item_diameter_range[1])
 
         self.minimum_gap = LabeledNumberInput("Minimum gap", generator.minimum_gap)
 
@@ -46,14 +46,14 @@ class MainWidget(QtGui.QWidget):
         ctrl.addLayout(self.number2.layout())
 
         ctrl.addWidget(heading("Dot"))
-        ctrl.addLayout(self.dot_diameter_mean.layout())
-        ctrl.addLayout(self.dot_diameter_range.layout())
-        ctrl.addLayout(self.dot_diameter_std.layout())
+        ctrl.addLayout(self.item_diameter_mean.layout())
+        ctrl.addLayout(self.item_diameter_range.layout())
+        ctrl.addLayout(self.item_diameter_std.layout())
         ctrl.addLayout(self.dot_colour.layout())
         ctrl.addLayout(self.dot_colour2.layout())
 
         ctrl.addWidget(heading("Array"))
-        ctrl.addLayout(self.max_array_radius.layout())
+        ctrl.addLayout(self.target_array_radius.layout())
         ctrl.addLayout(self.minimum_gap.layout())
         ctrl.addStretch(1)
 

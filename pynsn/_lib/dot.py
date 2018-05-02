@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
 from .colour import Colour
-from .item_features import ItemFeatures, ItemFeaturesList
+from .item_attributes import ItemAttributes, ItemAttributeList
 
 class Coordinate2D(object):
 
@@ -115,14 +115,14 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
         x : numeric (default=0)
         y : numeric (default=0)
         diameter : numeric (default=1)
-        features : ItemFeatures
+        features : ItemAttributes
         """
 
         Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
         if features is None:
-            self.features = ItemFeatures(colour=None, picture=None)
-        elif not isinstance(features, ItemFeatures):
+            self.features = ItemAttributes(colour=None, picture=None)
+        elif not isinstance(features, ItemAttributes):
             raise TypeError("features must be a ItemFeatures, not {}".format(
                 type(features).__name__))
         else:
@@ -173,7 +173,7 @@ class Rectangle(Coordinate2D): #todo
 
         Coordinate2D.__init__(self, x=x, y=y)
         if features is None:
-            self.features = ItemFeaturesList(colour=None)
+            self.features = ItemAttributeList(colour=None)
         else:
             self.features = features
 

@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
-__version__ = '0.7.18'
+__version__ = '0.7.19'
 
 from ._lib.simple_dot_array import SimpleDotArray
 from ._lib.dot_array import DotArray
@@ -16,9 +16,10 @@ from ._lib.log_file import GeneratorLogger, LogFileReader
 
 from ._lib.dot import Dot
 from ._lib.colour import Colour
-from ._lib.continuous_property import SurfaceArea, DotDiameter, Perimeter, ConvexHull, Density
-from ._lib.simple_dot_array import DotArrayProperties
-from ._lib.item_features import ItemFeaturesList, ItemFeatures
+from ._lib.features import TotalSurfaceArea, ItemDiameter, ItemPerimeter, FieldArea, Coverage
+from ._lib.cardinal_features import CardinalFeatures, CardinalFeaturesDotArray
+from ._lib.simple_dot_array import DotArrayFeature
+from ._lib.item_attributes import ItemAttributeList, ItemAttributes
 
 
 # TODO:

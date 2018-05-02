@@ -15,9 +15,9 @@ class ExprimentDotArray(Canvas):
     def __init__(self, dot_array,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colour_area=None,
-                 colour_convex_hull_positions=None,
-                 colour_convex_hull_dots=None,
+                 colour_target_area=None,
+                 colour_field_area=None,
+                 colour_field_area_outer=None,
                  colour_center_of_mass=None,
                  colour_center_of_outer_positions=None,
                  antialiasing=True,
@@ -25,11 +25,11 @@ class ExprimentDotArray(Canvas):
 
         Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
-        self.colour_convex_hull_positions = Colour(colour_convex_hull_positions)
-        self.colour_convex_hull_dots = Colour(colour_convex_hull_dots)
+        self.colour_field_area = Colour(colour_field_area)
+        self.colour_field_area_outer = Colour(colour_field_area_outer)
         self.colour_center_of_mass = Colour(colour_center_of_mass)
         self.colour_center_of_outer_positions = Colour(colour_center_of_outer_positions)
-        self.colour_area = Colour(colour_area)
+        self.colour_target_area = Colour(colour_target_area)
         self.colour_background = Colour(colour_background)
         self.antialiasing = antialiasing
         self._image = None
@@ -43,9 +43,9 @@ class ExprimentDotArray(Canvas):
 
     def make_pil_image(self):
 
-        gen = PILImageGenerator(colour_area=self.colour_area,
-                                colour_convex_hull_positions=self.colour_convex_hull_positions,
-                                colour_convex_hull_dots=self.colour_convex_hull_dots,
+        gen = PILImageGenerator(colour_target_area=self.colour_target_area,
+                                colour_field_area=self.colour_field_area,
+                                colour_field_area_outer=self.colour_field_area_outer,
                                 colour_center_of_mass=self.colour_center_of_mass,
                                 colour_center_of_outer_positions=self.colour_center_of_outer_positions,
                                 antialiasing=self.antialiasing,
@@ -67,7 +67,7 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colour_area=None,
+                 colour_target_area=None,
                  antialiasing=None,
                  colour_background=(0, 0, 0),
                  make_pil_images_now=False,
@@ -76,13 +76,13 @@ class ExpyrimentDASequence(object):
         self.da_sequence = da_sequence
         self.stimuli = []
         self.position = position
-        self.colour_area = colour_area
+        self.colour_area = colour_target_area
         self.antialiasing = antialiasing
         self.colour_background = colour_background
 
         for da in self.da_sequence.dot_arrays:
             stim = ExprimentDotArray(dot_array=da, position=position,
-                                     colour_area=colour_area, antialiasing=antialiasing,
+                                     colour_target_area=colour_target_area, antialiasing=antialiasing,
                                      colour_background=colour_background)
             self.stimuli.append(stim)
 

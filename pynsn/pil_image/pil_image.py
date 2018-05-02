@@ -11,9 +11,9 @@ from .._lib.misc import PYTHON3
 class PILImageGenerator(object):
 
     def __init__(self,
-                 colour_area=None,
-                 colour_convex_hull_positions=None,
-                 colour_convex_hull_dots=None,
+                 colour_target_area=None,
+                 colour_field_area=None,
+                 colour_field_area_outer=None,
                  colour_center_of_mass=None,
                  colour_center_of_outer_positions=None,
                  antialiasing=None,
@@ -21,9 +21,9 @@ class PILImageGenerator(object):
                  default_dot_colour=Colour("lightgreen")  # used if no color specified in dot array
                  ):
 
-        self.colour_area = Colour(colour_area)
-        self.colour_convex_hull_positions = Colour(colour_convex_hull_positions)
-        self.colour_convex_hull_dots = Colour(colour_convex_hull_dots)
+        self.colour_target_area = Colour(colour_target_area)
+        self.colour_field_area = Colour(colour_field_area)
+        self.colour_field_area_outer = Colour(colour_field_area_outer)
         self.colour_center_of_mass = Colour(colour_center_of_mass)
         self.colour_center_of_outer_positions = Colour(colour_center_of_outer_positions)
         self.colour_background = Colour(colour_background)
@@ -41,9 +41,9 @@ class PILImageGenerator(object):
                 self.antialiasing = 1
 
     def as_dict(self):
-        return {"colour_area": self.colour_area.colour,
-                "colour_convex_hull_positions": self.colour_convex_hull_positions.colour,
-                "colour_convex_hull_dots": self.colour_convex_hull_dots.colour,
+        return {"colour_total_area": self.colour_target_area.colour,
+                "colour_field_area": self.colour_field_area.colour,
+                "colour_field_area_outer": self.colour_field_area_outer.colour,
                 "colour_center_of_mass": self.colour_center_of_mass.colour,
                 "colour_center_of_outer_positions": self.colour_center_of_outer_positions.colour,
                 "antialiasing": self.antialiasing,
@@ -60,11 +60,11 @@ class PILImageGenerator(object):
         """
 
         aa = self.antialiasing
-        image_size = int(round(dot_array.max_array_radius * 2)) * aa
+        image_size = int(round(dot_array.target_array_radius * 2)) * aa
         img = Image.new("RGBA", (image_size, image_size),
                         color=self.colour_background.colour)
 
-        tmp_colour = self.colour_area.colour
+        tmp_colour = self.colour_target_area.colour
         if tmp_colour is not None:
             _draw_dot(img, xy=_convert_pos(np.zeros(2), image_size),
                       diameter=image_size,
@@ -79,18 +79,18 @@ class PILImageGenerator(object):
                 c = default_dot_colour
             _draw_dot(img, xy=xy, diameter=d, colour=c.colour)  # todo draw pictures
 
-        tmp_colour = self.colour_convex_hull_positions.colour
+        tmp_colour = self.colour_field_area.colour
         if tmp_colour is not None:
             # plot convey hull
             _draw_convex_hull(img=img,
                               convex_hull=_convert_pos(dot_array.convex_hull_positions * aa, image_size),
                               convex_hull_colour=tmp_colour)
 
-        tmp_colour = self.colour_convex_hull_dots.colour
+        tmp_colour = self.colour_field_area_outer.colour
         if tmp_colour is not None:
             # plot convey hull
             _draw_convex_hull(img=img,
-                              convex_hull=_convert_pos(dot_array.convex_hull * aa, image_size),
+                              convex_hull=_convert_pos(dot_array.full_convex_hull_positions * aa, image_size),
                               convex_hull_colour=tmp_colour)
 
         tmp_colour = self.colour_center_of_mass.colour
@@ -139,29 +139,4 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
                       width=2,
                       fill=convex_hull_colour)
         last = p
-
-
-class PickleablePILImage(object): # todo redundant
-    """PIL Images under PYTHON 2 are not pickable. Use this class if you need a picklable.
-    Under PYTHON3 it doesn't do anything
-
-    """
-
-    def __init__(self, pil_image):
-
-        if True:
-            self._image = pil_image
-        else:
-            self._image = {'data': pil_image.tobytes(),
-                'size': pil_image.size,
-                'mode': pil_image.mode}
-
-    @property
-    def image(self):
-        if isinstance(self._image, dict):
-            return Image.frombytes(mode=self._image['mode'],
-                                    size=self._image['size'],
-                                    data=self._image['data'])
-        else:
-            return self._image
 

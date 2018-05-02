@@ -12,13 +12,13 @@ from collections import namedtuple
 from hashlib import md5
 import numpy as np
 from scipy import spatial
-from .item_features import numpy_vector
-from . import continuous_property as cp
+from .item_attributes import numpy_vector
+from . import features as cp
 
 TWO_PI = 2 * np.pi
 
 
-class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
+class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
                                                      "total_surface_area", "convex_hull_area",
                                                      "density", "total_perimeter"])):
     __slots__ = ()
@@ -30,7 +30,7 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
         return cls._make(map(lambda _: [], range(n_prop)))
 
     @property
-    def property_names(self):
+    def feature_names(self):
         return self._fields[1:]
 
     @property
@@ -65,7 +65,7 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
             tmp = []
             for f in range(len(self._fields)):
                 tmp.append(self[f][i])
-            rtn.append(DotArrayProperties._make(tmp))
+            rtn.append(DotArrayFeature._make(tmp))
         return rtn
 
     def get_nice_text(self, spacing_char="."):
@@ -122,14 +122,14 @@ class SimpleDotArray(object):
         return self._xy
 
     @property
-    def diameters(self):
+    def item_diameters(self):
         return self._diameters
 
-    def append(self, xy, diameters):
+    def append(self, xy, item_diameters):
         """append dots using numpy array"""
 
         # ensure numpy array
-        diameters = numpy_vector(diameters)
+        item_diameters = numpy_vector(item_diameters)
         # ensure xy is a 2d array
         xy = np.array(xy)
         if xy.ndim == 1 and len(xy) == 2:
@@ -137,13 +137,13 @@ class SimpleDotArray(object):
         if xy.ndim != 2:
             raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
 
-        if xy.shape[0] != len(diameters):
-            raise RuntimeError("Bad shaped data: " + u"xy has not the same length as diameter")
+        if xy.shape[0] != len(item_diameters):
+            raise RuntimeError("Bad shaped data: " + u"xy has not the same length as item_diameters")
 
         if len(self._xy) == 0:
             self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
         self._xy = np.append(self._xy, xy, axis=0)
-        self._diameters = np.append(self._diameters, diameters)
+        self._diameters = np.append(self._diameters, item_diameters)
         self.set_array_modified()
 
     def clear(self):
@@ -163,7 +163,7 @@ class SimpleDotArray(object):
 
         """
         if indices is None:
-            indices = list(range(self.prop_numerosity))
+            indices = list(range(self.feature_numerosity))
 
         return SimpleDotArray(xy=self._xy[indices, :].copy(),
                               diameters=self._diameters[indices].copy())
@@ -239,7 +239,7 @@ class SimpleDotArray(object):
         return self._ch.convex_hull_object.vertices
 
     @property
-    def convex_hull(self):  # FIXME not defined for l<3
+    def full_convex_hull_positions(self):  # FIXME not defined for l<3
         """this convex_hull takes into account the dot diameter"""
         return self._ch.full_xy
 
@@ -278,49 +278,53 @@ class SimpleDotArray(object):
         return shift_required
 
     @property
-    def prop_mean_dot_diameter(self):
+    def feature_item_diameter(self):
         return self._diameters.mean()
 
     @property
-    def prop_total_surface_area(self):
+    def feature_total_surface_area(self):
         return np.sum(self.surface_areas)
 
     @property
-    def prop_total_perimeter(self):
+    def feature_total_perimeter(self):
         return np.sum(self.perimeter)
 
     @property
-    def prop_convex_hull_area_positions(self):  # FIXME not defined for l<3
+    def feature_field_area(self):
         return self._ch.convex_hull_object.area
 
     @property
-    def prop_convex_hull_area(self):  # FIXME not defined for l<3
-        return self._ch.full_area
+    def feature_field_area_outer(self):  # FIXME not used (correct?)
+        return self._ch.full_field_area
 
     @property
-    def prop_numerosity(self):
+    def feature_numerosity(self):
         return len(self._xy)
 
     @property
-    def prop_density(self):  # FIXME should be converage not defined for l<3
+    def feature_converage(self):
         """density takes into account the convex hull"""
         try:
-            return self.prop_convex_hull_area / self.prop_total_surface_area  # todo: positions conved hull
+            return self.feature_total_surface_area / self.feature_field_area
         except:
             return None
 
-    def get_properties(self):
+    @property
+    def feature_sparcity(self):
+        return self.feature_field_area / self.feature_numerosity
+
+    def get_features(self):
         """returns a named tuple """
-        return DotArrayProperties(self.object_id, self.prop_numerosity, self.prop_mean_dot_diameter,
-                                  self.prop_total_surface_area, self.prop_convex_hull_area, self.prop_density,
-                                  self.prop_total_perimeter)
+        return DotArrayFeature(self.object_id, self.feature_numerosity, self.feature_item_diameter,
+                               self.feature_total_surface_area, self.feature_field_area, self.feature_converage,
+                               self.feature_total_perimeter)
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
         dist = spatial.distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
         if not between_positions:
             # subtract dot diameter
-            radii_mtx = np.ones((self.prop_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
+            radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
             dist -= radii_mtx  # for each row
             dist -= radii_mtx.T  # each each column
         return dist
@@ -331,7 +335,7 @@ class SimpleDotArray(object):
 
         dist = self.get_distance_matrix(between_positions=True)
         # add dot diameter
-        radii_mtx = np.ones((self.prop_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
+        radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
         dist += radii_mtx  # add to each row
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
@@ -349,7 +353,7 @@ class SimpleDotArray(object):
         if not isinstance(match_properties, (list, tuple)):
             match_properties = [match_properties]
 
-        cp.check_list_continuous_properties(match_properties, check_set_value=match_dot_array is None)
+        cp.check_feature_list(match_properties, check_set_value=match_dot_array is None)
 
         # copy and change values to match this stimulus
         if match_dot_array is None:
@@ -363,19 +367,19 @@ class SimpleDotArray(object):
 
         # Adapt
         for cont_prop in match_props:
-            if isinstance(cont_prop, cp.SurfaceArea):
+            if isinstance(cont_prop, cp.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=cont_prop.value)
-            elif isinstance(cont_prop, cp.DotDiameter):
-                self._match_mean_dot_diameter(mean_dot_diameter=cont_prop.value)
-            elif isinstance(cont_prop, cp.Perimeter):
+            elif isinstance(cont_prop, cp.ItemDiameter):
+                self._match_mean_item_diameter(mean_dot_diameter=cont_prop.value)
+            elif isinstance(cont_prop, cp.ItemPerimeter):
                 self._match_total_perimeter(total_perimeter=cont_prop.value)
-            elif isinstance(cont_prop, cp.ConvexHull):
-                self._match_convex_hull_area(convex_hull_area=cont_prop.value,
-                                             precision=cont_prop.match_presision)
-            elif isinstance(cont_prop, cp.Density):
-                self._match_density(density=cont_prop.value,
-                                    precision=cont_prop.convex_hull_precision,
-                                    adaptation_CH2TA_ratio=cont_prop.match_ratio_convhull2area)
+            elif isinstance(cont_prop, cp.FieldArea):
+                self._match_field_area(field_area=cont_prop.value,
+                                       precision=cont_prop.match_presision)
+            elif isinstance(cont_prop, cp.Coverage):
+                self._match_coverage(coverage=cont_prop.value,
+                                     precision=cont_prop.convex_hull_precision,
+                                     adaptation_FA2TA_ratio=cont_prop.match_ratio_fieldarea2totalarea)
 
         if center_array:
             self._xy -= self.center_of_outer_positions
@@ -383,29 +387,29 @@ class SimpleDotArray(object):
 
     def _match_total_surface_area(self, surface_area):
         # changes diameter
-        a_scale = (surface_area / self.prop_total_surface_area)
+        a_scale = (surface_area / self.feature_total_surface_area)
         self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
         self.set_array_modified()
 
-    def _match_mean_dot_diameter(self, mean_dot_diameter):
+    def _match_mean_item_diameter(self, mean_dot_diameter):
         # changes diameter
 
-        scale = mean_dot_diameter / self.prop_mean_dot_diameter
+        scale = mean_dot_diameter / self.feature_item_diameter
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
     def _match_total_perimeter(self, total_perimeter):
         # linear to fit_mean_dot_diameter, but depends on numerosity
-        mean_dot_diameter = total_perimeter / (self.prop_numerosity * np.pi)
-        self._match_mean_dot_diameter(mean_dot_diameter)
+        mean_dot_diameter = total_perimeter / (self.feature_numerosity * np.pi)
+        self._match_mean_item_diameter(mean_dot_diameter)
 
-    def _match_convex_hull_area(self, convex_hull_area, precision=0.001):
+    def _match_field_area(self, field_area, precision=0.001):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
         """
-        current = self.prop_convex_hull_area
+        current = self.feature_field_area
 
         if current is None:
             return  # not defined
@@ -413,29 +417,29 @@ class SimpleDotArray(object):
         # iteratively determine scale
         scale = 1  # find good scale
         step = 0.1
-        if convex_hull_area < current:  # current too larger
+        if field_area < current:  # current too larger
             step *= -1
 
         # centered  points
         old_center = self.center_of_outer_positions
         centered_polar = SimpleDotArray._cartesian2polar(self._xy - old_center)
 
-        while abs(current - convex_hull_area) > precision:
+        while abs(current - field_area) > precision:
 
             scale += step
 
             self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
             self.set_array_modified()  # required to recalc convex hull
-            current = self.prop_convex_hull_area
+            current = self.feature_field_area
 
-            if (current < convex_hull_area and step < 0) or \
-                    (current > convex_hull_area and step > 0):
+            if (current < field_area and step < 0) or \
+                    (current > field_area and step > 0):
                 step *= -0.2  # change direction and finer grain
 
         self._xy += old_center
         self.set_array_modified()
 
-    def _match_density(self, density, precision=0.001, adaptation_CH2TA_ratio=0.5):
+    def _match_coverage(self, coverage, precision=0.001, adaptation_FA2TA_ratio=0.5):
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 
@@ -445,16 +449,16 @@ class SimpleDotArray(object):
         """
 
         # dens = convex_hull_area / total_surface_area
-        if adaptation_CH2TA_ratio < 0 or adaptation_CH2TA_ratio > 1:
-            adaptation_CH2TA_ratio = 0.5
+        if adaptation_FA2TA_ratio < 0 or adaptation_FA2TA_ratio > 1:
+            adaptation_FA2TA_ratio = 0.5
 
-        area_change100 = (self.prop_convex_hull_area / density) - self.prop_total_surface_area
-        d_change_area = area_change100 * (1 - adaptation_CH2TA_ratio)
+        area_change100 = (self.feature_field_area / coverage) - self.feature_total_surface_area
+        d_change_area = area_change100 * (1 - adaptation_FA2TA_ratio)
         if abs(d_change_area) > 0:
-            self._match_total_surface_area(surface_area=self.prop_total_surface_area + d_change_area)
+            self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_area)
 
-        self._match_convex_hull_area(convex_hull_area=self.prop_total_surface_area * density,
-                                     precision=precision)
+        self._match_field_area(field_area=self.feature_total_surface_area * coverage,
+                               precision=precision)
 
     def remove_overlap_from_inner_to_outer(self, minimum_gap):
 
@@ -502,7 +506,7 @@ class EfficientConvexHull(object):
         return self._full_xy
 
     @property
-    def full_area(self):
+    def full_field_area(self):
         if self._full_area is None:
             self._full_area = spatial.ConvexHull(self.full_xy).area
 

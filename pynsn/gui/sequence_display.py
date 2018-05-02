@@ -18,7 +18,6 @@ def _map_make_image(x):
     return gen.make(dot_array=da)
 
 
-
 class SequenceDisplay(QtGui.QDialog):
 
     def __init__(self, parent, da_sequence, start_numerosity, image_parameter):
@@ -27,7 +26,7 @@ class SequenceDisplay(QtGui.QDialog):
 
         self.setWindowTitle("Dot Array Sequence")
         self.da_sequence = da_sequence
-        self.pixmap_width = da_sequence.dot_arrays[0].max_array_radius * 2
+        self.pixmap_width = da_sequence.dot_arrays[0].target_array_radius * 2
 
         self.picture_field = QtGui.QLabel(self)
         self.picture_field.setFixedSize(self.pixmap_width, self.pixmap_width)
@@ -45,13 +44,13 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        pil_generator = pil_image.PILImageGenerator(colour_area=image_parameter.colour_area,
-                                          colour_convex_hull_positions=image_parameter.colour_convex_hull_positions,
-                                          colour_convex_hull_dots=image_parameter.colour_convex_hull_dots,
-                                          colour_center_of_mass=image_parameter.colour_center_of_mass,
-                                          colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
-                                          antialiasing=image_parameter.antialiasing,
-                                          colour_background=image_parameter.colour_background)
+        pil_generator = pil_image.PILImageGenerator(colour_target_area=image_parameter.colour_target_area,
+                                                    colour_field_area=image_parameter.colour_field_area,
+                                                    colour_field_area_outer=image_parameter.colour_field_area_outer,
+                                                    colour_center_of_mass=image_parameter.colour_center_of_mass,
+                                                    colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
+                                                    antialiasing=image_parameter.antialiasing,
+                                                    colour_background=image_parameter.colour_background)
         pil_generator = [pil_generator] * len(self.da_sequence.dot_arrays)
 
         iter_images = Pool().imap(_map_make_image, zip(self.da_sequence.dot_arrays, pil_generator))
@@ -66,7 +65,7 @@ class SequenceDisplay(QtGui.QDialog):
     def updateUI(self):
         num = self.slider.value()
         idx = self.da_sequence.numerosity_idx[num]
-        prop = self.da_sequence.dot_arrays[idx].get_properties()
+        prop = self.da_sequence.dot_arrays[idx].get_features()
         self.setWindowTitle(prop.short_str(with_object_id=False))
         self.picture_field.setPixmap(self.pixmaps[idx])
         self.adjustSize()

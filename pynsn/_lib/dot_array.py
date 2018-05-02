@@ -10,22 +10,22 @@ import random
 import numpy as np
 from scipy import spatial
 from .dot import Dot
-from .simple_dot_array import SimpleDotArray, DotArrayProperties, numpy_vector
-from .item_features import ItemFeaturesList, ItemFeatures
+from .simple_dot_array import SimpleDotArray, DotArrayFeature, numpy_vector
+from .item_attributes import ItemAttributeList, ItemAttributes
 
 TWO_PI = 2 * np.pi
 
 
 class DotArray(SimpleDotArray):
 
-    def __init__(self, max_array_radius, minimum_gap=1, xy=None,
+    def __init__(self, target_array_radius, minimum_gap=1, xy=None,
                  diameters=None, features=None):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned """
 
         SimpleDotArray.__init__(self)
-        self.features = ItemFeaturesList()
-        self.max_array_radius = max_array_radius
+        self.features = ItemAttributeList()
+        self.target_array_radius = target_array_radius
         self.minimum_gap = minimum_gap
         if xy is not None or diameters is not None or features is not None:
             self.append(xy, diameters, features = features)
@@ -34,21 +34,21 @@ class DotArray(SimpleDotArray):
         SimpleDotArray.clear(self)
         self.features.clear()
 
-    def append(self, xy, diameters, features=None):
+    def append(self, xy, item_diameters, features=None):
         """append dots using numpy array
         features None, ItemFeatureList of ItemFeatures"""
 
-        diameters = numpy_vector(diameters)
-        SimpleDotArray.append(self, xy=xy, diameters=diameters)
+        item_diameters = numpy_vector(item_diameters)
+        SimpleDotArray.append(self, xy=xy, item_diameters=item_diameters)
 
         if features is None:
-            features = ItemFeaturesList(colours=[None] * len(diameters))
-        elif len(diameters)>1 and isinstance(features, ItemFeatures):
-            tmp = ItemFeaturesList()
-            tmp.append_features(features)
-            features = tmp.repeat(len(diameters))
+            features = ItemAttributeList(colours=[None] * len(item_diameters))
+        elif len(item_diameters)>1 and isinstance(features, ItemAttributes):
+            tmp = ItemAttributeList()
+            tmp.append_attributes(features)
+            features = tmp.repeat(len(item_diameters))
 
-        self.features.append_features(features=features)
+        self.features.append_attributes(attributes=features)
 
         if (self.features.length != len(self._diameters)):
             raise RuntimeError(u"Bad shaped data: " + u"colour and/or picture has not the same length as diameter")
@@ -64,21 +64,21 @@ class DotArray(SimpleDotArray):
 
         """
         if indices is None:
-            indices = list(range(self.prop_numerosity))
+            indices = list(range(self.feature_numerosity))
 
-        return DotArray(max_array_radius=self.max_array_radius,
+        return DotArray(target_array_radius=self.target_array_radius,
                         minimum_gap=self.minimum_gap,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
                         features=self.features.copy())
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], diameters=dot.diameter, features=dot.features)
+        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, features=dot.features)
 
     def join(self, dot_array, realign=False):
         """add another dot arrays"""
 
-        self.append(xy=dot_array._xy, diameters=dot_array._diameters,features=dot_array.features)
+        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, features=dot_array.features)
         if realign:
             self.realign()
 
@@ -125,12 +125,12 @@ class DotArray(SimpleDotArray):
         cnt = 0
         while True:
             radii = SimpleDotArray._cartesian2polar(self._xy, radii_only=True)
-            too_far = np.where((radii + self._diameters // 2) > self.max_array_radius)[0]  # find outlier
+            too_far = np.where((radii + self._diameters // 2) > self.target_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
                 polar = SimpleDotArray._cartesian2polar([self._xy[too_far[0], :]])[0]
-                polar[0] = self.max_array_radius - self._diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
+                polar[0] = self.target_array_radius - self._diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = SimpleDotArray._polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 
@@ -151,7 +151,7 @@ class DotArray(SimpleDotArray):
 
         if error:
             return False, u"Can't find solution when removing outlier (n=" + \
-                   str(self.prop_numerosity) + ")"
+                   str(self.feature_numerosity) + ")"
         if not shift_required:
             return True, ""
         else:
@@ -159,9 +159,9 @@ class DotArray(SimpleDotArray):
             return self.realign()  # recursion
 
     @property
-    def prop_density_max_field(self):
-        """density takes into account the full possible dot area """
-        return np.pi * self.max_array_radius ** 2 / self.prop_total_surface_area
+    def feature_coverage_target_area(self):
+        """density takes into account the full possible target area (i.e., stimulus radius) """
+        return np.pi * self.target_array_radius ** 2 / self.feature_total_surface_area
 
     def split_array_by_colour(self):
         """returns a list of arrays
@@ -169,21 +169,21 @@ class DotArray(SimpleDotArray):
         rtn = []
         for c in np.unique(self.features.colours):
             if c is not None:
-                da = DotArray(max_array_radius=self.max_array_radius,
+                da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
                 for d in self.get_dots(colour=c):
                     da.append_dot(d)
                 rtn.append(da)
         return rtn
 
-    def get_properties_split_by_colours(self):
+    def get_features_split_by_colours(self):
         """returns is unicolor or no color"""
         if len(np.unique(self.features.colours)) == 1:
             return None
 
-        rtn = DotArrayProperties._make_arrays()
+        rtn = DotArrayFeature._make_arrays()
         for da in self.split_array_by_colour():
-            prop = da.get_properties()
+            prop = da.get_features()
             rtn[0].append(self.object_id + str(da.features.colours[0]))
             for i in range(1, len(rtn)):
                 rtn[i].append(prop[i])
@@ -222,7 +222,7 @@ class DotArray(SimpleDotArray):
             if object_id_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
-                rtn += "{},".format(self.prop_numerosity)
+                rtn += "{},".format(self.feature_numerosity)
             rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
                    num_format % self._diameters[cnt]
             if colour_column:
@@ -235,7 +235,7 @@ class DotArray(SimpleDotArray):
 
     def random_free_dot_position(self, dot_diameter,
                                  ignore_overlapping=False,
-                                 prefer_inside_convex_hull=False,
+                                 prefer_inside_field_area=False,
                                  occupied_space=None):
         """moves a dot to an available random position
 
@@ -243,7 +243,7 @@ class DotArray(SimpleDotArray):
         occupied space: see generator make
         """
         try_out_inside_convex_hull = 1000
-        if prefer_inside_convex_hull:
+        if prefer_inside_field_area:
             delaunay = spatial.Delaunay(self.convex_hull_positions)
         else:
             delaunay = None
@@ -251,11 +251,11 @@ class DotArray(SimpleDotArray):
         while True:
             cnt += 1
             proposal_polar = np.random.random(2) * \
-                             (self.max_array_radius - (dot_diameter / 2.0), TWO_PI)
+                             (self.target_array_radius - (dot_diameter / 2.0), TWO_PI)
             proposal_xy = SimpleDotArray._polar2cartesian([proposal_polar])[0]
 
             bad_position = False
-            if prefer_inside_convex_hull and cnt < try_out_inside_convex_hull:
+            if prefer_inside_field_area and cnt < try_out_inside_convex_hull:
                 bad_position = delaunay.find_simplex(proposal_xy)<0
 
             if not bad_position and not ignore_overlapping:
@@ -289,24 +289,24 @@ class DotArray(SimpleDotArray):
                 self._xy = np.append(self._xy, [xy], axis=0)
 
 
-    def number_deviant(self, change_numerosity, prefer_keeping_convex_hull=False):
+    def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
         """number deviant
         """
 
         try_out = 100
         # make a copy for the deviant
         deviant = self.copy()
-        if self.prop_numerosity + change_numerosity <= 0:
+        if self.feature_numerosity + change_numerosity <= 0:
             deviant.clear()
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
-                if prefer_keeping_convex_hull:
+                if prefer_keeping_field_area:
                     ch = deviant.convex_hull_indices
                 else:
                     ch = []
                 for x in range(try_out):
-                    rnd = random.randint(0, deviant.prop_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                    rnd = random.randint(0, deviant.feature_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
                     if rnd not in ch or change_numerosity >0:
                         break
 
@@ -316,8 +316,8 @@ class DotArray(SimpleDotArray):
                 else:
                     # copy a random dot
                     deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
-                                                        prefer_inside_convex_hull=prefer_keeping_convex_hull),
-                                   diameters=deviant._diameters[rnd],
+                                                                       prefer_inside_field_area=prefer_keeping_field_area),
+                                   item_diameters=deviant._diameters[rnd],
                                    features=deviant.features[rnd])
 
         return deviant
@@ -326,11 +326,11 @@ class DotArray(SimpleDotArray):
         import yaml
 
         if document_separator:
-            rtn = "---\n# {}, {}\n".format(self.object_id, self.prop_numerosity)
+            rtn = "---\n# {}, {}\n".format(self.object_id, self.feature_numerosity)
         else:
             rtn = ""
         d = {"minimum_gap": self.minimum_gap,
-             "max_array_radius": self.max_array_radius,
+             "target_array_radius": self.target_array_radius,
              "xy": self._xy.tolist(),
              "diameter": self._diameters.tolist(),
              "features": self.features.as_dict()}

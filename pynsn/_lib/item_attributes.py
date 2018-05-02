@@ -10,14 +10,14 @@ import numpy as np
 from .colour import Colour
 
 
-class ItemFeatures(object):
+class ItemAttributes(object):
 
     def __init__(self, colour=None, picture=None):
         self.colour = Colour(colour)
         self.picture = picture
 
     def __repr__(self):
-        return 'ItemFeatures(colour={}, picture={})'.format(
+        return 'ItemAttributes(colour={}, picture={})'.format(
                     self.colour, self.picture)
 
     def to_dict(self):
@@ -25,11 +25,11 @@ class ItemFeatures(object):
                 "picture": self.picture}
 
 
-class ItemFeaturesList(object):
+class ItemAttributeList(object):
 
     def __init__(self, colours=None, pictures=None):
-        """If all ItemFeatures should None (but not empty) init with ItemFeatues(colours=[None]),
-        otherwise the ItemFeatrues will be empty"""
+        """If all ItemAttributes should None (but not empty) init with ItemFeatues(colours=[None]),
+        otherwise the ItemAttributes will be empty"""
 
         self.colours = np.array([])
         self.pictures = np.array([])
@@ -37,12 +37,12 @@ class ItemFeaturesList(object):
             self.append(colours=colours, pictures=pictures)
 
     def __iter__(self):
-        return map(lambda x: ItemFeatures(colour=x[0], picture=x[1]),
-                                zip(self.colours, self.pictures))
+        return map(lambda x: ItemAttributes(colour=x[0], picture=x[1]),
+                   zip(self.colours, self.pictures))
 
     def __getitem__(self, key):
-        return ItemFeatures(colour=self.colours[key],
-                            picture=self.pictures[key])
+        return ItemAttributes(colour=self.colours[key],
+                              picture=self.pictures[key])
 
     def as_dict(self):
         col = map(lambda x:x._colour, self.colours)
@@ -64,27 +64,27 @@ class ItemFeaturesList(object):
     def repeat(self, repeats):
         """:return repeated features, equivalent to numpy.repeat"""
 
-        rtn = ItemFeaturesList()
+        rtn = ItemAttributeList()
         rtn.colours = self.colours.repeat(repeats)
         rtn.pictures = self.pictures.repeat(repeats)
         return rtn
 
     def copy(self):
-        rtn = ItemFeaturesList()
+        rtn = ItemAttributeList()
         rtn.colours = self.colours.copy()
         rtn.pictures = self.pictures.copy()
         return rtn
 
-    def append_features(self, features):
+    def append_attributes(self, attributes):
         """features: None, ItemFeature, ItemFeatureList
         """
 
-        if isinstance(features, ItemFeatures):
-            self.append(colours=features.colour,
-                        pictures=features.picture)
+        if isinstance(attributes, ItemAttributes):
+            self.append(colours=attributes.colour,
+                        pictures=attributes.picture)
         else:
-            self.append(colours=features.colours,
-                    pictures=features.pictures)
+            self.append(colours=attributes.colours,
+                        pictures=attributes.pictures)
 
     def append(self, colours, pictures):
 

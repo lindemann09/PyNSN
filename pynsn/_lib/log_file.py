@@ -9,7 +9,7 @@ import sys
 import time
 import numpy as np
 from .. import __version__
-from .item_features import ItemFeaturesList
+from .item_attributes import ItemAttributeList
 from .dot_array import DotArray
 from .dot_array_sequence import DASequence
 import atexit
@@ -61,11 +61,11 @@ class GeneratorLogger(object):
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
 
-            prop = dot_array_object.get_properties()
+            prop = dot_array_object.get_features()
             prop_log = prop.get_csv(variable_names=variable_names)
             if isinstance(dot_array_object, DotArray):
                 if properties_different_colour:
-                    prop = dot_array_object.get_properties_split_by_colours()
+                    prop = dot_array_object.get_features_split_by_colours()
                 if prop is not None:
                     prop_log = prop.get_csv(variable_names=False)
 
@@ -189,7 +189,7 @@ class LogFileReader(object):
         else:
             return np.array([])
 
-    def _get_dot_array(self, idx, max_array_radius):
+    def _get_dot_array(self, idx, target_array_radius):
         """Please do not use this method and use get_object()
 
         helper method with plausibility check
@@ -206,18 +206,18 @@ class LogFileReader(object):
         else:
             pict = [None] * len(xy)
 
-        rtn = DotArray(max_array_radius=max_array_radius)
+        rtn = DotArray(target_array_radius=target_array_radius)
         for x in zip(xy, dia, col, pict):
-            rtn.append(xy=x[0], diameters=x[1],
-                       features=ItemFeaturesList(colours=x[2], pictures=x[3]))
-        if max_array_radius is None:
+            rtn.append(xy=x[0], item_diameters=x[1],
+                       features=ItemAttributeList(colours=x[2], pictures=x[3]))
+        if target_array_radius is None:
             # adjust max_radius if not defined
             radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
-            rtn.max_array_radius = int(np.ceil(np.max(radii)))
+            rtn.target_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 
-    def get_object(self, object_id, max_array_radius=None):  # todo: save max radius?
-        """if max_array_radius=None find minimal required radius
+    def get_object(self, object_id, target_array_radius=None):  # todo: save max radius?
+        """if target_array_radius=None find minimal required radius
 
         :returns dot array or dot array sequence"""
 
@@ -227,7 +227,7 @@ class LogFileReader(object):
             o_idx = self.object_ids == object_id
             ot = self.get_object_type(object_id)
             if ot == DotArray:
-                return self._get_dot_array(o_idx, max_array_radius=max_array_radius)
+                return self._get_dot_array(o_idx, target_array_radius=target_array_radius)
 
             elif ot == DASequence:
                 rtn = DASequence()
@@ -235,16 +235,16 @@ class LogFileReader(object):
                 array_radii = []
                 for num_id in self.get_unique_num_ids(object_id):
                     tmp = o_idx & (self.num_ids == num_id)
-                    da = self._get_dot_array(tmp, max_array_radius=max_array_radius)
+                    da = self._get_dot_array(tmp, target_array_radius=target_array_radius)
                     rtn.append_dot_arrays(da)
-                    if max_array_radius is None:
-                        array_radii.append(da.max_array_radius)
+                    if target_array_radius is None:
+                        array_radii.append(da.target_array_radius)
 
-                if max_array_radius is None:
+                if target_array_radius is None:
                     # just all area radii to largest
                     tmp = np.max(array_radii)
                     for i in range(len(rtn.dot_arrays)):
-                        rtn.dot_arrays[i].max_array_radius = tmp
+                        rtn.dot_arrays[i].target_array_radius = tmp
 
                 return rtn
 

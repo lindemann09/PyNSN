@@ -14,10 +14,10 @@ exp = control.initialize()
 
 squeeze = .7
 generator = pynsn.DotArrayGenerator(
-                       max_array_radius=300 * squeeze,
-                       dot_diameter_mean=10,
-                       dot_diameter_range=(5, 20),
-                       dot_diameter_std=2,
+                       target_array_radius=300 * squeeze,
+                       item_diameter_mean=10,
+                       item_diameter_range=(5, 20),
+                       item_diameter_std=2,
                        minimum_gap=3)
 
 def compare_stimulus(n_left, n_right,
