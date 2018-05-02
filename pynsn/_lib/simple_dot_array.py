@@ -10,6 +10,7 @@ import random
 from copy import copy
 from collections import namedtuple
 from hashlib import md5
+import math
 import numpy as np
 from scipy import spatial
 from .item_attributes import numpy_vector
@@ -20,7 +21,7 @@ TWO_PI = 2 * np.pi
 
 class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
                                                      "total_surface_area", "convex_hull_area",
-                                                     "density", "total_perimeter"])):
+                                                     "density", "total_perimeter"])): # FIXME use spacity and new feature names
     __slots__ = ()
 
     @classmethod
@@ -313,7 +314,7 @@ class SimpleDotArray(object):
     def feature_sparcity(self):
         return self.feature_field_area / self.feature_numerosity
 
-    def get_features(self):
+    def get_features(self): #FIXME use sparcity and new featrues
         """returns a named tuple """
         return DotArrayFeature(self.object_id, self.feature_numerosity, self.feature_item_diameter,
                                self.feature_total_surface_area, self.feature_field_area, self.feature_converage,
@@ -340,7 +341,7 @@ class SimpleDotArray(object):
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
 
-    def match(self, match_properties, center_array=True, match_dot_array=None):
+    def match(self, match_features, center_array=True, match_dot_array=None):
         """
         match_properties: continuous property or list of continuous properties
         several properties to be matched
@@ -350,36 +351,40 @@ class SimpleDotArray(object):
         """
 
         # type check
-        if not isinstance(match_properties, (list, tuple)):
-            match_properties = [match_properties]
+        if not isinstance(match_features, (list, tuple)):
+            match_features = [match_features]
 
-        cp.check_feature_list(match_properties, check_set_value=match_dot_array is None)
+        cp.check_feature_list(match_features, check_set_value=match_dot_array is None)
 
         # copy and change values to match this stimulus
         if match_dot_array is None:
-            match_props = match_properties
+            match_feat = match_features
         else:
-            match_props = []
-            for m in match_properties:
+            match_feat = []
+            for m in match_features:
                 m = copy(m)
                 m.set_value(match_dot_array)
-                match_props.append(m)
+                match_feat.append(m)
 
         # Adapt
-        for cont_prop in match_props:
-            if isinstance(cont_prop, cp.TotalSurfaceArea):
-                self._match_total_surface_area(surface_area=cont_prop.value)
-            elif isinstance(cont_prop, cp.ItemDiameter):
-                self._match_mean_item_diameter(mean_dot_diameter=cont_prop.value)
-            elif isinstance(cont_prop, cp.ItemPerimeter):
-                self._match_total_perimeter(total_perimeter=cont_prop.value)
-            elif isinstance(cont_prop, cp.FieldArea):
-                self._match_field_area(field_area=cont_prop.value,
-                                       precision=cont_prop.match_presision)
-            elif isinstance(cont_prop, cp.Coverage):
-                self._match_coverage(coverage=cont_prop.value,
-                                     precision=cont_prop.convex_hull_precision,
-                                     adaptation_FA2TA_ratio=cont_prop.match_ratio_fieldarea2totalarea)
+        for feat in match_feat:
+            if isinstance(feat, cp.ItemDiameter):
+                self._match_item_diameter(mean_item_diameter=feat.value)
+            elif isinstance(feat, cp.ItemPerimeter):
+                mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
+                self._match_item_diameter(mean_dot_diameter)
+            elif isinstance(feat, cp.TotalSurfaceArea): #fixme check new matching
+                #mean_surface = np.mean(self.surface_areas)
+                #mean_diameter = math.sqrt(mean_surface) * 2/math.sqrt(math.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+                #self._match_item_diameter(mean_item_diameter=mean_diameter)
+                self._match_total_surface_area(surface_area=feat.value)
+            elif isinstance(feat, cp.FieldArea):
+                self._match_field_area(field_area=feat.value,
+                                       precision=feat.match_presision)
+            elif isinstance(feat, cp.Coverage):
+                self._match_coverage(coverage=feat.value,
+                                     precision=feat.convex_hull_precision,
+                                     adaptation_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
 
         if center_array:
             self._xy -= self.center_of_outer_positions
@@ -389,20 +394,15 @@ class SimpleDotArray(object):
         # changes diameter
         a_scale = (surface_area / self.feature_total_surface_area)
         self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
-            np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+            math.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
         self.set_array_modified()
 
-    def _match_mean_item_diameter(self, mean_dot_diameter):
+    def _match_item_diameter(self, mean_item_diameter):
         # changes diameter
 
-        scale = mean_dot_diameter / self.feature_item_diameter
+        scale = mean_item_diameter / self.feature_item_diameter
         self._diameters = self._diameters * scale
         self.set_array_modified()
-
-    def _match_total_perimeter(self, total_perimeter):
-        # linear to fit_mean_dot_diameter, but depends on numerosity
-        mean_dot_diameter = total_perimeter / (self.feature_numerosity * np.pi)
-        self._match_mean_item_diameter(mean_dot_diameter)
 
     def _match_field_area(self, field_area, precision=0.001):
         """changes the convex hull area to a desired size with certain precision
@@ -452,10 +452,10 @@ class SimpleDotArray(object):
         if adaptation_FA2TA_ratio < 0 or adaptation_FA2TA_ratio > 1:
             adaptation_FA2TA_ratio = 0.5
 
-        area_change100 = (self.feature_field_area / coverage) - self.feature_total_surface_area
-        d_change_area = area_change100 * (1 - adaptation_FA2TA_ratio)
-        if abs(d_change_area) > 0:
-            self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_area)
+        total_area_change100 = (self.feature_field_area / coverage) - self.feature_total_surface_area
+        d_change_total_area = total_area_change100 * (1 - adaptation_FA2TA_ratio)
+        if abs(d_change_total_area) > 0:
+            self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_total_area)
 
         self._match_field_area(field_area=self.feature_total_surface_area * coverage,
                                precision=precision)
