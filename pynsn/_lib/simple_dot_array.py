@@ -20,7 +20,7 @@ TWO_PI = 2 * np.pi
 
 class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
                                                      "total_surface_area", "convex_hull_area",
-                                                     "density", "total_circumference"])):
+                                                     "density", "total_perimeter"])):
     __slots__ = ()
 
     @classmethod
@@ -91,7 +91,7 @@ class DotArrayProperties(namedtuple("DAProperties", ["object_id", "numerosity", 
         rtn += "n: {}, DD:{}, TA: {}, TC: {}. CH: {}, DE: {:.3f}".format(self.numerosity,
                                                                      int(self.mean_dot_diameter),
                                                                      int(self.total_surface_area),
-                                                                     int(self.total_circumference),
+                                                                     int(self.total_perimeter),
                                                                      int(self.convex_hull_area),
                                                                      self.density)
         return rtn
@@ -226,7 +226,7 @@ class SimpleDotArray(object):
         return np.pi * (self._diameters ** 2) / 4.0
 
     @property
-    def circumferences(self):
+    def perimeter(self):
         return np.pi * self._diameters
 
     @property
@@ -286,8 +286,8 @@ class SimpleDotArray(object):
         return np.sum(self.surface_areas)
 
     @property
-    def prop_total_circumference(self):
-        return np.sum(self.circumferences)
+    def prop_total_perimeter(self):
+        return np.sum(self.perimeter)
 
     @property
     def prop_convex_hull_area_positions(self):  # FIXME not defined for l<3
@@ -302,7 +302,7 @@ class SimpleDotArray(object):
         return len(self._xy)
 
     @property
-    def prop_density(self):  # FIXME not defined for l<3
+    def prop_density(self):  # FIXME should be converage not defined for l<3
         """density takes into account the convex hull"""
         try:
             return self.prop_convex_hull_area / self.prop_total_surface_area  # todo: positions conved hull
@@ -313,7 +313,7 @@ class SimpleDotArray(object):
         """returns a named tuple """
         return DotArrayProperties(self.object_id, self.prop_numerosity, self.prop_mean_dot_diameter,
                                   self.prop_total_surface_area, self.prop_convex_hull_area, self.prop_density,
-                                  self.prop_total_circumference)
+                                  self.prop_total_perimeter)
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
@@ -367,8 +367,8 @@ class SimpleDotArray(object):
                 self._match_total_surface_area(surface_area=cont_prop.value)
             elif isinstance(cont_prop, cp.DotDiameter):
                 self._match_mean_dot_diameter(mean_dot_diameter=cont_prop.value)
-            elif isinstance(cont_prop, cp.Circumference):
-                self._match_total_circumference(total_circumference=cont_prop.value)
+            elif isinstance(cont_prop, cp.Perimeter):
+                self._match_total_perimeter(total_perimeter=cont_prop.value)
             elif isinstance(cont_prop, cp.ConvexHull):
                 self._match_convex_hull_area(convex_hull_area=cont_prop.value,
                                              precision=cont_prop.match_presision)
@@ -395,9 +395,9 @@ class SimpleDotArray(object):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
-    def _match_total_circumference(self, total_circumference):
+    def _match_total_perimeter(self, total_perimeter):
         # linear to fit_mean_dot_diameter, but depends on numerosity
-        mean_dot_diameter = total_circumference / (self.prop_numerosity * np.pi)
+        mean_dot_diameter = total_perimeter / (self.prop_numerosity * np.pi)
         self._match_mean_dot_diameter(mean_dot_diameter)
 
     def _match_convex_hull_area(self, convex_hull_area, precision=0.001):

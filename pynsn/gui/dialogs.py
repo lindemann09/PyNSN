@@ -21,7 +21,7 @@ class MatchPropertyDialog(QtGui.QDialog):
         self.comboBox.addItem(cp.Density().long_label)  # 1
         self.comboBox.addItem(cp.ConvexHull().long_label)  # 2
         self.comboBox.addItem(cp.SurfaceArea().long_label)  # 3
-        self.comboBox.addItem(cp.Circumference().long_label)  # 4
+        self.comboBox.addItem(cp.Perimeter().long_label)  # 4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
@@ -51,8 +51,8 @@ class MatchPropertyDialog(QtGui.QDialog):
             self.num_input.value = self.properties.density
         elif selection == cp.ConvexHull().long_label:
             self.num_input.value = self.properties.convex_hull_area
-        elif selection == cp.Circumference().long_label:
-            self.num_input.value = self.properties.total_circumference
+        elif selection == cp.Perimeter().long_label:
+            self.num_input.value = self.properties.total_perimeter
         elif selection == cp.SurfaceArea().long_label:
             self.num_input.value = self.properties.total_surface_area
 
@@ -123,7 +123,7 @@ class SequenceDialog(QtGui.QDialog):
 
         self.match_diameter = QtGui.QCheckBox(cp.DotDiameter.long_label)
         self.match_area = QtGui.QCheckBox(cp.SurfaceArea.long_label)
-        self.match_circumference = QtGui.QCheckBox(cp.Circumference.long_label)
+        self.match_perimeter = QtGui.QCheckBox(cp.Perimeter.long_label)
         self.match_density = QtGui.QCheckBox(cp.Density.long_label)
         self.match_convex_hull = QtGui.QCheckBox(cp.ConvexHull.long_label)
         self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
@@ -139,7 +139,7 @@ class SequenceDialog(QtGui.QDialog):
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
         self.match_diameter.toggled.connect(self.ui_update)
-        self.match_circumference.toggled.connect(self.ui_update)
+        self.match_perimeter.toggled.connect(self.ui_update)
         self.match_density.toggled.connect(self.ui_update)
         self.match_ch_presision.edit.editingFinished.connect(self.ui_update)
         self.match_density_ratio.edit.editingFinished.connect(self.ui_update)
@@ -155,7 +155,7 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addWidget(misc.heading("Matching"))
         vlayout.addWidget(self.match_diameter)
         vlayout.addWidget(self.match_area)
-        vlayout.addWidget(self.match_circumference)
+        vlayout.addWidget(self.match_perimeter)
         vlayout.addWidget(self.match_convex_hull)
         vlayout.addWidget(self.match_density)
         vlayout.addSpacing(10)
@@ -178,8 +178,8 @@ class SequenceDialog(QtGui.QDialog):
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Circumference())
-        if self.match_circumference.isChecked():
+        all.append(cp.Perimeter())
+        if self.match_perimeter.isChecked():
             selected.append(all[-1])
 
         all.append(cp.SurfaceArea())
@@ -197,7 +197,7 @@ class SequenceDialog(QtGui.QDialog):
 
         self.match_diameter.setEnabled(True)
         self.match_area.setEnabled(True)
-        self.match_circumference.setEnabled(True)
+        self.match_perimeter.setEnabled(True)
         self.match_density.setEnabled(True)
         self.match_convex_hull.setEnabled(True)
         for x in all:
@@ -209,9 +209,9 @@ class SequenceDialog(QtGui.QDialog):
                     if isinstance(x, cp.SurfaceArea):
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    if isinstance(x, cp.Circumference):
-                        self.match_circumference.setEnabled(False)
-                        self.match_circumference.setChecked(False)
+                    if isinstance(x, cp.Perimeter):
+                        self.match_perimeter.setEnabled(False)
+                        self.match_perimeter.setChecked(False)
                     if isinstance(x, cp.ConvexHull):
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)

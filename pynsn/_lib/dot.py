@@ -151,7 +151,7 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
         return math.pi * (self.diameter**2)/4.0
 
     @property
-    def circumference(self):
+    def perimeter(self):
         return math.pi * self.diameter
 
 
@@ -238,6 +238,6 @@ class Rectangle(Coordinate2D): #todo
         return self.width * self.height
 
     @property
-    def circumference(self):
+    def perimeter(self):
         return 2 * (self.width+self.height)
 

@@ -16,7 +16,7 @@ from ._lib.log_file import GeneratorLogger, LogFileReader
 
 from ._lib.dot import Dot
 from ._lib.colour import Colour
-from ._lib.continuous_property import SurfaceArea, DotDiameter, Circumference, ConvexHull, Density
+from ._lib.continuous_property import SurfaceArea, DotDiameter, Perimeter, ConvexHull, Density
 from ._lib.simple_dot_array import DotArrayProperties
 from ._lib.item_features import ItemFeaturesList, ItemFeatures
 

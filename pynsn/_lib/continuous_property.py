@@ -64,7 +64,7 @@ class SurfaceArea(_ContinuousProperty):
 
     @property
     def _dependencies(self):
-        return [DotDiameter, Circumference, SurfaceArea]
+        return [DotDiameter, Perimeter, SurfaceArea]
 
 
 
@@ -77,19 +77,19 @@ class DotDiameter(_ContinuousProperty):
 
     @property
     def _dependencies(self):
-        return [DotDiameter, Circumference, SurfaceArea]
+        return [DotDiameter, Perimeter, SurfaceArea]
 
 
-class Circumference(_ContinuousProperty):
+class Perimeter(_ContinuousProperty):
     """"""
-    long_label = "Total circumference"
+    long_label = "Total perimeter"
 
     def set_value(self, reference_dot_array):
-        self.value = reference_dot_array.prop_total_circumference
+        self.value = reference_dot_array.prop_total_perimeter
 
     @property
     def _dependencies(self):
-        return [DotDiameter, Circumference, SurfaceArea]
+        return [DotDiameter, Perimeter, SurfaceArea]
 
 
 class ConvexHull(_ContinuousProperty):
@@ -184,8 +184,8 @@ def dict_to_property(d):
         return DotDiameter(**d)
     elif t == SurfaceArea.__name__:
         return SurfaceArea(**d)
-    elif t == Circumference.__name__:
-        return Circumference(**d)
+    elif t == Perimeter.__name__:
+        return Perimeter(**d)
     elif t == Density.__name__:
         print("l")
         return Density(**d)

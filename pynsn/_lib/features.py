@@ -1,58 +1,140 @@
-from math import log2
+from __future__ import print_function, division
+
+from math import sqrt, pi
+try:
+    from math import log2
+except:
+    from math import log
+    log2 = lambda x: log(x, 2)
 
 
 
 class ArrayFeatures(object):
 
-    def __init__(self, Numerosity,
-                 total_surface_area=None,
-                 item_surface_area=None,
-                 field_area=None,
-                 sparcity=None,
-                 Size=None,
-                 Spacing=None):
+    def __init__(self, Numerosity=1, Size=1, Spacing=1):
         """
-        [N, [TSA, ISA], [FA, SPAR]]
-
-        Please define two features for two diffienct categories (A, B C).
-
-
-        A: TSA (total surface area), ISA (mean item surface area), Size
-        B: FA (Field area), SPAR (Sparcity), Spacing
+        :param Numerosity:
+        :param Size:
+        :param Spacing:
         """
 
-        self.N = Numerosity
+        self.Numerosity = Numerosity
+        self.Size = Size
+        self.Spacing = Spacing
 
-        self.TSA = total_surface_area
-        self.ISA = item_surface_area
+    # -- cardinal features
 
-        self.FA = field_area
-        self.SPAR = sparcity
+    @property
+    def Numerosity(self):
+        return self._N
 
-        try:
-            self.logSize = log2(Size)
-        except:
-            self.logSize = None
+    @Numerosity.setter
+    def Numerosity(self, x):
+        self._N = x
+        self._sqrtN = sqrt(x)
 
-        try:
-            self.logSpacing = log2(Spacing)
-        except:
-            self.logSpacing = log2(Spacing)
+    @property
+    def Size(self):
+        return self._size
+
+    @Size.setter
+    def Size(self, x):
+        self._size = float(x)
+        self._sqrtSize = sqrt(x)
+
+    @property
+    def Spacing(self):
+        return self._spacing
+
+    @Spacing.setter
+    def Spacing(self, x):
+        self._spacing = float(x)
+        self._sqrtSpace = sqrt(x)
+
+    # -- stimulus features
+
+    @property
+    def total_surface_area(self):
+        """TSA = sqrt(Sz*n) """
+        return self._sqrtSize * self._sqrtN
+
+    @total_surface_area.setter
+    def total_surface_area(self, x):
+        self.Size = (x / self._sqrtN) ** 2
+
+    @property
+    def item_surface_area(self):
+        """mean item surface array. ISA = sqrt(Size/N)"""
+        return self._sqrtSize / self._sqrtN
+
+    @item_surface_area.setter
+    def item_surface_area(self, x):
+        """mean item surface array. ISA = sqrt(Size/N)"""
+        self.Size = (x * self._sqrtN) ** 2
+
+    @property
+    def field_area(self):
+        """FA = sqrt(Spacing * N)"""
+        return self._sqrtSpace * self._sqrtN
+
+    @field_area.setter
+    def field_area(self, x):
+        self.Spacing = (x / self._sqrtN) ** 2
+
+    @property
+    def sparcity(self):
+        return self._sqrtSpace / self._sqrtN
+
+    @sparcity.setter
+    def sparcity(self, x):
+        self.Spacing = (x * self._sqrtN) ** 2
+
+    # ---- further stimulus features (only setter)
+    @property
+    def density(self):
+        return 1/float(self.sparcity)
+
+    @property
+    def coverage(self):
+        """often referred to as density: total surface area per field area
+
+        Can not be modified directly, because it reflects relation of two cardinal feature.
+        Please adjust Size and/or Spacing.
+        """
+        return self._sqrtSize / self._sqrtSpace
+
+    @property
+    def apparent_closeness(self):
+        """
+
+        Can not be modified directly, because it reflects relation of two cardinal feature.
+        Please adjust Size and/or Spacing.
+        """
+
+        return self._sqrtSize * self._sqrtSpace
 
 
 
-    def _calc(self):
+class DotArrayFeatures(ArrayFeatures):
 
-        if self.TSA is None:
-            self.TSA= self.N * self.ISA
-        if self.TSA is None:
-            self.TSA = 2**(self.logSize - log2(self.ISA))
-        if self.ISA is None:
-            self.ISA = float(self.TSA)/ self.N
-        if self.ISA is None:
-            self.ISA = 2**(self.logSize - log2(self.TSA))
-        if self.FA is None:
+    @property
+    def item_diameter(self):
+
+        return sqrt(self.item_surface_area/pi)  * 2
+
+    @item_diameter.setter
+    def item_diameter(self, x):
+        self.item_surface_area = pi * x**2 / 4
+
+    @property
+    def item_perimeter(self):
+        return 2 * sqrt(pi * self.item_surface_area)
+
+    @item_perimeter.setter
+    def item_perimeter(self, x):
+        self.item_surface_area = x**2 / (4*pi)
 
 
-
-
+a = DotArrayFeatures(Numerosity=23, Spacing=12, Size=2)
+print(a.coverage)
+print(a.total_surface_area/a.field_area)
