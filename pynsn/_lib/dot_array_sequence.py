@@ -8,8 +8,8 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
 import numpy as np
-from .simple_dot_array import DotArrayFeature
 from .dot_array import DotArray
+from . import misc
 
 class DASequence(object):
 
@@ -55,21 +55,19 @@ class DASequence(object):
             m.update(da.object_id.encode("UTF-8"))
         return m.hexdigest()[:DotArray.OBJECT_ID_LENGTH]
 
-    def get_features(self):
-        """named tuple with arrays"""
-        rtn = DotArrayFeature._make_arrays()
+    def get_features_dict(self): #todo search for get_features!
+        """dictionary with arrays"""
 
-        for da in self.dot_arrays:
-            prop = da.get_features()
-            for i in range(len(rtn)):
-                rtn[i].append(prop[i])
-        return rtn
+        dicts = [x.get_features_dict() for x in self.dot_arrays]
+        return misc.join_dict_list(dicts)
 
     def get_numerosity_correlations(self):
-        prop = self.get_features()
-        cor = np.corrcoef(np.round(prop.np_array, 2), rowvar=False)
+        feat = self.get_features_dict()
+        del feat['object_id']
+        feat_np = np.round(np.array(feat.values()).T, 2)
+        cor = np.corrcoef(feat_np, rowvar=False)
         cor = cor[0, :]
-        names = prop.feature_names
+        names = feat.keys()
         rtn = {}
         for x in range(1, len(cor)):
             rtn[names[x]] = cor[x]

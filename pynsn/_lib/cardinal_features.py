@@ -81,17 +81,17 @@ class CardinalFeatures(object):
         self.Spacing = (x / self._sqrtN) ** 2
 
     @property
-    def sparcity(self):
+    def sparsity(self):
         return self._sqrtSpace / self._sqrtN
 
-    @sparcity.setter
-    def sparcity(self, x):
+    @sparsity.setter
+    def sparsity(self, x):
         self.Spacing = (x * self._sqrtN) ** 2
 
     # ---- further stimulus features (only setter)
     @property
     def density(self):
-        return 1/float(self.sparcity)
+        return 1/float(self.sparsity)
 
     @property
     def coverage(self):

@@ -10,7 +10,8 @@ import random
 import numpy as np
 from scipy import spatial
 from .dot import Dot
-from .simple_dot_array import SimpleDotArray, DotArrayFeature, numpy_vector
+from . import misc
+from .simple_dot_array import SimpleDotArray, numpy_vector
 from .item_attributes import ItemAttributeList, ItemAttributes
 
 TWO_PI = 2 * np.pi
@@ -181,13 +182,12 @@ class DotArray(SimpleDotArray):
         if len(np.unique(self.features.colours)) == 1:
             return None
 
-        rtn = DotArrayFeature._make_arrays()
+        dicts = []
         for da in self.split_array_by_colour():
-            prop = da.get_features()
-            rtn[0].append(self.object_id + str(da.features.colours[0]))
-            for i in range(1, len(rtn)):
-                rtn[i].append(prop[i])
-        return rtn
+            feat = da.get_features_dict()
+            feat["object_id"] += str(da.features.colours[0])
+            dicts.append(feat)
+        return misc.join_dict_list(dicts)
 
     def __str__(self):
         return self.get_csv()

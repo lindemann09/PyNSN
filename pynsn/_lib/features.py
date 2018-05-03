@@ -63,7 +63,7 @@ class TotalSurfaceArea(_BaseFeature):
 
     @property
     def _dependencies(self):
-        return [ItemDiameter, ItemPerimeter, TotalSurfaceArea]
+        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
 
 
 
@@ -76,10 +76,10 @@ class ItemDiameter(_BaseFeature):
 
     @property
     def _dependencies(self):
-        return [ItemDiameter, ItemPerimeter, TotalSurfaceArea]
+        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
 
 
-class ItemPerimeter(_BaseFeature):
+class TotalPerimeter(_BaseFeature):
     """"""
     long_label = "Total perimeter"
 
@@ -88,7 +88,7 @@ class ItemPerimeter(_BaseFeature):
 
     @property
     def _dependencies(self):
-        return [ItemDiameter, ItemPerimeter, TotalSurfaceArea]
+        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
 
 
 class FieldArea(_BaseFeature):
@@ -183,8 +183,8 @@ def _dict_to_feature(d):
         return ItemDiameter(**d)
     elif t == TotalSurfaceArea.__name__:
         return TotalSurfaceArea(**d)
-    elif t == ItemPerimeter.__name__:
-        return ItemPerimeter(**d)
+    elif t == TotalPerimeter.__name__:
+        return TotalPerimeter(**d)
     elif t == Coverage.__name__:
         print("l")
         return Coverage(**d)

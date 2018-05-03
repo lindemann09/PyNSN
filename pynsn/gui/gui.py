@@ -230,8 +230,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         self.write_properties()
 
     def write_properties(self, clear_field=True):
-        prop = self.data_array.get_features()
-        txt = prop.get_nice_text()
+        txt = self.data_array.get_features_text(extended_format=True, with_object_id=True)
         if self.settings.bicoloured.isChecked():
             prop = self.data_array.get_features_split_by_colours()
             for p in prop.split:
@@ -260,8 +259,8 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.current_data_array.get_features()
-        print(dialogs.MatchPropertyDialog.get_response(self, prop))  # TODO
+        prop = self.current_data_array.get_feature_dict()
+        print(dialogs.MatchPropertyDialog.get_response(self, prop))  # FIXME get_response does not work with dicts
 
     def action_settings(self):
         """"""

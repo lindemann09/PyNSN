@@ -9,6 +9,7 @@ import sys
 import time
 import numpy as np
 from .. import __version__
+from . import misc
 from .item_attributes import ItemAttributeList
 from .dot_array import DotArray
 from .dot_array_sequence import DASequence
@@ -60,14 +61,15 @@ class GeneratorLogger(object):
         """helper function: returns log for dot arry and log for properties"""
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
-
-            prop = dot_array_object.get_features()
-            prop_log = prop.get_csv(variable_names=variable_names)
-            if isinstance(dot_array_object, DotArray):
+            is_sequence = isinstance(dot_array_object,DASequence)
+            feat = dot_array_object.get_features_dict()
+            feat_log = misc.dict_to_csv(feat, variable_names=variable_names,
+                                        dict_of_lists=is_sequence)
+            if not is_sequence:
                 if properties_different_colour:
-                    prop = dot_array_object.get_features_split_by_colours()
-                if prop is not None:
-                    prop_log = prop.get_csv(variable_names=False)
+                    feat = dot_array_object.get_features_split_by_colours() # todo: check logging different colours
+                    if feat is not None:
+                        feat_log += feat.get_csv(feat, dict_of_lists=True, variable_names=False)
 
                 da_log = dot_array_object.get_csv(colour_column=log_colours,
                                                   num_format=num_format, variable_names=variable_names)
@@ -76,19 +78,19 @@ class GeneratorLogger(object):
                                                   num_format=num_format, variable_names=variable_names)
         else:
             da_log = ""
-            prop_log = ""
+            feat_log = ""
 
-        return da_log, prop_log
+        return da_log, feat_log
 
     def log(self, dot_array_object):
 
-        da_log, prop_log = GeneratorLogger._logging_txt(dot_array_object=dot_array_object,
+        da_log, feat_log = GeneratorLogger._logging_txt(dot_array_object=dot_array_object,
                                                         variable_names=not self._varname_written,
                                                         num_format=self.num_format,
                                                         properties_different_colour=self.properties_different_colour,
                                                         log_colours=self.log_colours)
         self._varname_written = True
-        self.logtext_prop += prop_log
+        self.logtext_prop += feat_log
         self.logtext_arrays += da_log
 
 

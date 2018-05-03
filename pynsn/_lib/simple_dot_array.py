@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import random
 from copy import copy
-from collections import namedtuple
+from collections import OrderedDict
 from hashlib import md5
 import math
 import numpy as np
@@ -18,84 +18,57 @@ from . import features as cp
 
 TWO_PI = 2 * np.pi
 
-
-class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "mean_dot_diameter",
-                                                     "total_surface_area", "convex_hull_area",
-                                                     "density", "total_perimeter"])): # FIXME use spacity and new feature names
-    __slots__ = ()
-
-    @classmethod
-    def _make_arrays(cls):
-        """# create DotListProperties with empty arrays """
-        n_prop = len(cls._fields)
-        return cls._make(map(lambda _: [], range(n_prop)))
-
-    @property
-    def feature_names(self):
-        return self._fields[1:]
-
-    @property
-    def np_array(self):
-        return np.array(self[1:]).T
-
-    @property
-    def size(self):
-        try:
-            return len(self.numerosity)
-        except:
-            return 1
-
-    def get_csv(self, variable_names=True):
-        rtn = ""
-        if variable_names:
-            rtn += u", ".join(self._fields) + "\n"
-        if self.size > 1:
-            for i, prop in enumerate(self.np_array):
-                rtn += self.object_id[i] + u", " + ", ".join(map(str, prop)) + "\n"
-        else:
-            rtn += u", ".join(map(str, self)) + u"\n"
-
-        return rtn
-
-    @property
-    def split(self):
-        """list of DotArrayProperties objects instead
-        one DotArrayProperties object with lists for each property"""
-        rtn = []
-        for i in range(len(self[0])):
-            tmp = []
-            for f in range(len(self._fields)):
-                tmp.append(self[f][i])
-            rtn.append(DotArrayFeature._make(tmp))
-        return rtn
-
-    def get_nice_text(self, spacing_char="."):
-        txt = None
-        for k, v in self._asdict().items():
-            if txt is None:
-                txt = "- {}\n".format(self.object_id)
-            else:
-                name = "  " + k
-                try:
-                    value = "{0:.2f}\n".format(v)  # try rounding
-                except:
-                    value = "{}\n".format(v)
-
-                txt += name + (spacing_char * (23 - len(name))) + (" " * (10 - len(value))) + value
-        return txt
-
-    def short_str(self, with_object_id=True):
-        if with_object_id:
-            rtn = "id: {}".format(self.object_id)
-        else:
-            rtn =""
-        rtn += "n: {}, DD:{}, TA: {}, TC: {}. CH: {}, DE: {:.3f}".format(self.numerosity,
-                                                                     int(self.mean_dot_diameter),
-                                                                     int(self.total_surface_area),
-                                                                     int(self.total_perimeter),
-                                                                     int(self.convex_hull_area),
-                                                                     self.density)
-        return rtn
+#
+# class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "item_diameter",
+#                                                      "total_surface_area", "field_area",
+#                                                      "coverage", "total_perimeter",
+#                                                     "sparsity"])): # FIXME use spacity and new feature names
+#     __slots__ = ()
+#
+#     @classmethod
+#     def _make_arrays(cls):
+#         """# create DotListProperties with empty arrays """
+#         n_prop = len(cls._fields)
+#         return cls._make(map(lambda _: [], range(n_prop)))
+#
+#     @property
+#     def feature_names(self):
+#         return self._fields[1:]
+#
+#     @property
+#     def np_array(self):
+#         return np.array(self[1:]).T
+#
+#     @property
+#     def size(self):
+#         try:
+#             return len(self.numerosity)
+#         except:
+#             return 1
+#
+#     def get_csv(self, variable_names=True):
+#         rtn = ""
+#         if variable_names:
+#             rtn += u", ".join(self._fields) + "\n"
+#         if self.size > 1:
+#             for i, prop in enumerate(self.np_array):
+#                 rtn += self.object_id[i] + u", " + ", ".join(map(str, prop)) + "\n"
+#         else:
+#             rtn += u", ".join(map(str, self)) + u"\n"
+#
+#         return rtn
+#
+#     @property
+#     def split(self):
+#         """list of DotArrayProperties objects instead
+#         one DotArrayProperties object with lists for each property"""
+#         rtn = []
+#         for i in range(len(self[0])):
+#             tmp = []
+#             for f in range(len(self._fields)):
+#                 tmp.append(self[f][i])
+#             rtn.append(DotArrayFeature._make(tmp))
+#         return rtn
 
 class SimpleDotArray(object):
     """Numpy Position list for optimized for numpy calculations
@@ -280,7 +253,11 @@ class SimpleDotArray(object):
 
     @property
     def feature_item_diameter(self):
-        return self._diameters.mean()
+        return np.mean(self._diameters)
+
+    @property
+    def feature_item_surface_area(self):
+        return np.mean(self.surface_areas)
 
     @property
     def feature_total_surface_area(self):
@@ -311,14 +288,8 @@ class SimpleDotArray(object):
             return None
 
     @property
-    def feature_sparcity(self):
+    def feature_sparsity(self):
         return self.feature_field_area / self.feature_numerosity
-
-    def get_features(self): #FIXME use sparcity and new featrues
-        """returns a named tuple """
-        return DotArrayFeature(self.object_id, self.feature_numerosity, self.feature_item_diameter,
-                               self.feature_total_surface_area, self.feature_field_area, self.feature_converage,
-                               self.feature_total_perimeter)
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
@@ -370,13 +341,10 @@ class SimpleDotArray(object):
         for feat in match_feat:
             if isinstance(feat, cp.ItemDiameter):
                 self._match_item_diameter(mean_item_diameter=feat.value)
-            elif isinstance(feat, cp.ItemPerimeter):
+            elif isinstance(feat, cp.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
             elif isinstance(feat, cp.TotalSurfaceArea): #fixme check new matching
-                #mean_surface = np.mean(self.surface_areas)
-                #mean_diameter = math.sqrt(mean_surface) * 2/math.sqrt(math.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-                #self._match_item_diameter(mean_item_diameter=mean_diameter)
                 self._match_total_surface_area(surface_area=feat.value)
             elif isinstance(feat, cp.FieldArea):
                 self._match_field_area(field_area=feat.value,
@@ -469,6 +437,48 @@ class SimpleDotArray(object):
                 shift_required = True
 
         return shift_required
+
+
+    def get_features_dict(self):
+        """ordered dictionary with the most important feature"""
+        rtn = [("object_id", self.object_id),
+               ("numerosity", self.feature_numerosity),
+               ("total surface area", self.feature_total_surface_area),
+               ("item surface area", self.feature_item_surface_area),
+               ("field area", self.feature_field_area),
+               ("sparsity", self.feature_sparsity),
+               ("converage", self.feature_converage)]
+        return OrderedDict(rtn)
+
+    def get_features_text(self, with_object_id=True, extended_format=False, spacing_char="."):
+        if extended_format:
+            rtn = None
+            for k, v in self.get_features_dict().items():
+                if rtn is None:
+                    if with_object_id:
+                        rtn = "- {}\n".format(k)
+                    else:
+                        rtn = "- {}\n".format(k)
+                else:
+                    name = "  " + k
+                    try:
+                        value = "{0:.2f}\n".format(v)  # try rounding
+                    except:
+                        value = "{}\n".format(v)
+
+                    rtn += name + (spacing_char * (23 - len(name))) + (" " * (10 - len(value))) + value
+        else:
+            if with_object_id:
+                rtn = "id: {}".format(self.object_id)
+            else:
+                rtn =""
+            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, COV: {:.3f}".format(self.feature_numerosity,
+                                                                         int(self.feature_total_surface_area),
+                                                                         int(self.feature_item_surface_area),
+                                                                         int(self.feature_field_area),
+                                                                         self.feature_sparsity,
+                                                                         self.feature_converage) # TODO cardinal
+        return rtn
 
 
 ########## helper

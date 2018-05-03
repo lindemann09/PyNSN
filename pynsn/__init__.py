@@ -16,9 +16,8 @@ from ._lib.log_file import GeneratorLogger, LogFileReader
 
 from ._lib.dot import Dot
 from ._lib.colour import Colour
-from ._lib.features import TotalSurfaceArea, ItemDiameter, ItemPerimeter, FieldArea, Coverage
+from ._lib.features import TotalSurfaceArea, ItemDiameter, TotalPerimeter, FieldArea, Coverage
 from ._lib.cardinal_features import CardinalFeatures, CardinalFeaturesDotArray
-from ._lib.simple_dot_array import DotArrayFeature
 from ._lib.item_attributes import ItemAttributeList, ItemAttributes
 
 

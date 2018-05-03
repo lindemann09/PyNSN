@@ -15,13 +15,13 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         self.setWindowTitle("Match Dot Array Property")
 
-        self.properties = properties
+        self.features = properties
         self.comboBox = QtGui.QComboBox(self)
         self.comboBox.addItem(cp.ItemDiameter().long_label)  # 0
         self.comboBox.addItem(cp.Coverage().long_label)  # 1
         self.comboBox.addItem(cp.FieldArea().long_label)  # 2
         self.comboBox.addItem(cp.TotalSurfaceArea().long_label)  # 3
-        self.comboBox.addItem(cp.ItemPerimeter().long_label)  # 4
+        self.comboBox.addItem(cp.TotalPerimeter().long_label)  # 4
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
@@ -46,15 +46,15 @@ class MatchPropertyDialog(QtGui.QDialog):
     def choice(self, selection):
 
         if selection == cp.ItemDiameter().long_label:
-            self.num_input.value = self.properties.mean_dot_diameter
+            self.num_input.value = self.features['item_diameter']
         elif selection == cp.Coverage().long_label:
-            self.num_input.value = self.properties.density
+            self.num_input.value = self.features['coverage']
         elif selection == cp.FieldArea().long_label:
-            self.num_input.value = self.properties.convex_hull_area
-        elif selection == cp.ItemPerimeter().long_label:
-            self.num_input.value = self.properties.total_perimeter
+            self.num_input.value = self.features['field_area']
+        elif selection == cp.TotalPerimeter().long_label:
+            self.num_input.value = self.features['total_perimeter']
         elif selection == cp.TotalSurfaceArea().long_label:
-            self.num_input.value = self.properties.total_surface_area
+            self.num_input.value = self.features['total_surface_area']
 
     @staticmethod
     def get_response(parent, prop):
@@ -123,7 +123,7 @@ class SequenceDialog(QtGui.QDialog):
 
         self.match_diameter = QtGui.QCheckBox(cp.ItemDiameter.long_label)
         self.match_area = QtGui.QCheckBox(cp.TotalSurfaceArea.long_label)
-        self.match_perimeter = QtGui.QCheckBox(cp.ItemPerimeter.long_label)
+        self.match_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
         self.match_density = QtGui.QCheckBox(cp.Coverage.long_label)
         self.match_convex_hull = QtGui.QCheckBox(cp.FieldArea.long_label)
         self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
@@ -178,7 +178,7 @@ class SequenceDialog(QtGui.QDialog):
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.ItemPerimeter())
+        all.append(cp.TotalPerimeter())
         if self.match_perimeter.isChecked():
             selected.append(all[-1])
 
@@ -209,7 +209,7 @@ class SequenceDialog(QtGui.QDialog):
                     if isinstance(x, cp.TotalSurfaceArea):
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    if isinstance(x, cp.ItemPerimeter):
+                    if isinstance(x, cp.TotalPerimeter):
                         self.match_perimeter.setEnabled(False)
                         self.match_perimeter.setChecked(False)
                     if isinstance(x, cp.FieldArea):

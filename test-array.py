@@ -29,8 +29,7 @@ if __name__ == "__main__":
                                  #              DASequenceGenerator.DENSITY_ONLY_AREA],
                                  min_max_numerosity=[10, 30])
 
-    prop = ds.get_features()
-    print(prop.get_nice_text())
+    prop = ds.get_features_dict()
     exit()
     # print(ds.get_numerosity_correlations())
     # print(ds.variances)
@@ -47,7 +46,6 @@ if __name__ == "__main__":
         x = a.copy()
         x.join(b)
         logger.log(x)
-        print(x.get_features_split_by_colours().get_csv())
 
 
     else:

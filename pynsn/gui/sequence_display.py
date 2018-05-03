@@ -65,8 +65,8 @@ class SequenceDisplay(QtGui.QDialog):
     def updateUI(self):
         num = self.slider.value()
         idx = self.da_sequence.numerosity_idx[num]
-        prop = self.da_sequence.dot_arrays[idx].get_features()
-        self.setWindowTitle(prop.short_str(with_object_id=False))
+        feat = self.da_sequence.dot_arrays[idx].get_features_text(extended_format=False, with_object_id=False)
+        self.setWindowTitle(feat)
         self.picture_field.setPixmap(self.pixmaps[idx])
         self.adjustSize()
 
