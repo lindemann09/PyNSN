@@ -407,6 +407,7 @@ class SimpleDotArray(object):
         self._xy += old_center
         self.set_array_modified()
 
+
     def _match_coverage(self, coverage, precision=0.001, adaptation_FA2TA_ratio=0.5):
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0

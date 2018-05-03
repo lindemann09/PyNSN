@@ -16,7 +16,7 @@ from . import features as cp
 class DotArrayGenerator(object):
 
     def __init__(self,
-                 target_array_radius,
+                 target_area_radius,
                  item_diameter_mean,
                  item_diameter_range=None,
                  item_diameter_std=None,
@@ -46,7 +46,7 @@ class DotArrayGenerator(object):
             raise RuntimeError("item_diameter_mean has to be inside the defined item_diameter_range")
 
         self.minimum_gap = minimum_gap
-        self.target_array_radius = target_array_radius
+        self.target_array_radius = target_area_radius
         self.item_diameter_range = item_diameter_range
         self.item_diameter_mean = item_diameter_mean
         self.item_diameter_std = item_diameter_std

@@ -17,7 +17,7 @@ from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = (40, DotArrayGenerator(target_array_radius=200,
+DEFAULT_ARRAY = (40, DotArrayGenerator(target_area_radius=200,
                                        item_colour="lime",
                                        item_diameter_mean=15,
                                        item_diameter_range=[5, 40],
@@ -31,7 +31,7 @@ DEFAULT_ARRAY = (40, DotArrayGenerator(target_array_radius=200,
                                              antialiasing=True,
                                              colour_background="gray"))
 
-ICON = (11, DotArrayGenerator(target_array_radius=200,
+ICON = (11, DotArrayGenerator(target_area_radius=200,
                               item_colour="lime",
                               item_diameter_mean=35,
                               item_diameter_range=[5, 80],
@@ -169,7 +169,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_dot = DEFAULT_ARRAY[1].dot_colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return DotArrayGenerator(target_array_radius=self.main_widget.target_array_radius.value,
+        return DotArrayGenerator(target_area_radius=self.main_widget.target_array_radius.value,
                                  item_colour=colour_dot,
                                  item_diameter_mean=self.main_widget.item_diameter_mean.value,
                                  item_diameter_range=[self.main_widget.item_diameter_range.value1,
@@ -259,7 +259,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.current_data_array.get_feature_dict()
+        prop = self.data_array.get_features_dict()
         print(dialogs.MatchPropertyDialog.get_response(self, prop))  # FIXME get_response does not work with dicts
 
     def action_settings(self):

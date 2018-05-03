@@ -14,7 +14,7 @@ class MatchPropertyDialog(QtGui.QDialog):
         super(MatchPropertyDialog, self).__init__(parent)
 
         self.setWindowTitle("Match Dot Array Property")
-
+        print(properties)
         self.features = properties
         self.comboBox = QtGui.QComboBox(self)
         self.comboBox.addItem(cp.ItemDiameter().long_label)  # 0

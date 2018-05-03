@@ -57,8 +57,12 @@ class Colour(object):
                         self._colour = Colour.rgb2hextriplet(value)
                     except:
                         raise RuntimeError("Incorrect colour " +\
-                            "('{}'). Use RGB tuple, hex triplet or colours.named_colour.".format(value))
+                            "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(value))
 
+
+    @property
+    def rgb(self):
+        return Colour.hextriplet2rgb(self._colour)
 
     @staticmethod
     def hextriplet2rgb(hextriplet):
