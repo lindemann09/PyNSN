@@ -153,6 +153,7 @@ class Coverage(_BaseFeature):
         d["convex_hull_precision"] = self.convex_hull_precision
         return(d)
 
+
 ## helper function
 def check_feature_list(feature_list, check_set_value=False):
     """helper function

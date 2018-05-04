@@ -388,9 +388,10 @@ class SimpleDotArray(object):
         if field_area < current:  # current too larger
             step *= -1
 
-        # centered  points
+        # centered points
         old_center = self.center_of_outer_positions
-        centered_polar = SimpleDotArray._cartesian2polar(self._xy - old_center)
+        self._xy -= old_center
+        centered_polar = SimpleDotArray._cartesian2polar(self._xy)
 
         while abs(current - field_area) > precision:
 
