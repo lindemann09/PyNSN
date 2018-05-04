@@ -10,12 +10,14 @@ import sys
 import random
 from collections import OrderedDict
 import numpy as np
+
 PYTHON3 = (sys.version_info[0] == 3)
 
 try:
     from math import log2
 except:
     from math import log
+
     log2 = lambda x: log(x, 2)
 
 
@@ -25,11 +27,13 @@ def is_base_string(s):
     else:
         return isinstance(s, (unicode, str))
 
+
 def is_unicode_string(s):
     if PYTHON3:
         return isinstance(s, str)
     else:
         return isinstance(s, unicode)
+
 
 def is_byte_string(s):
     if PYTHON3:
@@ -38,10 +42,10 @@ def is_byte_string(s):
         return isinstance(s, str)
 
 
-
 # randomizing
 
 random.seed()
+
 
 def random_beta(number_range, parameter):
     """Draw from beta distribution defined by the
@@ -63,7 +67,7 @@ def random_beta(number_range, parameter):
     """
 
     return number_range[0] + (number_range[1] - number_range[0]) \
-                             * random.betavariate(alpha=parameter[0], beta=parameter[1])
+           * random.betavariate(alpha=parameter[0], beta=parameter[1])
 
 
 def shape_parameter_beta(number_range, mean, std):
@@ -87,7 +91,7 @@ def shape_parameter_beta(number_range, mean, std):
     """
 
     if mean <= number_range[0] or mean >= number_range[1] or \
-                    number_range[0] >= number_range[1]:
+            number_range[0] >= number_range[1]:
         raise RuntimeError("Mean has to be inside the defined number range")
     f = float(number_range[1] - number_range[0])
     mean = (mean - number_range[0]) / f
@@ -108,6 +112,7 @@ def join_dict_list(list_of_dicts):
                 rtn[k] = [v]
     return rtn
 
+
 def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
     d = OrderedDict(dictionary.items())
     rtn = ""
@@ -115,7 +120,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
         rtn += ",".join(d.keys()) + "\n"
 
     if dict_of_lists:
-        feat_np = np.array(list(d.values())).T # list is requires in PY3
+        feat_np = np.array(list(d.values())).T  # list is requires in PY3
         for x in feat_np:
             rtn += ", ".join(map(lambda s: str(s), x)) + "\n"
     else:

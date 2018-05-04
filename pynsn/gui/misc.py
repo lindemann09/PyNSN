@@ -6,6 +6,7 @@ from builtins import zip, filter, range, super
 
 from PyQt4 import QtGui, QtCore
 
+
 class LabeledInput(object):
 
     def __init__(self, label, text, width_label=180, width_edit=70, case_sensitive=True):
@@ -47,10 +48,9 @@ class LabeledInput(object):
         self.label.setVisible(bool)
 
 
-
 class LabeledNumberInput(LabeledInput):
     def __init__(self, label, value, width_label=180, width_edit=70,
-                 integer_only=True, min = None, max = None):
+                 integer_only=True, min=None, max=None):
 
         LabeledInput.__init__(self, label=label, text="", width_label=width_label,
                               width_edit=width_edit)
@@ -69,10 +69,10 @@ class LabeledNumberInput(LabeledInput):
             rtn = int(self.edit.text())
         else:
             rtn = float(self.edit.text())
-        if self.min is not None and rtn<self.min:
+        if self.min is not None and rtn < self.min:
             rtn = self.min
             self.value = rtn
-        if self.max is not None and rtn>self.max:
+        if self.max is not None and rtn > self.max:
             rtn = self.max
             self.value = rtn
 
@@ -80,9 +80,9 @@ class LabeledNumberInput(LabeledInput):
 
     @value.setter
     def value(self, v):
-        if self.min is not None and v<self.min:
+        if self.min is not None and v < self.min:
             v = self.min
-        if self.max is not None and v>self.max:
+        if self.max is not None and v > self.max:
             v = self.max
         if self.integer_only:
             v = int(v)
@@ -153,10 +153,10 @@ class NumberInput(object):
             rtn = int(self.edit.text())
         else:
             rtn = float(self.edit.text())
-        if self.min is not None and rtn<self.min:
+        if self.min is not None and rtn < self.min:
             rtn = self.min
             self.value = rtn
-        if self.max is not None and rtn>self.max:
+        if self.max is not None and rtn > self.max:
             rtn = self.max
             self.value = rtn
 
@@ -164,9 +164,9 @@ class NumberInput(object):
 
     @value.setter
     def value(self, v):
-        if self.min is not None and v<self.min:
+        if self.min is not None and v < self.min:
             v = self.min
-        if self.max is not None and v>self.max:
+        if self.max is not None and v > self.max:
             v = self.max
         if self.integer_only:
             v = int(v)

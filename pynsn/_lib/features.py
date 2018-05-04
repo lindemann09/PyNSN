@@ -5,7 +5,8 @@ import itertools
 
 DEFAULT_SPACING_PRECISION = 0.0001
 
-#@total_ordering
+
+# @total_ordering
 class _BaseFeature(object):
     """"""
     long_label = "undefined"
@@ -62,6 +63,7 @@ class _SizeRelatedFeature(_BaseFeature):
     def dependencies(self):
         return (ItemDiameter, TotalPerimeter, TotalSurfaceArea, LogSize)
 
+
 class _SpaceRelatedFeature(_BaseFeature):
 
     def __init__(self, value=None, spacing_precision=DEFAULT_SPACING_PRECISION):
@@ -75,11 +77,10 @@ class _SpaceRelatedFeature(_BaseFeature):
     def as_dict(self):
         d = _BaseFeature.as_dict(self)
         d["spacing_precision"] = self.spacing_precision
-        return(d)
+        return (d)
 
 
 class LogSize(_SizeRelatedFeature):
-
     long_label = "Log Size"
 
     def set_value(self, reference_dot_array):
@@ -87,7 +88,6 @@ class LogSize(_SizeRelatedFeature):
 
 
 class LogSpacing(_SpaceRelatedFeature):
-
     long_label = "Log Spacing"
 
     def set_value(self, reference_dot_array):
@@ -173,7 +173,7 @@ class Coverage(_BaseFeature):
         d = _BaseFeature.as_dict(self)
         d["match_ratio_convhull2area"] = self.match_ratio_fieldarea2totalarea
         d["spacing_precision"] = self.spacing_precision
-        return(d)
+        return (d)
 
 
 ## helper function
@@ -197,6 +197,7 @@ def check_feature_list(feature_list, check_set_value=False):
         if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                 type(a).__name__, type(b).__name__))
+
 
 def _dict_to_feature(d):
     d = copy(d)

@@ -9,17 +9,15 @@ from .. import pil_image
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, LabeledInput
 from . import dialogs
 
+
 class MainWidget(QtGui.QWidget):
 
     def __init__(self, parent, settings, number, generator):
-
         super(MainWidget, self).__init__(parent)
         self.settings = settings
         self.initUI(number, generator)
 
-
     def initUI(self, number, generator):
-
         self.btn_generate = QtGui.QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
@@ -37,7 +35,6 @@ class MainWidget(QtGui.QWidget):
         self.dot_colour = LabeledInput("Colour", text=generator.item_feature.colour, case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
         self.slider = QtGui.QSlider(QtCore.Qt.Vertical)
-
 
         ctrl = QtGui.QVBoxLayout()
         ctrl.addWidget(self.btn_generate)
@@ -79,7 +76,6 @@ class MainWidget(QtGui.QWidget):
         self.updateUI()
         self.slider.valueChanged.connect(self.action_slider_change)
 
-
     def updateUI(self):
         self.dot_colour2.setVisible(self.settings.bicoloured.isChecked())
         self.number2.setVisible(self.settings.bicoloured.isChecked())
@@ -91,8 +87,8 @@ class MainWidget(QtGui.QWidget):
 
     def resize_fields(self, width, text_height=150, minium_text_width=300):
         self.picture_field.setFixedSize(width, width)
-        if width<minium_text_width:
-            width=minium_text_width
+        if width < minium_text_width:
+            width = minium_text_width
         self.text_field.setMinimumSize(width, text_height)
 
     def action_slider_change(self):

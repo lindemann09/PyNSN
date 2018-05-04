@@ -8,6 +8,7 @@ import numpy as np
 from .._lib.colour import Colour
 from .._lib.misc import PYTHON3
 
+
 class PILImageGenerator(object):
 
     def __init__(self,
@@ -49,7 +50,6 @@ class PILImageGenerator(object):
                 "antialiasing": self.antialiasing,
                 "colour_background": self.colour_background.colour,
                 "default_dot_colour": self.default_dot_colour.colour}
-
 
     def make(self, dot_array):  # todo using *args and ImageParameter
         """use PIL colours (see PIL.ImageColor.colormap)
@@ -139,4 +139,3 @@ def _draw_convex_hull(img, convex_hull, convex_hull_colour):
                       width=2,
                       fill=convex_hull_colour)
         last = p
-

@@ -142,7 +142,7 @@ class SequenceDialog(QtGui.QDialog):
                                                            integer_only=False, min=0, max=1)
         self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range", value1=10, value2=100)
         self.match_extra_space = misc.LabeledNumberInput("Extra space",
-                                                           value=50, integer_only=True, min=0)
+                                                         value=50, integer_only=True, min=0)
 
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
@@ -248,7 +248,6 @@ class SequenceDialog(QtGui.QDialog):
                     if isinstance(x, cp.LogSpacing):
                         self.match_spacing.setEnabled(False)
                         self.match_spacing.setChecked(False)
-
 
         self.match_methods = selected
 

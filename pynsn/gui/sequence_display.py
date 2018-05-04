@@ -6,7 +6,7 @@ from builtins import zip, filter, range, super, map
 
 from multiprocessing import Pool
 from itertools import imap
-from PyQt4 import QtGui,  QtCore
+from PyQt4 import QtGui, QtCore
 from PIL.ImageQt import ImageQt
 from .._lib.misc import PYTHON3
 from .. import pil_image
@@ -21,7 +21,6 @@ def _map_make_image(x):
 class SequenceDisplay(QtGui.QDialog):
 
     def __init__(self, parent, da_sequence, start_numerosity, image_parameter):
-
         super(SequenceDisplay, self).__init__(parent)
 
         self.setWindowTitle("Dot Array Sequence")
@@ -55,12 +54,11 @@ class SequenceDisplay(QtGui.QDialog):
 
         iter_images = Pool().imap(_map_make_image, zip(self.da_sequence.dot_arrays, pil_generator))
         progbar_iter = misc.progressbar_iterator(iter_images,
-                                                 n_elements = len(self.da_sequence.dot_arrays),
+                                                 n_elements=len(self.da_sequence.dot_arrays),
                                                  label="make images", win_title="Dot Array Sequence")
 
-        self.pixmaps = list(map(lambda im: QtGui.QPixmap.fromImage(ImageQt(im)), progbar_iter ))
+        self.pixmaps = list(map(lambda im: QtGui.QPixmap.fromImage(ImageQt(im)), progbar_iter))
         self.updateUI()
-
 
     def updateUI(self):
         num = self.slider.value()
@@ -72,6 +70,3 @@ class SequenceDisplay(QtGui.QDialog):
 
     def action_slider_change(self):
         self.updateUI()
-
-
-

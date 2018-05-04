@@ -16,6 +16,7 @@ from .item_attributes import ItemAttributeList, ItemAttributes
 
 TWO_PI = 2 * np.pi
 
+
 class DotArray(SimpleDotArray):
 
     def __init__(self, target_array_radius, minimum_gap=1, xy=None,
@@ -28,7 +29,7 @@ class DotArray(SimpleDotArray):
         self.target_array_radius = target_array_radius
         self.minimum_gap = minimum_gap
         if xy is not None or diameters is not None or features is not None:
-            self.append(xy, diameters, features = features)
+            self.append(xy, diameters, features=features)
 
     def clear(self):
         SimpleDotArray.clear(self)
@@ -43,7 +44,7 @@ class DotArray(SimpleDotArray):
 
         if features is None:
             features = ItemAttributeList(colours=[None] * len(item_diameters))
-        elif len(item_diameters)>1 and isinstance(features, ItemAttributes):
+        elif len(item_diameters) > 1 and isinstance(features, ItemAttributes):
             tmp = ItemAttributeList()
             tmp.append_attributes(features)
             features = tmp.repeat(len(item_diameters))
@@ -82,7 +83,7 @@ class DotArray(SimpleDotArray):
         if realign:
             self.realign()
 
-    def get_dots(self, indices=None, diameter=None, colour=None, picture=None): # todo: search by features
+    def get_dots(self, indices=None, diameter=None, colour=None, picture=None):  # todo: search by features
         """returns all dots
          filtering possible:
          if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
@@ -133,7 +134,8 @@ class DotArray(SimpleDotArray):
 
                 # squeeze in outlier
                 polar = SimpleDotArray._cartesian2polar([self._xy[too_far[0], :]])[0]
-                polar[0] = self.target_array_radius - self._diameters[too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
+                polar[0] = self.target_array_radius - self._diameters[
+                    too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = SimpleDotArray._polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 
@@ -196,7 +198,7 @@ class DotArray(SimpleDotArray):
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
                 object_id_column=True, num_idx_column=True,
-                colour_column=False, picture_column=False): # todo print features
+                colour_column=False, picture_column=False):  # todo print features
         """Return the dot array as csv text
 
         Parameter
@@ -234,7 +236,6 @@ class DotArray(SimpleDotArray):
             rtn += "\n"
         return rtn
 
-
     def random_free_dot_position(self, dot_diameter,
                                  ignore_overlapping=False,
                                  prefer_inside_field_area=False,
@@ -258,7 +259,7 @@ class DotArray(SimpleDotArray):
 
             bad_position = False
             if prefer_inside_field_area and cnt < try_out_inside_convex_hull:
-                bad_position = delaunay.find_simplex(proposal_xy)<0
+                bad_position = delaunay.find_simplex(proposal_xy) < 0
 
             if not bad_position and not ignore_overlapping:
                 # find bad_positions
@@ -290,7 +291,6 @@ class DotArray(SimpleDotArray):
             else:
                 self._xy = np.append(self._xy, [xy], axis=0)
 
-
     def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
         """number deviant
         """
@@ -308,8 +308,9 @@ class DotArray(SimpleDotArray):
                 else:
                     ch = []
                 for x in range(try_out):
-                    rnd = random.randint(0, deviant.feature_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
-                    if rnd not in ch or change_numerosity >0:
+                    rnd = random.randint(0,
+                                         deviant.feature_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                    if rnd not in ch or change_numerosity > 0:
                         break
 
                 if change_numerosity < 0:

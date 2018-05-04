@@ -56,9 +56,9 @@ class Colour(object):
                     try:
                         self._colour = Colour.rgb2hextriplet(value)
                     except:
-                        raise RuntimeError("Incorrect colour " +\
-                            "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(value))
-
+                        raise RuntimeError("Incorrect colour " + \
+                                           "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
+                                               value))
 
     @property
     def rgb(self):
@@ -69,10 +69,9 @@ class Colour(object):
         ht = hextriplet.lstrip("#")
         return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
 
-
     @staticmethod
     def rgb2hextriplet(rgb, uppercase=True):
-        if len(rgb) !=3:
+        if len(rgb) != 3:
             raise TypeError("rgb must be a list of three values.")
         if uppercase:
             lettercase = 'X'
@@ -222,6 +221,6 @@ class Colour(object):
         'whitesmoke': '#F5F5F5',
         'yellow': '#FFFF00',
         'yellowgreen': '#9ACD32',
-        'expyriment_orange' : '#FF9632',
-        'expyriment_purple' : '#A046FA'
+        'expyriment_orange': '#FF9632',
+        'expyriment_purple': '#A046FA'
     }

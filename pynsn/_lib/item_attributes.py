@@ -18,7 +18,7 @@ class ItemAttributes(object):
 
     def __repr__(self):
         return 'ItemAttributes(colour={}, picture={})'.format(
-                    self.colour, self.picture)
+            self.colour, self.picture)
 
     def to_dict(self):
         return {"colour": self.colour.colour,
@@ -33,7 +33,7 @@ class ItemAttributeList(object):
 
         self.colours = np.array([])
         self.pictures = np.array([])
-        if colours is  not None or pictures is not None:
+        if colours is not None or pictures is not None:
             self.append(colours=colours, pictures=pictures)
 
     def __iter__(self):
@@ -45,9 +45,9 @@ class ItemAttributeList(object):
                               picture=self.pictures[key])
 
     def as_dict(self):
-        col = map(lambda x:x._colour, self.colours)
-        return {"colours" : list(col),
-                "pictures" : self.pictures.tolist()}
+        col = map(lambda x: x._colour, self.colours)
+        return {"colours": list(col),
+                "pictures": self.pictures.tolist()}
 
     @property
     def length(self):
@@ -120,7 +120,6 @@ class ItemAttributeList(object):
             self.colours[indices] = Colour(colour)
         if picture is not None:
             self.pictures[indices] = picture
-
 
 
 ################### helper functions ###########################

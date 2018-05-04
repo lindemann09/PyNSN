@@ -285,15 +285,15 @@ class PyNSN_GUI(QtGui.QMainWindow):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
 
         d = {"match range": match_range, "extra_space": extra_space}
-        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods)) #TODO <-- check ERROR
+        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))  # TODO <-- check ERROR
         self.main_widget.text_field.append("# Sequence\n" + \
                                            yaml.dump(d, default_flow_style=False))
 
         if match_methods is not None:
             # print("processing")
             gen = DASequenceGenerator(match_properties=match_methods,
-                                               min_max_numerosity=match_range,
-                                               extra_space=extra_space)
+                                      min_max_numerosity=match_range,
+                                      extra_space=extra_space)
             sequence = gen.make(reference_dot_array=self.data_array, logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.feature_numerosity,

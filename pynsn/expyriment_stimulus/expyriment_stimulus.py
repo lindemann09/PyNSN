@@ -22,7 +22,6 @@ class ExprimentDotArray(Canvas):
                  colour_center_of_outer_positions=None,
                  antialiasing=True,
                  colour_background=(0, 0, 0)):
-
         Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
         self.colour_field_area = Colour(colour_field_area)
@@ -42,7 +41,6 @@ class ExprimentDotArray(Canvas):
         return self._image
 
     def make_pil_image(self):
-
         gen = PILImageGenerator(colour_target_area=self.colour_target_area,
                                 colour_field_area=self.colour_field_area,
                                 colour_field_area_outer=self.colour_field_area_outer,
@@ -53,9 +51,7 @@ class ExprimentDotArray(Canvas):
         self._image = gen.make(dot_array=self.dot_array)
         return self._image
 
-
     def _create_surface(self):
-
         self._size = self.image.size
         return pygame.image.frombuffer(self.image.tobytes(),
                                        self.image.size,

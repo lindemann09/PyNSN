@@ -21,7 +21,7 @@ class DotArrayGenerator(object):
                  item_diameter_range=None,
                  item_diameter_std=None,
                  item_colour=None,  # todo feature
-                 minimum_gap=1): # TODO check minim gap
+                 minimum_gap=1):  # TODO check minim gap
 
         """Specification of a Random Dot Array
 
@@ -90,7 +90,6 @@ class DotArrayGenerator(object):
                 "dot_colour": self.item_feature.colour.colour,  ##todo feature
                 "minimum_gap": self.minimum_gap}
 
-
     def make_iter(self, list_of_n_dots, occupied_space=None, logger=None, multiprocessing=False):  # TODO  never checked
         args = map(lambda x: (self, x, occupied_space, logger), list_of_n_dots)
 
@@ -139,8 +138,7 @@ class DASequenceGenerator(object):
         self.extra_space = extra_space
         self.center_array = center_array
 
-
-    def make(self, reference_dot_array, logger=None): # todo could be an iterator
+    def make(self, reference_dot_array, logger=None):  # todo could be an iterator
         """Methods takes take , you might use make Process
             match_properties:
                     continuous property or list of continuous properties to be match
@@ -159,7 +157,7 @@ class DASequenceGenerator(object):
             m = copy(m)
             m.set_value(reference_dot_array)
             match_props.append(m)
-            if isinstance(m, cp.LogSpacing().dependencies ) or \
+            if isinstance(m, cp.LogSpacing().dependencies) or \
                     (isinstance(m, cp.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
                 prefer_keeping_field_area = True
                 break
@@ -246,7 +244,6 @@ class DASequenceGenerator(object):
                 break
 
         return da_sequence, error
-
 
 # class DASequenceMakeProcess(Process):
 #     def __init__(self, reference_dot_array, min_max_numerosity, match_properties, extra_space,

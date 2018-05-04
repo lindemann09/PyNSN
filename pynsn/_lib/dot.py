@@ -10,6 +10,7 @@ import math
 from .colour import Colour
 from .item_attributes import ItemAttributes, ItemAttributeList
 
+
 class Coordinate2D(object):
 
     def __init__(self, x=0, y=0):
@@ -83,7 +84,6 @@ class Coordinate2D(object):
         self._x = None
         self._y = None
 
-
     def distance(self, d):
         """Return Euclidean distance to the another Coordinate. The function take the
         diameter of the points into account.
@@ -101,8 +101,7 @@ class Coordinate2D(object):
         return math.hypot(self.x - d.x, self.y - d.y)
 
 
-
-class Dot(Coordinate2D): #TODO becomes maybe an item
+class Dot(Coordinate2D):  # TODO becomes maybe an item
 
     def __init__(self, x=0, y=0, diameter=1, features=None):
         """Initialize a point
@@ -127,7 +126,6 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
         else:
             self.features = features
 
-
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function take the
         diameter of the points into account.
@@ -147,15 +145,14 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
 
     @property
     def area(self):
-        return math.pi * (self.diameter**2)/4.0
+        return math.pi * (self.diameter ** 2) / 4.0
 
     @property
     def perimeter(self):
         return math.pi * self.diameter
 
 
-
-class Rectangle(Coordinate2D): #todo
+class Rectangle(Coordinate2D):  # todo
     def __init__(self, x=0, y=0, width=0, height=0, features=None):
         """Initialize a point
 
@@ -181,11 +178,11 @@ class Rectangle(Coordinate2D): #todo
 
     @property
     def left_top(self):
-        return self._x - 0.5*self.width, self._y + 0.5*self.height
+        return self._x - 0.5 * self.width, self._y + 0.5 * self.height
 
     @property
     def right_bottom(self):
-        return self._x + 0.5*self.width, self._y - 0.5*self.height
+        return self._x + 0.5 * self.width, self._y - 0.5 * self.height
 
     @property
     def rect(self):
@@ -207,12 +204,11 @@ class Rectangle(Coordinate2D): #todo
 
         """
 
-        #l1, t1 = self.left_top
-        #r1, b1 = self.right_bottom
-        #l2, t2 = d.left_top
-        #r2, b2 = d.right_bottom
-        return Coordinate2D.distance(self, d) #TODO check me
-
+        # l1, t1 = self.left_top
+        # r1, b1 = self.right_bottom
+        # l2, t2 = d.left_top
+        # r2, b2 = d.right_bottom
+        return Coordinate2D.distance(self, d)  # TODO check me
 
     def gap_xy(self, other):
         """Gap beween two rectangles seppart for the x and y axis"""
@@ -230,12 +226,10 @@ class Rectangle(Coordinate2D): #todo
 
         return dx, dy
 
-
     @property
     def area(self):
         return self.width * self.height
 
     @property
     def perimeter(self):
-        return 2 * (self.width+self.height)
-
+        return 2 * (self.width + self.height)

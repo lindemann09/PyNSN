@@ -11,6 +11,7 @@ import numpy as np
 from .dot_array import DotArray
 from . import misc
 
+
 class DASequence(object):
 
     def __init__(self):
@@ -55,7 +56,7 @@ class DASequence(object):
             m.update(da.object_id.encode("UTF-8"))
         return m.hexdigest()[:DotArray.OBJECT_ID_LENGTH]
 
-    def get_features_dict(self): #todo search for get_features!
+    def get_features_dict(self):  # todo search for get_features!
         """dictionary with arrays"""
 
         dicts = [x.get_features_dict() for x in self.dot_arrays]

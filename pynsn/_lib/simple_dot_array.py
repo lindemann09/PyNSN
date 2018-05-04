@@ -363,7 +363,7 @@ class SimpleDotArray(object):
 
             elif isinstance(feat, features.LogSpacing):
                 logfa = 0.5 * feat.value + 0.5 * log2(self.feature_numerosity)
-                self._match_field_area(field_area=2**logfa,
+                self._match_field_area(field_area=2 ** logfa,
                                        precision=feat.spacing_precision)
             elif isinstance(feat, features.Sparsity):
                 fa = feat.value * self.feature_numerosity

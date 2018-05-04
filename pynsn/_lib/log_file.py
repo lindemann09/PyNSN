@@ -15,6 +15,7 @@ from .dot_array import DotArray
 from .dot_array_sequence import DASequence
 import atexit
 
+
 class GeneratorLogger(object):
 
     def __init__(self, log_filename,
@@ -40,7 +41,7 @@ class GeneratorLogger(object):
             pass
 
         header = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
-                                                       os.path.split(sys.argv[0])[1])
+                                                      os.path.split(sys.argv[0])[1])
 
         with open(self.log_filename_arrays, write_mode) as logfile_arrays:
             logfile_arrays.write(header)
@@ -61,13 +62,13 @@ class GeneratorLogger(object):
         """helper function: returns log for dot arry and log for properties"""
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
-            is_sequence = isinstance(dot_array_object,DASequence)
+            is_sequence = isinstance(dot_array_object, DASequence)
             feat = dot_array_object.get_features_dict()
             feat_log = misc.dict_to_csv(feat, variable_names=variable_names,
                                         dict_of_lists=is_sequence)
             if not is_sequence:
                 if properties_different_colour:
-                    feat = dot_array_object.get_features_split_by_colours() # todo: check logging different colours
+                    feat = dot_array_object.get_features_split_by_colours()  # todo: check logging different colours
                     if feat is not None:
                         feat_log += feat.get_csv(feat, dict_of_lists=True, variable_names=False)
 
@@ -93,7 +94,6 @@ class GeneratorLogger(object):
         self.logtext_prop += feat_log
         self.logtext_arrays += da_log
 
-
     def save(self):
 
         with open(self.log_filename_arrays, "a+") as logfile_arrays:
@@ -102,7 +102,6 @@ class GeneratorLogger(object):
             logfile_prop.write(self.logtext_prop)
         self.logtext_prop = ""
         self.logtext_arrays = ""
-
 
 
 class LogFileReader(object):

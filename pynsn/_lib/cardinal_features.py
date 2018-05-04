@@ -1,11 +1,14 @@
 from __future__ import division
 
 from math import sqrt, pi
+
 try:
     from math import log2
 except:
     from math import log
+
     log2 = lambda x: log(x, 2)
+
 
 class CardinalFeatures(object):
 
@@ -49,7 +52,6 @@ class CardinalFeatures(object):
         self._spacing = float(x)
         self._sqrtSpace = sqrt(x)
 
-
     # -- stimulus features
 
     @property
@@ -91,7 +93,7 @@ class CardinalFeatures(object):
     # ---- further stimulus features (only setter)
     @property
     def density(self):
-        return 1/float(self.sparsity)
+        return 1 / float(self.sparsity)
 
     @property
     def coverage(self):
@@ -112,16 +114,16 @@ class CardinalFeatures(object):
 
         return self._sqrtSize * self._sqrtSpace
 
+
 class CardinalFeaturesDotArray(CardinalFeatures):
 
     @property
     def item_diameter(self):
-
-        return sqrt(self.item_surface_area/pi)  * 2
+        return sqrt(self.item_surface_area / pi) * 2
 
     @item_diameter.setter
     def item_diameter(self, x):
-        self.item_surface_area = pi * x**2 / 4
+        self.item_surface_area = pi * x ** 2 / 4
 
     @property
     def item_perimeter(self):
@@ -129,6 +131,4 @@ class CardinalFeaturesDotArray(CardinalFeatures):
 
     @item_perimeter.setter
     def item_perimeter(self, x):
-        self.item_surface_area = x**2 / (4*pi)
-
-
+        self.item_surface_area = x ** 2 / (4 * pi)
