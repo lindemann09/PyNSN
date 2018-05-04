@@ -16,7 +16,6 @@ from .item_attributes import ItemAttributeList, ItemAttributes
 
 TWO_PI = 2 * np.pi
 
-
 class DotArray(SimpleDotArray):
 
     def __init__(self, target_array_radius, minimum_gap=1, xy=None,

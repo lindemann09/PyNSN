@@ -288,6 +288,14 @@ class SimpleDotArray(object):
             return None
 
     @property
+    def feature_Size(self):
+        return (self.feature_total_surface_area / math.sqrt(self.feature_numerosity)) ** 2
+
+    @property
+    def feature_Space(self):
+        return (self.feature_field_area / math.sqrt(self.feature_numerosity)) ** 2
+
+    @property
     def feature_sparsity(self):
         return self.feature_field_area / self.feature_numerosity
 
@@ -409,7 +417,7 @@ class SimpleDotArray(object):
         self.set_array_modified()
 
 
-    def _match_coverage(self, coverage, precision=0.001, match_FA2TA_ratio=0.5):
+    def _match_coverage(self, coverage, precision=0.001, match_FA2TA_ratio=0.5): # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 

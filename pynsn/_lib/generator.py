@@ -39,7 +39,7 @@ class DotArrayGenerator(object):
 
         if item_diameter_std <= 0:
             item_diameter_std = None
-        if item_diameter_range is not None and \
+        elif item_diameter_range is not None and \
                 (item_diameter_mean <= item_diameter_range[0] or
                  item_diameter_mean >= item_diameter_range[1] or
                  item_diameter_range[0] >= item_diameter_range[1]):
