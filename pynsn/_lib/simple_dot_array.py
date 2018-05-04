@@ -268,7 +268,7 @@ class SimpleDotArray(object):
         return np.sum(self.perimeter)
 
     @property
-    def feature_field_area(self):
+    def feature_field_area(self): # todo: not defined for small n
         return self._ch.convex_hull_object.volume
 
     @property
@@ -344,7 +344,7 @@ class SimpleDotArray(object):
             elif isinstance(feat, cp.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
-            elif isinstance(feat, cp.TotalSurfaceArea): #fixme check new matching
+            elif isinstance(feat, cp.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=feat.value)
             elif isinstance(feat, cp.FieldArea):
                 self._match_field_area(field_area=feat.value,
@@ -352,7 +352,7 @@ class SimpleDotArray(object):
             elif isinstance(feat, cp.Coverage):
                 self._match_coverage(coverage=feat.value,
                                      precision=feat.convex_hull_precision,
-                                     adaptation_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
+                                     match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
 
         if center_array:
             self._xy -= self.center_of_outer_positions
@@ -408,7 +408,7 @@ class SimpleDotArray(object):
         self.set_array_modified()
 
 
-    def _match_coverage(self, coverage, precision=0.001, adaptation_FA2TA_ratio=0.5):
+    def _match_coverage(self, coverage, precision=0.001, match_FA2TA_ratio=0.5):
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 
@@ -418,16 +418,20 @@ class SimpleDotArray(object):
         """
 
         # dens = convex_hull_area / total_surface_area
-        if adaptation_FA2TA_ratio < 0 or adaptation_FA2TA_ratio > 1:
-            adaptation_FA2TA_ratio = 0.5
+        if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
+            match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (self.feature_field_area / coverage) - self.feature_total_surface_area
-        d_change_total_area = total_area_change100 * (1 - adaptation_FA2TA_ratio)
+        total_area_change100 = (coverage * self.feature_field_area ) - self.feature_total_surface_area
+        d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
             self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_total_area)
 
-        self._match_field_area(field_area=self.feature_total_surface_area * coverage,
+        self._match_field_area(field_area=self.feature_total_surface_area / coverage,
                                precision=precision)
+
+    def center_array(self):
+        self._xy -= self.center_of_outer_positions
+        self.set_array_modified()
 
     def remove_overlap_from_inner_to_outer(self, minimum_gap):
 
@@ -436,6 +440,9 @@ class SimpleDotArray(object):
         for i in np.argsort(SimpleDotArray._cartesian2polar(self._xy, radii_only=True)):
             if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
                 shift_required = True
+
+        if shift_required:
+            self.set_array_modified()
 
         return shift_required
 
@@ -457,11 +464,14 @@ class SimpleDotArray(object):
             for k, v in self.get_features_dict().items():
                 if rtn is None:
                     if with_object_id:
-                        rtn = "- {}\n".format(k)
+                        rtn = "- {}\n".format(v)
                     else:
-                        rtn = "- {}\n".format(k)
+                        rtn = ""
                 else:
-                    name = "  " + k
+                    if rtn == "":
+                        name = "- " + k
+                    else:
+                        name = "  " + k
                     try:
                         value = "{0:.2f}\n".format(v)  # try rounding
                     except:

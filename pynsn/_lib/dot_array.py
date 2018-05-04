@@ -108,7 +108,7 @@ class DotArray(SimpleDotArray):
             rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, features=feat))
         return rtn
 
-    def realign(self):
+    def realign(self, center_array=False):
         """Realigns the dots in order to remove all dots overlaps. If two dots
         overlap, the dots that is further apart from the arry center will be
         moved opposite to the direction of the other dot until there is no
@@ -117,8 +117,11 @@ class DotArray(SimpleDotArray):
 
         """
 
-        shift_required = False
         error = False
+
+        if center_array:
+            self._xy -= self.center_of_outer_positions
+            self.set_array_modified()
 
         shift_required = self.remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
 

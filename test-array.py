@@ -12,16 +12,21 @@ if __name__ == "__main__":
                              log_colours=True, properties_different_colour=True)
     generator = DotArrayGenerator(
         target_area_radius=300,
-        item_diameter_mean=25,
+        item_diameter_mean=20,
         item_diameter_range=(5, 40),
         item_diameter_std=2,
         item_colour="skyblue",
-        minimum_gap=10)
+        minimum_gap=5)
 
     reference = generator.make(n_dots=25, logger=None)
-    print(reference.get_features_dict())
-    reference.match(match_features=pynsn.Coverage(0.15))
-    print(reference.get_features_dict())
+    reference.center_array()
+    reference.realign()
+    print(reference.get_features_text(with_object_id=False, extended_format=False ))
+
+    reference2 = reference.copy()
+    reference2.match(match_features=pynsn.Coverage(0.10, match_ratio_fieldarea2totalarea=0.5), center_array=True)
+    reference2.realign()
+    print(reference2.get_features_text(with_object_id=False, extended_format=False))
 
     # ds = make_dot_array_sequence(reference_dot_array=reference,
     #                              logger=logger,
@@ -78,6 +83,15 @@ if __name__ == "__main__":
                                                   #  colour_center_of_outer_positions=(0,0,200),
                                                   antialiasing=True)
 
+    stimx.present()
+    exp.keyboard.wait()
+    stimx = expyriment_stimulus.ExprimentDotArray(reference2,
+                                                  colour_target_area="dimgray",
+                                                  # colour_convex_hull_dots=(255, 0, 0),
+                                                  # colour_convex_hull_positions=(255, 200, 0),
+                                                  # colour_center_of_mass=(255, 0, 0),
+                                                  #  colour_center_of_outer_positions=(0,0,200),
+                                                  antialiasing=True)
     stimx.present()
     exp.keyboard.wait()
 
