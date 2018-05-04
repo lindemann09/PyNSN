@@ -46,15 +46,15 @@ class MatchPropertyDialog(QtGui.QDialog):
     def choice(self, selection):
 
         if selection == cp.ItemDiameter().long_label:
-            self.num_input.value = self.features['item_diameter']
+            self.num_input.value = self.features['item surface area']
         elif selection == cp.Coverage().long_label:
-            self.num_input.value = self.features['coverage']
+            self.num_input.value = self.features['converage']
         elif selection == cp.FieldArea().long_label:
-            self.num_input.value = self.features['field_area']
-        elif selection == cp.TotalPerimeter().long_label:
-            self.num_input.value = self.features['total_perimeter']
+            self.num_input.value = self.features['field area']
+        #elif selection == cp.TotalPerimeter().long_label:
+        #    self.num_input.value = self.features['total_perimeter']
         elif selection == cp.TotalSurfaceArea().long_label:
-            self.num_input.value = self.features['total_surface_area']
+            self.num_input.value = self.features['total surface area']
 
     @staticmethod
     def get_response(parent, prop):

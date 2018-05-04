@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 from builtins import *
 
@@ -39,7 +39,7 @@ class GeneratorLogger(object):
         except:
             pass
 
-        header = "# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
+        header = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
                                                        os.path.split(sys.argv[0])[1])
 
         with open(self.log_filename_arrays, write_mode) as logfile_arrays:

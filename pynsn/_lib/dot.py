@@ -123,8 +123,7 @@ class Dot(Coordinate2D): #TODO becomes maybe an item
         if features is None:
             self.features = ItemAttributes(colour=None, picture=None)
         elif not isinstance(features, ItemAttributes):
-            raise TypeError("features must be a ItemFeatures, not {}".format(
-                type(features).__name__))
+            raise TypeError("features must be a ItemFeatures, not {}".format(type(features).__name__))
         else:
             self.features = features
 
@@ -194,7 +193,7 @@ class Rectangle(Coordinate2D): #todo
         rtn.extend(self.right_bottom)
         return rtn
 
-    def distance(self, r):
+    def distance(self, d):
         """Return Euclidean distance to the dot d. The function take the
         diameter of the points into account.
 
@@ -208,12 +207,11 @@ class Rectangle(Coordinate2D): #todo
 
         """
 
-        l1, t1 = self.left_top
-        r1, b1 = self.right_bottom
-        l2, t2 = r.left_top
-        r2, b2 = r.right_bottom
-
-        return Coordinate2D.distance(self, d) #TODO
+        #l1, t1 = self.left_top
+        #r1, b1 = self.right_bottom
+        #l2, t2 = d.left_top
+        #r2, b2 = d.right_bottom
+        return Coordinate2D.distance(self, d) #TODO check me
 
 
     def gap_xy(self, other):

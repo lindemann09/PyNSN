@@ -269,7 +269,7 @@ class SimpleDotArray(object):
 
     @property
     def feature_field_area(self):
-        return self._ch.convex_hull_object.area
+        return self._ch.convex_hull_object.volume
 
     @property
     def feature_field_area_outer(self):  # FIXME not used (correct?)
@@ -519,6 +519,6 @@ class EfficientConvexHull(object):
     @property
     def full_field_area(self):
         if self._full_area is None:
-            self._full_area = spatial.ConvexHull(self.full_xy).area
+            self._full_area = spatial.ConvexHull(self.full_xy).volume
 
         return self._full_area

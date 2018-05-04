@@ -260,7 +260,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def action_match(self):
         """"""
         prop = self.data_array.get_features_dict()
-        print(dialogs.MatchPropertyDialog.get_response(self, prop))  # FIXME get_response does not work with dicts
+        dialogs.MatchPropertyDialog.get_response(self, prop)  # FIXME get_response does not work with dicts
 
     def action_settings(self):
         """"""
