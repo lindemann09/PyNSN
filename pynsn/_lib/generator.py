@@ -159,8 +159,7 @@ class DASequenceGenerator(object):
             m = copy(m)
             m.set_value(reference_dot_array)
             match_props.append(m)
-
-            if isinstance(m, cp.FieldArea) or \
+            if isinstance(m, cp.LogSpacing().dependencies ) or \
                     (isinstance(m, cp.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
                 prefer_keeping_field_area = True
                 break

@@ -14,9 +14,11 @@ import math
 import numpy as np
 from scipy import spatial
 from .item_attributes import numpy_vector
-from . import features as cp
+from . import features
+from .misc import log2
 
 TWO_PI = 2 * np.pi
+
 
 #
 # class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "item_diameter",
@@ -147,7 +149,8 @@ class SimpleDotArray(object):
         """md5_hash of position, diameter"""
 
         m = md5()
-        m.update(self._xy.tobytes()) # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
+        m.update(
+            self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self._diameters.tobytes())
         return m.hexdigest()[:SimpleDotArray.OBJECT_ID_LENGTH]
 
@@ -268,7 +271,7 @@ class SimpleDotArray(object):
         return np.sum(self.perimeter)
 
     @property
-    def feature_field_area(self): # todo: not defined for small n
+    def feature_field_area(self):  # todo: not defined for small n
         return self._ch.convex_hull_object.volume
 
     @property
@@ -288,12 +291,12 @@ class SimpleDotArray(object):
             return None
 
     @property
-    def feature_Size(self):
-        return (self.feature_total_surface_area / math.sqrt(self.feature_numerosity)) ** 2
+    def feature_logSize(self):
+        return log2(self.feature_total_surface_area) + log2(self.feature_item_surface_area)
 
     @property
-    def feature_Space(self):
-        return (self.feature_field_area / math.sqrt(self.feature_numerosity)) ** 2
+    def feature_logSpacing(self):
+        return log2(self.feature_field_area) + log2(self.feature_sparsity)
 
     @property
     def feature_sparsity(self):
@@ -333,7 +336,7 @@ class SimpleDotArray(object):
         if not isinstance(match_features, (list, tuple)):
             match_features = [match_features]
 
-        cp.check_feature_list(match_features, check_set_value=match_dot_array is None)
+        features.check_feature_list(match_features, check_set_value=match_dot_array is None)
 
         # copy and change values to match this stimulus
         if match_dot_array is None:
@@ -347,19 +350,32 @@ class SimpleDotArray(object):
 
         # Adapt
         for feat in match_feat:
-            if isinstance(feat, cp.ItemDiameter):
+            if isinstance(feat, features.ItemDiameter):
                 self._match_item_diameter(mean_item_diameter=feat.value)
-            elif isinstance(feat, cp.TotalPerimeter):
+            elif isinstance(feat, features.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
-            elif isinstance(feat, cp.TotalSurfaceArea):
+            elif isinstance(feat, features.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=feat.value)
-            elif isinstance(feat, cp.FieldArea):
+            elif isinstance(feat, features.LogSize):
+                logtsa = 0.5 * feat.value + 0.5 * log2(self.feature_numerosity)
+                self._match_total_surface_area(2 ** logtsa)
+
+            elif isinstance(feat, features.LogSpacing):
+                logfa = 0.5 * feat.value + 0.5 * log2(self.feature_numerosity)
+                self._match_field_area(field_area=2**logfa,
+                                       precision=feat.spacing_precision)
+            elif isinstance(feat, features.Sparsity):
+                fa = feat.value * self.feature_numerosity
+                self._match_field_area(field_area=fa,
+                                       precision=feat.spacing_precision)
+
+            elif isinstance(feat, features.FieldArea):
                 self._match_field_area(field_area=feat.value,
-                                       precision=feat.match_presision)
-            elif isinstance(feat, cp.Coverage):
+                                       precision=feat.spacing_precision)
+            elif isinstance(feat, features.Coverage):
                 self._match_coverage(coverage=feat.value,
-                                     precision=feat.convex_hull_precision,
+                                     precision=feat.spacing_precision,
                                      match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
 
         if center_array:
@@ -380,7 +396,7 @@ class SimpleDotArray(object):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
-    def _match_field_area(self, field_area, precision=0.001):
+    def _match_field_area(self, field_area, precision=features.DEFAULT_SPACING_PRECISION):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
@@ -416,8 +432,8 @@ class SimpleDotArray(object):
         self._xy += old_center
         self.set_array_modified()
 
-
-    def _match_coverage(self, coverage, precision=0.001, match_FA2TA_ratio=0.5): # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
+    def _match_coverage(self, coverage, precision=features.DEFAULT_SPACING_PRECISION,
+                        match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 
@@ -430,7 +446,7 @@ class SimpleDotArray(object):
         if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (coverage * self.feature_field_area ) - self.feature_total_surface_area
+        total_area_change100 = (coverage * self.feature_field_area) - self.feature_total_surface_area
         d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
             self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_total_area)
@@ -455,7 +471,6 @@ class SimpleDotArray(object):
 
         return shift_required
 
-
     def get_features_dict(self):
         """ordered dictionary with the most important feature"""
         rtn = [("object_id", self.object_id),
@@ -464,6 +479,8 @@ class SimpleDotArray(object):
                ("item surface area", self.feature_item_surface_area),
                ("field area", self.feature_field_area),
                ("sparsity", self.feature_sparsity),
+               ("logSize", self.feature_logSize),
+               ("logSpacing", self.feature_logSpacing),
                ("converage", self.feature_converage)]
         return OrderedDict(rtn)
 
@@ -486,18 +503,21 @@ class SimpleDotArray(object):
                     except:
                         value = "{}\n".format(v)
 
-                    rtn += name + (spacing_char * (23 - len(name))) + (" " * (10 - len(value))) + value
+                    rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
         else:
             if with_object_id:
                 rtn = "id: {}".format(self.object_id)
             else:
-                rtn =""
-            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, COV: {:.3f}".format(self.feature_numerosity,
-                                                                         int(self.feature_total_surface_area),
-                                                                         int(self.feature_item_surface_area),
-                                                                         int(self.feature_field_area),
-                                                                         self.feature_sparsity,
-                                                                         self.feature_converage) # TODO cardinal
+                rtn = ""
+            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: {:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
+                self.feature_numerosity,
+                int(self.feature_total_surface_area),
+                int(self.feature_item_surface_area),
+                int(self.feature_field_area),
+                self.feature_sparsity,
+                self.feature_logSize,
+                self.feature_logSpacing,
+                self.feature_converage)
         return rtn
 
 

@@ -3,6 +3,8 @@ from __future__ import division
 from copy import copy
 import itertools
 
+DEFAULT_SPACING_PRECISION = 0.0001
+
 #@total_ordering
 class _BaseFeature(object):
     """"""
@@ -42,88 +44,108 @@ class _BaseFeature(object):
         return float(self.value)
 
     @property
-    def _dependencies(self):
-        return []
+    def dependencies(self):
+        return ()
 
     def is_dependent(self, other):
-        return type(other) in self._dependencies or \
-               type(self) in other._dependencies
+        return type(other) in self.dependencies or \
+               type(self) in other.dependencies
 
     def as_dict(self):
         return {"type": self.type,
                 "value": self.value}
 
 
-class TotalSurfaceArea(_BaseFeature):
+class _SizeRelatedFeature(_BaseFeature):
+
+    @property
+    def dependencies(self):
+        return (ItemDiameter, TotalPerimeter, TotalSurfaceArea, LogSize)
+
+class _SpaceRelatedFeature(_BaseFeature):
+
+    def __init__(self, value=None, spacing_precision=DEFAULT_SPACING_PRECISION):
+        _BaseFeature.__init__(self, value)
+        self.spacing_precision = spacing_precision
+
+    @property
+    def dependencies(self):
+        return (LogSpacing, FieldArea, Sparsity)
+
+    def as_dict(self):
+        d = _BaseFeature.as_dict(self)
+        d["spacing_precision"] = self.spacing_precision
+        return(d)
+
+
+class LogSize(_SizeRelatedFeature):
+
+    long_label = "Log Size"
+
+    def set_value(self, reference_dot_array):
+        self.value = reference_dot_array.feature_logSize
+
+
+class LogSpacing(_SpaceRelatedFeature):
+
+    long_label = "Log Spacing"
+
+    def set_value(self, reference_dot_array):
+        self.value = reference_dot_array.feature_logSpacing
+
+
+class TotalSurfaceArea(_SizeRelatedFeature):
     """"""
     long_label = "Total surface area"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_total_surface_area
 
-    @property
-    def _dependencies(self):
-        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
 
-
-
-class ItemDiameter(_BaseFeature):
+class ItemDiameter(_SizeRelatedFeature):
     """"""
     long_label = "Mean item diameter"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_item_diameter
 
-    @property
-    def _dependencies(self):
-        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
 
-
-class TotalPerimeter(_BaseFeature):
+class TotalPerimeter(_SizeRelatedFeature):
     """"""
     long_label = "Total perimeter"
 
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_total_perimeter
 
-    @property
-    def _dependencies(self):
-        return [ItemDiameter, TotalPerimeter, TotalSurfaceArea]
+
+class Sparsity(_SpaceRelatedFeature):
+    """"""
+    long_label = "Sparsity"
+
+    def set_value(self, reference_dot_array):
+        self.value = reference_dot_array.feature_sparsity
 
 
-class FieldArea(_BaseFeature):
+class FieldArea(_SpaceRelatedFeature):
     """"""
     long_label = "Field area"
 
-    def __init__(self, value=None, match_presision=0.01):
-        _BaseFeature.__init__(self, value)
-        self.match_presision = match_presision
-
-    @property
-    def _dependencies(self):
-        return [FieldArea]
-
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_field_area
-
-    def as_dict(self):
-        d = _BaseFeature.as_dict(self)
-        d["match_presision"] = self.match_presision
-        return(d)
 
 
 class Coverage(_BaseFeature):
     """"""
     long_label = "Coverage"
 
-    def __init__(self, value=None, match_ratio_fieldarea2totalarea=0.5, convex_hull_precision=None):
+    def __init__(self, value=None, match_ratio_fieldarea2totalarea=0.5, spacing_precision=None):
 
         _BaseFeature.__init__(self, value)
         self.match_ratio_fieldarea2totalarea = match_ratio_fieldarea2totalarea
-        if convex_hull_precision is None:
-            self.convex_hull_precision = FieldArea().match_presision
+        if spacing_precision is None:
+            self.spacing_precision = FieldArea().spacing_precision
         else:
-            self.convex_hull_precision = convex_hull_precision
+            self.spacing_precision = spacing_precision
 
     @property
     def match_ratio_fieldarea2totalarea(self):
@@ -139,18 +161,18 @@ class Coverage(_BaseFeature):
         self.value = reference_dot_array.feature_converage
 
     @property
-    def _dependencies(self):
+    def dependencies(self):
         dep = [Coverage]
         if self.match_ratio_fieldarea2totalarea < 1:  # area involved
-            dep.extend(TotalSurfaceArea()._dependencies)
+            dep.extend(TotalSurfaceArea().dependencies)
         if self.match_ratio_fieldarea2totalarea > 0:  # convex hull involved
-            dep.extend(FieldArea()._dependencies)
+            dep.extend(FieldArea().dependencies)
         return dep
 
     def as_dict(self):
         d = _BaseFeature.as_dict(self)
         d["match_ratio_convhull2area"] = self.match_ratio_fieldarea2totalarea
-        d["convex_hull_precision"] = self.convex_hull_precision
+        d["spacing_precision"] = self.spacing_precision
         return(d)
 
 
@@ -192,4 +214,3 @@ def _dict_to_feature(d):
     elif t == FieldArea.__name__:
         return FieldArea(**d)
     return None
-

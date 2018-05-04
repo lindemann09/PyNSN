@@ -12,6 +12,11 @@ from collections import OrderedDict
 import numpy as np
 PYTHON3 = (sys.version_info[0] == 3)
 
+try:
+    from math import log2
+except:
+    from math import log
+    log2 = lambda x: log(x, 2)
 
 
 def is_base_string(s):

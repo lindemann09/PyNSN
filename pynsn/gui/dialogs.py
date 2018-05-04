@@ -22,6 +22,8 @@ class MatchPropertyDialog(QtGui.QDialog):
         self.comboBox.addItem(cp.FieldArea().long_label)  # 2
         self.comboBox.addItem(cp.TotalSurfaceArea().long_label)  # 3
         self.comboBox.addItem(cp.TotalPerimeter().long_label)  # 4
+        self.comboBox.addItem(cp.LogSize().long_label)  # 5
+        self.comboBox.addItem(cp.LogSpacing().long_label)  # 6
         self.comboBox.activated[str].connect(self.choice)
 
         self.num_input = misc.NumberInput(width_edit=150, value=0)
@@ -51,10 +53,14 @@ class MatchPropertyDialog(QtGui.QDialog):
             self.num_input.value = self.features['converage']
         elif selection == cp.FieldArea().long_label:
             self.num_input.value = self.features['field area']
-        #elif selection == cp.TotalPerimeter().long_label:
-        #    self.num_input.value = self.features['total_perimeter']
+        elif selection == cp.TotalPerimeter().long_label:
+            self.num_input.value = self.features['total_perimeter']
         elif selection == cp.TotalSurfaceArea().long_label:
             self.num_input.value = self.features['total surface area']
+        elif selection == cp.LogSize().long_label:
+            self.num_input.value = self.features['logSize']
+        elif selection == cp.LogSpacing().long_label:
+            self.num_input.value = self.features['logSpacing']
 
     @staticmethod
     def get_response(parent, prop):
@@ -126,8 +132,10 @@ class SequenceDialog(QtGui.QDialog):
         self.match_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
         self.match_density = QtGui.QCheckBox(cp.Coverage.long_label)
         self.match_convex_hull = QtGui.QCheckBox(cp.FieldArea.long_label)
+        self.match_size = QtGui.QCheckBox(cp.LogSize.long_label)
+        self.match_spacing = QtGui.QCheckBox(cp.LogSpacing.long_label)
         self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
-                                                          value=cp.FieldArea().match_presision,
+                                                          value=cp.FieldArea().spacing_precision,
                                                           integer_only=False)
         self.match_density_ratio = misc.LabeledNumberInput("Ratio convex_hull/area",
                                                            value=cp.Coverage().match_ratio_fieldarea2totalarea,
@@ -140,6 +148,8 @@ class SequenceDialog(QtGui.QDialog):
         self.match_convex_hull.toggled.connect(self.ui_update)
         self.match_diameter.toggled.connect(self.ui_update)
         self.match_perimeter.toggled.connect(self.ui_update)
+        self.match_size.toggled.connect(self.ui_update)
+        self.match_spacing.toggled.connect(self.ui_update)
         self.match_density.toggled.connect(self.ui_update)
         self.match_ch_presision.edit.editingFinished.connect(self.ui_update)
         self.match_density_ratio.edit.editingFinished.connect(self.ui_update)
@@ -158,6 +168,9 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addWidget(self.match_perimeter)
         vlayout.addWidget(self.match_convex_hull)
         vlayout.addWidget(self.match_density)
+        vlayout.addSpacing(10)
+        vlayout.addWidget(self.match_size)
+        vlayout.addWidget(self.match_spacing)
         vlayout.addSpacing(10)
         vlayout.addWidget(misc.heading("Matching parameter"))
         vlayout.addLayout(self.match_ch_presision.layout())
@@ -186,13 +199,21 @@ class SequenceDialog(QtGui.QDialog):
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.FieldArea(match_presision=self.match_ch_presision.value))
+        all.append(cp.FieldArea(spacing_precision=self.match_ch_presision.value))
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
         all.append(cp.Coverage(match_ratio_fieldarea2totalarea=self.match_density_ratio.value,
-                               convex_hull_precision=self.match_ch_presision.value))
+                               spacing_precision=self.match_ch_presision.value))
         if self.match_density.isChecked():
+            selected.append(all[-1])
+
+        all.append(cp.LogSize())
+        if self.match_size.isChecked():
+            selected.append(all[-1])
+
+        all.append(cp.LogSpacing(spacing_precision=self.match_ch_presision.value))
+        if self.match_spacing.isChecked():
             selected.append(all[-1])
 
         self.match_diameter.setEnabled(True)
@@ -200,6 +221,9 @@ class SequenceDialog(QtGui.QDialog):
         self.match_perimeter.setEnabled(True)
         self.match_density.setEnabled(True)
         self.match_convex_hull.setEnabled(True)
+        self.match_spacing.setEnabled(True)
+        self.match_size.setEnabled(True)
+
         for x in all:
             if x not in selected:
                 if sum(map(lambda s: s.is_dependent(x), selected)) > 0:  # any dependency
@@ -218,6 +242,13 @@ class SequenceDialog(QtGui.QDialog):
                     if isinstance(x, cp.Coverage):
                         self.match_density.setEnabled(False)
                         self.match_density.setChecked(False)
+                    if isinstance(x, cp.LogSize):
+                        self.match_size.setEnabled(False)
+                        self.match_size.setChecked(False)
+                    if isinstance(x, cp.LogSpacing):
+                        self.match_spacing.setEnabled(False)
+                        self.match_spacing.setChecked(False)
+
 
         self.match_methods = selected
 

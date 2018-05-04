@@ -24,8 +24,8 @@ if __name__ == "__main__":
     print(reference.get_features_text(with_object_id=False, extended_format=False ))
 
     reference2 = reference.copy()
-    reference2.match(match_features=pynsn.Coverage(0.10, match_ratio_fieldarea2totalarea=1), center_array=True)
-    #reference2.realign()
+    reference2.match(match_features=pynsn.Sparsity(4371), center_array=True)
+    reference2.realign()
     print(reference2.get_features_text(with_object_id=False, extended_format=False))
 
     # ds = make_dot_array_sequence(reference_dot_array=reference,
