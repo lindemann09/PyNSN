@@ -119,6 +119,6 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
         for x in feat_np:
             rtn += ", ".join(map(lambda s: str(s), x)) + "\n"
     else:
-        rtn += ",".join(d.values()) + "\n"
+        rtn += ",".join(map(lambda s: str(s), d.values())) + "\n"
 
     return rtn
