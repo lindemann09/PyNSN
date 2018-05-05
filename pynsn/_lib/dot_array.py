@@ -11,7 +11,7 @@ import numpy as np
 from scipy import spatial
 from .dot import Dot
 from . import misc
-from .simple_dot_array import SimpleDotArray, numpy_vector
+from .simple_dot_array import SimpleDotArray
 from .item_attributes import ItemAttributeList, ItemAttributes
 
 TWO_PI = 2 * np.pi
@@ -25,38 +25,42 @@ class DotArray(SimpleDotArray):
             be realigned """
 
         SimpleDotArray.__init__(self)
-        self.features = ItemAttributeList()
+        self._attributes = ItemAttributeList()
         self.target_array_radius = target_array_radius
         self.minimum_gap = minimum_gap
         if xy is not None or diameters is not None or features is not None:
-            self.append(xy, diameters, features=features)
+            self.append(xy, diameters, attributes=features)
+
+    @property
+    def attributes(self):
+        return self._attributes
 
     def clear(self):
         SimpleDotArray.clear(self)
-        self.features.clear()
+        self._attributes.clear()
 
-    def append(self, xy, item_diameters, features=None):
+    def append(self, xy, item_diameters, attributes=None):
         """append dots using numpy array
         features None, ItemFeatureList of ItemFeatures"""
 
-        item_diameters = numpy_vector(item_diameters)
+        item_diameters = misc.numpy_vector(item_diameters)
         SimpleDotArray.append(self, xy=xy, item_diameters=item_diameters)
 
-        if features is None:
-            features = ItemAttributeList(colours=[None] * len(item_diameters))
-        elif len(item_diameters) > 1 and isinstance(features, ItemAttributes):
+        if attributes is None:
+            attributes = ItemAttributeList(colours=[None] * len(item_diameters))
+        elif len(item_diameters) > 1 and isinstance(attributes, ItemAttributes):
             tmp = ItemAttributeList()
-            tmp.append_attributes(features)
-            features = tmp.repeat(len(item_diameters))
+            tmp.append_attributes(attributes)
+            attributes = tmp.repeat(len(item_diameters))
 
-        self.features.append_attributes(attributes=features)
+        self._attributes.append_attributes(attributes=attributes)
 
-        if (self.features.length != len(self._diameters)):
+        if (self._attributes.length != len(self._diameters)):
             raise RuntimeError(u"Bad shaped data: " + u"colour and/or picture has not the same length as diameter")
 
     def delete(self, index):
         SimpleDotArray.delete(self, index)
-        self.features.delete(index)
+        self._attributes.delete(index)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -71,15 +75,15 @@ class DotArray(SimpleDotArray):
                         minimum_gap=self.minimum_gap,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
-                        features=self.features.copy())
+                        features=self._attributes.copy())
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, features=dot.features)
+        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, attributes=dot.features)
 
     def join(self, dot_array, realign=False):
         """add another dot arrays"""
 
-        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, features=dot_array.features)
+        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, attributes=dot_array.features)
         if realign:
             self.realign()
 
@@ -97,7 +101,7 @@ class DotArray(SimpleDotArray):
             except:
                 indices = [indices]
 
-        for xy, dia, feat in zip(self._xy, self._diameters, self.features):
+        for xy, dia, feat in zip(self._xy, self._diameters, self._attributes):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
@@ -172,7 +176,7 @@ class DotArray(SimpleDotArray):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self.features.colours):
+        for c in np.unique(self._attributes.colours):
             if c is not None:
                 da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
@@ -183,13 +187,13 @@ class DotArray(SimpleDotArray):
 
     def get_features_split_by_colours(self):
         """returns is unicolor or no color"""
-        if len(np.unique(self.features.colours)) == 1:
+        if len(np.unique(self._attributes.colours)) == 1:
             return None
 
         dicts = []
         for da in self.split_array_by_colour():
             feat = da.get_features_dict()
-            feat["object_id"] += str(da.features.colours[0])
+            feat["object_id"] += str(da._attributes.colours[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
@@ -230,9 +234,9 @@ class DotArray(SimpleDotArray):
             rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
                    num_format % self._diameters[cnt]
             if colour_column:
-                rtn += ", {}".format(self.features.colours[cnt])
+                rtn += ", {}".format(self._attributes.colours[cnt])
             if picture_column:
-                rtn += ", {}".format(self.features.pictures[cnt])
+                rtn += ", {}".format(self._attributes.pictures[cnt])
             rtn += "\n"
         return rtn
 
@@ -321,7 +325,7 @@ class DotArray(SimpleDotArray):
                     deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
                                                                        prefer_inside_field_area=prefer_keeping_field_area),
                                    item_diameters=deviant._diameters[rnd],
-                                   features=deviant.features[rnd])
+                                   attributes=deviant._attributes[rnd])
 
         return deviant
 
@@ -336,5 +340,5 @@ class DotArray(SimpleDotArray):
              "target_array_radius": self.target_array_radius,
              "xy": self._xy.tolist(),
              "diameter": self._diameters.tolist(),
-             "features": self.features.as_dict()}
+             "features": self._attributes.as_dict()}
         return rtn + yaml.dump(d)

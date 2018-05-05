@@ -2,11 +2,11 @@
 """
 
 from __future__ import absolute_import
-from builtins import zip, filter, range, super
+from builtins import super
 
 from PyQt4 import QtGui, QtCore
 from . import misc
-from .._lib import features as cp
+from pynsn._lib import features as cp
 
 
 class MatchPropertyDialog(QtGui.QDialog):

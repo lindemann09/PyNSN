@@ -5,7 +5,6 @@ import itertools
 
 DEFAULT_SPACING_PRECISION = 0.0001
 
-
 # @total_ordering
 class _BaseFeature(object):
     """"""

@@ -35,11 +35,11 @@ class DASequence(object):
         self.dot_arrays.pop(array_id)
         self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
-    def get_array_numerosity(self, number_of_dots):
+    def get_array(self, numerosity):
         """returns array with a particular numerosity"""
 
         try:
-            return self.dot_arrays[self.numerosity_idx[number_of_dots]]
+            return self.dot_arrays[self.numerosity_idx[numerosity]]
         except:
             return None
 

@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from builtins import map, filter, range, zip
+from builtins import map, range
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -9,8 +9,8 @@ from multiprocessing import Pool
 from .dot_array import DotArray
 from .item_attributes import ItemAttributes
 from .dot_array_sequence import DASequence
-from .log_file import GeneratorLogger
-from . import features as cp
+from .logging import LogFile
+from . import features
 
 
 class DotArrayGenerator(object):
@@ -73,10 +73,10 @@ class DotArrayGenerator(object):
                     self.item_diameter_range, parameter)
 
             xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
-            rtn.append(xy=xy, item_diameters=diameter, features=self.item_feature)
+            rtn.append(xy=xy, item_diameters=diameter, attributes=self.item_feature)
 
         if logger is not None:
-            if not isinstance(logger, GeneratorLogger):
+            if not isinstance(logger, LogFile):
                 raise RuntimeError("logger has to be None or a GeneratorLogger")
             logger.log(rtn)
 
@@ -131,7 +131,7 @@ class DASequenceGenerator(object):
             match_properties = []
         elif not isinstance(match_properties, (tuple, list)):
             match_properties = [match_properties]
-        cp.check_feature_list(match_properties, check_set_value=False)
+        features.check_feature_list(match_properties, check_set_value=False)
 
         self.match_properties = match_properties
         self.min_max_numerosity = min_max_numerosity
@@ -157,8 +157,8 @@ class DASequenceGenerator(object):
             m = copy(m)
             m.set_value(reference_dot_array)
             match_props.append(m)
-            if isinstance(m, cp.LogSpacing().dependencies) or \
-                    (isinstance(m, cp.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
+            if isinstance(m, features.LogSpacing().dependencies) or \
+                    (isinstance(m, features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
                 prefer_keeping_field_area = True
                 break
 
@@ -198,7 +198,7 @@ class DASequenceGenerator(object):
                 rtn.error = error
 
         if logger is not None:
-            if not isinstance(logger, GeneratorLogger):
+            if not isinstance(logger, LogFile):
                 raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
                     type(logger).__name__))
 

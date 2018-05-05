@@ -10,7 +10,7 @@ import sys
 import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.generator import DotArrayGenerator, GeneratorLogger, DASequenceGenerator
+from .._lib.generator import DotArrayGenerator, LogFile, DASequenceGenerator
 from .._lib.colour import Colour
 from .. import pil_image
 from .main_widget import MainWidget
@@ -60,10 +60,10 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def set_loging(self, onoff):
 
         if onoff:
-            self.logger = GeneratorLogger(log_filename="log/gui",
-                                          override_log_files=True,
-                                          log_colours=False,
-                                          properties_different_colour=False)
+            self.logger = LogFile(log_filename="log/gui",
+                                  override_log_files=True,
+                                  log_colours=False,
+                                  properties_different_colour=False)
         else:
             self.logger = None
 

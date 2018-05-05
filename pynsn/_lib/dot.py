@@ -7,7 +7,6 @@ from builtins import *
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
-from .colour import Colour
 from .item_attributes import ItemAttributes, ItemAttributeList
 
 

@@ -74,7 +74,7 @@ class PILImageGenerator(object):
         default_dot_colour = self.default_dot_colour
         for xy, d, c in zip(_convert_pos(dot_array.rounded_xy * aa, image_size),
                             dot_array.rounded_diameters * aa,
-                            dot_array.features.colours):
+                            dot_array.attributes.colours):
             if c.colour is None:
                 c = default_dot_colour
             _draw_dot(img, xy=xy, diameter=d, colour=c.colour)  # todo draw pictures

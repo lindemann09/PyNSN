@@ -13,9 +13,8 @@ from hashlib import md5
 import math
 import numpy as np
 from scipy import spatial
-from .item_attributes import numpy_vector
 from . import features
-from .misc import log2
+from .misc import log2, numpy_vector
 
 TWO_PI = 2 * np.pi
 
@@ -91,7 +90,7 @@ class SimpleDotArray(object):
         self.set_array_modified()
 
     def set_array_modified(self):
-        self._ch = EfficientConvexHull(self._xy, self._diameters)
+        self._ch = _EfficientConvexHull(self._xy, self._diameters)
 
     @property
     def xy(self):
@@ -523,7 +522,7 @@ class SimpleDotArray(object):
 
 ########## helper
 
-class EfficientConvexHull(object):
+class _EfficientConvexHull(object):
     """helper class for efficent (and not repeated) calulations convex hull"""
 
     def __init__(self, xy, diameters):

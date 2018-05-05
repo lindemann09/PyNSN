@@ -16,7 +16,7 @@ from .dot_array_sequence import DASequence
 import atexit
 
 
-class GeneratorLogger(object):
+class LogFile(object):
 
     def __init__(self, log_filename,
                  log_colours=False,
@@ -85,11 +85,11 @@ class GeneratorLogger(object):
 
     def log(self, dot_array_object):
 
-        da_log, feat_log = GeneratorLogger._logging_txt(dot_array_object=dot_array_object,
-                                                        variable_names=not self._varname_written,
-                                                        num_format=self.num_format,
-                                                        properties_different_colour=self.properties_different_colour,
-                                                        log_colours=self.log_colours)
+        da_log, feat_log = LogFile._logging_txt(dot_array_object=dot_array_object,
+                                                variable_names=not self._varname_written,
+                                                num_format=self.num_format,
+                                                properties_different_colour=self.properties_different_colour,
+                                                log_colours=self.log_colours)
         self._varname_written = True
         self.logtext_prop += feat_log
         self.logtext_arrays += da_log
@@ -210,7 +210,7 @@ class LogFileReader(object):
         rtn = DotArray(target_array_radius=target_array_radius)
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], item_diameters=x[1],
-                       features=ItemAttributeList(colours=x[2], pictures=x[3]))
+                       attributes=ItemAttributeList(colours=x[2], pictures=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
             radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2

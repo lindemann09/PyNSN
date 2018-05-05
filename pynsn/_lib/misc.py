@@ -127,3 +127,19 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
         rtn += ",".join(map(lambda s: str(s), d.values())) + "\n"
 
     return rtn
+
+def numpy_vector(x):
+    """helper function:
+    make an numpy vector from any element (list, arrays, and single data (str, numeric))
+    nut None will not be procesed and returns None"""
+
+    if x is None:
+        return None
+
+    x = np.array(x)
+    if x.ndim == 1:
+        return x
+    elif x.ndim == 0:
+        return x.reshape(1)  # if one element only, make a array with one element
+    else:
+        return x.flatten()

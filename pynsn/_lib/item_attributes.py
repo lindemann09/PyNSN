@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 from .colour import Colour
-
+from .misc import numpy_vector
 
 class ItemAttributes(object):
 
@@ -122,20 +122,3 @@ class ItemAttributeList(object):
             self.pictures[indices] = picture
 
 
-################### helper functions ###########################
-
-def numpy_vector(x):
-    """helper function:
-    make an numpy vector from any element (list, arrays, and single data (str, numeric))
-    nut None will not be procesed and returns None"""
-
-    if x is None:
-        return None
-
-    x = np.array(x)
-    if x.ndim == 1:
-        return x
-    elif x.ndim == 0:
-        return x.reshape(1)  # if one element only, make a array with one element
-    else:
-        return x.flatten()
