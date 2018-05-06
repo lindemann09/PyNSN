@@ -119,6 +119,11 @@ class SettingsDialog(QtGui.QDialog):
 
 
 class SequenceDialog(QtGui.QDialog):
+    extra_space = 50
+    spacing_precision = cp.FieldArea().spacing_precision
+    fieldarea2totalarea = cp.Coverage().match_ratio_fieldarea2totalarea
+    sequence_range = [10, 100]
+
     def __init__(self, parent):
 
         super(SequenceDialog, self).__init__(parent)
@@ -130,19 +135,24 @@ class SequenceDialog(QtGui.QDialog):
         self.match_diameter = QtGui.QCheckBox(cp.ItemDiameter.long_label)
         self.match_area = QtGui.QCheckBox(cp.TotalSurfaceArea.long_label)
         self.match_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
-        self.match_density = QtGui.QCheckBox(cp.Coverage.long_label)
+        self.match_coverage = QtGui.QCheckBox(cp.Coverage.long_label)
+        self.match_sparsity = QtGui.QCheckBox(cp.Sparsity.long_label)
+
         self.match_convex_hull = QtGui.QCheckBox(cp.FieldArea.long_label)
         self.match_size = QtGui.QCheckBox(cp.LogSize.long_label)
         self.match_spacing = QtGui.QCheckBox(cp.LogSpacing.long_label)
-        self.match_ch_presision = misc.LabeledNumberInput("Convex_hull presision",
-                                                          value=cp.FieldArea().spacing_precision,
-                                                          integer_only=False)
-        self.match_density_ratio = misc.LabeledNumberInput("Ratio convex_hull/area",
-                                                           value=cp.Coverage().match_ratio_fieldarea2totalarea,
-                                                           integer_only=False, min=0, max=1)
-        self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range", value1=10, value2=100)
+        self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
+                                                               value=SequenceDialog.spacing_precision,
+                                                               integer_only=False)
+        self.match_fa2ta = misc.LabeledNumberInput("Ratio convex_hull/area",
+                                                   value=SequenceDialog.fieldarea2totalarea,
+                                                   integer_only=False, min=0, max=1)
+        self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range",
+                                                            value1=SequenceDialog.sequence_range[0],
+                                                            value2=SequenceDialog.sequence_range[1])
         self.match_extra_space = misc.LabeledNumberInput("Extra space",
-                                                         value=50, integer_only=True, min=0)
+                                                         value=SequenceDialog.extra_space,
+                                                         integer_only=True, min=0)
 
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
@@ -150,9 +160,10 @@ class SequenceDialog(QtGui.QDialog):
         self.match_perimeter.toggled.connect(self.ui_update)
         self.match_size.toggled.connect(self.ui_update)
         self.match_spacing.toggled.connect(self.ui_update)
-        self.match_density.toggled.connect(self.ui_update)
-        self.match_ch_presision.edit.editingFinished.connect(self.ui_update)
-        self.match_density_ratio.edit.editingFinished.connect(self.ui_update)
+        self.match_coverage.toggled.connect(self.ui_update)
+        self.match_sparsity.toggled.connect(self.ui_update)
+        self.match_spacing_presision.edit.editingFinished.connect(self.ui_update)
+        self.match_fa2ta.edit.editingFinished.connect(self.ui_update)
 
         # OK and Cancel buttons
         buttons = QtGui.QDialogButtonBox(
@@ -167,14 +178,15 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addWidget(self.match_area)
         vlayout.addWidget(self.match_perimeter)
         vlayout.addWidget(self.match_convex_hull)
-        vlayout.addWidget(self.match_density)
+        vlayout.addWidget(self.match_coverage)
+        vlayout.addWidget(self.match_sparsity)
         vlayout.addSpacing(10)
         vlayout.addWidget(self.match_size)
         vlayout.addWidget(self.match_spacing)
         vlayout.addSpacing(10)
         vlayout.addWidget(misc.heading("Matching parameter"))
-        vlayout.addLayout(self.match_ch_presision.layout())
-        vlayout.addLayout(self.match_density_ratio.layout())
+        vlayout.addLayout(self.match_spacing_presision.layout())
+        vlayout.addLayout(self.match_fa2ta.layout())
         vlayout.addLayout(self.match_range.layout())
         vlayout.addSpacing(10)
         vlayout.addLayout(self.match_extra_space.layout())
@@ -199,27 +211,33 @@ class SequenceDialog(QtGui.QDialog):
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.FieldArea(spacing_precision=self.match_ch_presision.value))
+        all.append(cp.FieldArea(spacing_precision=self.match_spacing_presision.value))
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Coverage(match_ratio_fieldarea2totalarea=self.match_density_ratio.value,
-                               spacing_precision=self.match_ch_presision.value))
-        if self.match_density.isChecked():
+        all.append(cp.Coverage(match_ratio_fieldarea2totalarea=self.match_fa2ta.value,
+                               spacing_precision=self.match_spacing_presision.value))
+        if self.match_coverage.isChecked():
             selected.append(all[-1])
+
+        all.append(cp.Sparsity(spacing_precision=self.match_spacing_presision.value))
+        if self.match_sparsity.isChecked():
+            selected.append(all[-1])
+
 
         all.append(cp.LogSize())
         if self.match_size.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.LogSpacing(spacing_precision=self.match_ch_presision.value))
+        all.append(cp.LogSpacing(spacing_precision=self.match_spacing_presision.value))
         if self.match_spacing.isChecked():
             selected.append(all[-1])
 
         self.match_diameter.setEnabled(True)
         self.match_area.setEnabled(True)
         self.match_perimeter.setEnabled(True)
-        self.match_density.setEnabled(True)
+        self.match_coverage.setEnabled(True)
+        self.match_sparsity.setEnabled(True)
         self.match_convex_hull.setEnabled(True)
         self.match_spacing.setEnabled(True)
         self.match_size.setEnabled(True)
@@ -240,8 +258,11 @@ class SequenceDialog(QtGui.QDialog):
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
                     if isinstance(x, cp.Coverage):
-                        self.match_density.setEnabled(False)
-                        self.match_density.setChecked(False)
+                        self.match_coverage.setEnabled(False)
+                        self.match_coverage.setChecked(False)
+                    if isinstance(x, cp.Sparsity):
+                        self.match_coverage.setEnabled(False)
+                        self.match_coverage.setChecked(False)
                     if isinstance(x, cp.LogSize):
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
@@ -257,8 +278,12 @@ class SequenceDialog(QtGui.QDialog):
         dialog = SequenceDialog(parent)
         result = dialog.exec_()
         if result == QtGui.QDialog.Accepted:
+            SequenceDialog.extra_space = dialog.match_extra_space.value
+            SequenceDialog.spacing_precision = dialog.match_spacing_presision.value
+            SequenceDialog.fieldarea2totalarea = dialog.match_fa2ta.value
+            SequenceDialog.sequence_range = [dialog.match_range.value1, dialog.match_range.value2]
 
-            return (dialog.match_methods, [dialog.match_range.value1, dialog.match_range.value2],
-                    dialog.match_extra_space.value)
+            return (dialog.match_methods, SequenceDialog.sequence_range,
+                    SequenceDialog.extra_space)
         else:
             return (None, None, None)
