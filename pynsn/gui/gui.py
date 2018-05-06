@@ -137,7 +137,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
             data_array2 = generator.make(n_dots=self.main_widget.number2.value,
                                          occupied_space=self.data_array,
                                          logger=self.logger)
-            data_array2.features.change(colour=self.main_widget.dot_colour2.text)
+            data_array2.attributes.change(colour=self.main_widget.dot_colour2.text)
             self.data_array.join(data_array2, realign=False)
 
         self._image = None
@@ -166,7 +166,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
         try:
             colour_dot = Colour(self.main_widget.dot_colour.text)
         except:
-            colour_dot = DEFAULT_ARRAY[1].dot_colour
+            colour_dot = DEFAULT_ARRAY[1].item_colour
             self.main_widget.dot_colour.text = colour_dot
 
         return DotArrayGenerator(target_area_radius=self.main_widget.target_array_radius.value,
@@ -270,7 +270,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.features.change(colour=self.get_generator().dot_colour)
+        self.data_array.attributes.change(colour=self.get_generator().item_feature.colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):

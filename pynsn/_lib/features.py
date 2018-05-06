@@ -60,7 +60,7 @@ class _SizeRelatedFeature(_BaseFeature):
 
     @property
     def dependencies(self):
-        return (ItemDiameter, TotalPerimeter, TotalSurfaceArea, LogSize)
+        return (ItemDiameter, ItemSurfaceArea, ItemPerimeter, TotalPerimeter, TotalSurfaceArea, LogSize)
 
 
 class _SpaceRelatedFeature(_BaseFeature):
@@ -108,6 +108,20 @@ class ItemDiameter(_SizeRelatedFeature):
     def set_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_item_diameter
 
+class ItemSurfaceArea(_SizeRelatedFeature):
+    """"""
+    long_label = "Mean item surface area"
+
+    def set_value(self, reference_dot_array):
+        self.value = reference_dot_array.feature_item_surface_area
+
+
+class ItemPerimeter(_SizeRelatedFeature):
+    """"""
+    long_label = "Mean item perimeter"
+
+    def set_value(self, reference_dot_array):
+        self.value = reference_dot_array.feature_item_perimeter
 
 class TotalPerimeter(_SizeRelatedFeature):
     """"""

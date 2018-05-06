@@ -270,6 +270,10 @@ class SimpleDotArray(object):
         return np.sum(self.perimeter)
 
     @property
+    def feature_item_perimeter(self):
+        return np.mean(self.perimeter)
+
+    @property
     def feature_field_area(self):  # todo: not defined for small n
         return self._ch.convex_hull_object.volume
 
@@ -351,11 +355,21 @@ class SimpleDotArray(object):
         for feat in match_feat:
             if isinstance(feat, features.ItemDiameter):
                 self._match_item_diameter(mean_item_diameter=feat.value)
+
+            elif isinstance(feat, features.ItemPerimeter):
+                self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
+
             elif isinstance(feat, features.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
+
+            elif isinstance(feat, features.ItemSurfaceArea):
+                ta = self.feature_numerosity * feat.value
+                self._match_total_surface_area(surface_area=ta)
+
             elif isinstance(feat, features.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=feat.value)
+
             elif isinstance(feat, features.LogSize):
                 logtsa = 0.5 * feat.value + 0.5 * log2(self.feature_numerosity)
                 self._match_total_surface_area(2 ** logtsa)
@@ -364,6 +378,7 @@ class SimpleDotArray(object):
                 logfa = 0.5 * feat.value + 0.5 * log2(self.feature_numerosity)
                 self._match_field_area(field_area=2 ** logfa,
                                        precision=feat.spacing_precision)
+
             elif isinstance(feat, features.Sparsity):
                 fa = feat.value * self.feature_numerosity
                 self._match_field_area(field_area=fa,
@@ -372,6 +387,7 @@ class SimpleDotArray(object):
             elif isinstance(feat, features.FieldArea):
                 self._match_field_area(field_area=feat.value,
                                        precision=feat.spacing_precision)
+
             elif isinstance(feat, features.Coverage):
                 self._match_coverage(coverage=feat.value,
                                      precision=feat.spacing_precision,

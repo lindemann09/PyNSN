@@ -133,8 +133,10 @@ class SequenceDialog(QtGui.QDialog):
         self.setWindowTitle("Sequence Dialog")
 
         self.match_diameter = QtGui.QCheckBox(cp.ItemDiameter.long_label)
+        self.match_item_perimeter= QtGui.QCheckBox(cp.ItemPerimeter.long_label)
+        self.match_item_area = QtGui.QCheckBox(cp.ItemSurfaceArea.long_label)
         self.match_area = QtGui.QCheckBox(cp.TotalSurfaceArea.long_label)
-        self.match_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
+        self.match_total_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
         self.match_coverage = QtGui.QCheckBox(cp.Coverage.long_label)
         self.match_sparsity = QtGui.QCheckBox(cp.Sparsity.long_label)
 
@@ -157,7 +159,9 @@ class SequenceDialog(QtGui.QDialog):
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
         self.match_diameter.toggled.connect(self.ui_update)
-        self.match_perimeter.toggled.connect(self.ui_update)
+        self.match_item_area.toggled.connect(self.ui_update)
+        self.match_item_perimeter.toggled.connect(self.ui_update)
+        self.match_total_perimeter.toggled.connect(self.ui_update)
         self.match_size.toggled.connect(self.ui_update)
         self.match_spacing.toggled.connect(self.ui_update)
         self.match_coverage.toggled.connect(self.ui_update)
@@ -175,8 +179,10 @@ class SequenceDialog(QtGui.QDialog):
         vlayout = QtGui.QVBoxLayout()
         vlayout.addWidget(misc.heading("Matching"))
         vlayout.addWidget(self.match_diameter)
+        vlayout.addWidget(self.match_item_perimeter)
+        vlayout.addWidget(self.match_item_area)
         vlayout.addWidget(self.match_area)
-        vlayout.addWidget(self.match_perimeter)
+        vlayout.addWidget(self.match_total_perimeter)
         vlayout.addWidget(self.match_convex_hull)
         vlayout.addWidget(self.match_coverage)
         vlayout.addWidget(self.match_sparsity)
@@ -203,8 +209,16 @@ class SequenceDialog(QtGui.QDialog):
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
+        all.append(cp.ItemSurfaceArea())
+        if self.match_item_area.isChecked():
+            selected.append(all[-1])
+
+        all.append(cp.ItemPerimeter())
+        if self.match_item_perimeter.isChecked():
+            selected.append(all[-1])
+
         all.append(cp.TotalPerimeter())
-        if self.match_perimeter.isChecked():
+        if self.match_total_perimeter.isChecked():
             selected.append(all[-1])
 
         all.append(cp.TotalSurfaceArea())
@@ -234,8 +248,10 @@ class SequenceDialog(QtGui.QDialog):
             selected.append(all[-1])
 
         self.match_diameter.setEnabled(True)
+        self.match_item_perimeter.setEnabled(True)
+        self.match_item_area.setEnabled(True)
         self.match_area.setEnabled(True)
-        self.match_perimeter.setEnabled(True)
+        self.match_total_perimeter.setEnabled(True)
         self.match_coverage.setEnabled(True)
         self.match_sparsity.setEnabled(True)
         self.match_convex_hull.setEnabled(True)
@@ -248,12 +264,18 @@ class SequenceDialog(QtGui.QDialog):
                     if isinstance(x, cp.ItemDiameter):
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
+                    if isinstance(x, cp.ItemPerimeter):
+                        self.match_item_perimeter.setEnabled(False)
+                        self.match_item_perimeter.setChecked(False)
+                    if isinstance(x, cp.ItemSurfaceArea):
+                        self.match_item_area.setEnabled(False)
+                        self.match_item_area.setChecked(False)
                     if isinstance(x, cp.TotalSurfaceArea):
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
                     if isinstance(x, cp.TotalPerimeter):
-                        self.match_perimeter.setEnabled(False)
-                        self.match_perimeter.setChecked(False)
+                        self.match_total_perimeter.setEnabled(False)
+                        self.match_total_perimeter.setChecked(False)
                     if isinstance(x, cp.FieldArea):
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
@@ -261,8 +283,8 @@ class SequenceDialog(QtGui.QDialog):
                         self.match_coverage.setEnabled(False)
                         self.match_coverage.setChecked(False)
                     if isinstance(x, cp.Sparsity):
-                        self.match_coverage.setEnabled(False)
-                        self.match_coverage.setChecked(False)
+                        self.match_sparsity.setEnabled(False)
+                        self.match_sparsity.setChecked(False)
                     if isinstance(x, cp.LogSize):
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
