@@ -7,6 +7,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import os
 import sys
 import time
+import gzip
 import numpy as np
 from .. import __version__
 from . import misc
@@ -22,36 +23,38 @@ class LogFile(object):
                  log_colours=False,
                  num_format="%6.0f",
                  override_log_files=False,
-                 properties_different_colour=False):
+                 properties_different_colour=False,
+                 zipped=False):
 
-        self.log_filename_arrays = log_filename + ".array.csv"
-        self.log_filename_properties = log_filename + ".prop.csv"
+        log_filename_arrays = log_filename + ".array.csv"
+        log_filename_properties = log_filename + ".prop.csv"
         self.num_format = num_format
         self.log_colours = log_colours
         self.properties_different_colour = properties_different_colour
-
-        if override_log_files:
-            write_mode = "w+"
-        else:
-            write_mode = "a+"
 
         try:
             os.makedirs(os.path.split(log_filename)[0])
         except:
             pass
 
+        if override_log_files:
+            write_mode = "wb"
+        else:
+            write_mode = "ab"
+
+        if zipped:
+            self.logfile_arrays = gzip.open(log_filename_arrays + ".gz", write_mode)
+            self.logfile_prop = gzip.open(log_filename_properties+ ".gz", write_mode)
+        else:
+            self.logfile_arrays = open(log_filename_arrays, write_mode)
+            self.logfile_prop = open(log_filename_properties, write_mode)
+
         header = u"# PyNSN {}, {}, main: {}\n".format(__version__, time.asctime(),
                                                       os.path.split(sys.argv[0])[1])
-
-        with open(self.log_filename_arrays, write_mode) as logfile_arrays:
-            logfile_arrays.write(header)
-        with open(self.log_filename_properties, write_mode) as logfile_prop:
-            logfile_prop.write(header)
-        self.logtext_prop = ""
-        self.logtext_arrays = ""
-
+        self.logtext_prop = header
+        self.logtext_arrays = header
         self._varname_written = False
-        atexit.register(self.save)
+        atexit.register(self.close)
 
     @staticmethod
     def _logging_txt(dot_array_object,
@@ -94,12 +97,14 @@ class LogFile(object):
         self.logtext_prop += feat_log
         self.logtext_arrays += da_log
 
-    def save(self):
+    def close(self):
+        self.save()
+        self.logfile_arrays.close()
+        self.logfile_prop.close()
 
-        with open(self.log_filename_arrays, "a+") as logfile_arrays:
-            logfile_arrays.write(self.logtext_arrays)
-        with open(self.log_filename_properties, "a+") as logfile_prop:
-            logfile_prop.write(self.logtext_prop)
+    def save(self):
+        self.logfile_arrays.write(self.logtext_arrays.encode("utf-8"))
+        self.logfile_prop.write(self.logtext_prop.encode("utf-8"))
         self.logtext_prop = ""
         self.logtext_arrays = ""
 
