@@ -97,10 +97,14 @@ class LogFile(object):
         self.logtext_prop += feat_log
         self.logtext_arrays += da_log
 
+    def __del__(self):
+        self.close()
+
     def close(self):
-        self.save()
-        self.logfile_arrays.close()
-        self.logfile_prop.close()
+        if not self.logfile_arrays.closed:
+            self.save()
+            self.logfile_arrays.close()
+            self.logfile_prop.close()
 
     def save(self):
         self.logfile_arrays.write(self.logtext_arrays.encode("utf-8"))

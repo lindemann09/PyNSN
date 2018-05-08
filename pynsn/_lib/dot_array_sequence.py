@@ -60,7 +60,9 @@ class DASequence(object):
         """dictionary with arrays"""
 
         dicts = [x.get_features_dict() for x in self.dot_arrays]
-        return misc.join_dict_list(dicts)
+        rtn = misc.join_dict_list(dicts)
+        rtn['object_id'] = [self.object_id] * len(self.dot_arrays)  # all arrays have the same ID
+        return rtn
 
     def get_numerosity_correlations(self):
         feat = self.get_features_dict()
