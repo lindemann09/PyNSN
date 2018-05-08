@@ -1,6 +1,6 @@
 """
-The named colour used are based on the named colours of matplotlib.
-   see https://matplotlib.org/examples/color/named_colors.html
+The named colour are the 140 HTMP colour names:
+   see https://www.w3schools.com/colors/colors_names.asp
 """
 from functools import total_ordering
 
