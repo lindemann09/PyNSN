@@ -53,7 +53,10 @@ class DotArrayGenerator(object):
         self.item_feature = ItemAttributes(colour=item_colour)
 
     def make(self, n_dots, occupied_space=None, logger=None):
-        """occupied_space is a dot array (used for multicolour dot array (join after)"""
+        """occupied_space is a dot array (used for multicolour dot array (join after)
+
+        returns None if not possible
+        """
 
         rtn = DotArray(target_array_radius=self.target_array_radius,  # - distance_field_edge ?
                        minimum_gap=self.minimum_gap)
@@ -72,7 +75,10 @@ class DotArrayGenerator(object):
                 diameter = misc.random_beta(
                     self.item_diameter_range, parameter)
 
-            xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
+            try:
+                xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
+            except:
+                return None
             rtn.append(xy=xy, item_diameters=diameter, attributes=self.item_feature)
 
         if logger is not None:
@@ -223,9 +229,11 @@ class DASequenceGenerator(object):
 
         error = None
         while True:
-            da = da.number_deviant(change_numerosity=change,
+            try:
+                da = da.number_deviant(change_numerosity=change,
                                    prefer_keeping_field_area=prefer_keeping_field_area)
-
+            except:
+                return [], "ERROR: Can't find the a make matched deviants"
             if len(match_props) > 0:
                 da.match(match_props, center_array=False)
 
