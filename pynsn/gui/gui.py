@@ -10,7 +10,8 @@ import sys
 import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.generator import DotArrayGenerator, LogFile, DASequenceGenerator
+from .._lib.generator import DotArrayGenerator, DASequenceGenerator
+from .._lib.logging import LogFile
 from .._lib.colour import Colour
 from .. import pil_image
 from .main_widget import MainWidget
@@ -46,6 +47,7 @@ ICON = (11, DotArrayGenerator(target_area_radius=200,
 
 
 class PyNSN_GUI(QtGui.QMainWindow):
+
     def __init__(self):
 
         super(PyNSN_GUI, self).__init__()

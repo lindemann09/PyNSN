@@ -3,12 +3,12 @@ from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
 import pynsn
-from pynsn import expyriment_stimulus, DotArrayGenerator, GeneratorLogger
+from pynsn import expyriment_stimulus, DotArrayGenerator, LogFile
 
 if __name__ == "__main__":
     cl = misc.Clock()
 
-    logger = GeneratorLogger(log_filename="log/test", override_log_files=True,
+    logger = LogFile(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
     generator = DotArrayGenerator(
         target_area_radius=300,
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     print(reference.get_features_text(with_object_id=False, extended_format=False ))
 
     reference2 = reference.copy()
-    reference2.match(match_features=pynsn.Sparsity(4371), center_array=True)
+    reference2.match(match_features=pynsn.features.Sparsity(4371), center_array=True)
     reference2.realign()
     print(reference2.get_features_text(with_object_id=False, extended_format=False))
 
