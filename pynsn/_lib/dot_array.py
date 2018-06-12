@@ -249,6 +249,7 @@ class DotArray(SimpleDotArray):
         raise exception if not found
         occupied space: see generator make
         """
+
         try_out_inside_convex_hull = 1000
         if prefer_inside_field_area:
             delaunay = spatial.Delaunay(self.convex_hull_positions)
@@ -276,24 +277,30 @@ class DotArray(SimpleDotArray):
             if not bad_position:
                 return proposal_xy
             elif cnt > 3000:
-                raise RuntimeError(u"Can't find a solution")
+                raise RuntimeError(u"Can't find a free position")
 
     def shuffle_all_positions(self, ignore_overlapping=False):
+        """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
-        diameters = self._diameters
-        self._diameters = np.array([])
-        self._xy = np.array([])
-        self.set_array_modified()
+        new_diameters = np.array([])
+        new_xy = np.array([])
 
-        for d in diameters:
-            xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
-            self._diameters = np.append(self._diameters, d)
-            if len(self._xy) == 0:
-                self._xy = np.array([xy])
+        for d in self._diameters:
+            try:
+                xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
+            except:
+                raise RuntimeError("Can't shuffle dot array. No free positions.")
+            new_diameters = np.append(new_diameters, d)
+            if len(new_xy) == 0:
+                new_xy = np.array([xy])
             else:
-                self._xy = np.append(self._xy, [xy], axis=0)
+                new_xy = np.append(new_xy, [xy], axis=0)
+
+        self._diameters = new_diameters
+        self._xy = new_xy
+        self.set_array_modified()
 
     def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
         """number deviant
@@ -322,11 +329,14 @@ class DotArray(SimpleDotArray):
                     deviant.delete(rnd)
                 else:
                     # copy a random dot
-                    deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
-                                                                       prefer_inside_field_area=prefer_keeping_field_area),
-                                   item_diameters=deviant._diameters[rnd],
-                                   attributes=deviant._attributes[rnd])
-
+                    try:
+                        deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
+                                                                           prefer_inside_field_area=prefer_keeping_field_area),
+                                       item_diameters=deviant._diameters[rnd],
+                                       attributes=deviant._attributes[rnd])
+                    except:
+                        # no free position
+                        raise RuntimeError("Can't make the deviant. No free position")
         return deviant
 
     def yaml_dump(self, document_separator=True):
