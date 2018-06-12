@@ -19,58 +19,6 @@ from .misc import log2, numpy_vector
 TWO_PI = 2 * np.pi
 
 
-#
-# class DotArrayFeature(namedtuple("DAProperties", ["object_id", "numerosity", "item_diameter",
-#                                                      "total_surface_area", "field_area",
-#                                                      "coverage", "total_perimeter",
-#                                                     "sparsity"])): # FIXME use spacity and new feature names
-#     __slots__ = ()
-#
-#     @classmethod
-#     def _make_arrays(cls):
-#         """# create DotListProperties with empty arrays """
-#         n_prop = len(cls._fields)
-#         return cls._make(map(lambda _: [], range(n_prop)))
-#
-#     @property
-#     def feature_names(self):
-#         return self._fields[1:]
-#
-#     @property
-#     def np_array(self):
-#         return np.array(self[1:]).T
-#
-#     @property
-#     def size(self):
-#         try:
-#             return len(self.numerosity)
-#         except:
-#             return 1
-#
-#     def get_csv(self, variable_names=True):
-#         rtn = ""
-#         if variable_names:
-#             rtn += u", ".join(self._fields) + "\n"
-#         if self.size > 1:
-#             for i, prop in enumerate(self.np_array):
-#                 rtn += self.object_id[i] + u", " + ", ".join(map(str, prop)) + "\n"
-#         else:
-#             rtn += u", ".join(map(str, self)) + u"\n"
-#
-#         return rtn
-#
-#     @property
-#     def split(self):
-#         """list of DotArrayProperties objects instead
-#         one DotArrayProperties object with lists for each property"""
-#         rtn = []
-#         for i in range(len(self[0])):
-#             tmp = []
-#             for f in range(len(self._fields)):
-#                 tmp.append(self[f][i])
-#             rtn.append(DotArrayFeature._make(tmp))
-#         return rtn
-
 class SimpleDotArray(object):
     """Numpy Position list for optimized for numpy calculations
 

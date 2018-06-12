@@ -49,7 +49,7 @@ class DASequence(object):
 
     @property
     def object_id(self):
-        """meta hash of all of csv (n_dots, counter, position, diameter only)"""
+        """meta hash of object ids"""
 
         m = md5()
         for da in self.dot_arrays:

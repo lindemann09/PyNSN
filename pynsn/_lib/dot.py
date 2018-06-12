@@ -2,13 +2,19 @@
 Dot Array
 """
 from __future__ import print_function, division
-from builtins import *
+from builtins import map, range, zip, filter
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
 from .item_attributes import ItemAttributes, ItemAttributeList
 
+
+def is_all_larger(vector, standard=0):
+    return sum(map(lambda x: x > standard, vector))==len(vector)
+
+def is_all_smaller(vector, standard=0):
+    return sum(map(lambda x: x < standard, vector))==len(vector)
 
 class Coordinate2D(object):
 
@@ -152,6 +158,7 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
 
 
 class Rectangle(Coordinate2D):  # todo
+
     def __init__(self, x=0, y=0, width=0, height=0, features=None):
         """Initialize a point
 
@@ -199,27 +206,51 @@ class Rectangle(Coordinate2D):  # todo
 
         Returns
         -------
-        distance : float
+        distance : float or -1 if overlapping
 
         """
 
-        # l1, t1 = self.left_top
-        # r1, b1 = self.right_bottom
-        # l2, t2 = d.left_top
-        # r2, b2 = d.right_bottom
+        lt1 = self.left_top
+        rb1 = self.right_bottom
+        lt2 = d.left_top
+        rb2 = d.right_bottom
+
+        x_diff = [lt1[0]-lt2[0], lt1[0]-r2, r1-l2, r1-r2]
+        y_diff = [t1-t2, t1-b2, b1-t2, b1-b2]
+        if is_all_smaller(x_diff):
+            is_right = True # other is to the right
+        elif is_all_larger(x_diff):
+            is_right = False
+        else:
+            is_right = None # is at x overlapping
+        if is_all_smaller(y_diff):
+            is_bottom = True # other is to the right
+        elif is_all_larger(x_diff):
+            is_bottom = False
+        else:
+            is_bottom = None # is overlapping at y
+
+        if is_bottom is None and is_right is None:
+            return -1 # overlapping or touching rects
+
+        if is_right and is_bottom:
+            a
+
+
         return Coordinate2D.distance(self, d)  # TODO check me
 
     def gap_xy(self, other):
         """Gap beween two rectangles seppart for the x and y axis"""
 
+
         #  overlaps in x or y:
         if abs(self.x - other.x) <= (self.width + other.width):
-            dx = 0;
+            dx = 0
         else:
             dx = abs(self.x - other.x) - (self.width + other.width)
         #
         if abs(self.y - other.y) <= (self.height + other.height):
-            dy = 0;
+            dy = 0
         else:
             dy = abs(self.y - other.y) - (self.h + other.height)
 
