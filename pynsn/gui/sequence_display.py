@@ -1,21 +1,18 @@
 """
 """
-
 from __future__ import absolute_import
 from builtins import zip, filter, range, super, map
 
 from multiprocessing import Pool
-from itertools import imap
 from PyQt4 import QtGui, QtCore
 from PIL.ImageQt import ImageQt
-from .._lib.misc import PYTHON3
 from .. import pil_image
 from . import misc
 
 
 def _map_make_image(x):
     da, gen = x
-    return gen.make(dot_array=da)
+    return gen.plot(dot_array=da)
 
 
 class SequenceDisplay(QtGui.QDialog):
@@ -43,13 +40,13 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        pil_generator = pil_image.PILImageGenerator(colour_target_area=image_parameter.colour_target_area,
-                                                    colour_field_area=image_parameter.colour_field_area,
-                                                    colour_field_area_outer=image_parameter.colour_field_area_outer,
-                                                    colour_center_of_mass=image_parameter.colour_center_of_mass,
-                                                    colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
-                                                    antialiasing=image_parameter.antialiasing,
-                                                    colour_background=image_parameter.colour_background)
+        pil_generator = pil_image.PILImagePlotter(colour_target_area=image_parameter.colour_target_area,
+                                                  colour_field_area=image_parameter.colour_field_area,
+                                                  colour_field_area_outer=image_parameter.colour_field_area_outer,
+                                                  colour_center_of_mass=image_parameter.colour_center_of_mass,
+                                                  colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
+                                                  antialiasing=image_parameter.antialiasing,
+                                                  colour_background=image_parameter.colour_background)
         pil_generator = [pil_generator] * len(self.da_sequence.dot_arrays)
 
         iter_images = Pool().imap(_map_make_image, zip(self.da_sequence.dot_arrays, pil_generator))

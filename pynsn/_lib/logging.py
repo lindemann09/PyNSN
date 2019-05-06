@@ -1,6 +1,5 @@
-from __future__ import print_function, division, unicode_literals
-
-from builtins import *
+from __future__ import absolute_import, print_function, division, unicode_literals
+from builtins import zip, filter, range, super, map
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -9,12 +8,13 @@ import sys
 import time
 import gzip
 import numpy as np
+import atexit
+
 from .. import __version__
 from . import misc
-from .item_attributes import ItemAttributeList
-from .dot_array import DotArray
 from .dot_array_sequence import DASequence
-import atexit
+from .dot_array import DotArray
+from .item_attributes import ItemAttributesList
 
 
 class LogFile(object):
@@ -114,6 +114,7 @@ class LogFile(object):
 
 
 class LogFileReader(object):
+
     def __init__(self, filename, colours=False, pictures=False,
                  comment="#", first_line_variable_names=True, zipped=False):  # todo: zip
         self.filename = filename
@@ -216,10 +217,10 @@ class LogFileReader(object):
         else:
             pict = [None] * len(xy)
 
-        rtn = DotArray(target_array_radius=target_array_radius)
+        rtn = dot_array.DotArray(target_array_radius=target_array_radius)
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], item_diameters=x[1],
-                       attributes=ItemAttributeList(colours=x[2], pictures=x[3]))
+                       attributes=ItemAttributesList(colours=x[2], pictures=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
             radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2

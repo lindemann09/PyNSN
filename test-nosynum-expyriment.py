@@ -13,7 +13,7 @@ control.defaults.open_gl = False
 exp = control.initialize()
 
 squeeze = .7
-generator = pynsn.DotArrayGenerator(
+generator = pynsn.RandomDotArray(
                        target_array_radius=300 * squeeze,
                        item_diameter_mean=10,
                        item_diameter_range=(5, 20),
@@ -26,8 +26,8 @@ def compare_stimulus(n_left, n_right,
                      match_methods=None,
                      match_the_left=True):
 
-    da_left = generator.make(n_dots=n_left)
-    da_right= generator.make(n_dots=n_right)
+    da_left = generator.generate(n_dots=n_left)
+    da_right= generator.generate(n_dots=n_right)
     da_right.features.change(colour="red")
     if match_the_left:
         b = da_right

@@ -25,10 +25,10 @@ class ItemAttributes(object):
                 "picture": self.picture}
 
 
-class ItemAttributeList(object):
+class ItemAttributesList(object):
 
     def __init__(self, colours=None, pictures=None):
-        """If all ItemAttributes should None (but not empty) init with ItemFeatues(colours=[None]),
+        """If all ItemAttributes should None (but not empty) init with ItemAttributes(colours=[None]),
         otherwise the ItemAttributes will be empty"""
 
         self.colours = np.array([])
@@ -62,21 +62,21 @@ class ItemAttributeList(object):
         self.pictures = np.delete(self.pictures, index)
 
     def repeat(self, repeats):
-        """:return repeated features, equivalent to numpy.repeat"""
+        """:return repeated attributes, equivalent to numpy.repeat"""
 
-        rtn = ItemAttributeList()
+        rtn = ItemAttributesList()
         rtn.colours = self.colours.repeat(repeats)
         rtn.pictures = self.pictures.repeat(repeats)
         return rtn
 
     def copy(self):
-        rtn = ItemAttributeList()
+        rtn = ItemAttributesList()
         rtn.colours = self.colours.copy()
         rtn.pictures = self.pictures.copy()
         return rtn
 
     def append_attributes(self, attributes):
-        """features: None, ItemFeature, ItemFeatureList
+        """features: None, ItemAttributes, ItemAttributesList
         """
 
         if isinstance(attributes, ItemAttributes):
@@ -108,7 +108,7 @@ class ItemAttributeList(object):
             self.colours = np.append(self.colours, Colour(c))
 
     def change(self, colour=None, picture=None, indices=None):
-        """allows usung color names and rgb array, since it
+        """allows using color names and rgb array, since it
         converts colour """
 
         if isinstance(indices, int):

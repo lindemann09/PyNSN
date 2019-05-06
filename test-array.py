@@ -3,14 +3,14 @@ from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
 import pynsn
-from pynsn import expyriment_stimulus, DotArrayGenerator, LogFile
+from pynsn import expyriment_stimulus, RandomDotArray, LogFile
 
 if __name__ == "__main__":
     cl = misc.Clock()
 
     logger = LogFile(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
-    generator = DotArrayGenerator(
+    generator = RandomDotArray(
         target_area_radius=300,
         item_diameter_mean=20,
         item_diameter_range=(5, 40),
@@ -18,7 +18,7 @@ if __name__ == "__main__":
         item_colour="skyblue",
         minimum_gap=5)
 
-    reference = generator.make(n_dots=25, logger=None)
+    reference = generator.generate(n_dots=25, logger=None)
     reference.center_array()
     reference.realign()
     print(reference.get_features_text(with_object_id=False, extended_format=False ))

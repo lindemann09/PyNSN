@@ -6,10 +6,9 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from PIL import Image, ImageDraw
 import numpy as np
 from .._lib.colour import Colour
-from .._lib.misc import PYTHON3
 
 
-class PILImageGenerator(object):
+class PILImagePlotter(object):
 
     def __init__(self,
                  colour_target_area=None,
@@ -51,12 +50,12 @@ class PILImageGenerator(object):
                 "colour_background": self.colour_background.colour,
                 "default_dot_colour": self.default_dot_colour.colour}
 
-    def make(self, dot_array):  # todo using *args and ImageParameter
+    def plot(self, dot_array):  # todo using *args and ImageParameter
         """use PIL colours (see PIL.ImageColor.colormap)
 
         returns pil image
 
-        default_dot_colour: if coulor is undefined in dot_array
+        default_dot_colour: if colour is undefined in dot_array
         """
 
         aa = self.antialiasing

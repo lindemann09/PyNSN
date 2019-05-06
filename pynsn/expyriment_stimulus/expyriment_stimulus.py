@@ -1,12 +1,15 @@
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+from __future__ import absolute_import
+from builtins import zip, filter, range, super, map
+
 import math
 import pygame
 from multiprocessing import Pool
 
 from expyriment.misc import Clock
 from expyriment.stimuli import Canvas
-from ..pil_image.pil_image import PILImageGenerator
+from ..pil_image.pil_image import PILImagePlotter
 from .._lib.colour import Colour
 
 
@@ -41,14 +44,14 @@ class ExprimentDotArray(Canvas):
         return self._image
 
     def make_pil_image(self):
-        gen = PILImageGenerator(colour_target_area=self.colour_target_area,
-                                colour_field_area=self.colour_field_area,
-                                colour_field_area_outer=self.colour_field_area_outer,
-                                colour_center_of_mass=self.colour_center_of_mass,
-                                colour_center_of_outer_positions=self.colour_center_of_outer_positions,
-                                antialiasing=self.antialiasing,
-                                colour_background=self.colour_background)
-        self._image = gen.make(dot_array=self.dot_array)
+        gen = PILImagePlotter(colour_target_area=self.colour_target_area,
+                              colour_field_area=self.colour_field_area,
+                              colour_field_area_outer=self.colour_field_area_outer,
+                              colour_center_of_mass=self.colour_center_of_mass,
+                              colour_center_of_outer_positions=self.colour_center_of_outer_positions,
+                              antialiasing=self.antialiasing,
+                              colour_background=self.colour_background)
+        self._image = gen.plot(dot_array=self.dot_array)
         return self._image
 
     def _create_surface(self):

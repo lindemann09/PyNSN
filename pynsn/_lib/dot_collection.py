@@ -1,7 +1,7 @@
 """
 Dot Array
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
@@ -19,7 +19,7 @@ from .misc import log2, numpy_vector
 TWO_PI = 2 * np.pi
 
 
-class SimpleDotArray(object):
+class DotCollection(object):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -88,8 +88,8 @@ class SimpleDotArray(object):
         if indices is None:
             indices = list(range(self.feature_numerosity))
 
-        return SimpleDotArray(xy=self._xy[indices, :].copy(),
-                              diameters=self._diameters[indices].copy())
+        return DotCollection(xy=self._xy[indices, :].copy(),
+                             diameters=self._diameters[indices].copy())
 
     @property
     def object_id(self):
@@ -99,7 +99,7 @@ class SimpleDotArray(object):
         m.update(
             self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self._diameters.tobytes())
-        return m.hexdigest()[:SimpleDotArray.OBJECT_ID_LENGTH]
+        return m.hexdigest()[:DotCollection.OBJECT_ID_LENGTH]
 
     @staticmethod
     def _polar2cartesian(polar):
@@ -175,7 +175,7 @@ class SimpleDotArray(object):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] -= SimpleDotArray._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self._xy[x, :] -= DotCollection._polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
@@ -193,9 +193,9 @@ class SimpleDotArray(object):
                            axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = SimpleDotArray._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
+            tmp_polar = DotCollection._cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = SimpleDotArray._polar2cartesian(tmp_polar)
+            xy = DotCollection._polar2cartesian(tmp_polar)
             self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
@@ -378,13 +378,13 @@ class SimpleDotArray(object):
         # centered points
         old_center = self.center_of_outer_positions
         self._xy -= old_center
-        centered_polar = SimpleDotArray._cartesian2polar(self._xy)
+        centered_polar = DotCollection._cartesian2polar(self._xy)
 
         while abs(current - field_area) > precision:
 
             scale += step
 
-            self._xy = SimpleDotArray._polar2cartesian(centered_polar * [scale, 1])
+            self._xy = DotCollection._polar2cartesian(centered_polar * [scale, 1])
             self.set_array_modified()  # required to recalc convex hull
             current = self.feature_field_area
 
@@ -425,7 +425,7 @@ class SimpleDotArray(object):
 
         shift_required = False
         # from inner to outer remove overlaps
-        for i in np.argsort(SimpleDotArray._cartesian2polar(self._xy, radii_only=True)):
+        for i in np.argsort(DotCollection._cartesian2polar(self._xy, radii_only=True)):
             if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
                 shift_required = True
 
@@ -512,9 +512,9 @@ class _EfficientConvexHull(object):
             minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
             center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)  # center outer positions
 
-            polar_centered = SimpleDotArray._cartesian2polar(self._xy[idx, :] - center)
+            polar_centered = DotCollection._cartesian2polar(self._xy[idx, :] - center)
             polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
-            self._full_xy = SimpleDotArray._polar2cartesian(polar_centered) + center
+            self._full_xy = DotCollection._polar2cartesian(polar_centered) + center
 
         return self._full_xy
 
