@@ -1,7 +1,7 @@
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
-
 from __future__ import absolute_import
 from builtins import zip, filter, range, super, map
+
+__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
 import pygame

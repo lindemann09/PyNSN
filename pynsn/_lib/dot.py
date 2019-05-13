@@ -108,7 +108,7 @@ class Coordinate2D(object):
 
 class Dot(Coordinate2D):  # TODO becomes maybe an item
 
-    def __init__(self, x=0, y=0, diameter=1, features=None):
+    def __init__(self, x=0, y=0, diameter=1, attributes=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -119,17 +119,17 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
         x : numeric (default=0)
         y : numeric (default=0)
         diameter : numeric (default=1)
-        features : ItemAttributes
+        attributes : ItemAttributes
         """
 
         Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
-        if features is None:
-            self.features = ItemAttributes(colour=None, picture=None)
-        elif not isinstance(features, ItemAttributes):
-            raise TypeError("features must be a ItemFeatures, not {}".format(type(features).__name__))
+        if attributes is None:
+            self.attributes = ItemAttributes(colour=None, picture=None)
+        elif not isinstance(attributes, ItemAttributes):
+            raise TypeError("features must be a ItemFeatures, not {}".format(type(attributes).__name__))
         else:
-            self.features = features
+            self.attributes = attributes
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function take the

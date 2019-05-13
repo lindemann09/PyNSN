@@ -3,14 +3,14 @@ from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
 import pynsn
-from pynsn import expyriment_stimulus, RandomDotArray, LogFile
+from pynsn import expyriment_stimulus, DotArrayGenerator, LogFile, features
 
 if __name__ == "__main__":
     cl = misc.Clock()
 
     logger = LogFile(log_filename="log/test", override_log_files=True,
                              log_colours=True, properties_different_colour=True)
-    generator = RandomDotArray(
+    generator = DotArrayGenerator(
         target_area_radius=300,
         item_diameter_mean=20,
         item_diameter_range=(5, 40),
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     print(reference.get_features_text(with_object_id=False, extended_format=False ))
 
     reference2 = reference.copy()
-    reference2.match(match_features=pynsn.features.Sparsity(4371), center_array=True)
+    reference2.match(match_features=features.Sparsity(4371), center_array=True)
     reference2.realign()
     print(reference2.get_features_text(with_object_id=False, extended_format=False))
 
@@ -44,15 +44,15 @@ if __name__ == "__main__":
     #
     #
     #
-    # if True:
-    #
-    #     a = generator.make(n_dots=20, logger=logger)
-    #     b = generator.make(n_dots=40, logger=logger)
-    #     b.features.change(colour="blue")
-    #     # b.match(mean_dot_diameter=83, convex_hull_area=523)
-    #     x = a.copy()
-    #     x.join(b)
-    #     logger.log(x)
+    if True:
+
+        a = generator.generate(n_dots=22, logger=logger)
+        b = generator.generate(n_dots=41, logger=logger)
+        b.attributes.change(colour="blue")
+        b.match(match_features=features.ItemDiameter(a.feature_item_diameter))
+        x = a.copy()
+        x.join(b)
+        logger.log(x)
     #
     #
     # else:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     #     p1.start()
     #     x = p.da_sequence
 
-    # exit()
+    exit()
 
     # print(x.get_csv(colour_column=True))
     control.set_develop_mode(True)

@@ -13,7 +13,7 @@ control.defaults.open_gl = False
 exp = control.initialize()
 
 squeeze = .7
-generator = pynsn.RandomDotArray(
+generator = pynsn.DotArrayGenerator(
                        target_array_radius=300 * squeeze,
                        item_diameter_mean=10,
                        item_diameter_range=(5, 20),

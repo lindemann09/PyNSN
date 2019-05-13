@@ -81,16 +81,16 @@ class DotArray(DotCollection):
                         features=self._attributes.copy())
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, attributes=dot.features)
+        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, attributes=dot.attributes)
 
     def join(self, dot_array, realign=False):
         """add another dot arrays"""
 
-        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, attributes=dot_array.features)
+        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, attributes=dot_array.attributes)
         if realign:
             self.realign()
 
-    def get_dots(self, indices=None, diameter=None, colour=None, picture=None):  # todo: search by features
+    def get_dots(self, indices=None, diameter=None, colour=None, picture=None):  # todo: search by attributes
         """returns all dots
          filtering possible:
          if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
@@ -104,15 +104,15 @@ class DotArray(DotCollection):
             except:
                 indices = [indices]
 
-        for xy, dia, feat in zip(self._xy, self._diameters, self._attributes):
+        for xy, dia, att in zip(self._xy, self._diameters, self._attributes):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
-                    (colour is not None and feat.colour != colour) or \
-                    (picture is not None and feat.picture != picture):
+                    (colour is not None and att.colour != colour) or \
+                    (picture is not None and att.picture != picture):
                 continue
 
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, features=feat))
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
         return rtn
 
     def realign(self, center_array=False):
@@ -358,7 +358,7 @@ class DotArray(DotCollection):
 
 
 
-class RandomDotArray(object):
+class DotArrayGenerator(object):
 
     def __init__(self,
                  target_area_radius,

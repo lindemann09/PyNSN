@@ -107,146 +107,131 @@ class DASequence(object):
             return rtn
 
 
+def generate_da_sequence(reference_dot_array,
+                  match_properties,
+                  min_max_numerosity,
+                  extra_space,  # fitting convex hull and density might result in enlarged arrays
+                  center_array=True,
+                  logger=None):  # todo could be an iterator
+    """Methods takes take , you might use make Process
+        match_properties:
+                continuous property or list of continuous properties to be match
+                or None
+     returns False is error occured (see self.error)
+    """
 
-class RandomDASequence(object):
+    try:
+        l = len(min_max_numerosity)
+    except:
+        l = 0
+    if l != 2:
+        raise ValueError("min_max_numerosity has to be a pair of (min, max)")
 
-    def __init__(self,
-                 match_properties,
-                 min_max_numerosity,
-                 extra_space,  # fitting convex hull and density might result in enlarged arrays
-                 center_array=True):
-        """Methods takes take , you might use make Process
-            match_properties:
-                    continuous property or list of continuous properties to be match
-                    or None
-         returns False is error occured (see self.error)
-        """
+    if match_properties is None:
+        match_properties = []
+    elif not isinstance(match_properties, (tuple, list)):
+        match_properties = [match_properties]
+    features.check_feature_list(match_properties, check_set_value=False)
 
+    if not isinstance(reference_dot_array, DotArray):
+        raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
+            type(reference_dot_array).__name__))
+
+
+    # copy and change values to match this stimulus
+    match_props = []
+    prefer_keeping_field_area = False
+    for m in match_properties:
+        m = copy(m)
+        m.set_value(reference_dot_array)
+        match_props.append(m)
+        if isinstance(m, features.LogSpacing().dependencies) or \
+                (isinstance(m, features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
+            prefer_keeping_field_area = True
+            break
+
+    # adjust reference (basically centering)
+    reference_da = reference_dot_array.copy()
+    reference_da.target_array_radius += (extra_space // 2)  # add extra space
+    if center_array:
+        reference_da._xy -= reference_da.center_of_outer_positions
+        reference_da.set_array_modified()
+
+    # matched deviants
+    rtn = DASequence()
+    rtn.method = match_props
+
+    min, max = sorted(min_max_numerosity)
+    # decreasing
+    if min < reference_dot_array.feature_numerosity:
+        da_sequence, error = _make_matched_deviants(
+            reference_da=reference_da,
+            match_props=match_props,
+            target_numerosity=min,
+            prefer_keeping_field_area=prefer_keeping_field_area)
+        rtn.append_dot_arrays(list(reversed(da_sequence)))
+        if error is not None:
+            rtn.error = error
+    # reference
+    rtn.append_dot_arrays(reference_da)
+    # increasing
+    if max > reference_dot_array.feature_numerosity:
+        da_sequence, error = _make_matched_deviants(
+            reference_da=reference_da,
+            match_props=match_props,
+            target_numerosity=max,
+            prefer_keeping_field_area=prefer_keeping_field_area)
+        rtn.append_dot_arrays(da_sequence)
+        if error is not None:
+            rtn.error = error
+
+    if logger is not None:
+        from .logging import LogFile # to avoid circular import
+        if not isinstance(logger, LogFile):
+            raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
+                type(logger).__name__))
+
+        logger.log(rtn)
+
+    return rtn
+
+def _make_matched_deviants(reference_da, match_props, target_numerosity,
+                           prefer_keeping_field_area):  # TODO center array OK?
+    """helper function. Do not use this method. Please use make"""
+
+    if reference_da.feature_numerosity == target_numerosity:
+        change = 0
+    elif reference_da.feature_numerosity > target_numerosity:
+        change = -1
+    else:
+        change = 1
+
+    da = reference_da.copy()
+    da_sequence = []
+
+    error = None
+    while True:
         try:
-            l = len(min_max_numerosity)
+            da = da.number_deviant(change_numerosity=change,
+                               prefer_keeping_field_area=prefer_keeping_field_area)
         except:
-            l = 0
-        if l != 2:
-            raise ValueError("min_max_numerosity has to be a pair of (min, max)")
+            return [], "ERROR: Can't find the a make matched deviants"
+        if len(match_props) > 0:
+            da.match(match_props, center_array=False)
 
-        if match_properties is None:
-            match_properties = []
-        elif not isinstance(match_properties, (tuple, list)):
-            match_properties = [match_properties]
-        features.check_feature_list(match_properties, check_set_value=False)
-
-        self.match_properties = match_properties
-        self.min_max_numerosity = min_max_numerosity
-        self.extra_space = extra_space
-        self.center_array = center_array
-
-    def generate(self, reference_dot_array, logger=None):  # todo could be an iterator
-        """Methods takes take , you might use make Process
-            match_properties:
-                    continuous property or list of continuous properties to be match
-                    or None
-         returns False is error occured (see self.error)
-        """
-
-        if not isinstance(reference_dot_array, DotArray):
-            raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
-                type(reference_dot_array).__name__))
-
-        # copy and change values to match this stimulus
-        match_props = []
-        prefer_keeping_field_area = False
-        for m in self.match_properties:
-            m = copy(m)
-            m.set_value(reference_dot_array)
-            match_props.append(m)
-            if isinstance(m, features.LogSpacing().dependencies) or \
-                    (isinstance(m, features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
-                prefer_keeping_field_area = True
-                break
-
-        # adjust reference (basically centering)
-        reference_da = reference_dot_array.copy()
-        reference_da.target_array_radius += (self.extra_space // 2)  # add extra space
-        if self.center_array:
-            reference_da._xy -= reference_da.center_of_outer_positions
-            reference_da.set_array_modified()
-
-        # matched deviants
-        rtn = DASequence()
-        rtn.method = match_props
-
-        min, max = sorted(self.min_max_numerosity)
-        # decreasing
-        if min < reference_dot_array.feature_numerosity:
-            da_sequence, error = RandomDASequence._make_matched_deviants(
-                reference_da=reference_da,
-                match_props=match_props,
-                target_numerosity=min,
-                prefer_keeping_field_area=prefer_keeping_field_area)
-            rtn.append_dot_arrays(list(reversed(da_sequence)))
-            if error is not None:
-                rtn.error = error
-        # reference
-        rtn.append_dot_arrays(reference_da)
-        # increasing
-        if max > reference_dot_array.feature_numerosity:
-            da_sequence, error = RandomDASequence._make_matched_deviants(
-                reference_da=reference_da,
-                match_props=match_props,
-                target_numerosity=max,
-                prefer_keeping_field_area=prefer_keeping_field_area)
-            rtn.append_dot_arrays(da_sequence)
-            if error is not None:
-                rtn.error = error
-
-        if logger is not None:
-            from .logging import LogFile # to avoid circular import
-            if not isinstance(logger, LogFile):
-                raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
-                    type(logger).__name__))
-
-            logger.log(rtn)
-
-        return rtn
-
-    @staticmethod
-    def _make_matched_deviants(reference_da, match_props, target_numerosity,
-                               prefer_keeping_field_area):  # TODO center array OK?
-        """helper function. Do not use this method. Please use make"""
-
-        if reference_da.feature_numerosity == target_numerosity:
-            change = 0
-        elif reference_da.feature_numerosity > target_numerosity:
-            change = -1
-        else:
-            change = 1
-
-        da = reference_da.copy()
-        da_sequence = []
-
-        error = None
+        cnt = 0
         while True:
-            try:
-                da = da.number_deviant(change_numerosity=change,
-                                   prefer_keeping_field_area=prefer_keeping_field_area)
-            except:
-                return [], "ERROR: Can't find the a make matched deviants"
-            if len(match_props) > 0:
-                da.match(match_props, center_array=False)
-
-            cnt = 0
-            while True:
-                cnt += 1
-                ok, mesg = da.realign()
-                if ok:
-                    break
-                if cnt > 10:
-                    error = u"ERROR: realign, " + str(cnt) + ", " + str(da.feature_numerosity)
-
-            da_sequence.append(da)
-
-            if error is not None or da.feature_numerosity == target_numerosity:
+            cnt += 1
+            ok, mesg = da.realign()
+            if ok:
                 break
+            if cnt > 10:
+                error = u"ERROR: realign, " + str(cnt) + ", " + str(da.feature_numerosity)
 
-        return da_sequence, error
+        da_sequence.append(da)
+
+        if error is not None or da.feature_numerosity == target_numerosity:
+            break
+
+    return da_sequence, error
 

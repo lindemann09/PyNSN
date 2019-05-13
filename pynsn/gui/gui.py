@@ -10,8 +10,8 @@ import sys
 import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.dot_array import RandomDotArray
-from .._lib.dot_array_sequence import RandomDASequence
+from .._lib.dot_array import DotArrayGenerator
+from .._lib.dot_array_sequence import generate_da_sequence
 from .._lib.logging import LogFile
 from .._lib.colour import Colour
 from .. import pil_image
@@ -19,12 +19,12 @@ from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = (40, RandomDotArray(target_area_radius=200,
-                                    item_colour="lime",
-                                    item_diameter_mean=15,
-                                    item_diameter_range=[5, 40],
-                                    item_diameter_std=8,
-                                    minimum_gap=2),
+DEFAULT_ARRAY = (40, DotArrayGenerator(target_area_radius=200,
+                                       item_colour="lime",
+                                       item_diameter_mean=15,
+                                       item_diameter_range=[5, 40],
+                                       item_diameter_std=8,
+                                       minimum_gap=2),
                  pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
                                            colour_field_area=None,
                                            colour_field_area_outer=None,
@@ -33,11 +33,11 @@ DEFAULT_ARRAY = (40, RandomDotArray(target_area_radius=200,
                                            antialiasing=True,
                                            colour_background="gray"))
 
-ICON = (11, RandomDotArray(target_area_radius=200,
-                           item_colour="lime",
-                           item_diameter_mean=35,
-                           item_diameter_range=[5, 80],
-                           item_diameter_std=20),
+ICON = (11, DotArrayGenerator(target_area_radius=200,
+                              item_colour="lime",
+                              item_diameter_mean=35,
+                              item_diameter_range=[5, 80],
+                              item_diameter_std=20),
         pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
                                   colour_field_area=None,
                                   colour_field_area_outer="expyriment_orange",
@@ -172,13 +172,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
             colour_dot = DEFAULT_ARRAY[1].item_colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return RandomDotArray(target_area_radius=self.main_widget.target_array_radius.value,
-                              item_colour=colour_dot,
-                              item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                              item_diameter_range=[self.main_widget.item_diameter_range.value1,
+        return DotArrayGenerator(target_area_radius=self.main_widget.target_array_radius.value,
+                                 item_colour=colour_dot,
+                                 item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                                 item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
-                              item_diameter_std=self.main_widget.item_diameter_std.value,
-                              minimum_gap=self.main_widget.minimum_gap.value)
+                                 item_diameter_std=self.main_widget.item_diameter_std.value,
+                                 minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_parameter(self):
         # check colour input
@@ -294,10 +294,11 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         if match_methods is not None:
             # print("processing")
-            gen = RandomDASequence(match_properties=match_methods,
+            sequence = generate_da_sequence(reference_dot_array=self.data_array,
+                                   match_properties=match_methods,
                                    min_max_numerosity=match_range,
-                                   extra_space=extra_space)
-            sequence = gen.generate(reference_dot_array=self.data_array, logger=self.logger)
+                                   extra_space=extra_space,
+                                   logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.feature_numerosity,
                             image_parameter=self.get_image_parameter()).exec_()

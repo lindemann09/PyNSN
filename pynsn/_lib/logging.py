@@ -70,11 +70,6 @@ class LogFile(object):
             feat_log = misc.dict_to_csv(feat, variable_names=variable_names,
                                         dict_of_lists=is_sequence)
             if not is_sequence:
-                if properties_different_colour:
-                    feat = dot_array_object.get_features_split_by_colours()  # todo: check logging different colours
-                    if feat is not None:
-                        feat_log += feat.get_csv(feat, dict_of_lists=True, variable_names=False)
-
                 da_log = dot_array_object.get_csv(colour_column=log_colours,
                                                   num_format=num_format, variable_names=variable_names)
             else:  # DASequence
