@@ -11,7 +11,7 @@ import numpy as np
 from scipy import spatial
 from multiprocessing import Pool
 
-from .dot import Dot
+from .geometry import Dot
 from . import misc
 from .dot_collection import DotCollection
 from .item_attributes import ItemAttributesList

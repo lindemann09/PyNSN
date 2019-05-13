@@ -143,3 +143,10 @@ def numpy_vector(x):
         return x.reshape(1)  # if one element only, make a array with one element
     else:
         return x.flatten()
+
+
+def is_all_larger(vector, standard=0):
+    return sum(map(lambda x: x > standard, vector))==len(vector)
+
+def is_all_smaller(vector, standard=0):
+    return sum(map(lambda x: x < standard, vector))==len(vector)

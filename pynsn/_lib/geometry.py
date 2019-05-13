@@ -9,13 +9,6 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import math
 from .item_attributes import ItemAttributes, ItemAttributesList
 
-
-def is_all_larger(vector, standard=0):
-    return sum(map(lambda x: x > standard, vector))==len(vector)
-
-def is_all_smaller(vector, standard=0):
-    return sum(map(lambda x: x < standard, vector))==len(vector)
-
 class Coordinate2D(object):
 
     def __init__(self, x=0, y=0):
@@ -95,7 +88,7 @@ class Coordinate2D(object):
 
         Parameters
         ----------
-        d : Dot
+        d : Coordinate2D
 
         Returns
         -------
@@ -157,9 +150,9 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
         return math.pi * self.diameter
 
 
-class Rectangle(Coordinate2D):  # todo
+class Rectangle(Coordinate2D):
 
-    def __init__(self, x=0, y=0, width=0, height=0, features=None):
+    def __init__(self, center_x=0, center_y=0, width=0, height=0, features=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -173,7 +166,7 @@ class Rectangle(Coordinate2D):  # todo
         height : numeric (default=1)
         """
 
-        Coordinate2D.__init__(self, x=x, y=y)
+        Coordinate2D.__init__(self, x=center_x, y=center_y)
         if features is None:
             self.features = ItemAttributesList(colour=None)
         else:
@@ -183,21 +176,43 @@ class Rectangle(Coordinate2D):  # todo
         self.width = width
 
     @property
-    def left_top(self):
-        return self._x - 0.5 * self.width, self._y + 0.5 * self.height
+    def left(self):
+        return self._x - 0.5 * self.width
 
     @property
-    def right_bottom(self):
-        return self._x + 0.5 * self.width, self._y - 0.5 * self.height
+    def top(self):
+        return self._y + 0.5 * self.height
 
     @property
-    def rect(self):
-        rtn = list(self.left_top)
-        rtn.extend(self.right_bottom)
-        return rtn
+    def right(self):
+        return self._x + 0.5 * self.width
 
-    def distance(self, d):
-        """Return Euclidean distance to the dot d. The function take the
+    @property
+    def bottom(self):
+        return self._y - 0.5 * self.height
+
+
+    def iter_edges(self):
+        yield self.left, self.top
+        yield self.right, self.top
+        yield self.right, self.bottom
+        yield self.left, self.bottom
+
+    def is_point_inside_rect(self, xy):
+        return (self.left <= xy[0] <= self.right and
+                self.top <= xy[1] <= self.bottom)
+
+    def overlaps_with(self, rect):
+        for corner in rect.iter_edges():
+            if self.is_point_inside_rect(corner):
+                return True
+        for corner in self.iter_edges():
+            if rect.is_point_inside_rect(corner):
+                return True
+        return False
+
+    def distance(self, rect):
+        """Return Euclidean distance to other rect. The function take the
         diameter of the points into account.
 
         Parameters
@@ -210,51 +225,36 @@ class Rectangle(Coordinate2D):  # todo
 
         """
 
-        lt1 = self.left_top
-        rb1 = self.right_bottom
-        lt2 = d.left_top
-        rb2 = d.right_bottom
+        # 1. see if they overlap
+        if self.overlaps_with(rect):
+            return 0
 
-        x_diff = [lt1[0]-lt2[0], lt1[0]-r2, r1-l2, r1-r2]
-        y_diff = [t1-t2, t1-b2, b1-t2, b1-b2]
-        if is_all_smaller(x_diff):
-            is_right = True # other is to the right
-        elif is_all_larger(x_diff):
-            is_right = False
-        else:
-            is_right = None # is at x overlapping
-        if is_all_smaller(y_diff):
-            is_bottom = True # other is to the right
-        elif is_all_larger(x_diff):
-            is_bottom = False
-        else:
-            is_bottom = None # is overlapping at y
+        # 2. draw a line between rectangles
+        line = (self.xy, rect.xy)
 
-        if is_bottom is None and is_right is None:
-            return -1 # overlapping or touching rects
+        # 3. find the two edges that intersect the line
+        edge1 = None
+        edge2 = None
+        for edge in self.iter_edges():
+            if _lines_intersect(edge, line):
+                edge1 = edge
+                break
+        for edge in rect.iter_edges():
+            if _lines_intersect(edge, line):
+                edge2 = edge
+                break
+        assert edge1
+        assert edge2
 
-        if is_right and is_bottom:
-            a
+        # 4. find shortest distance between these two edges
+        distances = [
+            _distance_between_edge_and_point(edge1, edge2[0]),
+            _distance_between_edge_and_point(edge1, edge2[1]),
+            _distance_between_edge_and_point(edge2, edge1[0]),
+            _distance_between_edge_and_point(edge2, edge1[1]),
+        ]
 
-
-        return Coordinate2D.distance(self, d)  # TODO check me
-
-    def gap_xy(self, other):
-        """Gap beween two rectangles seppart for the x and y axis"""
-
-
-        #  overlaps in x or y:
-        if abs(self.x - other.x) <= (self.width + other.width):
-            dx = 0
-        else:
-            dx = abs(self.x - other.x) - (self.width + other.width)
-        #
-        if abs(self.y - other.y) <= (self.height + other.height):
-            dy = 0
-        else:
-            dy = abs(self.y - other.y) - (self.h + other.height)
-
-        return dx, dy
+        return min(distances)
 
     @property
     def area(self):
@@ -263,3 +263,69 @@ class Rectangle(Coordinate2D):  # todo
     @property
     def perimeter(self):
         return 2 * (self.width + self.height)
+
+
+def _lines_intersect(line1, line2):
+    # lines_overlap_on_x_axis
+    x1, x2 = line1[0].x, line1[1].x
+    x3, x4 = line2[0].x, line2[1].x
+    e1_left, e1_right = min(x1, x2), max(x1, x2)
+    e2_left, e2_right = min(x3, x4), max(x3, x4)
+    lines_overlap_on_x_axis = (e1_left >= e2_left and e1_left <= e2_right) or \
+            (e1_right >= e2_left and e1_right <= e2_right) or \
+            (e2_left >= e1_left and e2_left <= e1_right) or \
+            (e2_right >= e1_left and e2_right <= e1_right)
+
+    # _lines_overlap_on_y_axis
+    y1, y2 = line1[0].y, line1[1].y
+    y3, y4 = line2[0].y, line2[1].y
+    e1_top, e1_bot = min(y1, y2), max(y1, y2)
+    e2_top, e2_bot = min(y3, y4), max(y3, y4)
+    lines_overlap_on_y_axis = (e1_top >= e2_top and e1_top <= e2_bot) or \
+           (e1_bot >= e2_top and e1_bot <= e2_bot) or \
+           (e2_top >= e1_top and e2_top <= e1_bot) or \
+           (e2_bot >= e1_top and e2_bot <= e1_bot)
+
+    return lines_overlap_on_x_axis and lines_overlap_on_y_axis
+
+
+# Gives distance if the point is facing edge, else False
+def _distance_between_edge_and_point(edge, point):
+    # edge is a tuple of 2d coordinates
+    if _point_faces_edge(edge, point):
+        area=_triangle_area_at_points(edge[0], edge[1], point)
+        base=edge[0].distance(edge[1])
+        height=area/(0.5*base)
+        return height
+    return min(point.distance(edge[0]), point.distance(edge[1]))
+
+def _triangle_area_at_points(p1, p2, p3):
+    # p1, p2, p3: 2d Coordinates
+    a=p1.distance(p2)
+    b=p2.distance(p3)
+    c=p1.distance(p3)
+    s=(a+b+c)/float(2)
+    area=math.sqrt(s*(s-a)*(s-b)*(s-c))
+    return area
+
+# Finds angle using cos law
+def _angle(a, b, c):
+    divid=float(a**2+b**2-c**2)
+    divis=(2*a*b)
+    if (divis)>0:
+        result=divid/divis
+        if result<=1.0 and result>=-1.0:
+            return math.acos(result)
+        return 0
+    else:
+        return 0
+
+# Checks if point faces edge
+def _point_faces_edge(edge, point):
+    a=edge[0].distance(edge[1])
+    b=edge[0].distance(point)
+    c=edge[1].distance(point)
+    ang1, ang2 = _angle(b, a, c), _angle(c, a, b)
+    if ang1>math.pi/2 or ang2>math.pi/2:
+        return False
+    return True
