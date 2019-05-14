@@ -6,6 +6,7 @@ from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
+from copy import copy
 import random
 import numpy as np
 from scipy import spatial
@@ -16,6 +17,7 @@ from . import misc
 from .dot_collection import DotCollection
 from .item_attributes import ItemAttributesList
 from .item_attributes import ItemAttributes
+from . import features
 
 TWO_PI = 2 * np.pi
 
@@ -115,6 +117,53 @@ class DotArray(DotCollection):
             rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
         return rtn
 
+    def _jitter_identical_positions(self, jitter_size=0.1):
+        """jitters points with identical position"""
+
+        for idx, ref_dot in enumerate(self._xy):
+            identical = np.where(np.all(np.equal(self._xy, ref_dot), axis=1))[0]  # find identical positions
+            if len(identical) > 1:
+                for x in identical:  # jitter all identical positions
+                    if x != idx:
+                        self._xy[x, :] -= misc.polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+
+    def _remove_overlap_for_dot(self, dot_id, minimum_gap):
+        """remove overlap for one point
+        helper function, please use realign
+        """
+
+        dist = self.distances(self._xy[dot_id, :], self._diameters[dot_id])
+
+        shift_required = False
+        idx = np.where(dist < minimum_gap)[0].tolist()  # overlapping dot ids
+        if len(idx) > 1:
+            idx.remove(dot_id)  # don't move yourself
+            if np.sum(
+                    np.all(self._xy[idx,] == self._xy[dot_id, :],
+                           axis=1)) > 0:  # check if there is an identical position
+                self._jitter_identical_positions()
+
+            tmp_polar = misc.cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
+            tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
+            xy = misc.polar2cartesian(tmp_polar)
+            self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
+            shift_required = True
+
+        return shift_required
+
+    def remove_overlap_from_inner_to_outer(self, minimum_gap):
+
+        shift_required = False
+        # from inner to outer remove overlaps
+        for i in np.argsort(misc.cartesian2polar(self._xy, radii_only=True)):
+            if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
+                shift_required = True
+
+        if shift_required:
+            self.set_array_modified()
+
+        return shift_required
+
     def realign(self, center_array=False):
         """Realigns the dots in order to remove all dots overlaps. If two dots
         overlap, the dots that is further apart from the arry center will be
@@ -135,15 +184,15 @@ class DotArray(DotCollection):
         # sqeeze in points that pop out of the stimulus area radius
         cnt = 0
         while True:
-            radii = DotCollection._cartesian2polar(self._xy, radii_only=True)
+            radii = misc.cartesian2polar(self._xy, radii_only=True)
             too_far = np.where((radii + self._diameters // 2) > self.target_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
-                polar = DotCollection._cartesian2polar([self._xy[too_far[0], :]])[0]
+                polar = misc.cartesian2polar([self._xy[too_far[0], :]])[0]
                 polar[0] = self.target_array_radius - self._diameters[
                     too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
-                new_xy = DotCollection._polar2cartesian([polar])[0]
+                new_xy = misc.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
@@ -263,7 +312,7 @@ class DotArray(DotCollection):
             cnt += 1
             proposal_polar = np.random.random(2) * \
                              (self.target_array_radius - (dot_diameter / 2.0), TWO_PI)
-            proposal_xy = DotCollection._polar2cartesian([proposal_polar])[0]
+            proposal_xy = misc.polar2cartesian([proposal_polar])[0]
 
             bad_position = False
             if prefer_inside_field_area and cnt < try_out_inside_convex_hull:
@@ -355,6 +404,151 @@ class DotArray(DotCollection):
              "diameter": self._diameters.tolist(),
              "features": self._attributes.as_dict()}
         return rtn + yaml.dump(d)
+
+
+    def match(self, match_features, center_array=True, match_dot_array=None):
+        """
+        match_properties: continuous property or list of continuous properties
+        several properties to be matched
+
+        if match dot array is specified, array will be match to match_dot_array, otherwise
+        the values defined in match_properties are used.
+        """
+
+        # type check
+        if not isinstance(match_features, (list, tuple)):
+            match_features = [match_features]
+
+        features.check_feature_list(match_features, check_set_value=match_dot_array is None)
+
+        # copy and change values to match this stimulus
+        if match_dot_array is None:
+            match_feat = match_features
+        else:
+            match_feat = []
+            for m in match_features:
+                m = copy(m)
+                m.set_value(match_dot_array)
+                match_feat.append(m)
+
+        # Adapt
+        for feat in match_feat:
+            if isinstance(feat, features.ItemDiameter):
+                self._match_item_diameter(mean_item_diameter=feat.value)
+
+            elif isinstance(feat, features.ItemPerimeter):
+                self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
+
+            elif isinstance(feat, features.TotalPerimeter):
+                mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
+                self._match_item_diameter(mean_dot_diameter)
+
+            elif isinstance(feat, features.ItemSurfaceArea):
+                ta = self.feature_numerosity * feat.value
+                self._match_total_surface_area(surface_area=ta)
+
+            elif isinstance(feat, features.TotalSurfaceArea):
+                self._match_total_surface_area(surface_area=feat.value)
+
+            elif isinstance(feat, features.LogSize):
+                logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+                self._match_total_surface_area(2 ** logtsa)
+
+            elif isinstance(feat, features.LogSpacing):
+                logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+                self._match_field_area(field_area=2 ** logfa,
+                                       precision=feat.spacing_precision)
+
+            elif isinstance(feat, features.Sparsity):
+                fa = feat.value * self.feature_numerosity
+                self._match_field_area(field_area=fa,
+                                       precision=feat.spacing_precision)
+
+            elif isinstance(feat, features.FieldArea):
+                self._match_field_area(field_area=feat.value,
+                                       precision=feat.spacing_precision)
+
+            elif isinstance(feat, features.Coverage):
+                self._match_coverage(coverage=feat.value,
+                                     precision=feat.spacing_precision,
+                                     match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
+
+        if center_array:
+            self._xy -= self.center_of_outer_positions
+            self.set_array_modified()
+
+    def _match_total_surface_area(self, surface_area):
+        # changes diameter
+        a_scale = (surface_area / self.feature_total_surface_area)
+        self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
+            np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+        self.set_array_modified()
+
+    def _match_item_diameter(self, mean_item_diameter):
+        # changes diameter
+
+        scale = mean_item_diameter / self.feature_mean_item_diameter
+        self._diameters = self._diameters * scale
+        self.set_array_modified()
+
+    def _match_field_area(self, field_area, precision=features.DEFAULT_SPACING_PRECISION):
+        """changes the convex hull area to a desired size with certain precision
+
+        iterative method can takes some time.
+        """
+        current = self.feature_field_area
+
+        if current is None:
+            return  # not defined
+
+        # iteratively determine scale
+        scale = 1  # find good scale
+        step = 0.1
+        if field_area < current:  # current too larger
+            step *= -1
+
+        # centered points
+        old_center = self.center_of_outer_positions
+        self._xy -= old_center
+        centered_polar = misc.cartesian2polar(self._xy)
+
+        while abs(current - field_area) > precision:
+
+            scale += step
+
+            self._xy = misc.polar2cartesian(centered_polar * [scale, 1])
+            self.set_array_modified()  # required to recalc convex hull
+            current = self.feature_field_area
+
+            if (current < field_area and step < 0) or \
+                    (current > field_area and step > 0):
+                step *= -0.2  # change direction and finer grain
+
+        self._xy += old_center
+        self.set_array_modified()
+
+    def _match_coverage(self, coverage, precision=features.DEFAULT_SPACING_PRECISION,
+                        match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
+        """this function changes the area and remixes to get a desired density
+        precision in percent between 1 < 0
+
+        ratio_area_convex_hull_adaptation:
+            ratio of adaptation via area or via convex_hull (between 0 and 1)
+
+        """
+
+        # dens = convex_hull_area / total_surface_area
+        if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
+            match_FA2TA_ratio = 0.5
+
+        total_area_change100 = (coverage * self.feature_field_area) - self.feature_total_surface_area
+        d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
+        if abs(d_change_total_area) > 0:
+            self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_total_area)
+
+        self._match_field_area(field_area=self.feature_total_surface_area / coverage,
+                               precision=precision)
+
 
 
 

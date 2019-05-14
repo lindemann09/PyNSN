@@ -106,14 +106,14 @@ class ItemDiameter(_SizeRelatedFeature):
     long_label = "Mean item diameter"
 
     def set_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_item_diameter
+        self.value = reference_dot_array.feature_mean_item_diameter
 
 class ItemSurfaceArea(_SizeRelatedFeature):
     """"""
     long_label = "Mean item surface area"
 
     def set_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_item_surface_area
+        self.value = reference_dot_array.feature_mean_item_surface_area
 
 
 class ItemPerimeter(_SizeRelatedFeature):
@@ -121,7 +121,7 @@ class ItemPerimeter(_SizeRelatedFeature):
     long_label = "Mean item perimeter"
 
     def set_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_item_perimeter
+        self.value = reference_dot_array.feature_mean_item_perimeter
 
 class TotalPerimeter(_SizeRelatedFeature):
     """"""

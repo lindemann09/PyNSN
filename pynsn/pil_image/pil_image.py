@@ -72,7 +72,7 @@ class PILImagePlotter(object):
         # draw dots
         default_dot_colour = self.default_dot_colour
         for xy, d, c in zip(_convert_pos(dot_array.rounded_xy * aa, image_size),
-                            dot_array.rounded_diameters * aa,
+                            dot_array.item_diameters * aa,
                             dot_array.attributes.colours):
             if c.colour is None:
                 c = default_dot_colour
@@ -89,7 +89,7 @@ class PILImagePlotter(object):
         if tmp_colour is not None:
             # plot convey hull
             _draw_convex_hull(img=img,
-                              convex_hull=_convert_pos(dot_array.full_convex_hull_positions * aa, image_size),
+                              convex_hull=_convert_pos(dot_array.convex_hull_positions_full * aa, image_size),
                               convex_hull_colour=tmp_colour)
 
         tmp_colour = self.colour_center_of_mass.colour

@@ -212,13 +212,13 @@ class LogFileReader(object):
         else:
             pict = [None] * len(xy)
 
-        rtn = dot_array.DotArray(target_array_radius=target_array_radius)
+        rtn = DotArray(target_array_radius=target_array_radius)
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], item_diameters=x[1],
                        attributes=ItemAttributesList(colours=x[2], pictures=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
-            radii = rtn._cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
+            radii = misc.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
             rtn.target_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 

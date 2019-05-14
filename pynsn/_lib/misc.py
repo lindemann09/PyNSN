@@ -150,3 +150,17 @@ def is_all_larger(vector, standard=0):
 
 def is_all_smaller(vector, standard=0):
     return sum(map(lambda x: x < standard, vector))==len(vector)
+
+def polar2cartesian(polar):
+    """polar is an 2d-array representing polar coordinates (radius, angle)"""
+    polar = np.array(polar)
+    return np.array([polar[:, 0] * np.cos(polar[:, 1]),
+                     polar[:, 0] * np.sin(polar[:, 1])]).T
+
+def cartesian2polar(xy, radii_only=False):
+    xy = np.array(xy)
+    radii = np.hypot(xy[:, 0], xy[:, 1])
+    if radii_only:
+        return radii
+    else:
+        return np.array([radii, np.arctan2(xy[:, 1], xy[:, 0])]).T
