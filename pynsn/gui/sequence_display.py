@@ -1,14 +1,10 @@
 """
 """
-from __future__ import absolute_import
-from builtins import zip, filter, range, super, map
-
 from multiprocessing import Pool
 from PyQt4 import QtGui, QtCore
 from PIL.ImageQt import ImageQt
 from .. import pil_image
 from . import misc
-
 
 def _map_make_image(x):
     da, gen = x

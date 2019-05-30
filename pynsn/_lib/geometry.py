@@ -1,9 +1,6 @@
 """
 Dot Array
 """
-from __future__ import print_function, division
-from builtins import map, range, zip, filter
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math

@@ -1,9 +1,5 @@
 """
 """
-
-from __future__ import unicode_literals, absolute_import, print_function
-from builtins import zip, filter, range, super
-
 from PyQt4 import QtGui, QtCore
 
 

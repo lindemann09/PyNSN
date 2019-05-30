@@ -5,7 +5,15 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
-__version__ = '0.7.31'
+__version__ = '0.7.32'
+
+import sys
+if not(sys.version_info[0] >= 3 and sys.version_info[1] >= 5):
+    raise RuntimeError("PyNsN {0} ".format(__version__) +
+                      "is not compatible with Python {0}.{1}. ".format(
+                                                    sys.version_info[0],
+                                                    sys.version_info[1]) +
+                      "Please use Python 3.5+.")
 
 from ._lib.dot_collection import DotCollection
 from ._lib.dot_array import DotArray, DotArrayGenerator

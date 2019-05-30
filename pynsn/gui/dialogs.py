@@ -1,9 +1,5 @@
 """
 """
-
-from __future__ import absolute_import
-from builtins import super
-
 from PyQt4 import QtGui, QtCore
 from . import misc
 from pynsn._lib import features as cp

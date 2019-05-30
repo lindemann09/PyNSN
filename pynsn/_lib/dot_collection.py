@@ -1,15 +1,14 @@
 """
 Dot Array
 """
-from __future__ import absolute_import, print_function, division
-from builtins import *
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
 from hashlib import md5
+
 import numpy as np
 from scipy import spatial
+
 from .misc import log2, numpy_vector, polar2cartesian, cartesian2polar
 
 TWO_PI = 2 * np.pi

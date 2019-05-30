@@ -1,14 +1,7 @@
 """
 """
-
-from __future__ import unicode_literals, absolute_import, print_function
-from builtins import zip, filter, range, super
-
 from PyQt4 import QtGui, QtCore
-from .. import pil_image
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, LabeledInput
-from . import dialogs
-
 
 class MainWidget(QtGui.QWidget):
 

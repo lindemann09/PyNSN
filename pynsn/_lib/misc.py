@@ -1,8 +1,6 @@
 """
 Draw a random number from a beta dirstribution
 """
-from __future__ import print_function, division, unicode_literals
-from builtins import *
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -10,8 +8,6 @@ import sys
 import random
 from collections import OrderedDict
 import numpy as np
-
-PYTHON3 = (sys.version_info[0] == 3)
 
 try:
     from math import log2
@@ -22,25 +18,13 @@ except:
 
 
 def is_base_string(s):
-    if PYTHON3:
-        return isinstance(s, (str, bytes))
-    else:
-        return isinstance(s, (unicode, str))
-
+    return isinstance(s, (str, bytes))
 
 def is_unicode_string(s):
-    if PYTHON3:
-        return isinstance(s, str)
-    else:
-        return isinstance(s, unicode)
-
+    return isinstance(s, str)
 
 def is_byte_string(s):
-    if PYTHON3:
-        return isinstance(s, bytes)
-    else:
-        return isinstance(s, str)
-
+    return isinstance(s, bytes)
 
 # randomizing
 

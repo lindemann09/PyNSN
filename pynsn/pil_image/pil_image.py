@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-from builtins import *
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from PIL import Image, ImageDraw

@@ -2,10 +2,6 @@
 
 """
 """
-
-from __future__ import unicode_literals, absolute_import, print_function
-from builtins import zip, filter, range, super
-
 import sys
 import yaml
 from PyQt4 import QtGui

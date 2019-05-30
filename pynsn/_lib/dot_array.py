@@ -1,16 +1,14 @@
 """
 Dot Array
 """
-from __future__ import absolute_import, print_function, division, unicode_literals
-from builtins import *
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from copy import copy
 import random
+from multiprocessing import Pool
+
 import numpy as np
 from scipy import spatial
-from multiprocessing import Pool
 
 from .geometry import Dot
 from . import misc

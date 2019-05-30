@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import pynsn
 from pynsn import expyriment_stimulus

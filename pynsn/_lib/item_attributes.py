@@ -1,12 +1,10 @@
 """
 Dot Array
 """
-from __future__ import print_function, division, unicode_literals
-from builtins import map, zip, range, filter
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import numpy as np
+
 from .colour import Colour
 from .misc import numpy_vector
 

@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import *
-
 """
 The named colour are the 140 HTML colour names:
    see https://www.w3schools.com/colors/colors_names.asp

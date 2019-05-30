@@ -1,9 +1,6 @@
 """
 Dot Array Sequence
 """
-from __future__ import absolute_import, print_function, division, unicode_literals
-from builtins import *
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
