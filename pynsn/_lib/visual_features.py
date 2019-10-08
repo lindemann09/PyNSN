@@ -6,7 +6,7 @@ DEFAULT_SPACING_PRECISION = 0.0001
 # @total_ordering
 class _BaseFeature(object):
     """"""
-    long_label = "undefined"
+    label = "undefined"
 
     def __init__(self, value=None):
         self.value = value
@@ -78,76 +78,77 @@ class _SpaceRelatedFeature(_BaseFeature):
 
 
 class LogSize(_SizeRelatedFeature):
-    long_label = "Log Size"
+    label = "Log Size"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_logSize
 
 
 class LogSpacing(_SpaceRelatedFeature):
-    long_label = "Log Spacing"
+    label = "Log Spacing"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_logSpacing
 
 
 class TotalSurfaceArea(_SizeRelatedFeature):
     """"""
-    long_label = "Total surface area"
+    label = "Total surface area"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_total_surface_area
 
 
 class ItemDiameter(_SizeRelatedFeature):
     """"""
-    long_label = "Mean item diameter"
+    label = "Mean item diameter"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_mean_item_diameter
 
 class ItemSurfaceArea(_SizeRelatedFeature):
     """"""
-    long_label = "Mean item surface area"
+    label = "Mean item surface area"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_mean_item_surface_area
 
 
 class ItemPerimeter(_SizeRelatedFeature):
     """"""
-    long_label = "Mean item perimeter"
+    label = "Mean item perimeter"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_mean_item_perimeter
 
 class TotalPerimeter(_SizeRelatedFeature):
     """"""
-    long_label = "Total perimeter"
+    label = "Total perimeter"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_total_perimeter
 
 
 class Sparsity(_SpaceRelatedFeature):
     """"""
-    long_label = "Sparsity"
+    label = "Sparsity"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_sparsity
 
 
 class FieldArea(_SpaceRelatedFeature):
     """"""
-    long_label = "Field area"
+    label = "Field area"
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_field_area
+
 
 
 class Coverage(_BaseFeature):
     """"""
-    long_label = "Coverage"
+    label = "Coverage"
 
     def __init__(self, value=None, match_ratio_fieldarea2totalarea=0.5, spacing_precision=None):
 
@@ -168,7 +169,7 @@ class Coverage(_BaseFeature):
         if v < 0 or v > 1:
             raise RuntimeError("Match_ratio_convhull2area has to be between 0 and 1.")
 
-    def set_value(self, reference_dot_array):
+    def adapt_value(self, reference_dot_array):
         self.value = reference_dot_array.feature_converage
 
     @property
@@ -185,6 +186,11 @@ class Coverage(_BaseFeature):
         d["match_ratio_convhull2area"] = self.match_ratio_fieldarea2totalarea
         d["spacing_precision"] = self.spacing_precision
         return (d)
+
+
+ALL_VISUAL_FEATURES = [ItemDiameter, TotalSurfaceArea, TotalPerimeter, FieldArea,
+                       Coverage, LogSpacing, LogSize, Sparsity,
+                       ItemSurfaceArea, ItemPerimeter]
 
 
 ## helper function
@@ -208,21 +214,3 @@ def check_feature_list(feature_list, check_set_value=False):
         if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                 type(a).__name__, type(b).__name__))
-
-
-def _dict_to_feature(d):
-    d = copy(d)
-    t = d["type"]
-    del d["type"]
-    if t == ItemDiameter.__name__:
-        return ItemDiameter(**d)
-    elif t == TotalSurfaceArea.__name__:
-        return TotalSurfaceArea(**d)
-    elif t == TotalPerimeter.__name__:
-        return TotalPerimeter(**d)
-    elif t == Coverage.__name__:
-        print("l")
-        return Coverage(**d)
-    elif t == FieldArea.__name__:
-        return FieldArea(**d)
-    return None

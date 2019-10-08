@@ -7,7 +7,7 @@ from hashlib import md5
 import numpy as np
 
 from copy import copy
-from . import misc, features
+from . import misc, visual_features
 from .dot_array import DotArray
 
 class DASequence(object):
@@ -128,7 +128,7 @@ def generate_da_sequence(reference_dot_array,
         match_properties = []
     elif not isinstance(match_properties, (tuple, list)):
         match_properties = [match_properties]
-    features.check_feature_list(match_properties, check_set_value=False)
+    visual_features.check_feature_list(match_properties, check_set_value=False)
 
     if not isinstance(reference_dot_array, DotArray):
         raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
@@ -140,10 +140,10 @@ def generate_da_sequence(reference_dot_array,
     prefer_keeping_field_area = False
     for m in match_properties:
         m = copy(m)
-        m.set_value(reference_dot_array)
+        m.adapt_value(reference_dot_array)
         match_props.append(m)
-        if isinstance(m, features.LogSpacing().dependencies) or \
-                (isinstance(m, features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
+        if isinstance(m, visual_features.LogSpacing().dependencies) or \
+                (isinstance(m, visual_features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
             prefer_keeping_field_area = True
             break
 
@@ -214,7 +214,7 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
         except:
             return [], "ERROR: Can't find the a make matched deviants"
         if len(match_props) > 0:
-            da.match(match_props, center_array=False)
+            da.match(match_props, realign=False, center_array=False)
 
         cnt = 0
         while True:

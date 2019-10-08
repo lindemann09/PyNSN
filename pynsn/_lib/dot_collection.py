@@ -10,6 +10,7 @@ import numpy as np
 from scipy import spatial
 
 from .misc import log2, numpy_vector, polar2cartesian, cartesian2polar
+from . import visual_features as vf
 
 TWO_PI = 2 * np.pi
 
@@ -23,6 +24,7 @@ class _CollectionFeatures(object):
     OBJECT_ID_LENGTH = 8
 
     _xy = None
+    _diameters = None
     _ch = None
     surface_areas = None
     perimeter = None
@@ -40,6 +42,10 @@ class _CollectionFeatures(object):
     def center_of_outer_positions(self):
         minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
+
+    @property
+    def feature_mean_item_diameter(self):
+        return np.mean(self._diameters)
 
     @property
     def feature_total_surface_area(self):
@@ -114,15 +120,18 @@ class _CollectionFeatures(object):
 
     def get_features_dict(self):
         """ordered dictionary with the most important feature"""
-        rtn = [("object_id", self.object_id),
-               ("numerosity", self.feature_numerosity),
-               ("total surface area", self.feature_total_surface_area),
-               ("item surface area", self.feature_mean_item_surface_area),
-               ("field area", self.feature_field_area),
-               ("sparsity", self.feature_sparsity),
-               ("logSize", self.feature_logSize),
-               ("logSpacing", self.feature_logSpacing),
-               ("converage", self.feature_converage)]
+        rtn = [("Object_id", self.object_id),
+               ("Numerosity", self.feature_numerosity),
+               (vf.TotalSurfaceArea.label, self.feature_total_surface_area),
+               (vf.ItemSurfaceArea.label, self.feature_mean_item_surface_area),
+               (vf.ItemDiameter.label, self.feature_mean_item_diameter),
+               (vf.ItemPerimeter.label, self.feature_mean_item_perimeter),
+               (vf.TotalPerimeter.label, self.feature_total_perimeter),
+               (vf.FieldArea.label, self.feature_field_area),
+               (vf.Sparsity.label, self.feature_sparsity),
+               (vf.Coverage.label, self.feature_converage),
+               (vf.LogSize.label, self.feature_logSize),
+               (vf.LogSpacing.label, self.feature_logSpacing)]
         return OrderedDict(rtn)
 
     def get_features_text(self, with_object_id=True, extended_format=False, spacing_char="."):
@@ -181,7 +190,7 @@ class DotCollection(_CollectionFeatures):
         self._ch = _EfficientConvexHullDots(self._xy, self._diameters)
 
     @property
-    def item_diameters(self):
+    def diameters(self):
         return self._diameters
 
     def append(self, xy, item_diameters):

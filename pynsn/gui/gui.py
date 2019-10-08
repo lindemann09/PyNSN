@@ -228,9 +228,9 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def action_generate_btn(self):
         """"""
         self.make_new_array()
-        self.show_current_image()
-        self.main_widget.updateUI()
+        self.show_current_image(remake_image=True)
         self.write_properties()
+        self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
         txt = self.data_array.get_features_text(extended_format=True, with_object_id=True)
@@ -240,6 +240,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
                 txt += p.get_nice_text()
         if clear_field:
             self.main_widget.text_clear()
+
         self.main_widget.text_out(txt)
 
     def action_print_xy(self):
@@ -263,7 +264,13 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def action_match(self):
         """"""
         prop = self.data_array.get_features_dict()
-        dialogs.MatchPropertyDialog.get_response(self, prop)  # FIXME get_response does not work with dicts
+        response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
+        if response is not None:
+            self.data_array.match(response, realign=True, center_array=True)
+            self.show_current_image(remake_image=True)
+            self.write_properties()
+            self.main_widget.updateUI()
+
 
     def action_settings(self):
         """"""

@@ -2,34 +2,33 @@
 """
 from PyQt4 import QtGui, QtCore
 from . import misc
-from pynsn._lib import features as cp
+from pynsn._lib import visual_features as vf
 
 
 class MatchPropertyDialog(QtGui.QDialog):
+
     def __init__(self, parent, properties):
         super(MatchPropertyDialog, self).__init__(parent)
 
         self.setWindowTitle("Match Dot Array Property")
-        print(properties)
         self.features = properties
+        self._selection = None
         self.comboBox = QtGui.QComboBox(self)
-        self.comboBox.addItem(cp.ItemDiameter().long_label)  # 0
-        self.comboBox.addItem(cp.Coverage().long_label)  # 1
-        self.comboBox.addItem(cp.FieldArea().long_label)  # 2
-        self.comboBox.addItem(cp.TotalSurfaceArea().long_label)  # 3
-        self.comboBox.addItem(cp.TotalPerimeter().long_label)  # 4
-        self.comboBox.addItem(cp.LogSize().long_label)  # 5
-        self.comboBox.addItem(cp.LogSpacing().long_label)  # 6
+        for feat in vf.ALL_VISUAL_FEATURES:
+            self.comboBox.addItem(feat.label)
+
         self.comboBox.activated[str].connect(self.choice)
 
-        self.num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(cp.ItemDiameter().long_label)
+        self._num_input = misc.NumberInput(width_edit=150, value=0)
+        self.choice(vf.ItemDiameter.label)
+
+
 
         vlayout = QtGui.QVBoxLayout(self)
         hlayout = QtGui.QHBoxLayout()
 
         hlayout.addWidget(self.comboBox)
-        hlayout.addWidget(self.num_input.edit)
+        hlayout.addWidget(self._num_input.edit)
 
         # OK and Cancel buttons
         buttons = QtGui.QDialogButtonBox(
@@ -43,30 +42,26 @@ class MatchPropertyDialog(QtGui.QDialog):
 
     def choice(self, selection):
 
-        if selection == cp.ItemDiameter().long_label:
-            self.num_input.value = self.features['item surface area']
-        elif selection == cp.Coverage().long_label:
-            self.num_input.value = self.features['converage']
-        elif selection == cp.FieldArea().long_label:
-            self.num_input.value = self.features['field area']
-        elif selection == cp.TotalPerimeter().long_label:
-            self.num_input.value = self.features['total_perimeter']
-        elif selection == cp.TotalSurfaceArea().long_label:
-            self.num_input.value = self.features['total surface area']
-        elif selection == cp.LogSize().long_label:
-            self.num_input.value = self.features['logSize']
-        elif selection == cp.LogSpacing().long_label:
-            self.num_input.value = self.features['logSpacing']
+        for feat in vf.ALL_VISUAL_FEATURES:
+            if selection == feat.label:
+                self._num_input.value = self.features[feat.label]
+                self._selection = feat()
+
+
+    def current_state(self):
+        self._selection.value = self._num_input.value
+        return self._selection
 
     @staticmethod
     def get_response(parent, prop):
+        """return the feature to be matched"""
 
         dialog = MatchPropertyDialog(parent, prop)
         result = dialog.exec_()
         if result == QtGui.QDialog.Accepted:
-            return (True, True)
+            return dialog.current_state()
         else:
-            return (None, None)
+            return None
 
 
 class SettingsDialog(QtGui.QDialog):
@@ -116,8 +111,8 @@ class SettingsDialog(QtGui.QDialog):
 
 class SequenceDialog(QtGui.QDialog):
     extra_space = 50
-    spacing_precision = cp.FieldArea().spacing_precision
-    fieldarea2totalarea = cp.Coverage().match_ratio_fieldarea2totalarea
+    spacing_precision = vf.FieldArea().spacing_precision
+    fieldarea2totalarea = vf.Coverage().match_ratio_fieldarea2totalarea
     sequence_range = [10, 100]
 
     def __init__(self, parent):
@@ -128,17 +123,17 @@ class SequenceDialog(QtGui.QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QtGui.QCheckBox(cp.ItemDiameter.long_label)
-        self.match_item_perimeter= QtGui.QCheckBox(cp.ItemPerimeter.long_label)
-        self.match_item_area = QtGui.QCheckBox(cp.ItemSurfaceArea.long_label)
-        self.match_area = QtGui.QCheckBox(cp.TotalSurfaceArea.long_label)
-        self.match_total_perimeter = QtGui.QCheckBox(cp.TotalPerimeter.long_label)
-        self.match_coverage = QtGui.QCheckBox(cp.Coverage.long_label)
-        self.match_sparsity = QtGui.QCheckBox(cp.Sparsity.long_label)
+        self.match_diameter = QtGui.QCheckBox(vf.ItemDiameter.label)
+        self.match_item_perimeter= QtGui.QCheckBox(vf.ItemPerimeter.label)
+        self.match_item_area = QtGui.QCheckBox(vf.ItemSurfaceArea.label)
+        self.match_area = QtGui.QCheckBox(vf.TotalSurfaceArea.label)
+        self.match_total_perimeter = QtGui.QCheckBox(vf.TotalPerimeter.label)
+        self.match_coverage = QtGui.QCheckBox(vf.Coverage.label)
+        self.match_sparsity = QtGui.QCheckBox(vf.Sparsity.label)
 
-        self.match_convex_hull = QtGui.QCheckBox(cp.FieldArea.long_label)
-        self.match_size = QtGui.QCheckBox(cp.LogSize.long_label)
-        self.match_spacing = QtGui.QCheckBox(cp.LogSpacing.long_label)
+        self.match_convex_hull = QtGui.QCheckBox(vf.FieldArea.label)
+        self.match_size = QtGui.QCheckBox(vf.LogSize.label)
+        self.match_spacing = QtGui.QCheckBox(vf.LogSpacing.label)
         self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -201,45 +196,45 @@ class SequenceDialog(QtGui.QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [cp.ItemDiameter()]
+        all = [vf.ItemDiameter()]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.ItemSurfaceArea())
+        all.append(vf.ItemSurfaceArea())
         if self.match_item_area.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.ItemPerimeter())
+        all.append(vf.ItemPerimeter())
         if self.match_item_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.TotalPerimeter())
+        all.append(vf.TotalPerimeter())
         if self.match_total_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.TotalSurfaceArea())
+        all.append(vf.TotalSurfaceArea())
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.FieldArea(spacing_precision=self.match_spacing_presision.value))
+        all.append(vf.FieldArea(spacing_precision=self.match_spacing_presision.value))
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Coverage(match_ratio_fieldarea2totalarea=self.match_fa2ta.value,
-                               spacing_precision=self.match_spacing_presision.value))
+        all.append(vf.Coverage(match_ratio_fieldarea2totalarea=self.match_fa2ta.value,
+                                 spacing_precision=self.match_spacing_presision.value))
         if self.match_coverage.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.Sparsity(spacing_precision=self.match_spacing_presision.value))
+        all.append(vf.Sparsity(spacing_precision=self.match_spacing_presision.value))
         if self.match_sparsity.isChecked():
             selected.append(all[-1])
 
 
-        all.append(cp.LogSize())
+        all.append(vf.LogSize())
         if self.match_size.isChecked():
             selected.append(all[-1])
 
-        all.append(cp.LogSpacing(spacing_precision=self.match_spacing_presision.value))
+        all.append(vf.LogSpacing(spacing_precision=self.match_spacing_presision.value))
         if self.match_spacing.isChecked():
             selected.append(all[-1])
 
@@ -257,34 +252,34 @@ class SequenceDialog(QtGui.QDialog):
         for x in all:
             if x not in selected:
                 if sum(map(lambda s: s.is_dependent(x), selected)) > 0:  # any dependency
-                    if isinstance(x, cp.ItemDiameter):
+                    if isinstance(x, vf.ItemDiameter):
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    if isinstance(x, cp.ItemPerimeter):
+                    if isinstance(x, vf.ItemPerimeter):
                         self.match_item_perimeter.setEnabled(False)
                         self.match_item_perimeter.setChecked(False)
-                    if isinstance(x, cp.ItemSurfaceArea):
+                    if isinstance(x, vf.ItemSurfaceArea):
                         self.match_item_area.setEnabled(False)
                         self.match_item_area.setChecked(False)
-                    if isinstance(x, cp.TotalSurfaceArea):
+                    if isinstance(x, vf.TotalSurfaceArea):
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    if isinstance(x, cp.TotalPerimeter):
+                    if isinstance(x, vf.TotalPerimeter):
                         self.match_total_perimeter.setEnabled(False)
                         self.match_total_perimeter.setChecked(False)
-                    if isinstance(x, cp.FieldArea):
+                    if isinstance(x, vf.FieldArea):
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
-                    if isinstance(x, cp.Coverage):
+                    if isinstance(x, vf.Coverage):
                         self.match_coverage.setEnabled(False)
                         self.match_coverage.setChecked(False)
-                    if isinstance(x, cp.Sparsity):
+                    if isinstance(x, vf.Sparsity):
                         self.match_sparsity.setEnabled(False)
                         self.match_sparsity.setChecked(False)
-                    if isinstance(x, cp.LogSize):
+                    if isinstance(x, vf.LogSize):
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
-                    if isinstance(x, cp.LogSpacing):
+                    if isinstance(x, vf.LogSpacing):
                         self.match_spacing.setEnabled(False)
                         self.match_spacing.setChecked(False)
 

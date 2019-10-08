@@ -15,7 +15,7 @@ from . import misc
 from .dot_collection import DotCollection
 from .item_attributes import ItemAttributesList
 from .item_attributes import ItemAttributes
-from . import features
+from . import visual_features
 
 TWO_PI = 2 * np.pi
 
@@ -243,7 +243,7 @@ class DotArray(DotCollection):
         dicts = []
         for da in self.split_array_by_colour():
             feat = da.get_features_dict()
-            feat["object_id"] += str(da._attributes.colours[0])
+            feat["Object_id"] += str(da._attributes.colours[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
@@ -404,7 +404,9 @@ class DotArray(DotCollection):
         return rtn + yaml.dump(d)
 
 
-    def match(self, match_features, center_array=True, match_dot_array=None):
+    def match(self, match_features, center_array=True,
+              realign = False,
+              match_dot_array=None):
         """
         match_properties: continuous property or list of continuous properties
         several properties to be matched
@@ -417,7 +419,7 @@ class DotArray(DotCollection):
         if not isinstance(match_features, (list, tuple)):
             match_features = [match_features]
 
-        features.check_feature_list(match_features, check_set_value=match_dot_array is None)
+        visual_features.check_feature_list(match_features, check_set_value=match_dot_array is None)
 
         # copy and change values to match this stimulus
         if match_dot_array is None:
@@ -426,52 +428,54 @@ class DotArray(DotCollection):
             match_feat = []
             for m in match_features:
                 m = copy(m)
-                m.set_value(match_dot_array)
+                m.adapt_value(match_dot_array)
                 match_feat.append(m)
 
         # Adapt
         for feat in match_feat:
-            if isinstance(feat, features.ItemDiameter):
+            if isinstance(feat, visual_features.ItemDiameter):
                 self._match_item_diameter(mean_item_diameter=feat.value)
 
-            elif isinstance(feat, features.ItemPerimeter):
+            elif isinstance(feat, visual_features.ItemPerimeter):
                 self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
 
-            elif isinstance(feat, features.TotalPerimeter):
+            elif isinstance(feat, visual_features.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
 
-            elif isinstance(feat, features.ItemSurfaceArea):
+            elif isinstance(feat, visual_features.ItemSurfaceArea):
                 ta = self.feature_numerosity * feat.value
                 self._match_total_surface_area(surface_area=ta)
 
-            elif isinstance(feat, features.TotalSurfaceArea):
+            elif isinstance(feat, visual_features.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=feat.value)
 
-            elif isinstance(feat, features.LogSize):
+            elif isinstance(feat, visual_features.LogSize):
                 logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
                 self._match_total_surface_area(2 ** logtsa)
 
-            elif isinstance(feat, features.LogSpacing):
+            elif isinstance(feat, visual_features.LogSpacing):
                 logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
                 self._match_field_area(field_area=2 ** logfa,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, features.Sparsity):
+            elif isinstance(feat, visual_features.Sparsity):
                 fa = feat.value * self.feature_numerosity
                 self._match_field_area(field_area=fa,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, features.FieldArea):
+            elif isinstance(feat, visual_features.FieldArea):
                 self._match_field_area(field_area=feat.value,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, features.Coverage):
+            elif isinstance(feat, visual_features.Coverage):
                 self._match_coverage(coverage=feat.value,
                                      precision=feat.spacing_precision,
                                      match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
 
-        if center_array:
+        if realign:
+            self.realign(center_array=center_array)
+        elif center_array:
             self._xy -= self.center_of_outer_positions
             self.set_array_modified()
 
@@ -489,7 +493,7 @@ class DotArray(DotCollection):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
-    def _match_field_area(self, field_area, precision=features.DEFAULT_SPACING_PRECISION):
+    def _match_field_area(self, field_area, precision=visual_features.DEFAULT_SPACING_PRECISION):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
@@ -525,7 +529,7 @@ class DotArray(DotCollection):
         self._xy += old_center
         self.set_array_modified()
 
-    def _match_coverage(self, coverage, precision=features.DEFAULT_SPACING_PRECISION,
+    def _match_coverage(self, coverage, precision=visual_features.DEFAULT_SPACING_PRECISION,
                         match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0

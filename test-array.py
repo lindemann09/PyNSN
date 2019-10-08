@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from expyriment import misc, control
 import pynsn
-from pynsn import expyriment_stimulus, DotArrayGenerator, LogFile, features
+from pynsn import expyriment_stimulus, DotArrayGenerator, LogFile, visual_features
 
 if __name__ == "__main__":
     cl = misc.Clock()
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     print(reference.get_features_text(with_object_id=False, extended_format=False ))
 
     reference2 = reference.copy()
-    reference2.match(match_features=features.Sparsity(4371), center_array=True)
+    reference2.match(match_features=visual_features.Sparsity(4371), center_array=True)
     reference2.realign()
     print(reference2.get_features_text(with_object_id=False, extended_format=False))
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         a = generator.generate(n_dots=22, logger=logger)
         b = generator.generate(n_dots=41, logger=logger)
         b.attributes.change(colour="blue")
-        b.match(match_features=features.ItemDiameter(a.feature_item_diameter))
+        b.match(match_features=visual_features.ItemDiameter(a.feature_item_diameter))
         x = a.copy()
         x.join(b)
         logger.log(x)
