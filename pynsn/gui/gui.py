@@ -129,8 +129,12 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def make_new_array(self):
 
-        generator = self.get_generator()
-        self.data_array = generator.generate(n_dots=self.get_number(), logger=self.logger)
+        try:
+            generator = self.get_generator()
+            self.data_array = generator.generate(n_dots=self.get_number(), logger=self.logger)
+        except (RuntimeError, ValueError) as error:
+            self.main_widget.text_error_feedback(error)
+            raise error
 
         if self.settings.bicoloured.isChecked():
             data_array2 = generator.generate(n_dots=self.main_widget.number2.value,
@@ -235,19 +239,19 @@ class PyNSN_GUI(QtGui.QMainWindow):
             for p in prop.split:
                 txt += p.get_nice_text()
         if clear_field:
-            self.main_widget.text_field.clear()
-        self.main_widget.text_field.append(txt)
+            self.main_widget.text_clear()
+        self.main_widget.text_out(txt)
 
     def action_print_xy(self):
         """"""
         txt = self.data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
-        self.main_widget.text_field.append(txt)
+        self.main_widget.text_out(txt)
 
     def action_print_para(self):
         d = {'number': self.get_number()}
         d['image_parameter'] = self.get_image_parameter().as_dict()
         d['generator'] = self.get_generator().as_dict()
-        self.main_widget.text_field.append("# parameter\n" + yaml.dump(d, default_flow_style=False))
+        self.main_widget.text_out("# parameter\n" + yaml.dump(d, default_flow_style=False))
 
     def save_pixmap(self):
         """"""
@@ -285,7 +289,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
         d = {"match range": match_range, "extra_space": extra_space}
         d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))  # TODO <-- check ERROR
-        self.main_widget.text_field.append("# Sequence\n" + \
+        self.main_widget.text_out("# Sequence\n" + \
                                            yaml.dump(d, default_flow_style=False))
 
         if match_methods is not None:

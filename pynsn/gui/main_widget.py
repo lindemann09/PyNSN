@@ -49,16 +49,16 @@ class MainWidget(QtGui.QWidget):
 
         # Add text field
         fields = QtGui.QVBoxLayout()
-        self.text_field = QtGui.QTextBrowser(self)
-        self.text_field.setFont(QtGui.QFont("Courier New", 8))
-        self.text_field.setReadOnly(True)
-        self.text_field.setWordWrapMode(False)
-        self.text_field.setVerticalScrollBar(QtGui.QScrollBar())
-        self.text_field.setHorizontalScrollBar(QtGui.QScrollBar())
+        self._text_field = QtGui.QTextBrowser(self)
+        self._text_field.setFont(QtGui.QFont("Courier New", 8))
+        self._text_field.setReadOnly(True)
+        self._text_field.setWordWrapMode(False)
+        self._text_field.setVerticalScrollBar(QtGui.QScrollBar())
+        self._text_field.setHorizontalScrollBar(QtGui.QScrollBar())
         self.picture_field = QtGui.QLabel(self)
         self.resize_fields(400)
         fields.addWidget(self.picture_field)
-        fields.addWidget(self.text_field)
+        fields.addWidget(self._text_field)
 
         hlayout = QtGui.QHBoxLayout()
         hlayout.addLayout(ctrl)
@@ -82,7 +82,21 @@ class MainWidget(QtGui.QWidget):
         self.picture_field.setFixedSize(width, width)
         if width < minium_text_width:
             width = minium_text_width
-        self.text_field.setMinimumSize(width, text_height)
+        self._text_field.setMinimumSize(width, text_height)
 
     def action_slider_change(self):
         self.number.value = self.slider.value()
+
+    def text_clear(self):
+        self._text_field.clear()
+
+    def text_out(self, txt):
+        self._text_field.append(txt)
+
+    def text_error_feedback(self, error):
+        self.text_clear()
+        self.text_out("ERROR\n=====\n")
+        txt = '<span style=\" color: #ff0000;\">%s</span>' % str(error)
+        self.text_out(txt)
+        self.updateUI()
+
