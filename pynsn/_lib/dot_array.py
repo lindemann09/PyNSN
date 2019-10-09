@@ -493,7 +493,7 @@ class DotArray(DotCollection):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
-    def _match_field_area(self, field_area, precision=visual_features.DEFAULT_SPACING_PRECISION):
+    def _match_field_area(self, field_area, precision=visual_features._DEFAULT_SPACING_PRECISION):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
@@ -529,7 +529,7 @@ class DotArray(DotCollection):
         self._xy += old_center
         self.set_array_modified()
 
-    def _match_coverage(self, coverage, precision=visual_features.DEFAULT_SPACING_PRECISION,
+    def _match_coverage(self, coverage, precision=visual_features._DEFAULT_SPACING_PRECISION,
                         match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0

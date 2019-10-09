@@ -6,14 +6,14 @@ import sys
 import yaml
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.dot_array import DotArrayGenerator
-from .._lib.dot_array_sequence import generate_da_sequence
-from .._lib.logging import LogFile
-from .._lib.colour import Colour
-from .. import pil_image
-from .main_widget import MainWidget
-from . import dialogs
-from .sequence_display import SequenceDisplay
+from ._lib.dot_array import DotArrayGenerator
+from ._lib.dot_array_sequence import generate_da_sequence
+from ._lib.logging import LogFile
+from ._lib.colour import Colour
+from ._lib import pil_image
+from .qt.main_widget import MainWidget
+from .qt import dialogs
+from .qt.sequence_display import SequenceDisplay
 
 DEFAULT_ARRAY = (40, DotArrayGenerator(target_area_radius=200,
                                        item_colour="lime",
@@ -59,7 +59,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
     def set_loging(self, onoff):
 
         if onoff:
-            self.logger = LogFile(log_filename="log/gui",
+            self.logger = LogFile(log_filename="log/qt",
                                   override_log_files=True,
                                   log_colours=False,
                                   properties_different_colour=False)

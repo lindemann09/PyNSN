@@ -1,7 +1,7 @@
 from copy import copy
 import itertools
 
-DEFAULT_SPACING_PRECISION = 0.0001
+_DEFAULT_SPACING_PRECISION = 0.0001
 
 # @total_ordering
 class _BaseFeature(object):
@@ -63,7 +63,7 @@ class _SizeRelatedFeature(_BaseFeature):
 
 class _SpaceRelatedFeature(_BaseFeature):
 
-    def __init__(self, value=None, spacing_precision=DEFAULT_SPACING_PRECISION):
+    def __init__(self, value=None, spacing_precision=_DEFAULT_SPACING_PRECISION):
         _BaseFeature.__init__(self, value)
         self.spacing_precision = spacing_precision
 

@@ -2,8 +2,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import pygame
 
-from ..pil_image import pil_image
-
+from ._lib import pil_image
 
 # todo make PygameSurfaceGenerator
 

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from builtins import zip, filter, range, super, map
+from builtins import map
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
@@ -9,8 +9,8 @@ from multiprocessing import Pool
 
 from expyriment.misc import Clock
 from expyriment.stimuli import Canvas
-from ..pil_image.pil_image import PILImagePlotter
-from .._lib.colour import Colour
+from ._lib.pil_image import PILImagePlotter
+from ._lib.colour import Colour
 
 
 class ExprimentDotArray(Canvas):

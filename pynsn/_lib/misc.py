@@ -4,7 +4,6 @@ Draw a random number from a beta dirstribution
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-import sys
 import random
 from collections import OrderedDict
 import numpy as np

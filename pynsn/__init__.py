@@ -21,9 +21,6 @@ from ._lib.dot_array_sequence import DASequence, generate_da_sequence
 from ._lib.geometry import Dot, Rectangle
 from ._lib.colour import Colour
 from ._lib.item_attributes import ItemAttributesList, ItemAttributes
-from . import visual_features
+from ._lib import visual_features
 from ._lib.logging import LogFile, LogFileReader
-
-# TODO:
-#
-#  target area
+from ._lib.pil_image import PILImagePlotter
