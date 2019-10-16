@@ -71,12 +71,13 @@ class GUIMainWindow(QtGui.QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(QtGui.qApp.quit)
 
-        saveAction = QtGui.QAction('&Save stimulus', self)
-        saveAction.setShortcut('Ctrl+S')
-        saveAction.triggered.connect(self.save_pixmap)
-
         settingsAction = QtGui.QAction('&Settings', self)
         settingsAction.triggered.connect(self.action_settings)
+
+        saveAction = QtGui.QAction('&Save stimulus', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.triggered.connect(self.save_array)
+
 
         printxyAction = QtGui.QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
@@ -89,20 +90,28 @@ class GUIMainWindow(QtGui.QMainWindow):
         sequenceAction = QtGui.QAction('&Make sequence', self)
         sequenceAction.triggered.connect(self.action_make_sequence)
 
+        aboutAction = QtGui.QAction('&About', self)
+
         # self.statusBar()
         menubar = self.menuBar()
 
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(saveAction)
-        fileMenu.addSeparator()
-        fileMenu.addAction(exitAction)
+        arrayMenu = menubar.addMenu('&Array')
+        arrayMenu.addAction(settingsAction)
+        arrayMenu.addAction(saveAction)
+        arrayMenu.addSeparator()
+        arrayMenu.addAction(exitAction)
 
         toolMenu = menubar.addMenu('&Tools')
         toolMenu.addAction(sequenceAction)
-        toolMenu.addAction(settingsAction)
         toolMenu.addAction(matchAction)
+        toolMenu.addSeparator()
         toolMenu.addAction(printparaAction)
         toolMenu.addAction(printxyAction)
+
+        aboutMenu = menubar.addMenu('&About')
+        aboutMenu.addAction(aboutAction)
+
+
 
         # main widget
         self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY[0], DEFAULT_ARRAY[1])
@@ -251,22 +260,30 @@ class GUIMainWindow(QtGui.QMainWindow):
         d['generator'] = self.get_generator().as_dict()
         self.main_widget.text_out("# parameter\n" + yaml.dump(d, default_flow_style=False))
 
-    def save_pixmap(self):
+    def save_array(self):
         """"""
-        # name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
 
         filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
             self,
             'Save file',
-            filter="Image File | .png;; JSON File | .json")
+            "",
+            "Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)"
+        )
 
-        filename = os.path.abspath(filename)
-        ext = extension.split("|")[1].strip()
-        if not filename.endswith(ext):
-            filename = filename + ext
+        if len(filename)>0:
+            filename = os.path.abspath(filename)
 
-        print(filename)
-        #TODO save image
+            ext = extension.split("(")[1].replace(")", "")\
+                                         .replace("*", "").strip()
+            if not filename.endswith(ext):
+                filename = filename + ext
+
+            if ext == ".json":
+                self.data_array.save(filename)
+
+            elif ext == ".png" or ext == ".bmp":
+                self.image().save(filename)
+
 
     def action_match(self):
         """"""
