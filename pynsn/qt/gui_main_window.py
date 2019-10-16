@@ -1,5 +1,6 @@
 
 import yaml
+import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib.dot_array import DotArrayGenerator
@@ -253,9 +254,19 @@ class GUIMainWindow(QtGui.QMainWindow):
     def save_pixmap(self):
         """"""
         # name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+
         filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
-            self, 'Save file', filter=self.tr(".png"))  # TODO multiple file formats FIXME formats selection
-        self.current_image.save(filename + extension, format=str(extension[1:]).upper())
+            self,
+            'Save file',
+            filter="Image File | .png;; JSON File | .json")
+
+        filename = os.path.abspath(filename)
+        ext = extension.split("|")[1].strip()
+        if not filename.endswith(ext):
+            filename = filename + ext
+
+        print(filename)
+        #TODO save image
 
     def action_match(self):
         """"""
