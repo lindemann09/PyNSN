@@ -36,7 +36,7 @@ Installing via `pip`
 python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn
 ```
 
-To generate `pygame` or `expyriment` stimuli install the optional packages
+To generate `pygame` or `expyriment` stimuli install some optional packages
 
 ```
 python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn[expyriment]
@@ -47,7 +47,7 @@ python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn[expyrimen
 RUN GUI tool
 -------------
 
-Note: Using the PyNSN-GUI requires the installation `PyQt4 4.10` or larger
+Note: Using the PyNSN-GUI requires the installation of `PyQt4 4.10` or larger
 
 ```
 python3 -m pynsn.gui
