@@ -2,9 +2,13 @@
 
 """
 """
+try:
+    from PyQt4 import QtGui
+except:
+    raise ModuleNotFoundError("Running the PyNSN GUI requires the installation 'PyQt4' (version 4.10 or larger)")
+
 import sys
 import yaml
-from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from ._lib.dot_array import DotArrayGenerator
 from ._lib.dot_array_sequence import generate_da_sequence
@@ -280,7 +284,7 @@ class PyNSN_GUI(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.attributes.change(colour=self.get_generator().item_feature.colour)
+        self.data_array.attributes.change(colour=self.get_generator().item_attributes.colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):

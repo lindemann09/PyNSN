@@ -11,7 +11,7 @@ from .. import __version__
 from . import misc
 from .dot_array_sequence import DASequence
 from .dot_array import DotArray
-from .item_attributes import ItemAttributesList
+from .item_attributes import ItemAttributes
 
 
 class LogFile(object):
@@ -59,7 +59,7 @@ class LogFile(object):
                      num_format,
                      properties_different_colour,
                      log_colours):
-        """helper function: returns log for dot arry and log for properties"""
+        """helper function: returns log for dot array and log for properties"""
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
             is_sequence = isinstance(dot_array_object, DASequence)
@@ -212,7 +212,7 @@ class LogFileReader(object):
         rtn = DotArray(target_array_radius=target_array_radius)
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], item_diameters=x[1],
-                       attributes=ItemAttributesList(colours=x[2], pictures=x[3]))
+                       attributes=ItemAttributes(colour=x[2], picture=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
             radii = misc.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2

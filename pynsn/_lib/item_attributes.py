@@ -6,7 +6,6 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from .colour import Colour
-from .misc import numpy_vector
 
 class ItemAttributes(object):
 
@@ -14,25 +13,18 @@ class ItemAttributes(object):
         self.colour = Colour(colour)
         self.picture = picture
 
-    def __repr__(self):
-        return 'ItemAttributes(colour={}, picture={})'.format(
-            self.colour, self.picture)
-
-    def to_dict(self):
-        return {"colour": self.colour.colour,
-                "picture": self.picture}
-
 
 class ItemAttributesList(object):
 
-    def __init__(self, colours=None, pictures=None):
+    def __init__(self):
         """If all ItemAttributes should None (but not empty) init with ItemAttributes(colours=[None]),
         otherwise the ItemAttributes will be empty"""
 
+        self.clear()
+
+    def clear(self):
         self.colours = np.array([])
         self.pictures = np.array([])
-        if colours is not None or pictures is not None:
-            self.append(colours=colours, pictures=pictures)
 
     def __iter__(self):
         return map(lambda x: ItemAttributes(colour=x[0], picture=x[1]),
@@ -43,17 +35,24 @@ class ItemAttributesList(object):
                               picture=self.pictures[key])
 
     def as_dict(self):
-        col = map(lambda x: x._colour, self.colours)
-        return {"colours": list(col),
-                "pictures": self.pictures.tolist()}
+
+        rtn = {"colours": list(map(lambda x: x._colour, self.colours))}
+
+        if not np.all(self.pictures == None):
+            rtn.update({"pictures": self.pictures.tolist()})
+        return rtn
+
+    def read_from_dict(self, dict):
+        col = list(map(lambda x: Colour(x), dict["colours"]))
+        self.colours = np.array(col)
+        try:
+            self.pictures = np.array(dict["pictures"])
+        except:
+            self.pictures = np.array([None] * len(self.colours))
 
     @property
     def length(self):
         return len(self.colours)
-
-    def clear(self):
-        self.colours = np.array([])
-        self.pictures = np.array([])
 
     def delete(self, index):
         self.colours = np.delete(self.colours, index)
@@ -73,37 +72,37 @@ class ItemAttributesList(object):
         rtn.pictures = self.pictures.copy()
         return rtn
 
-    def append_attributes(self, attributes):
-        """features: None, ItemAttributes, ItemAttributesList
+    def append(self, attributes):
+        """attributes: ItemAttributes, ItemAttributesList or list of ItemAttributes
         """
 
         if isinstance(attributes, ItemAttributes):
-            self.append(colours=attributes.colour,
-                        pictures=attributes.picture)
+            self._append_lists(colours=[attributes.colour],
+                               pictures=[attributes.picture])
+
+        elif isinstance(attributes, (list, tuple)):
+            # list of ItemAttributes
+            for att in attributes:
+                self.append(att)
+
+        elif isinstance(attributes, ItemAttributesList):
+            self._append_lists(colours=attributes.colours,
+                               pictures=attributes.pictures)
         else:
-            self.append(colours=attributes.colours,
-                        pictures=attributes.pictures)
+            raise ValueError("arrtibutes need to be ItemAttributes, list "
+                             "of ItemAttributes or ItemAttributesList")
 
-    def append(self, colours, pictures):
 
-        # ensure good numpy array or None
-        pictures = numpy_vector(pictures)
-        colours = numpy_vector(colours)
 
-        if (colours is not None and pictures is not None and len(colours) != len(pictures)):
-            raise RuntimeError(u"Bad shaped data: " + u"colour and picture have not the same length.")
+    def _append_lists(self, colours, pictures):
+        # lists of single attributes with equal length
 
-        if colours is None and pictures is None:
-            colours = [None]
-            pictures = [None]
-        elif pictures is None:
-            pictures = [None] * len(colours)
-        elif colours is None:
-            colours = [None] * len(pictures)
+        if (len(colours) != len(pictures)):
+            raise RuntimeError(u"Bad shaped data: attributes have not the same length.")
 
         self.pictures = np.append(self.pictures, pictures)  # TODO check picture exist
-        for c in colours:
-            self.colours = np.append(self.colours, Colour(c))
+        self.colours = np.append(self.colours, list(map(lambda x:Colour(x),
+                                                    colours)))
 
     def change(self, colour=None, picture=None, indices=None):
         """allows using color names and rgb array, since it

@@ -5,6 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
 from hashlib import md5
+import json
 
 import numpy as np
 from scipy import spatial
@@ -14,20 +15,22 @@ from . import visual_features as vf
 
 TWO_PI = 2 * np.pi
 
-class _CollectionFeatures(object):
-    """inherited class needs to defines
-            _xy,
-            surface_areas,
-            perimeter,
-            _ch (convex hull)"""
+class DotCollection(object):
+    """Numpy Position list for optimized for numpy calculations
 
+
+    Position + diameter
+    """
     OBJECT_ID_LENGTH = 8
 
-    _xy = None
-    _diameters = None
-    _ch = None
-    surface_areas = None
-    perimeter = None
+    def __init__(self, xy=None, diameters=None):
+
+        self._xy = np.array([])
+        self._diameters = np.array([])
+        self._ch = None
+        if (xy, diameters) != (None, None):
+            self.append(xy, diameters)
+        self.set_array_modified()
 
     @property
     def xy(self):
@@ -61,6 +64,14 @@ class _CollectionFeatures(object):
         return self._ch.convex_hull.vertices
 
     @property
+    def surface_areas(self):
+        return np.pi * (self._diameters ** 2) / 4.0
+
+    @property
+    def perimeter(self):
+        return np.pi * self._diameters
+
+    @property
     def feature_mean_item_surface_area(self):
         return np.mean(self.surface_areas)
 
@@ -82,7 +93,12 @@ class _CollectionFeatures(object):
 
     @property
     def feature_converage(self):
-        """density takes into account the convex hull"""
+        """ percent coverage in the field area. It takes thus the item size
+        into account. In contrast, the sparsity is only the ratio of field
+        array and numerosity
+
+        """
+
         try:
             return self.feature_total_surface_area / self.feature_field_area
         except:
@@ -117,6 +133,32 @@ class _CollectionFeatures(object):
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.surface_areas.tobytes())
         return m.hexdigest()[:DotCollection.OBJECT_ID_LENGTH]
+
+    def as_dict(self, rounded_values=False):
+        if rounded_values:
+            xy = np.round(self._xy).astype(np.int).tolist()
+            dia = np.round(self._diameters).astype(np.int).tolist()
+        else:
+            xy = self._xy.tolist()
+            dia = self._diameters.tolist()
+        return {"object_id": self.object_id, "xy": xy, "diameters": dia}
+
+    def save(self, json_filename, rounded_values=False, indent=None):
+
+        with open(json_filename, 'w') as fl:
+            json.dump(self.as_dict(rounded_values), fl, indent=indent)
+
+    def load(self, json_filename):
+
+        with open(json_filename, 'r') as fl:
+            dict = json.load(fl)
+        self.read_from_dict(dict)
+
+    def read_from_dict(self, dict):
+        """read Dot collection from dict"""
+        self._xy = np.array(dict["xy"])
+        self._diameters = np.array(dict["diameters"])
+        self.set_array_modified()
 
     def get_features_dict(self):
         """ordered dictionary with the most important feature"""
@@ -169,22 +211,6 @@ class _CollectionFeatures(object):
                 self.feature_logSpacing,
                 self.feature_converage)
         return rtn
-
-class DotCollection(_CollectionFeatures):
-    """Numpy Position list for optimized for numpy calculations
-
-
-    Position + diameter
-    """
-
-    def __init__(self, xy=None, diameters=None):
-
-        self._xy = np.array([])
-        self._diameters = np.array([])
-        self._ch = None
-        if (xy, diameters) != (None, None):
-            self.append(xy, diameters)
-        self.set_array_modified()
 
     def set_array_modified(self):
         self._ch = _EfficientConvexHullDots(self._xy, self._diameters)
@@ -248,14 +274,6 @@ class DotCollection(_CollectionFeatures):
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self._diameters)
-
-    @property
-    def surface_areas(self):
-        return np.pi * (self._diameters ** 2) / 4.0
-
-    @property
-    def perimeter(self):
-        return np.pi * self._diameters
 
     @property
     def feature_mean_item_diameter(self):

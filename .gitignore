@@ -47,3 +47,6 @@ _build/
 # backup file
 .bak
 .Rproj.user
+
+
+test-*

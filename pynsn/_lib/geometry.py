@@ -165,7 +165,7 @@ class Rectangle(Coordinate2D):
 
         Coordinate2D.__init__(self, x=center_x, y=center_y)
         if features is None:
-            self.features = ItemAttributesList(colour=None)
+            self.features = ItemAttributesList()
         else:
             self.features = features
 

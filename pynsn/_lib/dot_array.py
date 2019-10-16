@@ -13,8 +13,7 @@ from scipy import spatial
 from .geometry import Dot
 from . import misc
 from .dot_collection import DotCollection
-from .item_attributes import ItemAttributesList
-from .item_attributes import ItemAttributes
+from .item_attributes import ItemAttributesList, ItemAttributes
 from . import visual_features
 
 TWO_PI = 2 * np.pi
@@ -22,17 +21,25 @@ TWO_PI = 2 * np.pi
 
 class DotArray(DotCollection):
 
-    def __init__(self, target_array_radius, minimum_gap=1, xy=None,
-                 diameters=None, features=None):
+    def __init__(self, target_array_radius=None, minimum_gap=1, xy=None,
+                 diameters=None, features=None, dot_array_file=None):
         """Dot array is restricted to a certain area and can generate random dots and
-            be realigned """
+            be realigned
+
+        target_array_radius or dot_array_file needs to be define."""
 
         DotCollection.__init__(self)
-        self._attributes = ItemAttributesList()
-        self.target_array_radius = target_array_radius
-        self.minimum_gap = minimum_gap
-        if xy is not None or diameters is not None or features is not None:
-            self.append(xy, diameters, attributes=features)
+        if dot_array_file is None:
+            if target_array_radius is None:
+                raise RuntimeError("target_array_radius need to be defined, "
+                                   "if DotArray is not loaded from file.")
+            self._attributes = ItemAttributesList()
+            self.target_array_radius = target_array_radius
+            self.minimum_gap = minimum_gap
+            if xy is not None or diameters is not None or features is not None:
+                self.append(xy, diameters, attributes=features)
+        else:
+            self.load(json_filename=dot_array_file)
 
     @property
     def attributes(self):
@@ -44,22 +51,21 @@ class DotArray(DotCollection):
 
     def append(self, xy, item_diameters, attributes=None):
         """append dots using numpy array
-        features None, ItemFeatureList of ItemFeatures"""
+        attributes ItemAttributes of ItemAttributesList"""
 
         item_diameters = misc.numpy_vector(item_diameters)
-        DotCollection.append(self, xy=xy, item_diameters=item_diameters)
+        super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
-            attributes = ItemAttributesList(colours=[None] * len(item_diameters))
+            attributes = [ItemAttributes()] * len(item_diameters)
         elif len(item_diameters) > 1 and isinstance(attributes, ItemAttributes):
-            tmp = ItemAttributesList()
-            tmp.append_attributes(attributes)
-            attributes = tmp.repeat(len(item_diameters))
+            attributes = [attributes] * len(item_diameters)
 
-        self._attributes.append_attributes(attributes=attributes)
+        self._attributes.append(attributes=attributes)
 
         if (self._attributes.length != len(self._diameters)):
-            raise RuntimeError(u"Bad shaped data: " + u"colour and/or picture has not the same length as diameter")
+            raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
+                                                      u"the same length as diameter")
 
     def delete(self, index):
         DotCollection.delete(self, index)
@@ -293,11 +299,12 @@ class DotArray(DotCollection):
     def random_free_dot_position(self, dot_diameter,
                                  ignore_overlapping=False,
                                  prefer_inside_field_area=False,
+                                 squared_array = False,
                                  occupied_space=None):
         """moves a dot to an available random position
 
         raise exception if not found
-        occupied space: see generator make
+        occupied space: see generator generate
         """
 
         try_out_inside_convex_hull = 1000
@@ -306,14 +313,22 @@ class DotArray(DotCollection):
         else:
             delaunay = None
         cnt = 0
+
+        target_radius = self.target_array_radius - (dot_diameter / 2.0)
         while True:
             cnt += 1
-            proposal_polar = np.random.random(2) * \
-                             (self.target_array_radius - (dot_diameter / 2.0), TWO_PI)
-            proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-
+            ##  polar method seems to produce centeral clustering
+            #  proposal_polar =  np.random.random(2) * (target_radius, TWO_PI)
+            #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
+            proposal_xy = np.random.random(2) * 2 * self.target_array_radius - \
+                        self.target_array_radius
             bad_position = False
-            if prefer_inside_field_area and cnt < try_out_inside_convex_hull:
+            if not squared_array:
+                bad_position =  target_radius <= \
+                                np.hypot(proposal_xy[0], proposal_xy[1])
+
+            if not bad_position and prefer_inside_field_area and cnt < \
+                    try_out_inside_convex_hull:
                 bad_position = delaunay.find_simplex(proposal_xy) < 0
 
             if not bad_position and not ignore_overlapping:
@@ -389,20 +404,19 @@ class DotArray(DotCollection):
                         raise RuntimeError("Can't make the deviant. No free position")
         return deviant
 
-    def yaml_dump(self, document_separator=True):
-        import yaml
-
-        if document_separator:
-            rtn = "---\n# {}, {}\n".format(self.object_id, self.feature_numerosity)
-        else:
-            rtn = ""
-        d = {"minimum_gap": self.minimum_gap,
+    def as_dict(self, rounded_values=False):
+        d = super().as_dict(rounded_values)
+        d.update({"minimum_gap": self.minimum_gap,
              "target_array_radius": self.target_array_radius,
-             "xy": self._xy.tolist(),
-             "diameter": self._diameters.tolist(),
-             "features": self._attributes.as_dict()}
-        return rtn + yaml.dump(d)
+             "attributes": self._attributes.as_dict()})
+        return d
 
+    def read_from_dict(self, dict):
+        super().read_from_dict(dict)
+        self.minimum_gap = dict["minimum_gap"]
+        self.target_array_radius = dict["target_array_radius"]
+        self._attributes = ItemAttributesList()
+        self._attributes.read_from_dict(dict["attributes"])
 
     def match(self, match_features, center_array=True,
               realign = False,
@@ -412,7 +426,7 @@ class DotArray(DotCollection):
         several properties to be matched
 
         if match dot array is specified, array will be match to match_dot_array, otherwise
-        the values defined in match_properties are used.
+        the values defined in match_features is used.
         """
 
         # type check
@@ -591,7 +605,7 @@ class DotArrayGenerator(object):
         self.item_diameter_range = item_diameter_range
         self.item_diameter_mean = item_diameter_mean
         self.item_diameter_std = item_diameter_std
-        self.item_feature = ItemAttributes(colour=item_colour)
+        self.item_attributes = ItemAttributes(colour=item_colour)
 
     def generate(self, n_dots, occupied_space=None, logger=None):
         """occupied_space is a dot array (used for multicolour dot array (join after)
@@ -620,7 +634,7 @@ class DotArrayGenerator(object):
                 xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
             except:
                 return None
-            rtn.append(xy=xy, item_diameters=diameter, attributes=self.item_feature)
+            rtn.append(xy=xy, item_diameters=diameter, attributes=self.item_attributes)
 
         if logger is not None:
             from .logging import LogFile # to avoid circular import
@@ -635,10 +649,11 @@ class DotArrayGenerator(object):
                 "dot_diameter_mean": self.item_diameter_mean,
                 "dot_diameter_range": self.item_diameter_range,
                 "dot_diameter_std": self.item_diameter_std,
-                "dot_colour": self.item_feature.colour.colour,  ##todo feature
+                "dot_colour": self.item_attributes.colour.colour,  ##todo feature
                 "minimum_gap": self.minimum_gap}
 
-    def generate_iter(self, list_of_n_dots, occupied_space=None, logger=None, multiprocessing=False):  # TODO  never checked
+    def generate_iter(self, list_of_n_dots, occupied_space=None, logger=None,
+                      multiprocessing=False):  # TODO  never checked
         args = map(lambda x: (self, x, occupied_space, logger), list_of_n_dots)
 
         if multiprocessing:

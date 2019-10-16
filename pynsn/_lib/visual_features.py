@@ -199,12 +199,13 @@ def check_feature_list(feature_list, check_set_value=False):
     raises TypeError or Runtime errors if checks fail
     * type check
     * dependency check
-    * checks if value is defined
+    * is value defined
     """
     for x in feature_list:
         if not isinstance(x, _BaseFeature):
             raise TypeError("Parameter is not a continuous properties or a " + \
-                            "list of continuous properties")
+                            "list of continuous properties") #FIXME labels
+            # continious property or visual feature
         elif check_set_value and x.value is None:
             raise RuntimeError("Value of continuous property {} is not defined.".format(
                 type(x).__name__))

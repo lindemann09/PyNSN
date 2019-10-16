@@ -114,10 +114,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
 def numpy_vector(x):
     """helper function:
     make an numpy vector from any element (list, arrays, and single data (str, numeric))
-    nut None will not be procesed and returns None"""
-
-    if x is None:
-        return None
+    """
 
     x = np.array(x)
     if x.ndim == 1:
