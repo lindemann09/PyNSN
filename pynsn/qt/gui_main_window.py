@@ -3,11 +3,11 @@ import yaml
 import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.dot_array import DotArrayGenerator
-from .._lib.dot_array_sequence import generate_da_sequence
-from .._lib.logging import LogFile
-from .._lib.colour import Colour
-from .._lib import pil_image
+from ..lib.dot_array import DotArrayGenerator
+from ..lib.dot_array_sequence import generate_da_sequence
+from ..lib.logging import LogFile
+from ..lib.colour import Colour
+from ..lib import pil_image
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
