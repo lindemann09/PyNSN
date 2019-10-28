@@ -21,8 +21,12 @@ TWO_PI = 2 * np.pi
 
 class DotArray(DotCollection):
 
-    def __init__(self, target_array_radius=None, minimum_gap=1, xy=None,
-                 diameters=None, features=None, dot_array_file=None):
+    def __init__(self, target_array_radius=None,
+                 minimum_gap=1,
+                 xy=None,
+                 diameters=None,
+                 features=None,
+                 dot_array_file=None):
         """Dot array is restricted to a certain area and can generate random dots and
             be realigned
 
@@ -568,7 +572,7 @@ class DotArray(DotCollection):
 
 
 
-class DotArrayGenerator(object):
+class DotArrayFactory(object):
 
     def __init__(self,
                  target_area_radius,

@@ -110,7 +110,9 @@ def generate_da_sequence(reference_dot_array,
                   extra_space,  # fitting convex hull and density might result in enlarged arrays
                   center_array=True,
                   logger=None):  # todo could be an iterator
-    """Methods takes take , you might use make Process
+    """factory function
+
+    Methods takes take , you might use make Process
         match_properties:
                 continuous property or list of continuous properties to be match
                 or None
