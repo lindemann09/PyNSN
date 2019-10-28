@@ -74,7 +74,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         settingsAction = QtGui.QAction('&Settings', self)
         settingsAction.triggered.connect(self.action_settings)
 
-        saveAction = QtGui.QAction('&Save stimulus', self)
+        saveAction = QtGui.QAction('&Save current stimulus', self)
         saveAction.setShortcut('Ctrl+S')
         saveAction.triggered.connect(self.save_array)
 
