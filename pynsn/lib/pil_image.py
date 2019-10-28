@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from PIL import Image, ImageDraw
 import numpy as np
-from pynsn._lib.colour import Colour
+from pynsn.lib.colour import Colour
 
 
 class PILImagePlotter(object):

@@ -3,21 +3,21 @@ import yaml
 import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from .._lib.dot_array import DotArrayGenerator
-from .._lib.dot_array_sequence import generate_da_sequence
-from .._lib.logging import LogFile
-from .._lib.colour import Colour
-from .._lib import pil_image
+from ..lib.dot_array import DotArrayFactory
+from ..lib.dot_array_sequence import generate_da_sequence
+from ..lib.logging import LogFile
+from ..lib.colour import Colour
+from ..lib import pil_image
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = (40, DotArrayGenerator(target_area_radius=200,
-                                       item_colour="lime",
-                                       item_diameter_mean=15,
-                                       item_diameter_range=[5, 40],
-                                       item_diameter_std=8,
-                                       minimum_gap=2),
+DEFAULT_ARRAY = (40, DotArrayFactory(target_area_radius=200,
+                                     item_colour="lime",
+                                     item_diameter_mean=15,
+                                     item_diameter_range=[5, 40],
+                                     item_diameter_std=8,
+                                     minimum_gap=2),
                  pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
                                            colour_field_area=None,
                                            colour_field_area_outer=None,
@@ -26,11 +26,11 @@ DEFAULT_ARRAY = (40, DotArrayGenerator(target_area_radius=200,
                                            antialiasing=True,
                                            colour_background="gray"))
 
-ICON = (11, DotArrayGenerator(target_area_radius=200,
-                              item_colour="lime",
-                              item_diameter_mean=35,
-                              item_diameter_range=[5, 80],
-                              item_diameter_std=20),
+ICON = (11, DotArrayFactory(target_area_radius=200,
+                            item_colour="lime",
+                            item_diameter_mean=35,
+                            item_diameter_range=[5, 80],
+                            item_diameter_std=20),
         pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
                                   colour_field_area=None,
                                   colour_field_area_outer="expyriment_orange",
@@ -178,13 +178,13 @@ class GUIMainWindow(QtGui.QMainWindow):
             colour_dot = DEFAULT_ARRAY[1].item_colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return DotArrayGenerator(target_area_radius=self.main_widget.target_array_radius.value,
-                                 item_colour=colour_dot,
-                                 item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                                 item_diameter_range=[self.main_widget.item_diameter_range.value1,
+        return DotArrayFactory(target_area_radius=self.main_widget.target_array_radius.value,
+                               item_colour=colour_dot,
+                               item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                               item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
-                                 item_diameter_std=self.main_widget.item_diameter_std.value,
-                                 minimum_gap=self.main_widget.minimum_gap.value)
+                               item_diameter_std=self.main_widget.item_diameter_std.value,
+                               minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_parameter(self):
         # check colour input

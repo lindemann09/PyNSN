@@ -9,8 +9,8 @@ from multiprocessing import Pool
 
 from expyriment.misc import Clock
 from expyriment.stimuli import Canvas
-from ._lib.pil_image import PILImagePlotter
-from ._lib.colour import Colour
+from .lib.pil_image import PILImagePlotter
+from .lib.colour import Colour
 
 
 class ExprimentDotArray(Canvas):
