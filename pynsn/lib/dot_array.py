@@ -304,7 +304,7 @@ class DotArray(DotCollection):
                                  ignore_overlapping=False,
                                  prefer_inside_field_area=False,
                                  squared_array = False,
-                                 occupied_space=None):
+                                 occupied_space=None): #TODO rounded values
         """moves a dot to an available random position
 
         raise exception if not found
@@ -617,7 +617,7 @@ class DotArrayFactory(object):
         returns None if not possible
         """
 
-        rtn = DotArray(target_array_radius=self.target_array_radius,
+        rtn = DotArray(target_array_radius=self.target_array_radius,  # TODO distance_field_edge ?
                        minimum_gap=self.minimum_gap)
 
         for _ in range(n_dots):

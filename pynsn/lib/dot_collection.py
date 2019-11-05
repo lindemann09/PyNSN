@@ -21,7 +21,6 @@ class DotCollection(object):
 
     Position + diameter
     """
-    OBJECT_ID_LENGTH = 8
 
     def __init__(self, xy=None, diameters=None):
 
@@ -132,7 +131,7 @@ class DotCollection(object):
         m = md5()
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.surface_areas.tobytes())
-        return m.hexdigest()[:DotCollection.OBJECT_ID_LENGTH]
+        return m.hexdigest()
 
     def as_dict(self, rounded_values=False):
         if rounded_values:

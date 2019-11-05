@@ -52,7 +52,7 @@ class DASequence(object):
         m = md5()
         for da in self.dot_arrays:
             m.update(da.object_id.encode("UTF-8"))
-        return m.hexdigest()[:DotArray.OBJECT_ID_LENGTH]
+        return m.hexdigest()
 
     def get_features_dict(self):  # todo search for get_features!
         """dictionary with arrays"""
@@ -107,7 +107,7 @@ class DASequence(object):
 def generate_da_sequence(reference_dot_array,
                   match_properties,
                   min_max_numerosity,
-                  extra_space,  # fitting convex hull and density might result in enlarged arrays
+                  extra_space,  #  later fitting of convex hull and density might result in enlarged arrays
                   center_array=True,
                   logger=None):  # todo could be an iterator
     """factory function

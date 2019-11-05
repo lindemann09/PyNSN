@@ -7,6 +7,7 @@ from functools import total_ordering
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
+
 @total_ordering
 class Colour(object):
 
