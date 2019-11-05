@@ -27,8 +27,8 @@ class DotArray(DotCollection):
                  diameters=None,
                  features=None,
                  dot_array_file=None):
-        """Dot array is restricted to a certain area and can generate random dots and
-            be realigned
+        """Dot array is restricted to a certain area and can shuffle positions
+        and find random free space and be realigned itself
 
         target_array_radius or dot_array_file needs to be define."""
 
@@ -617,7 +617,7 @@ class DotArrayFactory(object):
         returns None if not possible
         """
 
-        rtn = DotArray(target_array_radius=self.target_array_radius,  # - distance_field_edge ?
+        rtn = DotArray(target_array_radius=self.target_array_radius,
                        minimum_gap=self.minimum_gap)
 
         for _ in range(n_dots):
@@ -668,6 +668,6 @@ class DotArrayFactory(object):
 
 def _make_imap_helper(args):
     generator = args[0]
-    return generator.plot(reference_dot_array=args[1],
-                          occupied_space=args[2],
-                          logger=args[3])
+    return generator._create_pil_image(reference_dot_array=args[1],
+                                       occupied_space=args[2],
+                                       logger=args[3])

@@ -9,49 +9,37 @@ from multiprocessing import Pool
 
 from expyriment.misc import Clock
 from expyriment.stimuli import Canvas
-from .lib.pil_image import PILImagePlotter
-from .lib.colour import Colour
+from .lib import pil_image
+from .lib.colour import ImageColours
 
 
 class ExprimentDotArray(Canvas):
 
     def __init__(self, dot_array,
-                 # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colour_target_area=None,
-                 colour_field_area=None,
-                 colour_field_area_outer=None,
-                 colour_center_of_mass=None,
-                 colour_center_of_outer_positions=None,
-                 antialiasing=True,
-                 colour_background=(0, 0, 0)):
+                 colours = ImageColours(),
+                 antialiasing=True):
+
+        if not isinstance(colours, ImageColours):
+            raise ValueError("Colours must be a ImageColours instance")
+
         Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
-        self.colour_field_area = Colour(colour_field_area)
-        self.colour_field_area_outer = Colour(colour_field_area_outer)
-        self.colour_center_of_mass = Colour(colour_center_of_mass)
-        self.colour_center_of_outer_positions = Colour(colour_center_of_outer_positions)
-        self.colour_target_area = Colour(colour_target_area)
-        self.colour_background = Colour(colour_background)
+        self.colours = colours
         self.antialiasing = antialiasing
         self._image = None
 
     @property
     def image(self):
         if self._image is None:
-            self.make_pil_image()
+            self._create_pil_image()
 
         return self._image
 
-    def make_pil_image(self):
-        gen = PILImagePlotter(colour_target_area=self.colour_target_area,
-                              colour_field_area=self.colour_field_area,
-                              colour_field_area_outer=self.colour_field_area_outer,
-                              colour_center_of_mass=self.colour_center_of_mass,
-                              colour_center_of_outer_positions=self.colour_center_of_outer_positions,
-                              antialiasing=self.antialiasing,
-                              colour_background=self.colour_background)
-        self._image = gen.plot(dot_array=self.dot_array)
+    def _create_pil_image(self):
+        self._image = pil_image.create(dot_array=self.dot_array,
+                                       colours= self.colours,
+                                       antialiasing=self.antialiasing) #TODO gabor filter
         return self._image
 
     def _create_surface(self):
@@ -66,29 +54,29 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colour_target_area=None,
+                 colours = ImageColours(),
                  antialiasing=None,
-                 colour_background=(0, 0, 0),
                  make_pil_images_now=False,
                  multiprocessing=False):
+
+        if not isinstance(colours, ImageColours):
+            raise ValueError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence
         self.stimuli = []
         self.position = position
-        self.colour_area = colour_target_area
         self.antialiasing = antialiasing
-        self.colour_background = colour_background
 
         for da in self.da_sequence.dot_arrays:
             stim = ExprimentDotArray(dot_array=da, position=position,
-                                     colour_target_area=colour_target_area, antialiasing=antialiasing,
-                                     colour_background=colour_background)
+                                     colours=colours,
+                                     antialiasing=antialiasing)
             self.stimuli.append(stim)
 
         if make_pil_images_now:
 
             if not multiprocessing:
-                list(map(lambda x: x.make_pil_image(), self.stimuli))
+                list(map(lambda x: x._create_pil_image(), self.stimuli))
                 self._make_image_process = None
             else:
                 p = Pool()
@@ -154,4 +142,4 @@ class ExpyrimentDASequence(object):
 
     @staticmethod
     def _make_stimuli_map_helper(x):
-        return x.make_pil_image()
+        return x._create_pil_image()

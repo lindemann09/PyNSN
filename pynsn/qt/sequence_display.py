@@ -7,8 +7,9 @@ from pynsn.lib import pil_image
 from . import misc
 
 def _map_make_image(x):
-    da, gen = x
-    return gen.plot(dot_array=da)
+    da, colours, aa = x
+    return pil_image.create(dot_array=da, colours=colours,
+                            antialiasing=aa)
 
 
 class SequenceDisplay(QtGui.QDialog):
@@ -36,16 +37,19 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        pil_generator = pil_image.PILImagePlotter(colour_target_area=image_parameter.colour_target_area,
-                                                  colour_field_area=image_parameter.colour_field_area,
-                                                  colour_field_area_outer=image_parameter.colour_field_area_outer,
-                                                  colour_center_of_mass=image_parameter.colour_center_of_mass,
-                                                  colour_center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
-                                                  antialiasing=image_parameter.antialiasing,
-                                                  colour_background=image_parameter.colour_background)
-        pil_generator = [pil_generator] * len(self.da_sequence.dot_arrays)
+        image_colours = pil_image.ImageColours(
+            target_area=image_parameter.colour_target_area,
+            field_area=image_parameter.colour_field_area,
+            field_area_outer=image_parameter.colour_field_area_outer,
+            center_of_mass=image_parameter.colour_center_of_mass,
+            center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
+            background=image_parameter.colour_background)
+        image_colours = [image_colours] * len(self.da_sequence.dot_arrays)
+        antialiasing = [image_parameter.antialiasing] * len(self.da_sequence.dot_arrays)
 
-        iter_images = Pool().imap(_map_make_image, zip(self.da_sequence.dot_arrays, pil_generator))
+        iter_images = Pool().imap(_map_make_image,
+                                  zip(self.da_sequence.dot_arrays,
+                                      image_colours, antialiasing))
         progbar_iter = misc.progressbar_iterator(iter_images,
                                                  n_elements=len(self.da_sequence.dot_arrays),
                                                  label="make images", win_title="Dot Array Sequence")

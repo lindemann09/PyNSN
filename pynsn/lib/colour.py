@@ -7,7 +7,6 @@ from functools import total_ordering
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
-
 @total_ordering
 class Colour(object):
 
@@ -224,3 +223,35 @@ class Colour(object):
         'expyriment_orange': '#FF9632',
         'expyriment_purple': '#A046FA'
     }
+
+
+class ImageColours(object):
+
+    def __init__(self,
+                 target_area=None,
+                 field_area=None,
+                 field_area_outer=None,
+                 center_of_mass=None,
+                 center_of_outer_positions=None,
+                 background=None,
+                 default_dot_colour=Colour("lightgreen"),  # used if no color
+                 # specified in dot array
+                 ):
+
+        self.target_area = Colour(target_area)
+        self.field_area = Colour(field_area)
+        self.field_area_outer = Colour(field_area_outer)
+        self.center_of_mass = Colour(center_of_mass)
+        self.center_of_outer_positions = Colour(center_of_outer_positions)
+        self.background = Colour(background)
+        self.default_dot_colour = Colour(default_dot_colour)
+
+    def as_dict(self):
+        return {"colour_total_area": self.target_area.colour,
+                "colour_field_area": self.field_area.colour,
+                "colour_field_area_outer": self.field_area_outer.colour,
+                "colour_center_of_mass": self.center_of_mass.colour,
+                "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
+                "colour_background": self.background.colour,
+                "default_dot_colour": self.default_dot_colour.colour}
+

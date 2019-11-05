@@ -65,25 +65,26 @@ class MatchPropertyDialog(QtGui.QDialog):
 
 
 class SettingsDialog(QtGui.QDialog):
-    def __init__(self, parent, image_parameter):
+
+    def __init__(self, parent, image_colours):
         super(SettingsDialog, self).__init__(parent)
 
         self.setWindowTitle("Dot Array Property")
 
         self.colour_area = misc.LabeledInput("Traget Area",
-                                             text=image_parameter.colour_target_area.colour,
+                                             text=image_colours.target_area.colour,
                                              case_sensitive=False)
         self.colour_background = misc.LabeledInput("Background",
-                                                   text=image_parameter.colour_background.colour,
+                                                   text=image_colours.background.colour,
                                                    case_sensitive=False)
         self.colour_convex_hull_positions = misc.LabeledInput("Colour field area",
-                                                              text=image_parameter.colour_field_area.colour,
+                                                              text=image_colours.field_area.colour,
                                                               case_sensitive=False)
         self.colour_convex_hull_dots = misc.LabeledInput("Colour field area outer",
-                                                         text=image_parameter.colour_field_area_outer.colour,
+                                                         text=image_colours.field_area_outer.colour,
                                                          case_sensitive=False)
         self.antialiasing = QtGui.QCheckBox("Antialiasing")
-        self.antialiasing.setChecked(image_parameter.antialiasing)
+        self.antialiasing.setChecked(True)
 
         self.bicoloured = QtGui.QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)

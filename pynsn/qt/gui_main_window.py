@@ -3,6 +3,7 @@ import yaml
 import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
+from PIL import ImageFilter
 from ..lib.dot_array import DotArrayFactory
 from ..lib.dot_array_sequence import generate_da_sequence
 from ..lib.logging import LogFile
@@ -18,26 +19,24 @@ DEFAULT_ARRAY = (40, DotArrayFactory(target_area_radius=200,
                                      item_diameter_range=[5, 40],
                                      item_diameter_std=8,
                                      minimum_gap=2),
-                 pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
-                                           colour_field_area=None,
-                                           colour_field_area_outer=None,
-                                           colour_center_of_mass=None,
-                                           colour_center_of_outer_positions=None,
-                                           antialiasing=True,
-                                           colour_background="gray"))
+                 pil_image.ImageColours(target_area="#3e3e3e",
+                                        field_area=None,
+                                        field_area_outer=None,
+                                        center_of_mass=None,
+                                        center_of_outer_positions=None,
+                                        background="gray"))
 
 ICON = (11, DotArrayFactory(target_area_radius=200,
                             item_colour="lime",
                             item_diameter_mean=35,
                             item_diameter_range=[5, 80],
                             item_diameter_std=20),
-        pil_image.PILImagePlotter(colour_target_area="#3e3e3e",
-                                  colour_field_area=None,
-                                  colour_field_area_outer="expyriment_orange",
-                                  colour_center_of_mass=None,
-                                  colour_center_of_outer_positions=None,
-                                  antialiasing=True,
-                                  colour_background=None))
+        pil_image.ImageColours(target_area="#3e3e3e",
+                               field_area=None,
+                               field_area_outer="expyriment_orange",
+                               center_of_mass=None,
+                               center_of_outer_positions=None,
+                               background=None))
 
 
 class GUIMainWindow(QtGui.QMainWindow):
@@ -49,7 +48,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         self._image = None
         self.data_array = None
         self.set_loging(False)  # todo checkbox in settings
-        self.settings = dialogs.SettingsDialog(self, DEFAULT_ARRAY[2])
+        self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY[2])
         self.initUI()
         self.show()
 
@@ -124,9 +123,11 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.setWindowTitle('PyNSN GUI')
 
         # ICON
-        pil_generator = ICON[2]
+        colours = ICON[2]
         da_generator = ICON[1]
-        self._image = pil_generator.plot(dot_array=da_generator.generate(n_dots=ICON[0]))
+        self._image = pil_image.create(
+                        dot_array=da_generator.generate(n_dots=ICON[0]),
+                        colours=colours, antialiasing=True)
 
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
         self._image = None
@@ -155,16 +156,20 @@ class GUIMainWindow(QtGui.QMainWindow):
         if self._image is not None:
             return self._image
         else:
-            para = self.get_image_parameter()
-            pil_gen = pil_image.PILImagePlotter(colour_target_area=para.colour_target_area,
-                                                colour_field_area=para.colour_field_area,
-                                                colour_field_area_outer=para.colour_field_area_outer,
-                                                colour_center_of_mass=para.colour_center_of_mass,
-                                                colour_center_of_outer_positions=para.colour_center_of_outer_positions,
-                                                antialiasing=para.antialiasing,
-                                                colour_background=para.colour_background)
+            para = self.get_image_colours()
+            image_colours = pil_image.ImageColours(
+                target_area=para.target_area,
+                field_area=para.field_area,
+                field_area_outer=para.field_area_outer,
+                center_of_mass=para.center_of_mass,
+                center_of_outer_positions=para.center_of_outer_positions,
+                background=para.background)
 
-            self._image = pil_gen.plot(dot_array=self.data_array)
+            self._image = pil_image.create(dot_array=self.data_array,
+                                           colours=image_colours,
+                                           antialiasing=self.settings.antialiasing.isChecked())
+                                            # todo maybe: gabor_filter=ImageFilter.GaussianBlur
+
             return self._image
 
     def get_number(self):
@@ -186,7 +191,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                                item_diameter_std=self.main_widget.item_diameter_std.value,
                                minimum_gap=self.main_widget.minimum_gap.value)
 
-    def get_image_parameter(self):
+    def get_image_colours(self):
         # check colour input
 
         try:
@@ -210,13 +215,12 @@ class GUIMainWindow(QtGui.QMainWindow):
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return pil_image.PILImagePlotter(colour_target_area=colour_area,
-                                         colour_field_area=colour_convex_hull_positions,
-                                         colour_field_area_outer=colour_convex_hull_dots,
-                                         colour_center_of_mass=None,
-                                         colour_center_of_outer_positions=None,
-                                         antialiasing=self.settings.antialiasing.isChecked(),
-                                         colour_background=colour_background)
+        return pil_image.ImageColours(target_area=colour_area,
+                                      field_area=colour_convex_hull_positions,
+                                      field_area_outer=colour_convex_hull_dots,
+                                      center_of_mass=None,
+                                      center_of_outer_positions=None,
+                                      background=colour_background)
 
     def pixmap(self):
         return QtGui.QPixmap.fromImage(ImageQt(self.image()))
@@ -256,7 +260,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_print_para(self):
         d = {'number': self.get_number()}
-        d['image_parameter'] = self.get_image_parameter().as_dict()
+        d['image_parameter'] = self.get_image_colours().as_dict()
         d['generator'] = self.get_generator().as_dict()
         self.main_widget.text_out("# parameter\n" + yaml.dump(d, default_flow_style=False))
 
@@ -332,6 +336,6 @@ class GUIMainWindow(QtGui.QMainWindow):
                                    logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.feature_numerosity,
-                            image_parameter=self.get_image_parameter()).exec_()
+                            image_parameter=self.get_image_colours()).exec_()
 
 
