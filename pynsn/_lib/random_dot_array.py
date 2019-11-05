@@ -68,26 +68,18 @@ def create(n_dots, specs, occupied_space=None,
                     # distance_field_edge ?
                    minimum_gap=specs.minimum_gap)
 
-    for _ in range(n_dots):
+    # random diamter from beta distribution with exact mean and str
+    diameters = _misc.random_beta(size=n_dots,
+                                 number_range=specs.item_diameter_range,
+                                 mean=specs.item_diameter_mean,
+                                 std=specs.item_diameter_std)
 
-        # diameter
-        if specs.item_diameter_range is None or \
-                specs.item_diameter_std is None:
-            # constant diameter
-            diameter = specs.item_diameter_mean
-        else:
-            # draw diameter from beta distribution
-            parameter = _misc.shape_parameter_beta(specs.item_diameter_range,
-                                                  specs.item_diameter_mean,
-                                                  specs.item_diameter_std)
-            diameter = _misc.random_beta(
-                specs.item_diameter_range, parameter)
-
+    for dia in diameters:
         try:
-            xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
+            xy = rtn.random_free_dot_position(dot_diameter=dia, occupied_space=occupied_space)
         except:
             return None
-        rtn.append(xy=xy, item_diameters=diameter, attributes=specs.item_attributes)
+        rtn.append(xy=xy, item_diameters=dia, attributes=specs.item_attributes)
 
     if logger is not None:
         from ._logging import LogFile # to avoid circular import

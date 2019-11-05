@@ -4,7 +4,6 @@ Draw a random number from a beta dirstribution
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-import random
 from collections import OrderedDict
 import numpy as np
 from scipy import spatial
@@ -28,20 +27,22 @@ def is_byte_string(s):
 
 # randomizing
 
-random.seed()
+np.random.seed()
 
-
-def random_beta(number_range, parameter):
+def random_beta(size, number_range, mean, std):
     """Draw from beta distribution defined by the
-    number_range [a,b] and the shape parameters [alpha, beta]
+    number_range [a,b] and mean and standard distribution
+
+    Resulting distribution has the defined mean and std
+
+    for calculated shape parameters [alpha, beta] see `shape_parameter_beta`
 
     Parameter:
     ----------
     number_range : tuple (numeric, numeric)
         the range of the distribution
-    parameter: tuple
-        shape parameter (alpha, beta) of the distribution
-        see parameter function()
+    mean: numeric
+    std: numeric TODO
 
     Note:
     -----
@@ -49,10 +50,15 @@ def random_beta(number_range, parameter):
     distribution is left or right skewed.
 
     """
+    if std is None or number_range is None or std == 0:
+        return np.array([mean]*size)
 
-    return number_range[0] + (number_range[1] - number_range[0]) \
-           * random.betavariate(alpha=parameter[0], beta=parameter[1])
-
+    alpha, beta = shape_parameter_beta(number_range=number_range,
+                                       mean=mean,
+                                       std=std)
+    dist = np.random.beta(a=alpha, b=beta, size=size)
+    dist = (dist - np.mean(dist)) / np.std(dist) # z values
+    return dist*std + mean
 
 def shape_parameter_beta(number_range, mean, std):
     """Returns alpha (p) & beta (q) parameter for the beta distribution
