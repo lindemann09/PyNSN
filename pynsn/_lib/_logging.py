@@ -10,8 +10,8 @@ import atexit
 from .. import __version__
 from . import misc
 from .dot_array_sequence import DASequence
-from .dot_array import DotArray
-from .item_attributes import ItemAttributes
+from ._dot_array import DotArray
+from ._item_attributes import ItemAttributes
 
 
 class LogFile(object):

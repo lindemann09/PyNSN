@@ -1,10 +1,8 @@
-"""
-Dot Array
-"""
+
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
-from .item_attributes import ItemAttributes, ItemAttributesList
+from ._item_attributes import ItemAttributes, ItemAttributesList
 
 class Coordinate2D(object):
 

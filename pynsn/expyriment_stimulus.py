@@ -1,29 +1,26 @@
-from __future__ import absolute_import
-from builtins import map
-
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-import math
-import pygame
-from multiprocessing import Pool
+import math as _math
+import pygame as _pygame
+from multiprocessing import Pool as _Pool
 
-from expyriment.misc import Clock
-from expyriment.stimuli import Canvas
-from .lib import pil_image
-from .lib.colour import ImageColours
+from expyriment.misc import Clock as _Clock
+from expyriment.stimuli import Canvas as _Canvas
+from ._lib import pil_image as _pil_image
+from ._lib import _colour
 
 
-class ExprimentDotArray(Canvas):
+class ExprimentDotArray(_Canvas):
 
     def __init__(self, dot_array,
                  position=(0, 0),
-                 colours = ImageColours(),
+                 colours = _colour.ImageColours(),
                  antialiasing=True):
 
-        if not isinstance(colours, ImageColours):
+        if not isinstance(colours, _colour.ImageColours):
             raise ValueError("Colours must be a ImageColours instance")
 
-        Canvas.__init__(self, size=(0, 0), position=position)
+        _Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
         self.colours = colours
         self.antialiasing = antialiasing
@@ -37,14 +34,14 @@ class ExprimentDotArray(Canvas):
         return self._image
 
     def _create_pil_image(self):
-        self._image = pil_image.create(dot_array=self.dot_array,
+        self._image = _pil_image.create(dot_array=self.dot_array,
                                        colours= self.colours,
                                        antialiasing=self.antialiasing) #TODO gabor filter
         return self._image
 
     def _create_surface(self):
         self._size = self.image.size
-        return pygame.image.frombuffer(self.image.tobytes(),
+        return _pygame.image.frombuffer(self.image.tobytes(),
                                        self.image.size,
                                        self.image.mode)
 
@@ -54,12 +51,12 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colours = ImageColours(),
+                 colours = _colour.ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):
 
-        if not isinstance(colours, ImageColours):
+        if not isinstance(colours, _colour.ImageColours):
             raise ValueError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence
@@ -79,7 +76,7 @@ class ExpyrimentDASequence(object):
                 list(map(lambda x: x._create_pil_image(), self.stimuli))
                 self._make_image_process = None
             else:
-                p = Pool()
+                p = _Pool()
 
                 for c, pil_im in enumerate(p.imap(ExpyrimentDASequence._make_stimuli_map_helper, self.stimuli)):
                     self.stimuli[c]._image = pil_im
@@ -110,12 +107,12 @@ class ExpyrimentDASequence(object):
 
         """
         if until_percent > 0 and until_percent < 100:
-            last = int(math.floor(until_percent * len(self.stimuli) / 100.0))
+            last = int(_math.floor(until_percent * len(self.stimuli) / 100.0))
         elif until_percent == 0:
             last = 0
         else:
             last = len(self.stimuli)
-        cl = Clock()
+        cl = _Clock()
 
         try:
             for x in self.stimuli[:last]:

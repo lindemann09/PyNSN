@@ -3,12 +3,13 @@ Dot Array Sequence
 """
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from hashlib import md5
-import numpy as np
+from hashlib import md5 as _md5
+import numpy as _np
 
-from copy import copy
-from . import misc, visual_features
-from .dot_array import DotArray
+from copy import copy as _copy
+from . import misc as _misc
+from . import visual_features as _vf
+from ._dot_array import DotArray as _DotArray
 
 class DASequence(object):
 
@@ -24,7 +25,7 @@ class DASequence(object):
         self.numerosity_idx = {}
 
     def append_dot_arrays(self, arr):
-        if isinstance(arr, DotArray):
+        if isinstance(arr, _DotArray):
             arr = [arr]
         self.dot_arrays.extend(arr)
         self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
@@ -49,7 +50,7 @@ class DASequence(object):
     def object_id(self):
         """meta hash of object ids"""
 
-        m = md5()
+        m = _md5()
         for da in self.dot_arrays:
             m.update(da.object_id.encode("UTF-8"))
         return m.hexdigest()
@@ -58,15 +59,15 @@ class DASequence(object):
         """dictionary with arrays"""
 
         dicts = [x.get_features_dict() for x in self.dot_arrays]
-        rtn = misc.join_dict_list(dicts)
+        rtn = _misc.join_dict_list(dicts)
         rtn['object_id'] = [self.object_id] * len(self.dot_arrays)  # all arrays have the same ID
         return rtn
 
     def get_numerosity_correlations(self):
         feat = self.get_features_dict()
         del feat['object_id']
-        feat_np = np.round(np.array(feat.values()).T, 2)
-        cor = np.corrcoef(feat_np, rowvar=False)
+        feat_np = _np.round(_np.array(feat.values()).T, 2)
+        cor = _np.corrcoef(feat_np, rowvar=False)
         cor = cor[0, :]
         names = feat.keys()
         rtn = {}
@@ -104,12 +105,12 @@ class DASequence(object):
             return rtn
 
 
-def generate_da_sequence(reference_dot_array,
-                  match_properties,
-                  min_max_numerosity,
-                  extra_space,  #  later fitting of convex hull and density might result in enlarged arrays
-                  center_array=True,
-                  logger=None):  # todo could be an iterator
+def create(reference_dot_array,
+           match_properties,
+           min_max_numerosity,
+           extra_space,  #  later fitting of convex hull and density might result in enlarged arrays
+           center_array=True,
+           logger=None):  # todo could be an iterator
     """factory function
 
     Methods takes take , you might use make Process
@@ -130,9 +131,9 @@ def generate_da_sequence(reference_dot_array,
         match_properties = []
     elif not isinstance(match_properties, (tuple, list)):
         match_properties = [match_properties]
-    visual_features.check_feature_list(match_properties, check_set_value=False)
+    _vf.check_feature_list(match_properties, check_set_value=False)
 
-    if not isinstance(reference_dot_array, DotArray):
+    if not isinstance(reference_dot_array, _DotArray):
         raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
             type(reference_dot_array).__name__))
 
@@ -141,11 +142,12 @@ def generate_da_sequence(reference_dot_array,
     match_props = []
     prefer_keeping_field_area = False
     for m in match_properties:
-        m = copy(m)
+        m = _copy(m)
         m.adapt_value(reference_dot_array)
         match_props.append(m)
-        if isinstance(m, visual_features.LogSpacing().dependencies) or \
-                (isinstance(m, visual_features.Coverage) and m.match_ratio_fieldarea2totalarea < 1):
+        if isinstance(m, _vf.LogSpacing().dependencies) or \
+                (isinstance(m, _vf.Coverage) and
+                 m.match_ratio_fieldarea2totalarea < 1):
             prefer_keeping_field_area = True
             break
 
@@ -185,7 +187,7 @@ def generate_da_sequence(reference_dot_array,
             rtn.error = error
 
     if logger is not None:
-        from .logging import LogFile # to avoid circular import
+        from ._logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile):
             raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
                 type(logger).__name__))

@@ -5,24 +5,317 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from copy import copy
 import random
-from multiprocessing import Pool
+from collections import OrderedDict
+from hashlib import md5
+import json
 
 import numpy as np
 from scipy import spatial
 
 from .geometry import Dot
 from . import misc
-from .dot_collection import DotCollection
-from .item_attributes import ItemAttributesList, ItemAttributes
-from . import visual_features
+from ._item_attributes import ItemAttributesList, ItemAttributes
+from . import visual_features as vf
+
 
 TWO_PI = 2 * np.pi
+
+class DotCollection(object):
+    """Numpy Position list for optimized for numpy calculations
+
+
+    Position + diameter
+    """
+
+    def __init__(self, xy=None, diameters=None):
+
+        self._xy = np.array([])
+        self._diameters = np.array([])
+        self._ch = None
+        if (xy, diameters) != (None, None):
+            self.append(xy, diameters)
+        self.set_array_modified()
+
+    @property
+    def xy(self):
+        return self._xy
+
+    @property
+    def rounded_xy(self):
+        """rounded to integer"""
+        return np.array(np.round(self._xy), dtype=np.int32)
+
+    @property
+    def center_of_outer_positions(self):
+        minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
+        return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
+
+    @property
+    def feature_mean_item_diameter(self):
+        return np.mean(self._diameters)
+
+    @property
+    def feature_total_surface_area(self):
+        return np.sum(self.surface_areas)
+
+    @property
+    def convex_hull_positions(self):  # FIXME not defined for l<3
+        return self._xy[self.convex_hull_indices, :]
+
+    @property
+    def convex_hull_indices(self):  # FIXME not defined for l<3
+        """this convex_hull takes into account the dot diameter"""
+        return self._ch.convex_hull.vertices
+
+    @property
+    def surface_areas(self):
+        return np.pi * (self._diameters ** 2) / 4.0
+
+    @property
+    def perimeter(self):
+        return np.pi * self._diameters
+
+    @property
+    def feature_mean_item_surface_area(self):
+        return np.mean(self.surface_areas)
+
+    @property
+    def feature_total_perimeter(self):
+        return np.sum(self.perimeter)
+
+    @property
+    def feature_mean_item_perimeter(self):
+        return np.mean(self.perimeter)
+
+    @property
+    def feature_field_area(self):  # todo: not defined for small n
+        return self._ch.convex_hull.volume
+
+    @property
+    def feature_numerosity(self):
+        return len(self._xy)
+
+    @property
+    def feature_converage(self):
+        """ percent coverage in the field area. It takes thus the item size
+        into account. In contrast, the sparsity is only the ratio of field
+        array and numerosity
+
+        """
+
+        try:
+            return self.feature_total_surface_area / self.feature_field_area
+        except:
+            return None
+
+    @property
+    def feature_logSize(self):
+        return misc.log2(self.feature_total_surface_area) + misc.log2(
+            self.feature_mean_item_surface_area)
+
+    @property
+    def feature_logSpacing(self):
+        return misc.log2(self.feature_field_area) + misc.log2(
+            self.feature_sparsity)
+
+    @property
+    def feature_sparsity(self):
+        return self.feature_field_area / self.feature_numerosity
+
+    @property
+    def convex_hull_positions_full(self):  # FIXME not defined for l<3
+        """this convex_hull takes into account the dot diameter"""
+        return self._ch.full_xy
+
+    @property
+    def feature_field_area_full(self):  # FIXME not used (correct?)
+        return self._ch.full_field_area
+
+    @property
+    def object_id(self):
+        """md5_hash of position, diameter"""
+
+        m = md5()
+        m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
+        m.update(self.surface_areas.tobytes())
+        return m.hexdigest()
+
+    def as_dict(self, rounded_values=False):
+        if rounded_values:
+            xy = np.round(self._xy).astype(np.int).tolist()
+            dia = np.round(self._diameters).astype(np.int).tolist()
+        else:
+            xy = self._xy.tolist()
+            dia = self._diameters.tolist()
+        return {"object_id": self.object_id, "xy": xy, "diameters": dia}
+
+    def save(self, json_filename, rounded_values=False, indent=None):
+
+        with open(json_filename, 'w') as fl:
+            json.dump(self.as_dict(rounded_values), fl, indent=indent)
+
+    def load(self, json_filename):
+
+        with open(json_filename, 'r') as fl:
+            dict = json.load(fl)
+        self.read_from_dict(dict)
+
+    def read_from_dict(self, dict):
+        """read Dot collection from dict"""
+        self._xy = np.array(dict["xy"])
+        self._diameters = np.array(dict["diameters"])
+        self.set_array_modified()
+
+    def get_features_dict(self):
+        """ordered dictionary with the most important feature"""
+        rtn = [("Object_id", self.object_id),
+               ("Numerosity", self.feature_numerosity),
+               (vf.TotalSurfaceArea.label, self.feature_total_surface_area),
+               (vf.ItemSurfaceArea.label, self.feature_mean_item_surface_area),
+               (vf.ItemDiameter.label, self.feature_mean_item_diameter),
+               (vf.ItemPerimeter.label, self.feature_mean_item_perimeter),
+               (vf.TotalPerimeter.label, self.feature_total_perimeter),
+               (vf.FieldArea.label, self.feature_field_area),
+               (vf.Sparsity.label, self.feature_sparsity),
+               (vf.Coverage.label, self.feature_converage),
+               (vf.LogSize.label, self.feature_logSize),
+               (vf.LogSpacing.label, self.feature_logSpacing)]
+        return OrderedDict(rtn)
+
+    def get_features_text(self, with_object_id=True, extended_format=False, spacing_char="."):
+        if extended_format:
+            rtn = None
+            for k, v in self.get_features_dict().items():
+                if rtn is None:
+                    if with_object_id:
+                        rtn = "- {}\n".format(v)
+                    else:
+                        rtn = ""
+                else:
+                    if rtn == "":
+                        name = "- " + k
+                    else:
+                        name = "  " + k
+                    try:
+                        value = "{0:.2f}\n".format(v)  # try rounding
+                    except:
+                        value = "{}\n".format(v)
+
+                    rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
+        else:
+            if with_object_id:
+                rtn = "id: {}".format(self.object_id)
+            else:
+                rtn = ""
+            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: {:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
+                self.feature_numerosity,
+                int(self.feature_total_surface_area),
+                int(self.feature_mean_item_surface_area),
+                int(self.feature_field_area),
+                self.feature_sparsity,
+                self.feature_logSize,
+                self.feature_logSpacing,
+                self.feature_converage)
+        return rtn
+
+    def set_array_modified(self):
+        self._ch = misc.EfficientConvexHullDots(self._xy, self._diameters)
+
+    @property
+    def diameters(self):
+        return self._diameters
+
+    def append(self, xy, item_diameters):
+        """append dots using numpy array"""
+
+        # ensure numpy array
+        item_diameters = misc.numpy_vector(item_diameters)
+        # ensure xy is a 2d array
+        xy = np.array(xy)
+        if xy.ndim == 1 and len(xy) == 2:
+            xy = xy.reshape((1, 2))
+        if xy.ndim != 2:
+            raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+
+        if xy.shape[0] != len(item_diameters):
+            raise RuntimeError("Bad shaped data: " + u"xy has not the same length as item_diameters")
+
+        if len(self._xy) == 0:
+            self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
+        self._xy = np.append(self._xy, xy, axis=0)
+        self._diameters = np.append(self._diameters, item_diameters)
+        self.set_array_modified()
+
+    def clear(self):
+        self._xy = np.array([[]])
+        self._diameters = np.array([])
+        self.set_array_modified()
+
+    def delete(self, index):
+        self._xy = np.delete(self._xy, index, axis=0)
+        self._diameters = np.delete(self._diameters, index)
+        self.set_array_modified()
+
+    def copy(self, indices=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+        if indices is None:
+            indices = list(range(self.feature_numerosity))
+
+        return DotCollection(xy=self._xy[indices, :].copy(),
+                             diameters=self._diameters[indices].copy())
+
+    def distances(self, xy, diameter):
+        """Distances toward a single point (xy, diameter) """
+        if len(self._xy) == 0:
+            return np.array([])
+        else:
+            return np.hypot(self._xy[:, 0] - xy[0], self._xy[:, 1] - xy[1]) - \
+                   ((self._diameters + diameter) / 2.0)
+
+    @property
+    def center_of_mass(self):
+        weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
+        return weighted_sum / np.sum(self._diameters)
+
+    @property
+    def feature_mean_item_diameter(self):
+        return np.mean(self._diameters)
+
+    def get_distance_matrix(self, between_positions=False):
+        """between position ignores the dot size"""
+        dist = spatial.distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
+        if not between_positions:
+            # subtract dot diameter
+            radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
+            dist -= radii_mtx  # for each row
+            dist -= radii_mtx.T  # each each column
+        return dist
+
+    @property
+    def expension(self):
+        """ maximal distance between to points plus diameter of the two points"""
+
+        dist = self.get_distance_matrix(between_positions=True)
+        # add dot diameter
+        radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
+        dist += radii_mtx  # add to each row
+        dist += radii_mtx.T  # add two each column
+        return np.max(dist)
+
+    def center_array(self):
+        self._xy -= self.center_of_outer_positions
+        self.set_array_modified()
+
 
 
 class DotArray(DotCollection):
 
     def __init__(self, target_array_radius=None,
-                 minimum_gap=1,
+                 minimum_gap=2,
                  xy=None,
                  diameters=None,
                  features=None,
@@ -437,7 +730,8 @@ class DotArray(DotCollection):
         if not isinstance(match_features, (list, tuple)):
             match_features = [match_features]
 
-        visual_features.check_feature_list(match_features, check_set_value=match_dot_array is None)
+        vf.check_feature_list(match_features, check_set_value=match_dot_array
+                                                             is None)
 
         # copy and change values to match this stimulus
         if match_dot_array is None:
@@ -451,42 +745,42 @@ class DotArray(DotCollection):
 
         # Adapt
         for feat in match_feat:
-            if isinstance(feat, visual_features.ItemDiameter):
+            if isinstance(feat, vf.ItemDiameter):
                 self._match_item_diameter(mean_item_diameter=feat.value)
 
-            elif isinstance(feat, visual_features.ItemPerimeter):
+            elif isinstance(feat, vf.ItemPerimeter):
                 self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
 
-            elif isinstance(feat, visual_features.TotalPerimeter):
+            elif isinstance(feat, vf.TotalPerimeter):
                 mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
                 self._match_item_diameter(mean_dot_diameter)
 
-            elif isinstance(feat, visual_features.ItemSurfaceArea):
+            elif isinstance(feat, vf.ItemSurfaceArea):
                 ta = self.feature_numerosity * feat.value
                 self._match_total_surface_area(surface_area=ta)
 
-            elif isinstance(feat, visual_features.TotalSurfaceArea):
+            elif isinstance(feat, vf.TotalSurfaceArea):
                 self._match_total_surface_area(surface_area=feat.value)
 
-            elif isinstance(feat, visual_features.LogSize):
+            elif isinstance(feat, vf.LogSize):
                 logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
                 self._match_total_surface_area(2 ** logtsa)
 
-            elif isinstance(feat, visual_features.LogSpacing):
+            elif isinstance(feat, vf.LogSpacing):
                 logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
                 self._match_field_area(field_area=2 ** logfa,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, visual_features.Sparsity):
+            elif isinstance(feat, vf.Sparsity):
                 fa = feat.value * self.feature_numerosity
                 self._match_field_area(field_area=fa,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, visual_features.FieldArea):
+            elif isinstance(feat, vf.FieldArea):
                 self._match_field_area(field_area=feat.value,
                                        precision=feat.spacing_precision)
 
-            elif isinstance(feat, visual_features.Coverage):
+            elif isinstance(feat, vf.Coverage):
                 self._match_coverage(coverage=feat.value,
                                      precision=feat.spacing_precision,
                                      match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
@@ -511,7 +805,8 @@ class DotArray(DotCollection):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
-    def _match_field_area(self, field_area, precision=visual_features._DEFAULT_SPACING_PRECISION):
+    def _match_field_area(self, field_area,
+                          precision=vf._DEFAULT_SPACING_PRECISION):
         """changes the convex hull area to a desired size with certain precision
 
         iterative method can takes some time.
@@ -547,7 +842,7 @@ class DotArray(DotCollection):
         self._xy += old_center
         self.set_array_modified()
 
-    def _match_coverage(self, coverage, precision=visual_features._DEFAULT_SPACING_PRECISION,
+    def _match_coverage(self, coverage, precision=vf._DEFAULT_SPACING_PRECISION,
                         match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
@@ -568,106 +863,3 @@ class DotArray(DotCollection):
 
         self._match_field_area(field_area=self.feature_total_surface_area / coverage,
                                precision=precision)
-
-
-
-
-class DotArrayFactory(object):
-
-    def __init__(self,
-                 target_area_radius,
-                 item_diameter_mean,
-                 item_diameter_range=None,
-                 item_diameter_std=None,
-                 item_colour=None,  # todo feature
-                 minimum_gap=1):  # TODO check minim gap
-
-        """Specification of a Random Dot Array
-
-        Parameters:
-        -----------
-        stimulus_area_radius : int
-            the radius of the stimulus area
-        n_dots : int
-            number of moving dots
-
-        automatic logging log only the create process. If colours a changes later they are not log.
-        Use manual logging in this case.
-
-        """
-
-        if item_diameter_std <= 0:
-            item_diameter_std = None
-        elif item_diameter_range is not None and \
-                (item_diameter_mean <= item_diameter_range[0] or
-                 item_diameter_mean >= item_diameter_range[1] or
-                 item_diameter_range[0] >= item_diameter_range[1]):
-            raise RuntimeError("item_diameter_mean has to be inside the defined item_diameter_range")
-
-        self.minimum_gap = minimum_gap
-        self.target_array_radius = target_area_radius
-        self.item_diameter_range = item_diameter_range
-        self.item_diameter_mean = item_diameter_mean
-        self.item_diameter_std = item_diameter_std
-        self.item_attributes = ItemAttributes(colour=item_colour)
-
-    def generate(self, n_dots, occupied_space=None, logger=None):
-        """occupied_space is a dot array (used for multicolour dot array (join after)
-
-        returns None if not possible
-        """
-
-        rtn = DotArray(target_array_radius=self.target_array_radius,  # TODO distance_field_edge ?
-                       minimum_gap=self.minimum_gap)
-
-        for _ in range(n_dots):
-
-            # diameter
-            if self.item_diameter_range is None or self.item_diameter_std is None:
-                # constant diameter
-                diameter = self.item_diameter_mean
-            else:
-                # draw diameter from beta distribution
-                parameter = misc.shape_parameter_beta(self.item_diameter_range,
-                                                      self.item_diameter_mean,
-                                                      self.item_diameter_std)
-                diameter = misc.random_beta(
-                    self.item_diameter_range, parameter)
-
-            try:
-                xy = rtn.random_free_dot_position(dot_diameter=diameter, occupied_space=occupied_space)
-            except:
-                return None
-            rtn.append(xy=xy, item_diameters=diameter, attributes=self.item_attributes)
-
-        if logger is not None:
-            from .logging import LogFile # to avoid circular import
-            if not isinstance(logger, LogFile): #
-                raise RuntimeError("logger has to be None or a GeneratorLogger")
-            logger.log(rtn)
-
-        return rtn
-
-    def as_dict(self):
-        return {"target_array_radius": self.target_array_radius,
-                "dot_diameter_mean": self.item_diameter_mean,
-                "dot_diameter_range": self.item_diameter_range,
-                "dot_diameter_std": self.item_diameter_std,
-                "dot_colour": self.item_attributes.colour.colour,  ##todo feature
-                "minimum_gap": self.minimum_gap}
-
-    def generate_iter(self, list_of_n_dots, occupied_space=None, logger=None,
-                      multiprocessing=False):  # TODO  never checked
-        args = map(lambda x: (self, x, occupied_space, logger), list_of_n_dots)
-
-        if multiprocessing:
-            return Pool().imap(_make_imap_helper, args)
-        else:
-            return map(_make_imap_helper, args)
-
-
-def _make_imap_helper(args):
-    generator = args[0]
-    return generator._create_pil_image(reference_dot_array=args[1],
-                                       occupied_space=args[2],
-                                       logger=args[3])

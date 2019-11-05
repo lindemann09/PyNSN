@@ -3,35 +3,34 @@ import yaml
 import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
-from PIL import ImageFilter
-from ..lib.dot_array import DotArrayFactory
-from ..lib.dot_array_sequence import generate_da_sequence
-from ..lib.logging import LogFile
-from ..lib.colour import Colour
-from ..lib import pil_image
+from .._lib import random_dot_array
+from .._lib import dot_array_sequence
+from .._lib._logging import LogFile
+from .._lib import _colour
+from .._lib import pil_image
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
 
-DEFAULT_ARRAY = (40, DotArrayFactory(target_area_radius=200,
-                                     item_colour="lime",
-                                     item_diameter_mean=15,
-                                     item_diameter_range=[5, 40],
-                                     item_diameter_std=8,
-                                     minimum_gap=2),
-                 pil_image.ImageColours(target_area="#3e3e3e",
+DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
+                                         item_colour="lime",
+                                         item_diameter_mean=15,
+                                         item_diameter_range=[5, 40],
+                                         item_diameter_std=8,
+                                         minimum_gap=2),
+                 _colour .ImageColours(target_area="#3e3e3e",
                                         field_area=None,
                                         field_area_outer=None,
                                         center_of_mass=None,
                                         center_of_outer_positions=None,
                                         background="gray"))
 
-ICON = (11, DotArrayFactory(target_area_radius=200,
-                            item_colour="lime",
-                            item_diameter_mean=35,
-                            item_diameter_range=[5, 80],
-                            item_diameter_std=20),
-        pil_image.ImageColours(target_area="#3e3e3e",
+ICON = (11, random_dot_array.Specs(target_area_radius=200,
+                                item_colour="lime",
+                                item_diameter_mean=35,
+                                item_diameter_range=[5, 80],
+                                item_diameter_std=20),
+        _colour .ImageColours(target_area="#3e3e3e",
                                field_area=None,
                                field_area_outer="expyriment_orange",
                                center_of_mass=None,
@@ -55,7 +54,7 @@ class GUIMainWindow(QtGui.QMainWindow):
     def set_loging(self, onoff):
 
         if onoff:
-            self.logger = LogFile(log_filename="log/qt",
+            self.logger = LogFile(log_filename="log/_qt",
                                   override_log_files=True,
                                   log_colours=False,
                                   properties_different_colour=False)
@@ -124,9 +123,8 @@ class GUIMainWindow(QtGui.QMainWindow):
 
         # ICON
         colours = ICON[2]
-        da_generator = ICON[1]
         self._image = pil_image.create(
-                        dot_array=da_generator.generate(n_dots=ICON[0]),
+                        dot_array=random_dot_array.create(n_dots=ICON[0], specs = ICON[1]),
                         colours=colours, antialiasing=True)
 
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
@@ -137,15 +135,17 @@ class GUIMainWindow(QtGui.QMainWindow):
     def make_new_array(self):
 
         try:
-            generator = self.get_generator()
-            self.data_array = generator.generate(n_dots=self.get_number(), logger=self.logger)
+            self.data_array = random_dot_array.create(n_dots=self.get_number(),
+                                                      specs=self.get_specs(),
+                                                logger=self.logger)
         except (RuntimeError, ValueError) as error:
             self.main_widget.text_error_feedback(error)
             raise error
 
         if self.settings.bicoloured.isChecked():
-            data_array2 = generator.generate(n_dots=self.main_widget.number2.value,
-                                             occupied_space=self.data_array,
+            data_array2 = random_dot_array.create(n_dots=self.main_widget.number2.value,
+                                                  specs=self.get_specs(),
+                                                  occupied_space=self.data_array,
                                              logger=self.logger)
             data_array2.attributes.change(colour=self.main_widget.dot_colour2.text)
             self.data_array.join(data_array2, realign=False)
@@ -157,7 +157,7 @@ class GUIMainWindow(QtGui.QMainWindow):
             return self._image
         else:
             para = self.get_image_colours()
-            image_colours = pil_image.ImageColours(
+            image_colours = _colour.ImageColours(
                 target_area=para.target_area,
                 field_area=para.field_area,
                 field_area_outer=para.field_area_outer,
@@ -175,47 +175,50 @@ class GUIMainWindow(QtGui.QMainWindow):
     def get_number(self):
         return self.main_widget.number.value
 
-    def get_generator(self):
+    def get_specs(self):
 
         try:
-            colour_dot = Colour(self.main_widget.dot_colour.text)
+            colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
         except:
-            colour_dot = DEFAULT_ARRAY[1].item_colour
+            colour_dot = DEFAULT_ARRAY[1].item_attributes.colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return DotArrayFactory(target_area_radius=self.main_widget.target_array_radius.value,
-                               item_colour=colour_dot,
-                               item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                               item_diameter_range=[self.main_widget.item_diameter_range.value1,
+        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
+                                   item_colour=colour_dot,
+                                   item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                                   item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
-                               item_diameter_std=self.main_widget.item_diameter_std.value,
-                               minimum_gap=self.main_widget.minimum_gap.value)
+                                   item_diameter_std=self.main_widget.item_diameter_std.value,
+                                   minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_colours(self):
         # check colour input
 
         try:
-            colour_area = Colour(self.settings.colour_area.text)
+            colour_area = _colour.Colour(self.settings.colour_area.text)
         except:
             colour_area = None
             self.settings.colour_area.text = "None"
         try:
-            colour_convex_hull_positions = Colour(self.settings.colour_convex_hull_positions.text)
+            colour_convex_hull_positions = _colour.Colour(
+                self.settings.colour_convex_hull_positions.text)
         except:
             colour_convex_hull_positions = None
             self.settings.colour_convex_hull_positions.text = "None"
         try:
-            colour_convex_hull_dots = Colour(self.settings.colour_convex_hull_dots.text)
+            colour_convex_hull_dots = _colour.Colour(
+                self.settings.colour_convex_hull_dots.text)
         except:
             colour_convex_hull_dots = None
             self.settings.colour_convex_hull_dots.text = "None"
         try:
-            colour_background = Colour(self.settings.colour_background.text)
+            colour_background = _colour.Colour(
+                self.settings.colour_background.text)
         except:
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return pil_image.ImageColours(target_area=colour_area,
+        return _colour.ImageColours(target_area=colour_area,
                                       field_area=colour_convex_hull_positions,
                                       field_area_outer=colour_convex_hull_dots,
                                       center_of_mass=None,
@@ -229,7 +232,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         """"""
         if remake_image:
             self._image = None
-        w = self.get_generator().target_array_radius * 2
+        w = self.get_specs().target_array_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
         self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
@@ -261,7 +264,7 @@ class GUIMainWindow(QtGui.QMainWindow):
     def action_print_para(self):
         d = {'number': self.get_number()}
         d['image_parameter'] = self.get_image_colours().as_dict()
-        d['generator'] = self.get_generator().as_dict()
+        d['generator'] = self.get_specs().as_dict()
         self.main_widget.text_out("# parameter\n" + yaml.dump(d, default_flow_style=False))
 
     def save_array(self):
@@ -308,7 +311,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.attributes.change(colour=self.get_generator().item_attributes.colour)
+        self.data_array.attributes.change(colour=self.get_specs().item_attributes.colour)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
@@ -329,11 +332,12 @@ class GUIMainWindow(QtGui.QMainWindow):
 
         if match_methods is not None:
             # print("processing")
-            sequence = generate_da_sequence(reference_dot_array=self.data_array,
-                                   match_properties=match_methods,
-                                   min_max_numerosity=match_range,
-                                   extra_space=extra_space,
-                                   logger=self.logger)
+            sequence = dot_array_sequence.create(
+                reference_dot_array=self.data_array,
+                              match_properties=match_methods,
+                              min_max_numerosity=match_range,
+                              extra_space=extra_space,
+                              logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.feature_numerosity,
                             image_parameter=self.get_image_colours()).exec_()

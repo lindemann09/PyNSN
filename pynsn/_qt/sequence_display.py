@@ -3,7 +3,7 @@
 from multiprocessing import Pool
 from PyQt4 import QtGui, QtCore
 from PIL.ImageQt import ImageQt
-from pynsn.lib import pil_image
+from pynsn._lib import pil_image
 from . import misc
 
 def _map_make_image(x):

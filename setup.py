@@ -22,7 +22,7 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["lib", "qt"]:
+for subp in ["_lib", "_qt"]:
     packages.append("{}.{}".format(package_name, subp))
 
 

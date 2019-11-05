@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from .colour import Colour
+from ._colour import Colour
 
 class ItemAttributes(object):
 

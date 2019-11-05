@@ -1,5 +1,5 @@
-from copy import copy
-import itertools
+from copy import copy as _copy
+import itertools as _itertools
 
 _DEFAULT_SPACING_PRECISION = 0.0001
 
@@ -16,22 +16,22 @@ class _BaseFeature(object):
         return type(self).__name__
 
     def __add__(self, other):
-        rtn = copy(self)
+        rtn = _copy(self)
         rtn.value += other.value
         return rtn
 
     def __sub__(self, other):
-        rtn = copy(self)
+        rtn = _copy(self)
         rtn.value += other.value
         return rtn
 
     def __mul__(self, other):
-        rtn = copy(self)
+        rtn = _copy(self)
         rtn.value *= other.value
         return rtn
 
     def __truediv__(self, other):
-        rtn = copy(self)
+        rtn = _copy(self)
         rtn.value /= other.value
         return rtn
 
@@ -211,7 +211,7 @@ def check_feature_list(feature_list, check_set_value=False):
                 type(x).__name__))
 
     # check dependencies
-    for a, b in itertools.combinations(feature_list, 2):
+    for a, b in _itertools.combinations(feature_list, 2):
         if a.is_dependent(b):
             raise RuntimeError("Incompatible properties to match: {} & {}".format(
                 type(a).__name__, type(b).__name__))

@@ -1,8 +1,9 @@
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from PIL import Image, ImageDraw
-import numpy as np
-from .colour import ImageColours
+from PIL import Image as _Image
+from PIL import ImageDraw as _ImageDraw
+import numpy as _np
+from ._colour import ImageColours as _ImageColours
 
 def create(dot_array, colours, antialiasing=True,
            gabor_filter=None):
@@ -28,16 +29,16 @@ def create(dot_array, colours, antialiasing=True,
         except:
             aa = 1
 
-    if not isinstance(colours, ImageColours):
+    if not isinstance(colours, _ImageColours):
         raise ValueError("Colours must be a ImageColours instance")
 
     image_size = int(round(dot_array.target_array_radius * 2)) * aa
-    img = Image.new("RGBA", (image_size, image_size),
+    img = _Image.new("RGBA", (image_size, image_size),
                     color=colours.background.colour)
 
     tmp_colour = colours.target_area.colour
     if tmp_colour is not None:
-        _draw_dot(img, xy=_convert_pos(np.zeros(2), image_size),
+        _draw_dot(img, xy=_convert_pos(_np.zeros(2), image_size),
                   diameter=image_size,
                   colour=tmp_colour)
 
@@ -76,7 +77,7 @@ def create(dot_array, colours, antialiasing=True,
 
     if aa != 1:
         image_size = int(image_size / aa)
-        img = img.resize((image_size, image_size), Image.LANCZOS)
+        img = img.resize((image_size, image_size), _Image.LANCZOS)
 
     if gabor_filter is not None:
         try:
@@ -97,21 +98,22 @@ def _draw_dot(img, xy, diameter, colour, picture=None):
 
     r = diameter // 2
     if picture is not None:
-        pict = Image.open(picture, "r")
+        pict = _Image.open(picture, "r")
         img.paste(pict, (xy[0] - r, xy[1] - r))
     else:
-        ImageDraw.Draw(img).ellipse((xy[0] - r, xy[1] - r, xy[0] + r, xy[1] + r), fill=colour)
+        _ImageDraw.Draw(img).ellipse((xy[0] - r, xy[1] - r, xy[0] + r,
+                                          xy[1] + r), fill=colour)
 
 
 def _draw_convex_hull(img, convex_hull, convex_hull_colour):
     # plot convey hull
 
-    hull = np.append(convex_hull, [convex_hull[0]], axis=0)
+    hull = _np.append(convex_hull, [convex_hull[0]], axis=0)
     last = None
-    draw = ImageDraw.Draw(img)
+    draw = _ImageDraw.Draw(img)
     for p in hull:
         if last is not None:
-            draw.line(np.append(last, p).tolist(),
+            draw.line(_np.append(last, p).tolist(),
                       width=2,
                       fill=convex_hull_colour)
         last = p
