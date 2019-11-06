@@ -56,9 +56,10 @@ def random_beta(size, number_range, mean, std):
     alpha, beta = shape_parameter_beta(number_range=number_range,
                                        mean=mean,
                                        std=std)
-    dist = np.random.beta(a=alpha, b=beta, size=size)
-    dist = (dist - np.mean(dist)) / np.std(dist) # z values
-    return dist*std + mean
+    rtn = number_range[0] + (number_range[1] - number_range[0]) \
+            * np.random.beta(a=alpha, b=beta, size=size)
+
+    return rtn
 
 def shape_parameter_beta(number_range, mean, std):
     """Returns alpha (p) & beta (q) parameter for the beta distribution
@@ -145,6 +146,11 @@ def polar2cartesian(polar):
                      polar[:, 0] * np.sin(polar[:, 1])]).T
 
 def cartesian2polar(xy, radii_only=False):
+    """polar coordinates (radius, angle)
+
+    if only radii required you may consider radii_only=True for faster
+    processing
+    """
     xy = np.array(xy)
     radii = np.hypot(xy[:, 0], xy[:, 1])
     if radii_only:

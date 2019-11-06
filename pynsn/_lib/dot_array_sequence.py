@@ -217,8 +217,9 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
                                prefer_keeping_field_area=prefer_keeping_field_area)
         except:
             return [], "ERROR: Can't find the a make matched deviants"
-        if len(match_props) > 0:
-            da.match(match_props, realign=False, center_array=False)
+        _vf.check_feature_list(match_props)
+        for feat in match_props:
+            da.match(feat)
 
         cnt = 0
         while True:

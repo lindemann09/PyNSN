@@ -6,11 +6,13 @@ from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
 from .._lib import dot_array_sequence
 from .._lib._logging import LogFile
+from .._lib import visual_features as vf
 from .._lib import _colour
 from .._lib import pil_image
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
+
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                          item_colour="lime",
@@ -297,7 +299,10 @@ class GUIMainWindow(QtGui.QMainWindow):
         prop = self.data_array.get_features_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
-            self.data_array.match(response, realign=True, center_array=True)
+            self.data_array.match(response)
+            if response in vf.LogSize().dependencies:
+                self.data_array.realign()
+            self.data_array.center()
             self.show_current_image(remake_image=True)
             self.write_properties()
             self.main_widget.updateUI()

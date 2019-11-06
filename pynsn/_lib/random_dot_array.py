@@ -68,7 +68,7 @@ def create(n_dots, specs, occupied_space=None,
                     # distance_field_edge ?
                    minimum_gap=specs.minimum_gap)
 
-    # random diamter from beta distribution with exact mean and str
+    # random diameter from beta distribution with exact mean and str
     diameters = _misc.random_beta(size=n_dots,
                                  number_range=specs.item_diameter_range,
                                  mean=specs.item_diameter_mean,

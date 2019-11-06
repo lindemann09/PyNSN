@@ -188,12 +188,11 @@ class Coverage(_BaseFeature):
         return (d)
 
 
-ALL_VISUAL_FEATURES = [ItemDiameter, TotalSurfaceArea, TotalPerimeter, FieldArea,
-                       Coverage, LogSpacing, LogSize, Sparsity,
-                       ItemSurfaceArea, ItemPerimeter]
+ALL_VISUAL_FEATURES = (ItemDiameter, TotalSurfaceArea, TotalPerimeter,
+                       FieldArea, Coverage, LogSpacing, LogSize, Sparsity,
+                       ItemSurfaceArea, ItemPerimeter)
 
 
-## helper function
 def check_feature_list(feature_list, check_set_value=False):
     """helper function
     raises TypeError or Runtime errors if checks fail

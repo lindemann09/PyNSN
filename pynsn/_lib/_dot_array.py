@@ -36,6 +36,9 @@ class DotCollection(object):
             self.append(xy, diameters)
         self.set_array_modified()
 
+    def __str__(self):
+        return self.get_features_text(extended_format=True)
+
     @property
     def xy(self):
         return self._xy
@@ -465,20 +468,19 @@ class DotArray(DotCollection):
 
         return shift_required
 
-    def realign(self, center_array=False):
+    def realign(self):
         """Realigns the dots in order to remove all dots overlaps. If two dots
-        overlap, the dots that is further apart from the arry center will be
+        overlap, the dots that is further apart from the array center will be
         moved opposite to the direction of the other dot until there is no
         overlap (note: minimun_gap parameter). If two dots have exactly the same
         position the same position one is minimally shifted in a random direction.
 
+        Note: Rrealignming might change the field area! Match Space parameter after
+        realignment.
+
         """
 
         error = False
-
-        if center_array:
-            self._xy -= self.center_of_outer_positions
-            self.set_array_modified()
 
         shift_required = self.remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
 
@@ -500,7 +502,7 @@ class DotArray(DotCollection):
                 self._xy -= new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
                 self.remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
-                # new pos for outlyer
+                # new pos for outlier
                 self._xy += new_xy  # move back to old position
                 shift_required = True
             else:
@@ -514,10 +516,11 @@ class DotArray(DotCollection):
         if error:
             return False, u"Can't find solution when removing outlier (n=" + \
                    str(self.feature_numerosity) + ")"
+
+        self.set_array_modified()
         if not shift_required:
             return True, ""
         else:
-            self.set_array_modified()
             return self.realign()  # recursion
 
     @property
@@ -549,9 +552,6 @@ class DotArray(DotCollection):
             feat["Object_id"] += str(da._attributes.colours[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
-
-    def __str__(self):
-        return self.get_csv()
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
                 object_id_column=True, num_idx_column=True,
@@ -594,11 +594,11 @@ class DotArray(DotCollection):
         return rtn
 
     def random_free_dot_position(self, dot_diameter,
-                                 ignore_overlapping=False,
+                                 allow_overlapping=False,
                                  prefer_inside_field_area=False,
                                  squared_array = False,
                                  occupied_space=None): #TODO rounded values
-        """moves a dot to an available random position
+        """returns a available random xy position
 
         raise exception if not found
         occupied space: see generator generate
@@ -628,7 +628,7 @@ class DotArray(DotCollection):
                     try_out_inside_convex_hull:
                 bad_position = delaunay.find_simplex(proposal_xy) < 0
 
-            if not bad_position and not ignore_overlapping:
+            if not bad_position and not allow_overlapping:
                 # find bad_positions
                 dist = self.distances(proposal_xy, dot_diameter)
                 if occupied_space:
@@ -639,9 +639,9 @@ class DotArray(DotCollection):
             if not bad_position:
                 return proposal_xy
             elif cnt > 3000:
-                raise RuntimeError(u"Can't find a free position")
+                raise RuntimeError(u"Can't find a free position") #FIXME
 
-    def shuffle_all_positions(self, ignore_overlapping=False):
+    def shuffle_all_positions(self, allow_overlapping=False):
         """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
@@ -651,7 +651,7 @@ class DotArray(DotCollection):
 
         for d in self._diameters:
             try:
-                xy = self.random_free_dot_position(d, ignore_overlapping=ignore_overlapping)
+                xy = self.random_free_dot_position(d, allow_overlapping=allow_overlapping)
             except:
                 raise RuntimeError("Can't shuffle dot array. No free positions.")
             new_diameters = np.append(new_diameters, d)
@@ -715,81 +715,74 @@ class DotArray(DotCollection):
         self._attributes = ItemAttributesList()
         self._attributes.read_from_dict(dict["attributes"])
 
-    def match(self, match_features, center_array=True,
-              realign = False,
-              match_dot_array=None):
+    def match(self, match_feature, match_dot_array=None):
         """
         match_properties: continuous property or list of continuous properties
         several properties to be matched
 
         if match dot array is specified, array will be match to match_dot_array, otherwise
         the values defined in match_features is used.
+
+        some matching requires realignement to avoid overlaps. However,
+        realigment might result in a different field area. Thus, realign after
+        matching for  Size parameter and realign before matching space
+        parameter.
+
         """
 
         # type check
-        if not isinstance(match_features, (list, tuple)):
-            match_features = [match_features]
+        assert isinstance(match_feature, vf.ALL_VISUAL_FEATURES)
 
-        vf.check_feature_list(match_features, check_set_value=match_dot_array
+        vf.check_feature_list([match_feature],
+                              check_set_value=match_dot_array
                                                              is None)
 
         # copy and change values to match this stimulus
-        if match_dot_array is None:
-            match_feat = match_features
-        else:
-            match_feat = []
-            for m in match_features:
-                m = copy(m)
-                m.adapt_value(match_dot_array)
-                match_feat.append(m)
+        feat = copy(match_feature)
+        if match_dot_array is not None:
+            feat.adapt_value(match_dot_array)
 
         # Adapt
-        for feat in match_feat:
-            if isinstance(feat, vf.ItemDiameter):
-                self._match_item_diameter(mean_item_diameter=feat.value)
+        if isinstance(feat, vf.ItemDiameter):
+            self._match_item_diameter(mean_item_diameter=feat.value)
 
-            elif isinstance(feat, vf.ItemPerimeter):
-                self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
+        elif isinstance(feat, vf.ItemPerimeter):
+            self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
 
-            elif isinstance(feat, vf.TotalPerimeter):
-                mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
-                self._match_item_diameter(mean_dot_diameter)
+        elif isinstance(feat, vf.TotalPerimeter):
+            mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
+            self._match_item_diameter(mean_dot_diameter)
 
-            elif isinstance(feat, vf.ItemSurfaceArea):
-                ta = self.feature_numerosity * feat.value
-                self._match_total_surface_area(surface_area=ta)
+        elif isinstance(feat, vf.ItemSurfaceArea):
+            ta = self.feature_numerosity * feat.value
+            self._match_total_surface_area(surface_area=ta)
 
-            elif isinstance(feat, vf.TotalSurfaceArea):
-                self._match_total_surface_area(surface_area=feat.value)
+        elif isinstance(feat, vf.TotalSurfaceArea):
+            self._match_total_surface_area(surface_area=feat.value)
 
-            elif isinstance(feat, vf.LogSize):
-                logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
-                self._match_total_surface_area(2 ** logtsa)
+        elif isinstance(feat, vf.LogSize):
+            logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+            self._match_total_surface_area(2 ** logtsa)
 
-            elif isinstance(feat, vf.LogSpacing):
-                logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
-                self._match_field_area(field_area=2 ** logfa,
-                                       precision=feat.spacing_precision)
+        elif isinstance(feat, vf.LogSpacing):
+            logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+            self._match_field_area(field_area=2 ** logfa,
+                                   precision=feat.spacing_precision)
 
-            elif isinstance(feat, vf.Sparsity):
-                fa = feat.value * self.feature_numerosity
-                self._match_field_area(field_area=fa,
-                                       precision=feat.spacing_precision)
+        elif isinstance(feat, vf.Sparsity):
+            fa = feat.value * self.feature_numerosity
+            self._match_field_area(field_area=fa,
+                                   precision=feat.spacing_precision)
 
-            elif isinstance(feat, vf.FieldArea):
-                self._match_field_area(field_area=feat.value,
-                                       precision=feat.spacing_precision)
+        elif isinstance(feat, vf.FieldArea):
+            self._match_field_area(field_area=feat.value,
+                                   precision=feat.spacing_precision)
 
-            elif isinstance(feat, vf.Coverage):
-                self._match_coverage(coverage=feat.value,
-                                     precision=feat.spacing_precision,
-                                     match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea)
+        elif isinstance(feat, vf.Coverage):
+            self._match_coverage(coverage=feat.value,
+                                 precision=feat.spacing_precision,
+                                 match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea) #FIXME experimemtal
 
-        if realign:
-            self.realign(center_array=center_array)
-        elif center_array:
-            self._xy -= self.center_of_outer_positions
-            self.set_array_modified()
 
     def _match_total_surface_area(self, surface_area):
         # changes diameter
@@ -806,8 +799,68 @@ class DotArray(DotCollection):
         self.set_array_modified()
 
     def _match_field_area(self, field_area,
-                          precision=vf._DEFAULT_SPACING_PRECISION):
+                          precision=vf._DEFAULT_SPACING_PRECISION,
+                          use_scaling_only=False):
         """changes the convex hull area to a desired size with certain precision
+
+        uses scaling radial positions if field area has to be increased
+        uses replacement of outer points (and later re-scaling)
+
+        iterative method can takes some time.
+        """
+
+        if self.feature_field_area is None:
+            return  # not defined
+        elif field_area > self.feature_field_area or use_scaling_only:
+            # field area is currently too small or scaling is enforced
+            return self.__scale_field_area(field_area=field_area,
+                                           precision=precision)
+        elif field_area < self.feature_field_area:
+            # field area is too large
+            self.__decrease_field_area_by_replacement(max_field_area=field_area)
+            # ..and rescaling to avoid to compensate for possible too
+            # strong decrease
+            return self.__scale_field_area(field_area=field_area,
+                                           precision=precision)
+        else:
+            return
+
+    def __decrease_field_area_by_replacement(self, max_field_area):
+        """decreases filed area by recursively moving the most outer point
+        to some more central free position (avoids overlapping)
+
+        return False if not possible else True"""
+
+
+        # centered points
+        old_center = self.center_of_outer_positions
+        self._xy -= old_center
+
+        removed_dots = []
+        while self.feature_field_area > max_field_area:
+            # remove most outer dot and append in to array
+            vertices = self._ch.convex_hull.vertices
+            radii = misc.cartesian2polar(self._xy[vertices,:],
+                                                   radii_only=True)
+            idx_outer = vertices[np.where(radii == max(radii))[0][0]]
+
+            removed_dots.extend(self.get_dots(indices=[idx_outer]))
+            self.delete(idx_outer)
+
+        # add dots to free pos inside the convex hall
+        for d in removed_dots:
+            d.xy = self.random_free_dot_position(d.diameter,
+                                               allow_overlapping=False,
+                                               prefer_inside_field_area=True)
+            self.append_dot(d)
+
+        self._xy += old_center
+        self.set_array_modified()
+
+    def __scale_field_area(self, field_area,
+                           precision=vf._DEFAULT_SPACING_PRECISION):
+        """change the convex hull area to a desired size by scale the polar
+        positions  with certain precision
 
         iterative method can takes some time.
         """
@@ -816,7 +869,6 @@ class DotArray(DotCollection):
         if current is None:
             return  # not defined
 
-        # iteratively determine scale
         scale = 1  # find good scale
         step = 0.1
         if field_area < current:  # current too larger
@@ -827,6 +879,7 @@ class DotArray(DotCollection):
         self._xy -= old_center
         centered_polar = misc.cartesian2polar(self._xy)
 
+        # iteratively determine scale
         while abs(current - field_area) > precision:
 
             scale += step
@@ -843,7 +896,9 @@ class DotArray(DotCollection):
         self.set_array_modified()
 
     def _match_coverage(self, coverage, precision=vf._DEFAULT_SPACING_PRECISION,
-                        match_FA2TA_ratio=0.5):  # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
+                        match_FA2TA_ratio=0.5):
+        # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
+        # FIXME when to realign, realignment changes field_area!
         """this function changes the area and remixes to get a desired density
         precision in percent between 1 < 0
 
@@ -852,6 +907,7 @@ class DotArray(DotCollection):
 
         """
 
+        print("WARNING: _match_coverage is a experimental ")
         # dens = convex_hull_area / total_surface_area
         if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
