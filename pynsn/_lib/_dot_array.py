@@ -469,13 +469,16 @@ class DotArray(DotCollection):
         return shift_required
 
     def realign(self):
-        """Realigns the dots in order to remove all dots overlaps. If two dots
-        overlap, the dots that is further apart from the array center will be
-        moved opposite to the direction of the other dot until there is no
-        overlap (note: minimun_gap parameter). If two dots have exactly the same
-        position the same position one is minimally shifted in a random direction.
+        """Realigns the dots in order to remove all dots overlaps and dots
+        outside the target area.
 
-        Note: Rrealignming might change the field area! Match Space parameter after
+        If two dots overlap, the dots that is further apart from the array
+        center will be moved opposite to the direction of the other dot until
+        there is no overlap (note: minimun_gap parameter). If two dots have
+        exactly the same position the same position one is minimally shifted
+        in a random direction.
+
+        Note: Realignming might change the field area! Match Space parameter after
         realignment.
 
         """

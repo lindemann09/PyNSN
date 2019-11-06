@@ -58,8 +58,7 @@ class _SizeRelatedFeature(_BaseFeature):
 
     @property
     def dependencies(self):
-        return (ItemDiameter, ItemSurfaceArea, ItemPerimeter, TotalPerimeter, TotalSurfaceArea, LogSize)
-
+        return SIZE_FEATURES
 
 class _SpaceRelatedFeature(_BaseFeature):
 
@@ -69,7 +68,7 @@ class _SpaceRelatedFeature(_BaseFeature):
 
     @property
     def dependencies(self):
-        return (LogSpacing, FieldArea, Sparsity)
+        return SPACE_FEATURES
 
     def as_dict(self):
         d = _BaseFeature.as_dict(self)
@@ -191,6 +190,12 @@ class Coverage(_BaseFeature):
 ALL_VISUAL_FEATURES = (ItemDiameter, TotalSurfaceArea, TotalPerimeter,
                        FieldArea, Coverage, LogSpacing, LogSize, Sparsity,
                        ItemSurfaceArea, ItemPerimeter)
+
+SIZE_FEATURES = (ItemDiameter, ItemSurfaceArea, ItemPerimeter,
+                 TotalPerimeter, TotalSurfaceArea, LogSize)
+
+SPACE_FEATURES = (LogSpacing, FieldArea, Sparsity) #TODO wha about Coverage?
+
 
 
 def check_feature_list(feature_list, check_set_value=False):

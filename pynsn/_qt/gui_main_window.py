@@ -300,9 +300,9 @@ class GUIMainWindow(QtGui.QMainWindow):
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
             self.data_array.match(response)
-            if response in vf.LogSize().dependencies:
+            if type(response) in vf.SIZE_FEATURES:
+                self.data_array.center_array()
                 self.data_array.realign()
-            self.data_array.center()
             self.show_current_image(remake_image=True)
             self.write_properties()
             self.main_widget.updateUI()
