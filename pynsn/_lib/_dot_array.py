@@ -17,6 +17,7 @@ from . import misc
 from ._item_attributes import ItemAttributes
 from . import visual_features as vf
 
+# TODO: How to deal with rounding? Is saving to precises?
 
 class DotCollection(object):
     """Numpy Position list for optimized for numpy calculations
@@ -326,7 +327,7 @@ class DotArray(DotCollection):
         DotCollection.__init__(self)
         if dot_array_file is None:
             if target_array_radius is None:
-                raise RuntimeError("target_array_radius need to be defined, "
+                raise RuntimeError("target_array_radius needs to be defined, "
                                    "if DotArray is not loaded from file.")
             self._attributes = []
             self.target_array_radius = target_array_radius
@@ -741,6 +742,7 @@ class DotArray(DotCollection):
         self.minimum_gap = dict["minimum_gap"]
         self.target_array_radius = dict["target_array_radius"]
 
+        self._attributes = []
         for d in dict["attributes"]:
             ia = ItemAttributes()
             ia.read_from_dict(d)
