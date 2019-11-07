@@ -13,6 +13,10 @@ class ItemAttributes(object):
         self.colour = Colour(colour)
         self.picture = picture
 
+    def as_dict(self):
+        return {"color" : str(self.colour),
+                "picture" : self.picture}
+
 
 class ItemAttributesList(object):
 

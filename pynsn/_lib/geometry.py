@@ -113,7 +113,7 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
         Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
         if attributes is None:
-            self.attributes = ItemAttributes(colour=None, picture=None)
+            self.attributes = ItemAttributes()
         elif not isinstance(attributes, ItemAttributes):
             raise TypeError("features must be a ItemFeatures, not {}".format(type(attributes).__name__))
         else:
