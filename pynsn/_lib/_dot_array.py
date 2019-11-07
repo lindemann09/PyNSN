@@ -43,7 +43,7 @@ class DotCollection(object):
         return self._xy
 
     @property
-    def rounded_xy(self):
+    def xy_rounded_integer(self):
         """rounded to integer"""
         return np.array(np.round(self._xy), dtype=np.int32)
 
@@ -142,19 +142,22 @@ class DotCollection(object):
         m.update(self.surface_areas.tobytes())
         return m.hexdigest()
 
-    def as_dict(self, rounded_values=False):
-        if rounded_values:
-            xy = np.round(self._xy).astype(np.int).tolist()
-            dia = np.round(self._diameters).astype(np.int).tolist()
+    def as_dict(self, round_decimals=None):
+        if round_decimals is True:
+            round_decimals = 0
+        if isinstance(round_decimals, int):
+            xy = np.round(self._xy, decimals=round_decimals).astype(np.int).tolist()
+            dia = np.round(self._diameters, decimals=round_decimals).astype(np.int).tolist()
         else:
             xy = self._xy.tolist()
             dia = self._diameters.tolist()
         return {"object_id": self.object_id, "xy": xy, "diameters": dia}
 
-    def save(self, json_filename, rounded_values=False, indent=None):
+
+    def save(self, json_filename, round_decimals=None, indent=None):
 
         with open(json_filename, 'w') as fl:
-            json.dump(self.as_dict(rounded_values), fl, indent=indent)
+            json.dump(self.as_dict(round_decimals), fl, indent=indent)
 
     def load(self, json_filename):
 
@@ -728,8 +731,8 @@ class DotArray(DotCollection):
                         raise RuntimeError("Can't make the deviant. No free position")
         return deviant
 
-    def as_dict(self, rounded_values=False):
-        d = super().as_dict(rounded_values)
+    def as_dict(self, round_decimals=None):
+        d = super().as_dict(round_decimals=round_decimals)
         att = list(map(lambda x:x.as_dict(), self._attributes))
 
         d.update({"minimum_gap": self.minimum_gap,
