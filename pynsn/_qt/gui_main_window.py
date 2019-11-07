@@ -300,7 +300,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
             self.data_array.match(response)
-            if type(response) in vf.SIZE_FEATURES:
+            if isinstance(response, vf.SIZE_FEATURES):
                 self.data_array.center_array()
                 self.data_array.realign()
             self.show_current_image(remake_image=True)

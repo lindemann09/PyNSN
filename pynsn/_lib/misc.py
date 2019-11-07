@@ -5,6 +5,7 @@ Draw a random number from a beta dirstribution
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
+import random
 import numpy as np
 from scipy import spatial
 
@@ -26,8 +27,7 @@ def is_byte_string(s):
     return isinstance(s, bytes)
 
 # randomizing
-
-np.random.seed()
+random.seed()
 
 def random_beta(size, number_range, mean, std):
     """Draw from beta distribution defined by the
@@ -50,16 +50,21 @@ def random_beta(size, number_range, mean, std):
     distribution is left or right skewed.
 
     """
+
+
     if std is None or number_range is None or std == 0:
         return np.array([mean]*size)
 
     alpha, beta = shape_parameter_beta(number_range=number_range,
                                        mean=mean,
                                        std=std)
-    rtn = number_range[0] + (number_range[1] - number_range[0]) \
-            * np.random.beta(a=alpha, b=beta, size=size)
 
-    return rtn
+    # NOTE: do not use np.random.beta, because it produces identical numbers for
+    # different threads:
+    dist = np.array([random.betavariate(alpha=alpha, beta=beta) \
+                     for _ in range(size)])
+    dist = (dist - np.mean(dist)) / np.std(dist) # z values
+    return dist*std + mean
 
 def shape_parameter_beta(number_range, mean, std):
     """Returns alpha (p) & beta (q) parameter for the beta distribution

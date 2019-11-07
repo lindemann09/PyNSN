@@ -18,8 +18,6 @@ from ._item_attributes import ItemAttributesList, ItemAttributes
 from . import visual_features as vf
 
 
-TWO_PI = 2 * np.pi
-
 class DotCollection(object):
     """Numpy Position list for optimized for numpy calculations
 
@@ -429,7 +427,8 @@ class DotArray(DotCollection):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] -= misc.polar2cartesian([[jitter_size, random.random() * TWO_PI]])[0]
+                        self._xy[x, :] -= misc.polar2cartesian([[jitter_size,
+                                                                 random.random() * 2 * np.pi]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
@@ -618,10 +617,14 @@ class DotArray(DotCollection):
         while True:
             cnt += 1
             ##  polar method seems to produce centeral clustering
-            #  proposal_polar =  np.random.random(2) * (target_radius, TWO_PI)
+            #  proposal_polar =  np.array([random.random(), random.random()]) *
+            #                      (target_radius, TWO_PI)
             #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-            proposal_xy = np.random.random(2) * 2 * self.target_array_radius - \
-                        self.target_array_radius
+            # note: np.random produceing identical numbers under multiprocessing
+
+            proposal_xy = np.array([random.random(), random.random()]) \
+                          * 2 * self.target_array_radius - self.target_array_radius
+
             bad_position = False
             if not squared_array:
                 bad_position =  target_radius <= \
@@ -684,8 +687,7 @@ class DotArray(DotCollection):
                 else:
                     ch = []
                 for x in range(try_out):
-                    rnd = random.randint(0,
-                                         deviant.feature_numerosity - 1)  # strange: do not use np.rand, because parallel running process produce the same numbers
+                    rnd = random.randint(0, deviant.feature_numerosity-1) # do not use np.random
                     if rnd not in ch or change_numerosity > 0:
                         break
 
@@ -841,14 +843,12 @@ class DotArray(DotCollection):
 
         removed_dots = []
         while self.feature_field_area > max_field_area:
-            # remove most outer dot and append in to array
+            # remove one random outer dot and remember it
             vertices = self._ch.convex_hull.vertices
-            radii = misc.cartesian2polar(self._xy[vertices,:],
-                                                   radii_only=True)
-            idx_outer = vertices[np.where(radii == max(radii))[0][0]]
+            idx = vertices[random.randint(0, len(vertices)-1)]
 
-            removed_dots.extend(self.get_dots(indices=[idx_outer]))
-            self.delete(idx_outer)
+            removed_dots.extend(self.get_dots(indices=[idx]))
+            self.delete(idx)
 
         # add dots to free pos inside the convex hall
         for d in removed_dots:
