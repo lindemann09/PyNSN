@@ -8,6 +8,7 @@ from .._lib import dot_array_sequence
 from .._lib._logging import LogFile
 from .._lib import visual_features as vf
 from .._lib import _colour
+from .._lib._item_attributes import ItemAttributes
 from .._lib import pil_image
 from .main_widget import MainWidget
 from . import dialogs
@@ -149,7 +150,8 @@ class GUIMainWindow(QtGui.QMainWindow):
                                                   specs=self.get_specs(),
                                                   occupied_space=self.data_array,
                                              logger=self.logger)
-            data_array2.attributes.change(colour=self.main_widget.dot_colour2.text)
+            data_array2.set_attributes(
+                ItemAttributes(colour=self.main_widget.dot_colour2.text))
             self.data_array.join(data_array2, realign=False)
 
         self._image = None
@@ -250,9 +252,10 @@ class GUIMainWindow(QtGui.QMainWindow):
     def write_properties(self, clear_field=True):
         txt = self.data_array.get_features_text(extended_format=True, with_object_id=True)
         if self.settings.bicoloured.isChecked():
-            prop = self.data_array.get_features_split_by_colours()
-            for p in prop.split:
-                txt += p.get_nice_text()
+            for da in self.data_array.split_array_by_colour():
+                txt += "Colour {}\n".format(da.get_colours()[0])
+                txt += da.get_features_text(extended_format=True,
+                                          with_object_id=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -316,7 +319,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.attributes.change(colour=self.get_specs().item_attributes.colour)
+        self.data_array.set_attributes(self.get_specs().item_attributes)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
@@ -345,6 +348,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                               logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.data_array.feature_numerosity,
-                            image_parameter=self.get_image_colours()).exec_()
+                            image_colours=self.get_image_colours(),
+                            antialiasing=self.settings.antialiasing.isChecked()).exec_()
 
 

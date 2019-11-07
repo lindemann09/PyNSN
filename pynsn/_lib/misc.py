@@ -97,7 +97,7 @@ def shape_parameter_beta(number_range, mean, std):
 
 
 def join_dict_list(list_of_dicts):
-    """make a dictionary of list from list of dictionaries"""
+    """make a dictionary of lists from a list of dictionaries"""
     rtn = OrderedDict()
     for d in list_of_dicts:
 

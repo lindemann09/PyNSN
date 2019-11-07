@@ -2,7 +2,7 @@
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 import math
-from ._item_attributes import ItemAttributes, ItemAttributesList
+from ._item_attributes import ItemAttributes
 
 class Coordinate2D(object):
 
@@ -147,7 +147,7 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
 
 class Rectangle(Coordinate2D):
 
-    def __init__(self, center_x=0, center_y=0, width=0, height=0, features=None):
+    def __init__(self, center_x=0, center_y=0, width=0, height=0, attributes=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -162,10 +162,10 @@ class Rectangle(Coordinate2D):
         """
 
         Coordinate2D.__init__(self, x=center_x, y=center_y)
-        if features is None:
-            self.features = ItemAttributesList()
+        if attributes is None:
+            self.attributes = ItemAttributes()
         else:
-            self.features = features
+            self.attributes = attributes
 
         self.height = height
         self.width = width

@@ -10,116 +10,65 @@ from ._colour import Colour
 class ItemAttributes(object):
 
     def __init__(self, colour=None, picture=None):
-        self.colour = Colour(colour)
+        self.colour = colour
         self.picture = picture
 
+    @property
+    def colour(self):
+        return self._colour
+
+    @colour.setter
+    def colour(self, value):
+        self._colour = Colour(value)
+
+    def __str__(self):
+        return str(self.as_dict())
+
     def as_dict(self):
-        return {"color" : str(self.colour),
+        return {"colour" : str(self.colour),
                 "picture" : self.picture}
 
-
-class ItemAttributesList(object):
-
-    def __init__(self):
-        """If all ItemAttributes should None (but not empty) init with ItemAttributes(colours=[None]),
-        otherwise the ItemAttributes will be empty"""
-
-        self.clear()
-
-    def clear(self):
-        self.colours = np.array([])
-        self.pictures = np.array([])
-
-    def __iter__(self):
-        return map(lambda x: ItemAttributes(colour=x[0], picture=x[1]),
-                   zip(self.colours, self.pictures))
-
-    def __getitem__(self, key):
-        return ItemAttributes(colour=self.colours[key],
-                              picture=self.pictures[key])
-
-    def as_dict(self):
-
-        rtn = {"colours": list(map(lambda x: x._colour, self.colours))}
-
-        if not np.all(self.pictures == None):
-            rtn.update({"pictures": self.pictures.tolist()})
-        return rtn
-
     def read_from_dict(self, dict):
-        col = list(map(lambda x: Colour(x), dict["colours"]))
-        self.colours = np.array(col)
         try:
-            self.pictures = np.array(dict["pictures"])
+            self.colour = dict["colour"]
         except:
-            self.pictures = np.array([None] * len(self.colours))
+            self.colour = None
 
-    @property
-    def length(self):
-        return len(self.colours)
+        try:
+            self.picture = dict["picture"]
+        except:
+            self.picture = None
 
-    def delete(self, index):
-        self.colours = np.delete(self.colours, index)
-        self.pictures = np.delete(self.pictures, index)
+    def is_different(self, other):
+        """Returns True if at least on attribute, that is defined in both,
+        is different. Thus, None defined attributes will be ignored"""
 
-    def repeat(self, repeats):
-        """:return repeated attributes, equivalent to numpy.repeat"""
+        assert isinstance(other, ItemAttributes)
 
-        rtn = ItemAttributesList()
-        rtn.colours = self.colours.repeat(repeats)
-        rtn.pictures = self.pictures.repeat(repeats)
-        return rtn
+        if self.colour != other.colour and self.colour is not None and \
+                other.colour is not None:
+            return True
 
-    def copy(self):
-        rtn = ItemAttributesList()
-        rtn.colours = self.colours.copy()
-        rtn.pictures = self.pictures.copy()
-        return rtn
+        if self.picture != other.picture and self.picture is not None and \
+                other.picture is not None:
+            return True
 
-    def append(self, attributes):
-        """attributes: ItemAttributes, ItemAttributesList or list of ItemAttributes
-        """
+        return False
 
-        if isinstance(attributes, ItemAttributes):
-            self._append_lists(colours=[attributes.colour],
-                               pictures=[attributes.picture])
+    @staticmethod
+    def check_type(data):
+        """Checks if data a ItemAttributes ora list of ItemAttributes and
+         raises a ValueError if not"""
 
-        elif isinstance(attributes, (list, tuple)):
-            # list of ItemAttributes
-            for att in attributes:
-                self.append(att)
-
-        elif isinstance(attributes, ItemAttributesList):
-            self._append_lists(colours=attributes.colours,
-                               pictures=attributes.pictures)
+        if isinstance(data, ItemAttributes):
+            return True
         else:
-            raise ValueError("arrtibutes need to be ItemAttributes, list "
-                             "of ItemAttributes or ItemAttributesList")
+            invalid_type_error = "Invalid type: {}.\n attributes has to be a " + \
+                                 "ItemAttribute of a list of ItemAttributes."
+            if isinstance(data, (list, tuple)):
+                for d in data:
+                    if not isinstance(d, ItemAttributes):
+                        raise ValueError(invalid_type_error.format(type(d)))
+                return True
 
-
-
-    def _append_lists(self, colours, pictures):
-        # lists of single attributes with equal length
-
-        if (len(colours) != len(pictures)):
-            raise RuntimeError(u"Bad shaped data: attributes have not the same length.")
-
-        self.pictures = np.append(self.pictures, pictures)  # TODO check picture exist
-        self.colours = np.append(self.colours, list(map(lambda x:Colour(x),
-                                                    colours)))
-
-    def change(self, colour=None, picture=None, indices=None):
-        """allows using color names and rgb array, since it
-        converts colour """
-
-        if isinstance(indices, int):
-            indices = [indices]
-        elif indices is None:
-            indices = range(len(self.colours))
-
-        if colour is not None:
-            self.colours[indices] = Colour(colour)
-        if picture is not None:
-            self.pictures[indices] = picture
-
-
+            raise ValueError(invalid_type_error.format(type(data)))

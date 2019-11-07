@@ -4,6 +4,7 @@ from multiprocessing import Pool
 from PyQt4 import QtGui, QtCore
 from PIL.ImageQt import ImageQt
 from pynsn._lib import pil_image
+from pynsn._lib._colour import ImageColours
 from . import misc
 
 def _map_make_image(x):
@@ -14,7 +15,8 @@ def _map_make_image(x):
 
 class SequenceDisplay(QtGui.QDialog):
 
-    def __init__(self, parent, da_sequence, start_numerosity, image_parameter):
+    def __init__(self, parent, da_sequence, start_numerosity, image_colours,
+                 antialiasing):
         super(SequenceDisplay, self).__init__(parent)
 
         self.setWindowTitle("Dot Array Sequence")
@@ -37,15 +39,8 @@ class SequenceDisplay(QtGui.QDialog):
         self.setLayout(hlayout)
 
         # make images
-        image_colours = pil_image.ImageColours(
-            target_area=image_parameter.colour_target_area,
-            field_area=image_parameter.colour_field_area,
-            field_area_outer=image_parameter.colour_field_area_outer,
-            center_of_mass=image_parameter.colour_center_of_mass,
-            center_of_outer_positions=image_parameter.colour_center_of_outer_positions,
-            background=image_parameter.colour_background)
         image_colours = [image_colours] * len(self.da_sequence.dot_arrays)
-        antialiasing = [image_parameter.antialiasing] * len(self.da_sequence.dot_arrays)
+        antialiasing = [antialiasing] * len(self.da_sequence.dot_arrays)
 
         iter_images = Pool().imap(_map_make_image,
                                   zip(self.da_sequence.dot_arrays,

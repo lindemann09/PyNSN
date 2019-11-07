@@ -3,7 +3,7 @@ Dot Array
 """
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from copy import copy
+from copy import copy, deepcopy
 import random
 from collections import OrderedDict
 from hashlib import md5
@@ -14,7 +14,7 @@ from scipy import spatial
 
 from .geometry import Dot
 from . import misc
-from ._item_attributes import ItemAttributesList, ItemAttributes
+from ._item_attributes import ItemAttributes
 from . import visual_features as vf
 
 
@@ -282,9 +282,6 @@ class DotCollection(object):
         weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self._diameters)
 
-    @property
-    def feature_mean_item_diameter(self):
-        return np.mean(self._diameters)
 
     def get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
@@ -331,7 +328,7 @@ class DotArray(DotCollection):
             if target_array_radius is None:
                 raise RuntimeError("target_array_radius need to be defined, "
                                    "if DotArray is not loaded from file.")
-            self._attributes = ItemAttributesList()
+            self._attributes = []
             self.target_array_radius = target_array_radius
             self.minimum_gap = minimum_gap
             if xy is not None or diameters is not None or features is not None:
@@ -339,35 +336,58 @@ class DotArray(DotCollection):
         else:
             self.load(json_filename=dot_array_file)
 
-    @property
-    def attributes(self):
+    def get_attributes(self):
         return self._attributes
+
+    def set_attributes(self, attributes):
+        """Set all attributes
+
+        Parameter
+        ---------
+        attributes:  ItemAttributes or list of ItemAttributes
+
+        """
+
+        ItemAttributes.check_type(attributes)
+
+        if isinstance(attributes, (list, tuple)):
+            if len(attributes) != self.feature_numerosity:
+                raise ValueError("Length of attribute list does not match the " +\
+                                 "size of the dot array.")
+            self._attributes = attributes
+        else:
+            self._attributes = [attributes] * self.feature_numerosity
+
+    def get_colours(self):
+        return list(map(lambda x:x.colour, self._attributes))
 
     def clear(self):
         DotCollection.clear(self)
-        self._attributes.clear()
+        self._attributes = []
 
     def append(self, xy, item_diameters, attributes=None):
         """append dots using numpy array
-        attributes ItemAttributes of ItemAttributesList"""
+        attributes ItemAttributes or a list of ItemAttributes"""
 
         item_diameters = misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
-            attributes = [ItemAttributes()] * len(item_diameters)
-        elif len(item_diameters) > 1 and isinstance(attributes, ItemAttributes):
+            attributes = ItemAttributes()
+
+        ItemAttributes.check_type(attributes)
+        if isinstance(attributes, ItemAttributes):
             attributes = [attributes] * len(item_diameters)
 
-        self._attributes.append(attributes=attributes)
-
-        if (self._attributes.length != len(self._diameters)):
+        if len(attributes) != len(item_diameters):
             raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as diameter")
+        self._attributes.extend(attributes)
+
 
     def delete(self, index):
         DotCollection.delete(self, index)
-        self._attributes.delete(index)
+        self._attributes.pop(index)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -382,19 +402,22 @@ class DotArray(DotCollection):
                         minimum_gap=self.minimum_gap,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
-                        features=self._attributes.copy())
+                        features=deepcopy(self._attributes))
 
     def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y], item_diameters=dot.diameter, attributes=dot.attributes)
+        self.append(xy=[dot.x, dot.y],
+                    item_diameters=dot.diameter,
+                    attributes=dot.attributes)
 
     def join(self, dot_array, realign=False):
         """add another dot arrays"""
 
-        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters, attributes=dot_array.attributes)
+        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
+                    attributes=dot_array.get_attributes())
         if realign:
             self.realign()
 
-    def get_dots(self, indices=None, diameter=None, colour=None, picture=None):  # todo: search by attributes
+    def get_dots(self, indices=None, diameter=None, item_attributes=None):
         """returns all dots
          filtering possible:
          if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
@@ -412,8 +435,8 @@ class DotArray(DotCollection):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
-                    (colour is not None and att.colour != colour) or \
-                    (picture is not None and att.picture != picture):
+                    (item_attributes is not None and att.is_different(
+                        item_attributes)):
                 continue
 
             rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
@@ -534,30 +557,31 @@ class DotArray(DotCollection):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self._attributes.colours):
+        for c in np.unique(self.get_colours()):
             if c is not None:
                 da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
-                for d in self.get_dots(colour=c):
+                for d in self.get_dots(
+                        item_attributes =ItemAttributes(colour=c)):
                     da.append_dot(d)
                 rtn.append(da)
         return rtn
 
-    def get_features_split_by_colours(self):
-        """returns is unicolor or no color"""
-        if len(np.unique(self._attributes.colours)) == 1:
+    def get_features_split_by_colours(self): # Todo: Is this function required
+        """returns None if uni-color or no color"""
+        if len(np.unique(self.get_colours())) == 1:
             return None
 
         dicts = []
         for da in self.split_array_by_colour():
             feat = da.get_features_dict()
-            feat["Object_id"] += str(da._attributes.colours[0])
+            feat["Object_id"] = self.object_id + str(da.get_colours()[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
                 object_id_column=True, num_idx_column=True,
-                colour_column=False, picture_column=False):  # todo print features
+                colour_column=False):  # todo print features
         """Return the dot array as csv text
 
         Parameter
@@ -576,11 +600,10 @@ class DotArray(DotCollection):
             rtn += u"x,y,diameter"
             if colour_column:
                 rtn += u",colour"
-            if picture_column:
-                rtn += u",file"
             rtn += u"\n"
 
         obj_id = self.object_id
+        colours = self.get_colours()
         for cnt in range(len(self._xy)):
             if object_id_column:
                 rtn += "{0}, ".format(obj_id)
@@ -589,9 +612,7 @@ class DotArray(DotCollection):
             rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
                    num_format % self._diameters[cnt]
             if colour_column:
-                rtn += ", {}".format(self._attributes.colours[cnt])
-            if picture_column:
-                rtn += ", {}".format(self._attributes.pictures[cnt])
+                rtn += ", {}".format(colours[cnt])
             rtn += "\n"
         return rtn
 
@@ -708,17 +729,22 @@ class DotArray(DotCollection):
 
     def as_dict(self, rounded_values=False):
         d = super().as_dict(rounded_values)
+        att = list(map(lambda x:x.as_dict(), self._attributes))
+
         d.update({"minimum_gap": self.minimum_gap,
              "target_array_radius": self.target_array_radius,
-             "attributes": self._attributes.as_dict()})
+             "attributes": att})
         return d
 
     def read_from_dict(self, dict):
         super().read_from_dict(dict)
         self.minimum_gap = dict["minimum_gap"]
         self.target_array_radius = dict["target_array_radius"]
-        self._attributes = ItemAttributesList()
-        self._attributes.read_from_dict(dict["attributes"])
+
+        for d in dict["attributes"]:
+            ia = ItemAttributes()
+            ia.read_from_dict(d)
+            self._attributes.append(ia)
 
     def match(self, match_feature, match_dot_array=None):
         """

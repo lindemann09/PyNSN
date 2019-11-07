@@ -51,7 +51,7 @@ class Specs(object):
                 "dot_diameter_mean": self.item_diameter_mean,
                 "dot_diameter_range": self.item_diameter_range,
                 "dot_diameter_std": self.item_diameter_std,
-                "dot_colour": self.item_attributes.colour.colour,  ##todo feature
+                "dot_colour": str(self.item_attributes.colour),  ##todo feature
                 "minimum_gap": self.minimum_gap}
 
 
@@ -79,7 +79,8 @@ def create(n_dots, specs, occupied_space=None,
             xy = rtn.random_free_dot_position(dot_diameter=dia, occupied_space=occupied_space)
         except:
             return None
-        rtn.append(xy=xy, item_diameters=dia, attributes=specs.item_attributes)
+        rtn.append(xy=xy, item_diameters=dia,
+                     attributes=specs.item_attributes)
 
     if logger is not None:
         from ._logging import LogFile # to avoid circular import
