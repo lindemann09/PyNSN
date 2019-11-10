@@ -39,7 +39,7 @@ class DotCloud(object):
         self.set_array_modified()
 
     def __str__(self):
-        return self.get_features_text(extended_format=True)
+        return self.feature.get_features_text(extended_format=True)
 
 
     @property
@@ -226,7 +226,6 @@ class SimpleDotArray(DotCloud):
         self.target_array_radius = target_array_radius
         self.minimum_gap = minimum_gap
 
-
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
 
@@ -349,7 +348,8 @@ class SimpleDotArray(DotCloud):
                                  allow_overlapping=False,
                                  prefer_inside_field_area=False,
                                  squared_array = False,
-                                 occupied_space=None): #TODO rounded values
+                                 min_distance_area_boarder = 0,
+                                 occupied_space=None):
         """returns a available random xy position
 
         raise exception if not found
@@ -363,7 +363,8 @@ class SimpleDotArray(DotCloud):
             delaunay = None
         cnt = 0
 
-        target_radius = self.target_array_radius - (dot_diameter / 2.0)
+        target_radius = (self.target_array_radius -
+                         min_distance_area_boarder) - (dot_diameter / 2.0)
         while True:
             cnt += 1
             ##  polar method seems to produce centeral clustering
@@ -397,7 +398,8 @@ class SimpleDotArray(DotCloud):
             elif cnt > 3000:
                 raise RuntimeError(u"Can't find a free position") #FIXME
 
-    def shuffle_all_positions(self, allow_overlapping=False):
+    def shuffle_all_positions(self, allow_overlapping=False,
+                              min_distance_area_boarder=0):
         """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
@@ -406,7 +408,8 @@ class SimpleDotArray(DotCloud):
         for d in self.diameters:
             try:
                 xy = self.random_free_dot_position(d,
-                                            allow_overlapping=allow_overlapping)
+                                                   allow_overlapping=allow_overlapping,
+                                                   min_distance_area_boarder=min_distance_area_boarder)
             except:
                 raise RuntimeError("Can't shuffle dot array. No free positions.")
 
@@ -422,7 +425,7 @@ class SimpleDotArray(DotCloud):
         """number deviant
         """
 
-        try_out = 100
+        TRY_OUT = 100
         # make a copy for the deviant
         deviant = self.copy()
         if self.feature.numerosity + change_numerosity <= 0:
@@ -434,7 +437,7 @@ class SimpleDotArray(DotCloud):
                     ch = deviant.convex_hull.indices
                 else:
                     ch = []
-                for x in range(try_out):
+                for x in range(TRY_OUT):##
                     rnd = random.randint(0, deviant.feature.numerosity-1) # do not use np.random
                     if rnd not in ch or change_numerosity > 0:
                         break
@@ -677,7 +680,8 @@ class DotArray(SimpleDotArray):
     def __init__(self, target_array_radius, minimum_gap):
         """ Dot array adds attribues, such as colour to a SimpleDotArray."""
 
-        super().__init__(target_array_radius, minimum_gap)
+        super().__init__(target_array_radius=target_array_radius,
+                         minimum_gap=minimum_gap)
         self._attributes = []
 
     def get_attributes(self):

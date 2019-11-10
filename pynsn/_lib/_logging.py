@@ -105,7 +105,8 @@ class LogFile(object):
         self.logtext_arrays = ""
 
 
-class LogFileReader(object):
+class LogFileReader(object): # FIXME really required. Better using files for
+    # saving xy
 
     def __init__(self, filename, colours=False, pictures=False,
                  comment="#", first_line_variable_names=True, zipped=False):  # todo: zip
@@ -209,7 +210,9 @@ class LogFileReader(object):
         else:
             pict = [None] * len(xy)
 
-        rtn = DotArray(target_array_radius=target_array_radius)
+        rtn = DotArray(target_array_radius=target_array_radius,
+                       minimum_gap=2)
+
         for x in zip(xy, dia, col, pict):
             rtn.append(xy=x[0], item_diameters=x[1],
                        attributes=ItemAttributes(colour=x[2], picture=x[3]))

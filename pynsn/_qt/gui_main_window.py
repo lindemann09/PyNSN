@@ -16,11 +16,11 @@ from .sequence_display import SequenceDisplay
 
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
-                                         item_colour="lime",
-                                         item_diameter_mean=15,
-                                         item_diameter_range=[5, 40],
-                                         item_diameter_std=8,
-                                         minimum_gap=2),
+                                            item_colour="lime",
+                                            item_diameter_mean=15,
+                                            item_diameter_range=[5, 40],
+                                            item_diameter_std=8,
+                                            minimum_gap=2),
                  _colour .ImageColours(target_area="#3e3e3e",
                                         field_area=None,
                                         field_area_outer=None,
@@ -29,10 +29,10 @@ DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                         background="gray"))
 
 ICON = (11, random_dot_array.Specs(target_area_radius=200,
-                                item_colour="lime",
-                                item_diameter_mean=35,
-                                item_diameter_range=[5, 80],
-                                item_diameter_std=20),
+                                   item_colour="lime",
+                                   item_diameter_mean=35,
+                                   item_diameter_range=[5, 80],
+                                   item_diameter_std=20),
         _colour .ImageColours(target_area="#3e3e3e",
                                field_area=None,
                                field_area_outer="expyriment_orange",
@@ -188,12 +188,12 @@ class GUIMainWindow(QtGui.QMainWindow):
             self.main_widget.dot_colour.text = colour_dot
 
         return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
-                                   item_colour=colour_dot,
-                                   item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                                   item_diameter_range=[self.main_widget.item_diameter_range.value1,
+                                      item_colour=colour_dot,
+                                      item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                                      item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
-                                   item_diameter_std=self.main_widget.item_diameter_std.value,
-                                   minimum_gap=self.main_widget.minimum_gap.value)
+                                      item_diameter_std=self.main_widget.item_diameter_std.value,
+                                      minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_colours(self):
         # check colour input

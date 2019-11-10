@@ -15,7 +15,9 @@ class Specs(object):
                  item_diameter_range=None,
                  item_diameter_std=None,
                  item_colour=None,  # todo feature
-                 minimum_gap=2):  # TODO check minim gap
+                 minimum_gap=2,
+                 min_distance_area_boarder=0):
+        # minim gap
 
         """Specification of a Random Dot Array
 
@@ -44,6 +46,7 @@ class Specs(object):
         self.item_diameter_range = item_diameter_range
         self.item_diameter_mean = item_diameter_mean
         self.item_diameter_std = item_diameter_std
+        self.min_distance_area_boarder = min_distance_area_boarder
         self.item_attributes = _ItemAttributes(colour=item_colour)
 
     def as_dict(self):
@@ -52,7 +55,8 @@ class Specs(object):
                 "dot_diameter_range": self.item_diameter_range,
                 "dot_diameter_std": self.item_diameter_std,
                 "dot_colour": str(self.item_attributes.colour),  ##todo feature
-                "minimum_gap": self.minimum_gap}
+                "minimum_gap": self.minimum_gap,
+                "min_distance_area_boarder": self.min_distance_area_boarder}
 
 
 def create(n_dots, specs, occupied_space=None,
@@ -64,8 +68,7 @@ def create(n_dots, specs, occupied_space=None,
 
     assert isinstance(specs, Specs)
 
-    rtn = _DotArray(target_array_radius=specs.target_array_radius,  # TODO
-                    # distance_field_edge ?
+    rtn = _DotArray(target_array_radius=specs.target_array_radius,
                    minimum_gap=specs.minimum_gap)
 
     # random diameter from beta distribution with exact mean and str
@@ -76,7 +79,10 @@ def create(n_dots, specs, occupied_space=None,
 
     for dia in diameters:
         try:
-            xy = rtn.random_free_dot_position(dot_diameter=dia, occupied_space=occupied_space)
+            xy = rtn.random_free_dot_position(dot_diameter=dia,
+                                              occupied_space=occupied_space,
+                                              min_distance_area_boarder=
+                                            specs.min_distance_area_boarder)
         except:
             return None
         rtn.append(xy=xy, item_diameters=dia,

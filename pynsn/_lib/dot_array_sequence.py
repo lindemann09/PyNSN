@@ -110,7 +110,8 @@ class DASequence(object):
 def create(reference_dot_array,
            match_properties,
            min_max_numerosity,
-           extra_space,  #  later fitting of convex hull and density might result in enlarged arrays
+           extra_space,  #  later fitting of convex hull and density might
+           # result in enlarged arrays TODO rename variable
            center_array=True,
            logger=None):  # todo could be an iterator
     """factory function
