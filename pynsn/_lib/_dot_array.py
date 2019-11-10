@@ -17,9 +17,11 @@ from . import misc
 from ._item_attributes import ItemAttributes
 from . import visual_features as vf
 
-# TODO: How to deal with rounding? Is saving to precises?
+# TODO: How to deal with rounding? Is saving to precises? Suggestion:
+#  introduction precision parameter that is used by as_dict and get_csv and
+#  hash
 
-class DotCollection(object):
+class DotCloud(object):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -134,7 +136,7 @@ class DotCollection(object):
         return self._ch.full_field_area
 
     @property
-    def object_id(self):
+    def hash(self):
         """md5_hash of position, diameter"""
 
         m = md5()
@@ -143,15 +145,31 @@ class DotCollection(object):
         return m.hexdigest()
 
     def as_dict(self, round_decimals=None):
-        if round_decimals is True:
-            round_decimals = 0
+        """round_decimals decimal places to round the data.
+
+        if True it rounds to integer (like round_decimals==0)
+
+        Parameter
+        ---------
+        round_decimals: None, bool of integer
+        """
+        if isinstance(round_decimals, bool):
+            if round_decimals is True:
+                round_decimals = 0
+            else:
+                round_decimals = None
+
         if isinstance(round_decimals, int):
-            xy = np.round(self._xy, decimals=round_decimals).astype(np.int).tolist()
-            dia = np.round(self._diameters, decimals=round_decimals).astype(np.int).tolist()
+            xy = np.round(self._xy, decimals=round_decimals)
+            dia = np.round(self._diameters, decimals=round_decimals)
+            if round_decimals == 0:
+                xy = xy.astype(np.int)
+                dia = dia.astype(np.int)
         else:
-            xy = self._xy.tolist()
-            dia = self._diameters.tolist()
-        return {"object_id": self.object_id, "xy": xy, "diameters": dia}
+            xy = self._xy
+            dia = self._diameters
+        return {"hash": self.hash, "xy": xy.tolist(),
+                "diameters": dia.tolist()}
 
 
     def save(self, json_filename, round_decimals=None, indent=None):
@@ -173,7 +191,7 @@ class DotCollection(object):
 
     def get_features_dict(self):
         """ordered dictionary with the most important feature"""
-        rtn = [("Object_id", self.object_id),
+        rtn = [("Hash", self.hash),
                ("Numerosity", self.feature_numerosity),
                (vf.TotalSurfaceArea.label, self.feature_total_surface_area),
                (vf.ItemSurfaceArea.label, self.feature_mean_item_surface_area),
@@ -187,12 +205,12 @@ class DotCollection(object):
                (vf.LogSpacing.label, self.feature_logSpacing)]
         return OrderedDict(rtn)
 
-    def get_features_text(self, with_object_id=True, extended_format=False, spacing_char="."):
+    def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):
         if extended_format:
             rtn = None
             for k, v in self.get_features_dict().items():
                 if rtn is None:
-                    if with_object_id:
+                    if with_hash:
                         rtn = "- {}\n".format(v)
                     else:
                         rtn = ""
@@ -208,8 +226,8 @@ class DotCollection(object):
 
                     rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
         else:
-            if with_object_id:
-                rtn = "id: {}".format(self.object_id)
+            if with_hash:
+                rtn = "id: {}".format(self.hash)
             else:
                 rtn = ""
             rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: {:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
@@ -270,8 +288,8 @@ class DotCollection(object):
         if indices is None:
             indices = list(range(self.feature_numerosity))
 
-        return DotCollection(xy=self._xy[indices, :].copy(),
-                             diameters=self._diameters[indices].copy())
+        return DotCloud(xy=self._xy[indices, :].copy(),
+                        diameters=self._diameters[indices].copy())
 
     def distances(self, xy, diameter):
         """Distances toward a single point (xy, diameter) """
@@ -314,7 +332,7 @@ class DotCollection(object):
 
 
 
-class DotArray(DotCollection):
+class DotArray(DotCloud):
 
     def __init__(self, target_array_radius=None,
                  minimum_gap=2,
@@ -322,12 +340,13 @@ class DotArray(DotCollection):
                  diameters=None,
                  features=None,
                  dot_array_file=None):
-        """Dot array is restricted to a certain area and can shuffle positions
-        and find random free space and be realigned itself
+        """Dot array is restricted to a certain area, adds attributes,
+         and can shuffle positions and find random free space and be
+         realigned itself
 
         target_array_radius or dot_array_file needs to be define."""
 
-        DotCollection.__init__(self)
+        DotCloud.__init__(self)
         if dot_array_file is None:
             if target_array_radius is None:
                 raise RuntimeError("target_array_radius needs to be defined, "
@@ -366,14 +385,13 @@ class DotArray(DotCollection):
         return list(map(lambda x:x.colour, self._attributes))
 
     def clear(self):
-        DotCollection.clear(self)
+        DotCloud.clear(self)
         self._attributes = []
 
     def append(self, xy, item_diameters, attributes=None):
         """append dots using numpy array
         attributes ItemAttributes or a list of ItemAttributes"""
 
-        item_diameters = misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
@@ -381,16 +399,16 @@ class DotArray(DotCollection):
 
         ItemAttributes.check_type(attributes)
         if isinstance(attributes, ItemAttributes):
-            attributes = [attributes] * len(item_diameters)
+            attributes = [attributes] * self.feature_numerosity
 
-        if len(attributes) != len(item_diameters):
+        if len(attributes) != self.feature_numerosity:
             raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as diameter")
         self._attributes.extend(attributes)
 
 
     def delete(self, index):
-        DotCollection.delete(self, index)
+        DotCloud.delete(self, index)
         self._attributes.pop(index)
 
     def copy(self, indices=None):
@@ -413,13 +431,11 @@ class DotArray(DotCollection):
                     item_diameters=dot.diameter,
                     attributes=dot.attributes)
 
-    def join(self, dot_array, realign=False):
+    def join(self, dot_array):
         """add another dot arrays"""
 
         self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
                     attributes=dot_array.get_attributes())
-        if realign:
-            self.realign()
 
     def get_dots(self, indices=None, diameter=None, item_attributes=None):
         """returns all dots
@@ -579,12 +595,12 @@ class DotArray(DotCollection):
         dicts = []
         for da in self.split_array_by_colour():
             feat = da.get_features_dict()
-            feat["Object_id"] = self.object_id + str(da.get_colours()[0])
+            feat["hash"] = self.hash + str(da.get_colours()[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
     def get_csv(self, num_format="%7.2f", variable_names=True,
-                object_id_column=True, num_idx_column=True,
+                hash_column=True, num_idx_column=True,
                 colour_column=False):  # todo print features
         """Return the dot array as csv text
 
@@ -597,8 +613,8 @@ class DotArray(DotCollection):
 
         rtn = ""
         if variable_names:
-            if object_id_column:
-                rtn += u"object_id,"
+            if hash_column:
+                rtn += u"hash,"
             if num_idx_column:
                 rtn += u"num_id,"
             rtn += u"x,y,diameter"
@@ -606,10 +622,10 @@ class DotArray(DotCollection):
                 rtn += u",colour"
             rtn += u"\n"
 
-        obj_id = self.object_id
+        obj_id = self.hash
         colours = self.get_colours()
         for cnt in range(len(self._xy)):
-            if object_id_column:
+            if hash_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
                 rtn += "{},".format(self.feature_numerosity)
@@ -677,21 +693,19 @@ class DotArray(DotCollection):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
-        new_diameters = np.array([])
-        new_xy = np.array([])
-
-        for d in self._diameters:
+        new_xy = None
+        for d in self.diameters:
             try:
-                xy = self.random_free_dot_position(d, allow_overlapping=allow_overlapping)
+                xy = self.random_free_dot_position(d,
+                                            allow_overlapping=allow_overlapping)
             except:
                 raise RuntimeError("Can't shuffle dot array. No free positions.")
-            new_diameters = np.append(new_diameters, d)
-            if len(new_xy) == 0:
+
+            if new_xy is None:
                 new_xy = np.array([xy])
             else:
                 new_xy = np.append(new_xy, [xy], axis=0)
 
-        self._diameters = new_diameters
         self._xy = new_xy
         self.set_array_modified()
 

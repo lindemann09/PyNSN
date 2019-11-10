@@ -47,12 +47,12 @@ class DASequence(object):
         return (self.dot_arrays[0].feature_numerosity, self.dot_arrays[-1].feature_numerosity)
 
     @property
-    def object_id(self):
+    def hash(self):
         """meta hash of object ids"""
 
         m = _md5()
         for da in self.dot_arrays:
-            m.update(da.object_id.encode("UTF-8"))
+            m.update(da.hash.encode("UTF-8"))
         return m.hexdigest()
 
     def get_features_dict(self):  # todo search for get_features!
@@ -60,12 +60,13 @@ class DASequence(object):
 
         dicts = [x.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
-        rtn['object_id'] = [self.object_id] * len(self.dot_arrays)  # all arrays have the same ID
+        rtn['hash'] = [self.hash] * len(self.dot_arrays)  # all arrays have the
+        # same ID
         return rtn
 
     def get_numerosity_correlations(self):
         feat = self.get_features_dict()
-        del feat['object_id']
+        del feat['hash']
         feat_np = _np.round(_np.array(feat.values()).T, 2)
         cor = _np.corrcoef(feat_np, rowvar=False)
         cor = cor[0, :]
@@ -79,24 +80,25 @@ class DASequence(object):
         return self.get_csv()
 
     def get_csv(self, num_format="%7.2f", variable_names=True, colour_column=False,
-                picture_column=False, object_id_column=True):
+                picture_column=False, hash_column=True):
 
         rtn = ""
         tmp_var_names = variable_names
+
         for da in self.dot_arrays:
-            rtn += da.get_csv(num_idx_column=True, object_id_column=False,
+            rtn += da.get_csv(num_idx_column=True, hash_column=False,
                               variable_names=tmp_var_names,
                               num_format=num_format, colour_column=colour_column,
                               picture_column=picture_column)
             tmp_var_names = False
 
-        if object_id_column:
-            obj_id = self.object_id
+        if hash_column:
+            obj_id = self.hash
             rtn2 = ""
             tmp_var_names = variable_names
             for l in rtn.split("\n"):
                 if tmp_var_names:
-                    rtn2 += "object_id," + l + "\n"
+                    rtn2 += "hash," + l + "\n"
                     tmp_var_names = False
                 elif len(l) > 0:
                     rtn2 += "{},{}\n".format(obj_id, l)

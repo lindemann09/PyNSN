@@ -250,12 +250,12 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.data_array.get_features_text(extended_format=True, with_object_id=True)
+        txt = self.data_array.get_features_text(extended_format=True, with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.data_array.split_array_by_colour():
                 txt += "Colour {}\n".format(da.get_colours()[0])
                 txt += da.get_features_text(extended_format=True,
-                                          with_object_id=False)
+                                            with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -263,7 +263,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_print_xy(self):
         """"""
-        txt = self.data_array.get_csv(object_id_column=False, num_idx_column=False, colour_column=True)
+        txt = self.data_array.get_csv(hash_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_out(txt)
 
     def action_print_para(self):

@@ -15,7 +15,7 @@ if not(_version_info[0] >= 3 and _version_info[1] >= 5):
                                                     _version_info[1]) +
                       "Please use Python 3.5+.")
 
-from ._lib._dot_array import DotCollection, DotArray
+from ._lib._dot_array import DotCloud, DotArray
 from ._lib._colour import Colour, ImageColours
 from ._lib._item_attributes import ItemAttributes
 from ._lib._logging import LogFile, LogFileReader

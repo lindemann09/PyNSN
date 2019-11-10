@@ -122,19 +122,19 @@ class LogFileReader(object):
         self.diameters = []
         self.colours = []
         self.pictures = []
-        self.object_ids = []
+        self.hashes = []
         self.num_ids = []
-        self.unique_object_ids = []
+        self.unique_hashes = []
 
     def load(self):
 
         with open(self.filename, "r") as fl:
-            self.unique_object_ids = []
+            self.unique_hashes = []
             xy = []
             diameters = []
             colours = []  # TODO: features
             pictures = []
-            object_ids = []
+            hashes = []
             num_ids = []
             first_line = True
             for l in fl:
@@ -146,9 +146,9 @@ class LogFileReader(object):
 
                 arr = l.split(",")
 
-                object_ids.append(arr[0].strip())
-                if object_ids[-1] not in self.unique_object_ids:
-                    self.unique_object_ids.append(object_ids[-1])
+                hashes.append(arr[0].strip())
+                if hashes[-1] not in self.unique_hashes:
+                    self.unique_hashes.append(hashes[-1])
 
                 num_ids.append(int(arr[1]))
                 xy.append([float(arr[2]), float(arr[3])])
@@ -165,17 +165,17 @@ class LogFileReader(object):
         self.diameters = np.array(diameters)
         self.colours = np.array(colours)
         self.pictures = np.array(pictures)
-        self.object_ids = np.array(object_ids)
+        self.hashes = np.array(hashes)
         self.num_ids = np.array(num_ids, dtype=np.int)
 
     def _check_loaded(self):
 
-        if len(self.unique_object_ids) == 0:
+        if len(self.unique_hashes) == 0:
             raise RuntimeError("Operation not possible. Please first load log file (LogFileReader.load()).")
 
-    def get_object_type(self, object_id):
+    def get_object_type(self, hash):
 
-        l = len(self.get_unique_num_ids(object_id))
+        l = len(self.get_unique_num_ids(hash))
         if l > 1:  # several num_ids or just one
             return DASequence
         elif l == 1:
@@ -183,11 +183,11 @@ class LogFileReader(object):
         else:
             return None
 
-    def get_unique_num_ids(self, object_id):
+    def get_unique_num_ids(self, hash):
 
         self._check_loaded()
-        if object_id in self.unique_object_ids:
-            ids = self.object_ids == object_id
+        if hash in self.unique_hashes:
+            ids = self.hashes == hash
             return np.sort(np.unique(self.num_ids[ids]))
         else:
             return np.array([])
@@ -219,16 +219,16 @@ class LogFileReader(object):
             rtn.target_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 
-    def get_object(self, object_id, target_array_radius=None):  # todo: save max radius?
+    def get_object(self, hash, target_array_radius=None):  # todo: save max radius?
         """if target_array_radius=None find minimal required radius
 
         :returns dot array or dot array sequence"""
 
         self._check_loaded()
-        if object_id in self.unique_object_ids:
+        if hash in self.unique_hashes:
 
-            o_idx = self.object_ids == object_id
-            ot = self.get_object_type(object_id)
+            o_idx = self.hashes == hash
+            ot = self.get_object_type(hash)
             if ot == DotArray:
                 return self._get_dot_array(o_idx, target_array_radius=target_array_radius)
 
@@ -236,7 +236,7 @@ class LogFileReader(object):
                 rtn = DASequence()
 
                 array_radii = []
-                for num_id in self.get_unique_num_ids(object_id):
+                for num_id in self.get_unique_num_ids(hash):
                     tmp = o_idx & (self.num_ids == num_id)
                     da = self._get_dot_array(tmp, target_array_radius=target_array_radius)
                     rtn.append_dot_arrays(da)
