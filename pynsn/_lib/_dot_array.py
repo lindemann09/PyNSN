@@ -40,6 +40,7 @@ class DotCloud(object):
     def __str__(self):
         return self.get_features_text(extended_format=True)
 
+
     @property
     def xy(self):
         return self._xy
@@ -144,38 +145,26 @@ class DotCloud(object):
         m.update(self.surface_areas.tobytes())
         return m.hexdigest()
 
-    def as_dict(self, round_decimals=None):
-        """round_decimals decimal places to round the data.
+    def round(self, decimals=0):
+        """Round values of the array."""
 
-        if True it rounds to integer (like round_decimals==0)
+        self._xy = np.round(self._xy, decimals=decimals)
+        self._diameters = np.round(self._diameters, decimals=decimals)
+        if decimals==0:
+            self._xy = self._xy.astype(np.int32)
+            self._diameters = self._diameters.astype(np.int32)
 
-        Parameter
-        ---------
-        round_decimals: None, bool of integer
+    def as_dict(self):
         """
-        if isinstance(round_decimals, bool):
-            if round_decimals is True:
-                round_decimals = 0
-            else:
-                round_decimals = None
-
-        if isinstance(round_decimals, int):
-            xy = np.round(self._xy, decimals=round_decimals)
-            dia = np.round(self._diameters, decimals=round_decimals)
-            if round_decimals == 0:
-                xy = xy.astype(np.int)
-                dia = dia.astype(np.int)
-        else:
-            xy = self._xy
-            dia = self._diameters
-        return {"hash": self.hash, "xy": xy.tolist(),
-                "diameters": dia.tolist()}
+        """
+        return {"hash": self.hash, "xy": self._xy.tolist(),
+                "diameters": self._diameters.tolist()}
 
 
-    def save(self, json_filename, round_decimals=None, indent=None):
+    def save(self, json_filename, indent=None):
 
         with open(json_filename, 'w') as fl:
-            json.dump(self.as_dict(round_decimals), fl, indent=indent)
+            json.dump(self.as_dict(), fl, indent=indent)
 
     def load(self, json_filename):
 
@@ -330,86 +319,49 @@ class DotCloud(object):
         self._xy -= self.center_of_outer_positions
         self.set_array_modified()
 
+    def append_dot(self, dot):
+        assert isinstance(dot, Dot)
+        self.append(xy=[dot.x, dot.y],
+                    item_diameters=dot.diameter)
+
+    def get_dots(self, indices=None):
+        """returns all dots
+
+        indices int or list of ints
+         filtering possible:
+         if diameter is defined it returns only dots a particular
+         diameter
+
+         """
+
+        if indices is not None:
+            indices = range(self.feature_numerosity)
+        try:
+            indices = list(indices)  # check if iterable
+        except:
+            indices = [indices]
+
+        rtn = []
+        for xy, dia in zip(self._xy[indices, :], self._diameters[indices]):
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia))
+        return rtn
 
 
-class DotArray(DotCloud):
 
-    def __init__(self, target_array_radius=None,
-                 minimum_gap=2,
-                 xy=None,
-                 diameters=None,
-                 features=None,
-                 dot_array_file=None):
-        """Dot array is restricted to a certain area, adds attributes,
-         and can shuffle positions and find random free space and be
-         realigned itself
+class SimpleDotArray(DotCloud):
+
+    def __init__(self, target_array_radius, minimum_gap):
+        """Dot array is restricted to a certain area, it has a target area
+        and a minimum gap.
+        This features allow find shuffling free position and mathing
+        features.
 
         target_array_radius or dot_array_file needs to be define."""
 
-        DotCloud.__init__(self)
-        if dot_array_file is None:
-            if target_array_radius is None:
-                raise RuntimeError("target_array_radius needs to be defined, "
-                                   "if DotArray is not loaded from file.")
-            self._attributes = []
-            self.target_array_radius = target_array_radius
-            self.minimum_gap = minimum_gap
-            if xy is not None or diameters is not None or features is not None:
-                self.append(xy, diameters, attributes=features)
-        else:
-            self.load(json_filename=dot_array_file)
+        super().__init__()
+        self.target_array_radius = target_array_radius
+        self.minimum_gap = minimum_gap
 
-    def get_attributes(self):
-        return self._attributes
-
-    def set_attributes(self, attributes):
-        """Set all attributes
-
-        Parameter
-        ---------
-        attributes:  ItemAttributes or list of ItemAttributes
-
-        """
-
-        ItemAttributes.check_type(attributes)
-
-        if isinstance(attributes, (list, tuple)):
-            if len(attributes) != self.feature_numerosity:
-                raise ValueError("Length of attribute list does not match the " +\
-                                 "size of the dot array.")
-            self._attributes = attributes
-        else:
-            self._attributes = [attributes] * self.feature_numerosity
-
-    def get_colours(self):
-        return list(map(lambda x:x.colour, self._attributes))
-
-    def clear(self):
-        DotCloud.clear(self)
-        self._attributes = []
-
-    def append(self, xy, item_diameters, attributes=None):
-        """append dots using numpy array
-        attributes ItemAttributes or a list of ItemAttributes"""
-
-        super().append(xy=xy, item_diameters=item_diameters)
-
-        if attributes is None:
-            attributes = ItemAttributes()
-
-        ItemAttributes.check_type(attributes)
-        if isinstance(attributes, ItemAttributes):
-            attributes = [attributes] * self.feature_numerosity
-
-        if len(attributes) != self.feature_numerosity:
-            raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
-                                                      u"the same length as diameter")
-        self._attributes.extend(attributes)
-
-
-    def delete(self, index):
-        DotCloud.delete(self, index)
-        self._attributes.pop(index)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -417,49 +369,10 @@ class DotArray(DotCloud):
         It allows to copy a subset of dot only.
 
         """
-        if indices is None:
-            indices = list(range(self.feature_numerosity))
 
-        return DotArray(target_array_radius=self.target_array_radius,
-                        minimum_gap=self.minimum_gap,
-                        xy=self._xy[indices, :].copy(),
-                        diameters=self._diameters[indices].copy(),
-                        features=deepcopy(self._attributes))
-
-    def append_dot(self, dot):
-        self.append(xy=[dot.x, dot.y],
-                    item_diameters=dot.diameter,
-                    attributes=dot.attributes)
-
-    def join(self, dot_array):
-        """add another dot arrays"""
-
-        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
-                    attributes=dot_array.get_attributes())
-
-    def get_dots(self, indices=None, diameter=None, item_attributes=None):
-        """returns all dots
-         filtering possible:
-         if diameter/colour/picture is defined it returns only dots a particular diameter/colour/picture
-
-         """
-        rtn = []
-        i = -1
-        if indices is not None:
-            try:
-                indices = list(indices)  # check if iterable
-            except:
-                indices = [indices]
-
-        for xy, dia, att in zip(self._xy, self._diameters, self._attributes):
-            i += 1
-            if (indices is not None and i not in indices) or \
-                    (diameter is not None and dia != diameter) or \
-                    (item_attributes is not None and att.is_different(
-                        item_attributes)):
-                continue
-
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
+        rtn = super().copy(indices=indices)
+        rtn.target_array_radius = self.target_array_radius
+        rtn.minimum_gap = self.minimum_gap
         return rtn
 
     def _jitter_identical_positions(self, jitter_size=0.1):
@@ -573,68 +486,6 @@ class DotArray(DotCloud):
         """density takes into account the full possible target area (i.e., stimulus radius) """
         return np.pi * self.target_array_radius ** 2 / self.feature_total_surface_area
 
-    def split_array_by_colour(self):
-        """returns a list of arrays
-        each array contains all dots of with particular colour"""
-        rtn = []
-        for c in np.unique(self.get_colours()):
-            if c is not None:
-                da = DotArray(target_array_radius=self.target_array_radius,
-                              minimum_gap=self.minimum_gap)
-                for d in self.get_dots(
-                        item_attributes =ItemAttributes(colour=c)):
-                    da.append_dot(d)
-                rtn.append(da)
-        return rtn
-
-    def get_features_split_by_colours(self): # Todo: Is this function required
-        """returns None if uni-color or no color"""
-        if len(np.unique(self.get_colours())) == 1:
-            return None
-
-        dicts = []
-        for da in self.split_array_by_colour():
-            feat = da.get_features_dict()
-            feat["hash"] = self.hash + str(da.get_colours()[0])
-            dicts.append(feat)
-        return misc.join_dict_list(dicts)
-
-    def get_csv(self, num_format="%7.2f", variable_names=True,
-                hash_column=True, num_idx_column=True,
-                colour_column=False):  # todo print features
-        """Return the dot array as csv text
-
-        Parameter
-        ---------
-        variable_names : bool, optional
-            if True variable name will be printed in the first line
-
-        """
-
-        rtn = ""
-        if variable_names:
-            if hash_column:
-                rtn += u"hash,"
-            if num_idx_column:
-                rtn += u"num_id,"
-            rtn += u"x,y,diameter"
-            if colour_column:
-                rtn += u",colour"
-            rtn += u"\n"
-
-        obj_id = self.hash
-        colours = self.get_colours()
-        for cnt in range(len(self._xy)):
-            if hash_column:
-                rtn += "{0}, ".format(obj_id)
-            if num_idx_column:
-                rtn += "{},".format(self.feature_numerosity)
-            rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
-                   num_format % self._diameters[cnt]
-            if colour_column:
-                rtn += ", {}".format(colours[cnt])
-            rtn += "\n"
-        return rtn
 
     def random_free_dot_position(self, dot_diameter,
                                  allow_overlapping=False,
@@ -745,25 +596,7 @@ class DotArray(DotCloud):
                         raise RuntimeError("Can't make the deviant. No free position")
         return deviant
 
-    def as_dict(self, round_decimals=None):
-        d = super().as_dict(round_decimals=round_decimals)
-        att = list(map(lambda x:x.as_dict(), self._attributes))
-
-        d.update({"minimum_gap": self.minimum_gap,
-             "target_array_radius": self.target_array_radius,
-             "attributes": att})
-        return d
-
-    def read_from_dict(self, dict):
-        super().read_from_dict(dict)
-        self.minimum_gap = dict["minimum_gap"]
-        self.target_array_radius = dict["target_array_radius"]
-
-        self._attributes = []
-        for d in dict["attributes"]:
-            ia = ItemAttributes()
-            ia.read_from_dict(d)
-            self._attributes.append(ia)
+    # FIXME read_from_dict, as_dict?
 
     def match(self, match_feature, match_dot_array=None):
         """
@@ -967,3 +800,210 @@ class DotArray(DotCloud):
 
         self._match_field_area(field_area=self.feature_total_surface_area / coverage,
                                precision=precision)
+
+    def as_dict(self):
+        d = super().as_dict()
+        d.update({"minimum_gap": self.minimum_gap,
+             "target_array_radius": self.target_array_radius})
+        return d
+
+    def read_from_dict(self, dict):
+        super().read_from_dict(dict)
+        self.minimum_gap = dict["minimum_gap"]
+        self.target_array_radius = dict["target_array_radius"]
+
+
+class DotArray(SimpleDotArray):
+
+    def __init__(self, target_array_radius, minimum_gap):
+        """ Dot array adds attribues, such as colour to a SimpleDotArray."""
+
+        super().__init__(target_array_radius, minimum_gap)
+        self._attributes = []
+
+    def get_attributes(self):
+        return self._attributes
+
+    def set_attributes(self, attributes):
+        """Set all attributes
+
+        Parameter
+        ---------
+        attributes:  ItemAttributes or list of ItemAttributes
+
+        """
+
+        ItemAttributes.check_type(attributes)
+
+        if isinstance(attributes, (list, tuple)):
+            if len(attributes) != self.feature_numerosity:
+                raise ValueError("Length of attribute list does not match the " +\
+                                 "size of the dot array.")
+            self._attributes = attributes
+        else:
+            self._attributes = [attributes] * self.feature_numerosity
+
+    def get_colours(self):
+        return list(map(lambda x:x.colour, self._attributes))
+
+    def clear(self):
+        super().clear()
+        self._attributes = []
+
+    def append(self, xy, item_diameters, attributes=None):
+        """append dots using numpy array
+        attributes ItemAttributes or a list of ItemAttributes"""
+
+        super().append(xy=xy, item_diameters=item_diameters)
+
+        if attributes is None:
+            attributes = ItemAttributes()
+
+        ItemAttributes.check_type(attributes)
+        if isinstance(attributes, ItemAttributes):
+            attributes = [attributes] * self.feature_numerosity
+
+        if len(attributes) != self.feature_numerosity:
+            raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
+                                                      u"the same length as diameter")
+        self._attributes.extend(attributes)
+
+
+    def delete(self, index):
+        super().delete(index)
+        self._attributes.pop(index)
+
+    def copy(self, indices=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+        if indices is None:
+            indices = list(range(self.feature_numerosity))
+
+        rtn = DotArray(target_array_radius=self.target_array_radius,
+                        minimum_gap=self.minimum_gap)
+
+        for d in self.get_dots(indices=indices):
+            rtn.append_dot(d)
+        return rtn
+
+    def append_dot(self, dot):
+        assert isinstance(dot, Dot)
+        self.append(xy=[dot.x, dot.y],
+                    item_diameters=dot.diameter,
+                    attributes=dot.attributes)
+
+    def get_dots(self, indices=None, diameter=None, item_attributes=None):
+        """returns all dots
+        indices : int or list of ins
+
+         filtering possible:
+         if diameter/colour/picture is defined it returns only dots a
+         particular diameter/colour/picture
+
+         """
+        rtn = []
+        i = -1
+        if indices is not None:
+            try:
+                indices = list(indices)  # check if iterable
+            except:
+                indices = [indices]
+
+        for xy, dia, att in zip(self._xy, self._diameters, self._attributes):
+            i += 1
+            if (indices is not None and i not in indices) or \
+                    (diameter is not None and dia != diameter) or \
+                    (item_attributes is not None and att.is_different(
+                        item_attributes)):
+                continue
+
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
+        return rtn
+
+    def join(self, dot_array):
+        """add another dot arrays"""
+
+        self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
+                    attributes=dot_array.get_attributes())
+
+    def split_array_by_colour(self):
+        """returns a list of arrays
+        each array contains all dots of with particular colour"""
+        rtn = []
+        for c in np.unique(self.get_colours()):
+            if c is not None:
+                da = DotArray(target_array_radius=self.target_array_radius,
+                              minimum_gap=self.minimum_gap)
+                for d in self.get_dots(
+                        item_attributes =ItemAttributes(colour=c)):
+                    da.append_dot(d)
+                rtn.append(da)
+        return rtn
+
+
+    def get_features_split_by_colours(self): # Todo: Is this function required
+        """returns None if uni-color or no color"""
+        if len(np.unique(self.get_colours())) == 1:
+            return None
+
+        dicts = []
+        for da in self.split_array_by_colour():
+            feat = da.get_features_dict()
+            feat["hash"] = self.hash + str(da.get_colours()[0])
+            dicts.append(feat)
+        return misc.join_dict_list(dicts)
+
+    def get_csv(self, num_format="%7.2f", variable_names=True,
+                hash_column=True, num_idx_column=True,
+                colour_column=False):  # todo print features
+        """Return the dot array as csv text
+
+        Parameter
+        ---------
+        variable_names : bool, optional
+            if True variable name will be printed in the first line
+
+        """
+
+        rtn = ""
+        if variable_names:
+            if hash_column:
+                rtn += u"hash,"
+            if num_idx_column:
+                rtn += u"num_id,"
+            rtn += u"x,y,diameter"
+            if colour_column:
+                rtn += u",colour"
+            rtn += u"\n"
+
+        obj_id = self.hash
+        colours = self.get_colours()
+        for cnt in range(len(self._xy)):
+            if hash_column:
+                rtn += "{0}, ".format(obj_id)
+            if num_idx_column:
+                rtn += "{},".format(self.feature_numerosity)
+            rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
+                   num_format % self._diameters[cnt]
+            if colour_column:
+                rtn += ", {}".format(colours[cnt])
+            rtn += "\n"
+        return rtn
+
+
+    def as_dict(self):
+        d = super().as_dict()
+        att = map(lambda x:x.as_dict(), self._attributes)
+        d.update({"attributes": list(att)})
+        return d
+
+    def read_from_dict(self, dict):
+        super().read_from_dict(dict)
+        self._attributes = []
+        for d in dict["attributes"]:
+            ia = ItemAttributes()
+            ia.read_from_dict(d)
+            self._attributes.append(ia)

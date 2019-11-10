@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
-__version__ = '0.7.39'
+__version__ = '0.7.40'
 
 from sys import version_info as _version_info
 if not(_version_info[0] >= 3 and _version_info[1] >= 5):
@@ -15,7 +15,7 @@ if not(_version_info[0] >= 3 and _version_info[1] >= 5):
                                                     _version_info[1]) +
                       "Please use Python 3.5+.")
 
-from ._lib._dot_array import DotCloud, DotArray
+from ._lib._dot_array import DotCloud, SimpleDotArray, DotArray
 from ._lib._colour import Colour, ImageColours
 from ._lib._item_attributes import ItemAttributes
 from ._lib._logging import LogFile, LogFileReader
