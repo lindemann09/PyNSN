@@ -713,6 +713,7 @@ class DotArray(SimpleDotArray):
         """append dots using numpy array
         attributes ItemAttributes or a list of ItemAttributes"""
 
+        item_diameters = misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
@@ -720,9 +721,9 @@ class DotArray(SimpleDotArray):
 
         ItemAttributes.check_type(attributes)
         if isinstance(attributes, ItemAttributes):
-            attributes = [attributes] * self.feature.numerosity
+            attributes = [attributes] * len(item_diameters)
 
-        if len(attributes) != self.feature.numerosity:
+        if len(attributes) != len(item_diameters):
             raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as diameter")
         self._attributes.extend(attributes)
