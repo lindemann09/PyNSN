@@ -250,11 +250,12 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.data_array.get_features_text(extended_format=True, with_hash=True)
+        txt = self.data_array.feature.get_features_text(extended_format=True,
+                                                 with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.data_array.split_array_by_colour():
                 txt += "Colour {}\n".format(da.get_colours()[0])
-                txt += da.get_features_text(extended_format=True,
+                txt += da.feature.get_features_text(extended_format=True,
                                             with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
@@ -324,7 +325,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_slider_released(self):
         """"""
-        change = self.main_widget.number.value - self.data_array.feature_numerosity
+        change = self.main_widget.number.value - self.data_array.feature.numerosity
         self.data_array = self.data_array.number_deviant(change)
         self.show_current_image(remake_image=True)
         self.write_properties()
@@ -334,7 +335,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
 
         d = {"match range": match_range, "extra_space": extra_space}
-        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))  # TODO <-- check ERROR
+        d["match_methods"] = list(map(lambda x: x.get_features_dict(), match_methods))  # TODO <-- check ERROR
         self.main_widget.text_out("# Sequence\n" + \
                                            yaml.dump(d, default_flow_style=False))
 
@@ -347,7 +348,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                               extra_space=extra_space,
                               logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.data_array.feature_numerosity,
+                            start_numerosity=self.data_array.feature.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
 

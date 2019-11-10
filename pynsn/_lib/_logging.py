@@ -63,7 +63,7 @@ class LogFile(object):
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
             is_sequence = isinstance(dot_array_object, DASequence)
-            feat = dot_array_object.get_features_dict()
+            feat = dot_array_object.feature.get_features_dict()
             feat_log = misc.dict_to_csv(feat, variable_names=variable_names,
                                         dict_of_lists=is_sequence)
             if not is_sequence:

@@ -28,11 +28,11 @@ class DASequence(object):
         if isinstance(arr, _DotArray):
             arr = [arr]
         self.dot_arrays.extend(arr)
-        self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da.feature.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
         self.dot_arrays.pop(array_id)
-        self.numerosity_idx = {da.feature_numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da.feature.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def get_array(self, numerosity):
         """returns array with a particular numerosity"""
@@ -44,7 +44,7 @@ class DASequence(object):
 
     @property
     def min_max_numerosity(self):
-        return (self.dot_arrays[0].feature_numerosity, self.dot_arrays[-1].feature_numerosity)
+        return (self.dot_arrays[0].feature.numerosity, self.dot_arrays[-1].feature.numerosity)
 
     @property
     def hash(self):
@@ -58,7 +58,7 @@ class DASequence(object):
     def get_features_dict(self):  # todo search for get_features!
         """dictionary with arrays"""
 
-        dicts = [x.get_features_dict() for x in self.dot_arrays]
+        dicts = [x.feature.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['hash'] = [self.hash] * len(self.dot_arrays)  # all arrays have the
         # same ID
@@ -166,7 +166,7 @@ def create(reference_dot_array,
 
     min, max = sorted(min_max_numerosity)
     # decreasing
-    if min < reference_dot_array.feature_numerosity:
+    if min < reference_dot_array.feature.numerosity:
         da_sequence, error = _make_matched_deviants(
             reference_da=reference_da,
             match_props=match_props,
@@ -178,7 +178,7 @@ def create(reference_dot_array,
     # reference
     rtn.append_dot_arrays(reference_da)
     # increasing
-    if max > reference_dot_array.feature_numerosity:
+    if max > reference_dot_array.feature.numerosity:
         da_sequence, error = _make_matched_deviants(
             reference_da=reference_da,
             match_props=match_props,
@@ -202,9 +202,9 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
                            prefer_keeping_field_area):  # TODO center array OK?
     """helper function. Do not use this method. Please use make"""
 
-    if reference_da.feature_numerosity == target_numerosity:
+    if reference_da.feature.numerosity == target_numerosity:
         change = 0
-    elif reference_da.feature_numerosity > target_numerosity:
+    elif reference_da.feature.numerosity > target_numerosity:
         change = -1
     else:
         change = 1
@@ -230,11 +230,11 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
             if ok:
                 break
             if cnt > 10:
-                error = u"ERROR: realign, " + str(cnt) + ", " + str(da.feature_numerosity)
+                error = u"ERROR: realign, " + str(cnt) + ", " + str(da.feature.numerosity)
 
         da_sequence.append(da)
 
-        if error is not None or da.feature_numerosity == target_numerosity:
+        if error is not None or da.feature.numerosity == target_numerosity:
             break
 
     return da_sequence, error

@@ -58,14 +58,17 @@ def create(dot_array, colours, antialiasing=True,
     if tmp_colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
-                          convex_hull=_convert_pos(dot_array.convex_hull_positions * aa, image_size),
+                          convex_hull=_convert_pos(
+                              dot_array.convex_hull.xy * aa, image_size),
                           convex_hull_colour=tmp_colour)
 
     tmp_colour = colours.field_area_outer.colour
     if tmp_colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
-                          convex_hull=_convert_pos(dot_array.convex_hull_positions_full * aa, image_size),
+                          convex_hull=_convert_pos(
+                              dot_array.convex_hull.full_xy * aa,
+                              image_size),
                           convex_hull_colour=tmp_colour)
 
     tmp_colour = colours.center_of_mass.colour

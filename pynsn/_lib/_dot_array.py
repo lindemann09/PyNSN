@@ -1,20 +1,21 @@
 """
 Dot Array
 """
+
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-from copy import copy, deepcopy
+from copy import copy
 import random
-from collections import OrderedDict
 from hashlib import md5
 import json
 
 import numpy as np
 from scipy import spatial
 
+from ._item_attributes import ItemAttributes
+from ._dot_array_features import DotArrayFeatures
 from .geometry import Dot
 from . import misc
-from ._item_attributes import ItemAttributes
 from . import visual_features as vf
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
@@ -56,21 +57,12 @@ class DotCloud(object):
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
 
     @property
-    def feature_mean_item_diameter(self):
-        return np.mean(self._diameters)
+    def feature(self):
+        return DotArrayFeatures(self)
 
     @property
-    def feature_total_surface_area(self):
-        return np.sum(self.surface_areas)
-
-    @property
-    def convex_hull_positions(self):  # FIXME not defined for l<3
-        return self._xy[self.convex_hull_indices, :]
-
-    @property
-    def convex_hull_indices(self):  # FIXME not defined for l<3
-        """this convex_hull takes into account the dot diameter"""
-        return self._ch.convex_hull.vertices
+    def convex_hull(self):
+        return self._ch
 
     @property
     def surface_areas(self):
@@ -79,62 +71,6 @@ class DotCloud(object):
     @property
     def perimeter(self):
         return np.pi * self._diameters
-
-    @property
-    def feature_mean_item_surface_area(self):
-        return np.mean(self.surface_areas)
-
-    @property
-    def feature_total_perimeter(self):
-        return np.sum(self.perimeter)
-
-    @property
-    def feature_mean_item_perimeter(self):
-        return np.mean(self.perimeter)
-
-    @property
-    def feature_field_area(self):  # todo: not defined for small n
-        return self._ch.convex_hull.volume
-
-    @property
-    def feature_numerosity(self):
-        return len(self._xy)
-
-    @property
-    def feature_converage(self):
-        """ percent coverage in the field area. It takes thus the item size
-        into account. In contrast, the sparsity is only the ratio of field
-        array and numerosity
-
-        """
-
-        try:
-            return self.feature_total_surface_area / self.feature_field_area
-        except:
-            return None
-
-    @property
-    def feature_logSize(self):
-        return misc.log2(self.feature_total_surface_area) + misc.log2(
-            self.feature_mean_item_surface_area)
-
-    @property
-    def feature_logSpacing(self):
-        return misc.log2(self.feature_field_area) + misc.log2(
-            self.feature_sparsity)
-
-    @property
-    def feature_sparsity(self):
-        return self.feature_field_area / self.feature_numerosity
-
-    @property
-    def convex_hull_positions_full(self):  # FIXME not defined for l<3
-        """this convex_hull takes into account the dot diameter"""
-        return self._ch.full_xy
-
-    @property
-    def feature_field_area_full(self):  # FIXME not used (correct?)
-        return self._ch.full_field_area
 
     @property
     def hash(self):
@@ -178,57 +114,6 @@ class DotCloud(object):
         self._diameters = np.array(dict["diameters"])
         self.set_array_modified()
 
-    def get_features_dict(self):
-        """ordered dictionary with the most important feature"""
-        rtn = [("Hash", self.hash),
-               ("Numerosity", self.feature_numerosity),
-               (vf.TotalSurfaceArea.label, self.feature_total_surface_area),
-               (vf.ItemSurfaceArea.label, self.feature_mean_item_surface_area),
-               (vf.ItemDiameter.label, self.feature_mean_item_diameter),
-               (vf.ItemPerimeter.label, self.feature_mean_item_perimeter),
-               (vf.TotalPerimeter.label, self.feature_total_perimeter),
-               (vf.FieldArea.label, self.feature_field_area),
-               (vf.Sparsity.label, self.feature_sparsity),
-               (vf.Coverage.label, self.feature_converage),
-               (vf.LogSize.label, self.feature_logSize),
-               (vf.LogSpacing.label, self.feature_logSpacing)]
-        return OrderedDict(rtn)
-
-    def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):
-        if extended_format:
-            rtn = None
-            for k, v in self.get_features_dict().items():
-                if rtn is None:
-                    if with_hash:
-                        rtn = "- {}\n".format(v)
-                    else:
-                        rtn = ""
-                else:
-                    if rtn == "":
-                        name = "- " + k
-                    else:
-                        name = "  " + k
-                    try:
-                        value = "{0:.2f}\n".format(v)  # try rounding
-                    except:
-                        value = "{}\n".format(v)
-
-                    rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
-        else:
-            if with_hash:
-                rtn = "id: {}".format(self.hash)
-            else:
-                rtn = ""
-            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: {:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
-                self.feature_numerosity,
-                int(self.feature_total_surface_area),
-                int(self.feature_mean_item_surface_area),
-                int(self.feature_field_area),
-                self.feature_sparsity,
-                self.feature_logSize,
-                self.feature_logSpacing,
-                self.feature_converage)
-        return rtn
 
     def set_array_modified(self):
         self._ch = misc.EfficientConvexHullDots(self._xy, self._diameters)
@@ -275,7 +160,7 @@ class DotCloud(object):
 
         """
         if indices is None:
-            indices = list(range(self.feature_numerosity))
+            indices = list(range(self.feature.numerosity))
 
         return DotCloud(xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy())
@@ -293,27 +178,6 @@ class DotCloud(object):
         weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self._diameters)
 
-
-    def get_distance_matrix(self, between_positions=False):
-        """between position ignores the dot size"""
-        dist = spatial.distance.cdist(self._xy, self._xy)  # matrix with all distance between all points
-        if not between_positions:
-            # subtract dot diameter
-            radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
-            dist -= radii_mtx  # for each row
-            dist -= radii_mtx.T  # each each column
-        return dist
-
-    @property
-    def expension(self):
-        """ maximal distance between to points plus diameter of the two points"""
-
-        dist = self.get_distance_matrix(between_positions=True)
-        # add dot diameter
-        radii_mtx = np.ones((self.feature_numerosity, 1)) + self._diameters[:, np.newaxis].T / 2
-        dist += radii_mtx  # add to each row
-        dist += radii_mtx.T  # add two each column
-        return np.max(dist)
 
     def center_array(self):
         self._xy -= self.center_of_outer_positions
@@ -335,7 +199,7 @@ class DotCloud(object):
          """
 
         if indices is not None:
-            indices = range(self.feature_numerosity)
+            indices = range(self.feature.numerosity)
         try:
             indices = list(indices)  # check if iterable
         except:
@@ -473,19 +337,13 @@ class SimpleDotArray(DotCloud):
 
         if error:
             return False, u"Can't find solution when removing outlier (n=" + \
-                   str(self.feature_numerosity) + ")"
+                   str(self.feature.numerosity) + ")"
 
         self.set_array_modified()
         if not shift_required:
             return True, ""
         else:
             return self.realign()  # recursion
-
-    @property
-    def feature_coverage_target_area(self):
-        """density takes into account the full possible target area (i.e., stimulus radius) """
-        return np.pi * self.target_array_radius ** 2 / self.feature_total_surface_area
-
 
     def random_free_dot_position(self, dot_diameter,
                                  allow_overlapping=False,
@@ -500,7 +358,7 @@ class SimpleDotArray(DotCloud):
 
         try_out_inside_convex_hull = 1000
         if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self.convex_hull_positions)
+            delaunay = spatial.Delaunay(self.convex_hull.xy)
         else:
             delaunay = None
         cnt = 0
@@ -567,17 +425,17 @@ class SimpleDotArray(DotCloud):
         try_out = 100
         # make a copy for the deviant
         deviant = self.copy()
-        if self.feature_numerosity + change_numerosity <= 0:
+        if self.feature.numerosity + change_numerosity <= 0:
             deviant.clear()
         else:
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
                 if prefer_keeping_field_area:
-                    ch = deviant.convex_hull_indices
+                    ch = deviant.convex_hull.indices
                 else:
                     ch = []
                 for x in range(try_out):
-                    rnd = random.randint(0, deviant.feature_numerosity-1) # do not use np.random
+                    rnd = random.randint(0, deviant.feature.numerosity-1) # do not use np.random
                     if rnd not in ch or change_numerosity > 0:
                         break
 
@@ -586,14 +444,15 @@ class SimpleDotArray(DotCloud):
                     deviant.delete(rnd)
                 else:
                     # copy a random dot
+                    rnd_dot = self.get_dots([rnd])[0]
                     try:
-                        deviant.append(xy=deviant.random_free_dot_position(dot_diameter=deviant._diameters[rnd],
-                                                                           prefer_inside_field_area=prefer_keeping_field_area),
-                                       item_diameters=deviant._diameters[rnd],
-                                       attributes=deviant._attributes[rnd])
+
+                        rnd_dot.xy = deviant.random_free_dot_position(dot_diameter=rnd_dot.diameter)
                     except:
                         # no free position
                         raise RuntimeError("Can't make the deviant. No free position")
+                    deviant.append_dot(rnd_dot)
+
         return deviant
 
     # FIXME read_from_dict, as_dict?
@@ -633,27 +492,27 @@ class SimpleDotArray(DotCloud):
             self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
 
         elif isinstance(feat, vf.TotalPerimeter):
-            mean_dot_diameter = feat.value / (self.feature_numerosity * np.pi)
+            mean_dot_diameter = feat.value / (self.feature.numerosity * np.pi)
             self._match_item_diameter(mean_dot_diameter)
 
         elif isinstance(feat, vf.ItemSurfaceArea):
-            ta = self.feature_numerosity * feat.value
+            ta = self.feature.numerosity * feat.value
             self._match_total_surface_area(surface_area=ta)
 
         elif isinstance(feat, vf.TotalSurfaceArea):
             self._match_total_surface_area(surface_area=feat.value)
 
         elif isinstance(feat, vf.LogSize):
-            logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+            logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature.numerosity)
             self._match_total_surface_area(2 ** logtsa)
 
         elif isinstance(feat, vf.LogSpacing):
-            logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature_numerosity)
+            logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature.numerosity)
             self._match_field_area(field_area=2 ** logfa,
                                    precision=feat.spacing_precision)
 
         elif isinstance(feat, vf.Sparsity):
-            fa = feat.value * self.feature_numerosity
+            fa = feat.value * self.feature.numerosity
             self._match_field_area(field_area=fa,
                                    precision=feat.spacing_precision)
 
@@ -669,7 +528,7 @@ class SimpleDotArray(DotCloud):
 
     def _match_total_surface_area(self, surface_area):
         # changes diameter
-        a_scale = (surface_area / self.feature_total_surface_area)
+        a_scale = (surface_area / self.feature.total_surface_area)
         self._diameters = np.sqrt(self.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
         self.set_array_modified()
@@ -677,7 +536,7 @@ class SimpleDotArray(DotCloud):
     def _match_item_diameter(self, mean_item_diameter):
         # changes diameter
 
-        scale = mean_item_diameter / self.feature_mean_item_diameter
+        scale = mean_item_diameter / self.feature.mean_item_diameter
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
@@ -692,13 +551,13 @@ class SimpleDotArray(DotCloud):
         iterative method can takes some time.
         """
 
-        if self.feature_field_area is None:
+        if self.feature.field_area is None:
             return  # not defined
-        elif field_area > self.feature_field_area or use_scaling_only:
+        elif field_area > self.feature.field_area or use_scaling_only:
             # field area is currently too small or scaling is enforced
             return self.__scale_field_area(field_area=field_area,
                                            precision=precision)
-        elif field_area < self.feature_field_area:
+        elif field_area < self.feature.field_area:
             # field area is too large
             self.__decrease_field_area_by_replacement(max_field_area=field_area)
             # ..and rescaling to avoid to compensate for possible too
@@ -720,9 +579,9 @@ class SimpleDotArray(DotCloud):
         self._xy -= old_center
 
         removed_dots = []
-        while self.feature_field_area > max_field_area:
+        while self.feature.field_area > max_field_area:
             # remove one random outer dot and remember it
-            vertices = self._ch.convex_hull.vertices
+            vertices = self.convex_hull.indices
             idx = vertices[random.randint(0, len(vertices)-1)]
 
             removed_dots.extend(self.get_dots(indices=[idx]))
@@ -745,7 +604,7 @@ class SimpleDotArray(DotCloud):
 
         iterative method can takes some time.
         """
-        current = self.feature_field_area
+        current = self.feature.field_area
 
         if current is None:
             return  # not defined
@@ -767,7 +626,7 @@ class SimpleDotArray(DotCloud):
 
             self._xy = misc.polar2cartesian(centered_polar * [scale, 1])
             self.set_array_modified()  # required to recalc convex hull
-            current = self.feature_field_area
+            current = self.feature.field_area
 
             if (current < field_area and step < 0) or \
                     (current > field_area and step > 0):
@@ -793,12 +652,12 @@ class SimpleDotArray(DotCloud):
         if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (coverage * self.feature_field_area) - self.feature_total_surface_area
+        total_area_change100 = (coverage * self.feature.field_area) - self.feature.total_surface_area
         d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
-            self._match_total_surface_area(surface_area=self.feature_total_surface_area + d_change_total_area)
+            self._match_total_surface_area(surface_area=self.feature.total_surface_area + d_change_total_area)
 
-        self._match_field_area(field_area=self.feature_total_surface_area / coverage,
+        self._match_field_area(field_area=self.feature.total_surface_area / coverage,
                                precision=precision)
 
     def as_dict(self):
@@ -836,12 +695,12 @@ class DotArray(SimpleDotArray):
         ItemAttributes.check_type(attributes)
 
         if isinstance(attributes, (list, tuple)):
-            if len(attributes) != self.feature_numerosity:
+            if len(attributes) != self.feature.numerosity:
                 raise ValueError("Length of attribute list does not match the " +\
                                  "size of the dot array.")
             self._attributes = attributes
         else:
-            self._attributes = [attributes] * self.feature_numerosity
+            self._attributes = [attributes] * self.feature.numerosity
 
     def get_colours(self):
         return list(map(lambda x:x.colour, self._attributes))
@@ -861,9 +720,9 @@ class DotArray(SimpleDotArray):
 
         ItemAttributes.check_type(attributes)
         if isinstance(attributes, ItemAttributes):
-            attributes = [attributes] * self.feature_numerosity
+            attributes = [attributes] * self.feature.numerosity
 
-        if len(attributes) != self.feature_numerosity:
+        if len(attributes) != self.feature.numerosity:
             raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as diameter")
         self._attributes.extend(attributes)
@@ -880,7 +739,7 @@ class DotArray(SimpleDotArray):
 
         """
         if indices is None:
-            indices = list(range(self.feature_numerosity))
+            indices = list(range(self.feature.numerosity))
 
         rtn = DotArray(target_array_radius=self.target_array_radius,
                         minimum_gap=self.minimum_gap)
@@ -951,7 +810,7 @@ class DotArray(SimpleDotArray):
 
         dicts = []
         for da in self.split_array_by_colour():
-            feat = da.get_features_dict()
+            feat = da.feature.get_features_dict()
             feat["hash"] = self.hash + str(da.get_colours()[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
@@ -985,14 +844,13 @@ class DotArray(SimpleDotArray):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
-                rtn += "{},".format(self.feature_numerosity)
+                rtn += "{},".format(self.feature.numerosity)
             rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
                    num_format % self._diameters[cnt]
             if colour_column:
                 rtn += ", {}".format(colours[cnt])
             rtn += "\n"
         return rtn
-
 
     def as_dict(self):
         d = super().as_dict()

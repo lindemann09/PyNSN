@@ -4,7 +4,7 @@ import itertools as _itertools
 _DEFAULT_SPACING_PRECISION = 0.0001
 
 # @total_ordering
-class _BaseFeature(object):
+class _BaseFeatureType(object):
     """"""
     label = "undefined"
 
@@ -54,16 +54,16 @@ class _BaseFeature(object):
                 "value": self.value}
 
 
-class _SizeRelatedFeature(_BaseFeature):
+class _SizeRelatedFeatureType(_BaseFeatureType):
 
     @property
     def dependencies(self):
         return SIZE_FEATURES
 
-class _SpaceRelatedFeature(_BaseFeature):
+class _SpaceRelatedFeatureType(_BaseFeatureType):
 
     def __init__(self, value=None, spacing_precision=_DEFAULT_SPACING_PRECISION):
-        _BaseFeature.__init__(self, value)
+        _BaseFeatureType.__init__(self, value)
         self.spacing_precision = spacing_precision
 
     @property
@@ -71,87 +71,86 @@ class _SpaceRelatedFeature(_BaseFeature):
         return SPACE_FEATURES
 
     def as_dict(self):
-        d = _BaseFeature.as_dict(self)
+        d = _BaseFeatureType.as_dict(self)
         d["spacing_precision"] = self.spacing_precision
         return (d)
 
 
-class LogSize(_SizeRelatedFeature):
+class LogSize(_SizeRelatedFeatureType):
     label = "Log Size"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_logSize
+        self.value = reference_dot_array.feature.logSize
 
 
-class LogSpacing(_SpaceRelatedFeature):
+class LogSpacing(_SpaceRelatedFeatureType):
     label = "Log Spacing"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_logSpacing
+        self.value = reference_dot_array.feature.logSpacing
 
 
-class TotalSurfaceArea(_SizeRelatedFeature):
+class TotalSurfaceArea(_SizeRelatedFeatureType):
     """"""
     label = "Total surface area"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_total_surface_area
+        self.value = reference_dot_array.feature.total_surface_area
 
 
-class ItemDiameter(_SizeRelatedFeature):
+class ItemDiameter(_SizeRelatedFeatureType):
     """"""
     label = "Mean item diameter"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_mean_item_diameter
+        self.value = reference_dot_array.feature.mean_item_diameter
 
-class ItemSurfaceArea(_SizeRelatedFeature):
+class ItemSurfaceArea(_SizeRelatedFeatureType):
     """"""
     label = "Mean item surface area"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_mean_item_surface_area
+        self.value = reference_dot_array.feature.mean_item_surface_area
 
 
-class ItemPerimeter(_SizeRelatedFeature):
+class ItemPerimeter(_SizeRelatedFeatureType):
     """"""
     label = "Mean item perimeter"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_mean_item_perimeter
+        self.value = reference_dot_array.feature.mean_item_perimeter
 
-class TotalPerimeter(_SizeRelatedFeature):
+class TotalPerimeter(_SizeRelatedFeatureType):
     """"""
     label = "Total perimeter"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_total_perimeter
+        self.value = reference_dot_array.feature.total_perimeter
 
 
-class Sparsity(_SpaceRelatedFeature):
+class Sparsity(_SpaceRelatedFeatureType):
     """"""
     label = "Sparsity"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_sparsity
+        self.value = reference_dot_array.feature.sparsity
 
 
-class FieldArea(_SpaceRelatedFeature):
+class FieldArea(_SpaceRelatedFeatureType):
     """"""
     label = "Field area"
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_field_area
+        self.value = reference_dot_array.feature.field_area
 
 
-
-class Coverage(_BaseFeature):
+class Coverage(_BaseFeatureType):
     """"""
     label = "Coverage"
 
     def __init__(self, value=None, match_ratio_fieldarea2totalarea=0.5, spacing_precision=None):
 
-        _BaseFeature.__init__(self, value)
+        _BaseFeatureType.__init__(self, value)
         self.match_ratio_fieldarea2totalarea = match_ratio_fieldarea2totalarea
         if spacing_precision is None:
             self.spacing_precision = FieldArea().spacing_precision
@@ -169,7 +168,7 @@ class Coverage(_BaseFeature):
             raise RuntimeError("Match_ratio_convhull2area has to be between 0 and 1.")
 
     def adapt_value(self, reference_dot_array):
-        self.value = reference_dot_array.feature_converage
+        self.value = reference_dot_array.feature.converage
 
     @property
     def dependencies(self):
@@ -181,7 +180,7 @@ class Coverage(_BaseFeature):
         return dep
 
     def as_dict(self):
-        d = _BaseFeature.as_dict(self)
+        d = _BaseFeatureType.as_dict(self)
         d["match_ratio_convhull2area"] = self.match_ratio_fieldarea2totalarea
         d["spacing_precision"] = self.spacing_precision
         return (d)
@@ -206,7 +205,7 @@ def check_feature_list(feature_list, check_set_value=False):
     * is value defined
     """
     for x in feature_list:
-        if not isinstance(x, _BaseFeature):
+        if not isinstance(x, _BaseFeatureType):
             raise TypeError("Parameter is not a continuous properties or a " + \
                             "list of continuous properties") #FIXME labels
             # continious property or visual feature
