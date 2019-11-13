@@ -129,7 +129,7 @@ class DotArrayFeatures(object):
             for k, v in self.get_features_dict().items():
                 if rtn is None:
                     if with_hash:
-                        rtn = "- {}\n".format(v)
+                        rtn = "- {}: {}\n".format(k, v)
                     else:
                         rtn = ""
                 else:
@@ -145,10 +145,11 @@ class DotArrayFeatures(object):
                     rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
         else:
             if with_hash:
-                rtn = "id: {}".format(self.da.hash)
+                rtn = "ID: {} ".format(self.da.hash)
             else:
                 rtn = ""
-            rtn += "n: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: {:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
+            rtn += "N: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: " \
+                   "{:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
                 self.numerosity,
                 int(self.total_surface_area),
                 int(self.mean_item_surface_area),

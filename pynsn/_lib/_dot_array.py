@@ -22,6 +22,8 @@ from . import visual_features as vf
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
 
+
+
 class DotCloud(object):
     """Numpy Position list for optimized for numpy calculations
 
@@ -66,6 +68,7 @@ class DotCloud(object):
 
     @property
     def surface_areas(self):
+        # a = pi r**2 = pi d**2 / 4
         return np.pi * (self._diameters ** 2) / 4.0
 
     @property
@@ -543,6 +546,10 @@ class SimpleDotArray(DotCloud):
         self._diameters = self._diameters * scale
         self.set_array_modified()
 
+
+    # some parameter for matching field arrea
+    _ITERATIVE_CONVEX_HULL_MODIFICATION = True  # matching convexhull
+    _TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
     def _match_field_area(self, field_area,
                           precision=vf._DEFAULT_SPACING_PRECISION,
                           use_scaling_only=False):
@@ -554,6 +561,28 @@ class SimpleDotArray(DotCloud):
         iterative method can takes some time.
         """
 
+        # PROCEDURE
+        #
+        # increasing field area:
+        #   * merely scales polar coordinates of Dots
+        #   * uses __scale_field_area
+        #
+        # decreasing field area:
+        #   a) iterative convex hull modification
+        #      1. iteratively replacing outer dots to the side (random  pos.)
+        #         (resulting FA is likely to small)
+        #      2. increase FA by scaling to match precisely
+        #         inside the field area
+        #      - this methods results in very angular dot arrays, because it
+        #           prefers a solution with a small number of convex hull
+        #           dots
+        #   b) eccentricity criterion
+        #      1. determining circle with the required field area
+        #      2. replacing all dots outside this circle to the inside
+        #         (random pos.) (resulting FA is likely to small)
+        #      3. increase FA by scaling to match precisely
+        #      - this method will result is rather circulr areas
+
         if self.feature.field_area is None:
             return  # not defined
         elif field_area > self.feature.field_area or use_scaling_only:
@@ -562,7 +591,10 @@ class SimpleDotArray(DotCloud):
                                            precision=precision)
         elif field_area < self.feature.field_area:
             # field area is too large
-            self.__decrease_field_area_by_replacement(max_field_area=field_area)
+            self.__decrease_field_area_by_replacement(
+                    max_field_area=field_area,
+                    iterative_convex_hull_modification=
+                    SimpleDotArray._ITERATIVE_CONVEX_HULL_MODIFICATION)
             # ..and rescaling to avoid to compensate for possible too
             # strong decrease
             return self.__scale_field_area(field_area=field_area,
@@ -570,32 +602,62 @@ class SimpleDotArray(DotCloud):
         else:
             return
 
-    def __decrease_field_area_by_replacement(self, max_field_area):
+    def __decrease_field_area_by_replacement(self, max_field_area,
+                                            iterative_convex_hull_modification):
         """decreases filed area by recursively moving the most outer point
         to some more central free position (avoids overlapping)
 
-        return False if not possible else True"""
+        return False if not possible else True
 
+        Note: see doc string `_match_field_area`
+
+        """
 
         # centered points
         old_center = self.center_of_outer_positions
         self._xy -= old_center
 
         removed_dots = []
-        while self.feature.field_area > max_field_area:
-            # remove one random outer dot and remember it
-            vertices = self.convex_hull.indices
-            idx = vertices[random.randint(0, len(vertices)-1)]
 
-            removed_dots.extend(self.get_dots(indices=[idx]))
+        if iterative_convex_hull_modification:
+            while self.feature.field_area > max_field_area:
+                # remove one random outer dot and remember it
+                indices = self.convex_hull.indices
+                if not SimpleDotArray._TAKE_RANDOM_DOT_FROM_CONVEXHULL:
+                    # most outer dot from convex hull
+                    radii_outer_dots = misc.cartesian2polar(self.xy[indices],
+                                                   radii_only=True)
+                    i = np.where(radii_outer_dots==max(radii_outer_dots))[0]
+                    idx = indices[i][0]
+                else:
+                    # remove random
+                    idx = indices[random.randint(0, len(indices)-1)]
+
+                removed_dots.extend(self.get_dots(indices=[idx]))
+                self.delete(idx)
+
+            # add dots to free pos inside the convex hall
+            for d in removed_dots:
+                d.xy = self.random_free_dot_position(d.diameter,
+                                                   allow_overlapping=False,
+                                                   prefer_inside_field_area=True)
+                self.append_dot(d)
+
+        else:
+            # eccentricity criterion
+            max_radius =  np.sqrt(max_field_area/np.pi) # for circle with
+                                                        # required FA
+            idx = np.where(misc.cartesian2polar(self.xy, radii_only=True) > max_radius)[0]
+            removed_dots.extend(self.get_dots(indices=idx))
             self.delete(idx)
 
-        # add dots to free pos inside the convex hall
-        for d in removed_dots:
-            d.xy = self.random_free_dot_position(d.diameter,
-                                               allow_overlapping=False,
-                                               prefer_inside_field_area=True)
-            self.append_dot(d)
+            # add inside the circle
+            min_dist = self.target_array_radius - max_radius + 1
+            for d in removed_dots:
+                d.xy = self.random_free_dot_position(d.diameter,
+                                            allow_overlapping=False,
+                                            min_distance_area_boarder=min_dist)
+                self.append_dot(d)
 
         self._xy += old_center
         self.set_array_modified()
@@ -606,7 +668,10 @@ class SimpleDotArray(DotCloud):
         positions  with certain precision
 
         iterative method can takes some time.
+
+        Note: see doc string `_match_field_area`
         """
+
         current = self.feature.field_area
 
         if current is None:
@@ -682,7 +747,7 @@ class DotArray(SimpleDotArray):
 
         super().__init__(target_array_radius=target_array_radius,
                          minimum_gap=minimum_gap)
-        self._attributes = []
+        self._attributes = np.array([])
 
     def get_attributes(self):
         return self._attributes
@@ -702,16 +767,16 @@ class DotArray(SimpleDotArray):
             if len(attributes) != self.feature.numerosity:
                 raise ValueError("Length of attribute list does not match the " +\
                                  "size of the dot array.")
-            self._attributes = attributes
+            self._attributes = np.array(attributes)
         else:
-            self._attributes = [attributes] * self.feature.numerosity
+            self._attributes = np.array([attributes] * self.feature.numerosity)
 
     def get_colours(self):
         return list(map(lambda x:x.colour, self._attributes))
 
     def clear(self):
         super().clear()
-        self._attributes = []
+        self._attributes = np.array([])
 
     def append(self, xy, item_diameters, attributes=None):
         """append dots using numpy array
@@ -730,12 +795,12 @@ class DotArray(SimpleDotArray):
         if len(attributes) != len(item_diameters):
             raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as diameter")
-        self._attributes.extend(attributes)
+        self._attributes = np.append(self._attributes, attributes)
 
 
     def delete(self, index):
         super().delete(index)
-        self._attributes.pop(index)
+        self._attributes = np.delete(self._attributes, index)
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -865,8 +930,9 @@ class DotArray(SimpleDotArray):
 
     def read_from_dict(self, dict):
         super().read_from_dict(dict)
-        self._attributes = []
+        att = []
         for d in dict["attributes"]:
             ia = ItemAttributes()
             ia.read_from_dict(d)
-            self._attributes.append(ia)
+            att.append(ia)
+        self._attributes = np.array(att)
