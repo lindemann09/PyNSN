@@ -548,7 +548,7 @@ class SimpleDotArray(DotCloud):
 
 
     # some parameter for matching field arrea
-    _ITERATIVE_CONVEX_HULL_MODIFICATION = True  # matching convexhull
+    _ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull
     _TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
     def _match_field_area(self, field_area,
                           precision=vf._DEFAULT_SPACING_PRECISION,
