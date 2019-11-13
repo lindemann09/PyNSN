@@ -135,7 +135,7 @@ class NumberInput(object):
         self.edit.setFixedWidth(width_edit)
         self.edit.setAlignment(QtCore.Qt.AlignRight)
         self.integer_only = integer_only
-        if integer_only is not None:
+        if integer_only:
             self.edit.setValidator(QtGui.QIntValidator())
         else:
             self.edit.setValidator(QtGui.QDoubleValidator())

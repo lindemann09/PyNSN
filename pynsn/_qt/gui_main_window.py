@@ -301,7 +301,6 @@ class GUIMainWindow(QtGui.QMainWindow):
         """"""
         prop = self.dot_array.feature.get_features_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
-        print(response)
         if response is not None:
             self.dot_array.match(response)
             if isinstance(response, vf.SIZE_FEATURES):
