@@ -183,7 +183,7 @@ class DotCloud(object):
 
 
     def center_array(self):
-        self._xy -= self.center_of_outer_positions
+        self._xy = self._xy - self.center_of_outer_positions
         self.set_array_modified()
 
     def append_dot(self, dot):
@@ -249,8 +249,8 @@ class SimpleDotArray(DotCloud):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] -= misc.polar2cartesian([[jitter_size,
-                                                                 random.random() * 2 * np.pi]])[0]
+                        self._xy[x, :] = self._xy[x, :] - misc.polar2cartesian(
+                            [[jitter_size, random.random() * 2 * np.pi]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
         """remove overlap for one point
@@ -323,11 +323,11 @@ class SimpleDotArray(DotCloud):
                 self._xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
-                self._xy -= new_xy
+                self._xy = self._xy - new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
                 self.remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
                 # new pos for outlier
-                self._xy += new_xy  # move back to old position
+                self._xy = self._xy + new_xy  # move back to old position
                 shift_required = True
             else:
                 break  # end while loop
@@ -615,7 +615,7 @@ class SimpleDotArray(DotCloud):
 
         # centered points
         old_center = self.center_of_outer_positions
-        self._xy -= old_center
+        self._xy = self._xy - old_center
 
         removed_dots = []
 
@@ -659,7 +659,7 @@ class SimpleDotArray(DotCloud):
                                             min_distance_area_boarder=min_dist)
                 self.append_dot(d)
 
-        self._xy += old_center
+        self._xy = self._xy + old_center
         self.set_array_modified()
 
     def __scale_field_area(self, field_area,
@@ -684,7 +684,7 @@ class SimpleDotArray(DotCloud):
 
         # centered points
         old_center = self.center_of_outer_positions
-        self._xy -= old_center
+        self._xy = self._xy - old_center
         centered_polar = misc.cartesian2polar(self._xy)
 
         # iteratively determine scale
@@ -700,7 +700,7 @@ class SimpleDotArray(DotCloud):
                     (current > field_area and step > 0):
                 step *= -0.2  # change direction and finer grain
 
-        self._xy += old_center
+        self._xy = self._xy + old_center
         self.set_array_modified()
 
     def _match_coverage(self, coverage, precision=vf._DEFAULT_SPACING_PRECISION,

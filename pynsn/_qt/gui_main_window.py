@@ -59,8 +59,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         if onoff:
             self.logger = LogFile(log_filename="log/_qt",
                                   override_log_files=True,
-                                  log_colours=False,
-                                  properties_different_colour=False)
+                                  log_colours=False)
         else:
             self.logger = None
 
@@ -154,6 +153,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                 ItemAttributes(colour=self.main_widget.dot_colour2.text))
             self.data_array.join(data_array2, realign=False)
 
+        self.data_array.round(decimals=self.settings.rounding_decimals.value)
         self._image = None
 
     def image(self):

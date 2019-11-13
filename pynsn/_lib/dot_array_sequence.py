@@ -158,7 +158,8 @@ def create(reference_dot_array,
     reference_da = reference_dot_array.copy()
     reference_da.target_array_radius += (extra_space // 2)  # add extra space
     if center_array:
-        reference_da._xy -= reference_da.center_of_outer_positions
+        reference_da._xy = reference_da._xy - \
+                                reference_da.center_of_outer_positions
         reference_da.set_array_modified()
 
     # matched deviants

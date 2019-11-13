@@ -69,9 +69,15 @@ class SettingsDialog(QtGui.QDialog):
     def __init__(self, parent, image_colours):
         super(SettingsDialog, self).__init__(parent)
 
+
         self.setWindowTitle("Dot Array Property")
 
-        self.colour_area = misc.LabeledInput("Traget Area",
+        self.rounding_decimals = misc.LabeledNumberInput(
+                            label="Rounding decimals",
+                            value=0, integer_only = True,
+                            min = 0, max = 8)
+
+        self.colour_area = misc.LabeledInput("Target Area",
                                              text=image_colours.target_area.colour,
                                              case_sensitive=False)
         self.colour_background = misc.LabeledInput("Background",
@@ -89,7 +95,11 @@ class SettingsDialog(QtGui.QDialog):
         self.bicoloured = QtGui.QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)
 
+
+
         vlayout = QtGui.QVBoxLayout()
+        vlayout.addLayout(self.rounding_decimals.layout())
+
         vlayout.addWidget(misc.heading("Colour"))
         vlayout.addLayout(self.colour_area.layout())
         vlayout.addLayout(self.colour_background.layout())
