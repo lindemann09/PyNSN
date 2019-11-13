@@ -885,7 +885,7 @@ class DotArray(SimpleDotArray):
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
-    def get_csv(self, num_format="%7.2f", variable_names=True,
+    def get_csv(self, variable_names=True,
                 hash_column=True, num_idx_column=True,
                 colour_column=False):  # todo print features
         """Return the dot array as csv text
@@ -915,8 +915,11 @@ class DotArray(SimpleDotArray):
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
                 rtn += "{},".format(self.feature.numerosity)
-            rtn += num_format % self._xy[cnt, 0] + "," + num_format % self._xy[cnt, 1] + "," + \
-                   num_format % self._diameters[cnt]
+            #rtn += num_format % self._xy[cnt, 0] + "," + num_format %
+                # self._xy[cnt, 1] + "," + \
+            #       num_format % self._diameters[cnt]
+            rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
+                                     self._diameters[cnt])
             if colour_column:
                 rtn += ", {}".format(colours[cnt])
             rtn += "\n"

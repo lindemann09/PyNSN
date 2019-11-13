@@ -18,16 +18,12 @@ class LogFile(object):
 
     def __init__(self, log_filename,
                  log_colours=False,
-                 num_format="%6.0f",
                  override_log_files=False,
-                 properties_different_colour=False,
                  zipped=False):
 
         log_filename_arrays = log_filename + ".array.csv"
         log_filename_properties = log_filename + ".prop.csv"
-        self.num_format = num_format
         self.log_colours = log_colours
-        self.properties_different_colour = properties_different_colour
 
         try:
             os.makedirs(os.path.split(log_filename)[0])
@@ -56,8 +52,6 @@ class LogFile(object):
     @staticmethod
     def _logging_txt(dot_array_object,
                      variable_names,
-                     num_format,
-                     properties_different_colour,
                      log_colours):
         """helper function: returns log for dot array and log for properties"""
 
@@ -68,10 +62,10 @@ class LogFile(object):
                                         dict_of_lists=is_sequence)
             if not is_sequence:
                 da_log = dot_array_object.get_csv(colour_column=log_colours,
-                                                  num_format=num_format, variable_names=variable_names)
+                                                  variable_names=variable_names)
             else:  # DASequence
                 da_log = dot_array_object.get_csv(colour_column=log_colours,
-                                                  num_format=num_format, variable_names=variable_names)
+                                                  variable_names=variable_names)
         else:
             da_log = ""
             feat_log = ""
@@ -82,8 +76,6 @@ class LogFile(object):
 
         da_log, feat_log = LogFile._logging_txt(dot_array_object=dot_array_object,
                                                 variable_names=not self._varname_written,
-                                                num_format=self.num_format,
-                                                properties_different_colour=self.properties_different_colour,
                                                 log_colours=self.log_colours)
         self._varname_written = True
         self.logtext_prop += feat_log

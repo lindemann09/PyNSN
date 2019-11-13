@@ -79,7 +79,7 @@ class DASequence(object):
     def __str__(self):
         return self.get_csv()
 
-    def get_csv(self, num_format="%7.2f", variable_names=True, colour_column=False,
+    def get_csv(self, variable_names=True, colour_column=False,
                 picture_column=False, hash_column=True):
 
         rtn = ""
@@ -88,7 +88,7 @@ class DASequence(object):
         for da in self.dot_arrays:
             rtn += da.get_csv(num_idx_column=True, hash_column=False,
                               variable_names=tmp_var_names,
-                              num_format=num_format, colour_column=colour_column,
+                              colour_column=colour_column,
                               picture_column=picture_column)
             tmp_var_names = False
 

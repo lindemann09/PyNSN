@@ -1,5 +1,5 @@
 
-import yaml
+import json
 import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
@@ -270,8 +270,8 @@ class GUIMainWindow(QtGui.QMainWindow):
     def action_print_para(self):
         d = {'number': self.get_number()}
         d['image_parameter'] = self.get_image_colours().as_dict()
-        d['generator'] = self.get_specs().as_dict()
-        self.main_widget.text_out("# parameter\n" + yaml.dump(d, default_flow_style=False))
+        d['randomization'] = self.get_specs().as_dict()
+        self.main_widget.text_out("# parameter\n" + json.dumps(d, indent=2))
 
     def save_array(self):
         """"""
@@ -280,8 +280,7 @@ class GUIMainWindow(QtGui.QMainWindow):
             self,
             'Save file',
             "",
-            "Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)"
-        )
+            "Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
 
         if len(filename)>0:
             filename = os.path.abspath(filename)
@@ -300,7 +299,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.data_array.get_features_dict()
+        prop = self.data_array.feature.get_features_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
             self.data_array.match(response)
@@ -337,7 +336,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         d = {"match range": match_range, "extra_space": extra_space}
         d["match_methods"] = list(map(lambda x: x.get_features_dict(), match_methods))  # TODO <-- check ERROR
         self.main_widget.text_out("# Sequence\n" + \
-                                           yaml.dump(d, default_flow_style=False))
+                                           json.dumps(d))
 
         if match_methods is not None:
             # print("processing")
