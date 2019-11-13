@@ -144,6 +144,10 @@ def is_all_larger(vector, standard=0):
 def is_all_smaller(vector, standard=0):
     return sum(map(lambda x: x < standard, vector))==len(vector)
 
+def is_all_equal(vector):
+    # returns true if all elements are equal
+    return sum(map(lambda x: x==vector[0], vector))==len(vector)
+
 def polar2cartesian(polar):
     """polar is an 2d-array representing polar coordinates (radius, angle)"""
     polar = np.array(polar)

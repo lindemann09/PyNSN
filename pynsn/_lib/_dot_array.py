@@ -93,12 +93,6 @@ class DotCloud(object):
             self._xy = self._xy.astype(np.int32)
             self._diameters = self._diameters.astype(np.int32)
 
-    def as_dict(self):
-        """
-        """
-        return {"hash": self.hash, "xy": self._xy.tolist(),
-                "diameters": self._diameters.tolist()}
-
 
     def save(self, json_filename, indent=None):
 
@@ -110,6 +104,12 @@ class DotCloud(object):
         with open(json_filename, 'r') as fl:
             dict = json.load(fl)
         self.read_from_dict(dict)
+
+    def as_dict(self):
+        """
+        """
+        return {"hash": self.hash, "xy": self._xy.tolist(),
+                "diameters": self._diameters.tolist()}
 
     def read_from_dict(self, dict):
         """read Dot collection from dict"""
@@ -927,15 +927,24 @@ class DotArray(SimpleDotArray):
 
     def as_dict(self):
         d = super().as_dict()
-        att = map(lambda x:x.as_dict(), self._attributes)
-        d.update({"attributes": list(att)})
+        if misc.is_all_equal(self._attributes):
+            att = [self._attributes[0].as_dict()]
+        else:
+            att = list(map(lambda x:x.as_dict(), self._attributes))
+        d.update({"attributes": att})
         return d
 
     def read_from_dict(self, dict):
         super().read_from_dict(dict)
-        att = []
-        for d in dict["attributes"]:
+        if len(dict["attributes"]) == 1:
             ia = ItemAttributes()
-            ia.read_from_dict(d)
-            att.append(ia)
+            ia.read_from_dict(dict["attributes"][0])
+            att = [ia] * self.feature.numerosity
+        else:
+            att = []
+            for d in dict["attributes"]:
+                ia = ItemAttributes()
+                ia.read_from_dict(d)
+                att.append(ia)
+
         self._attributes = np.array(att)
