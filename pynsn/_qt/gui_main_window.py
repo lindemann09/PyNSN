@@ -48,7 +48,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         super(GUIMainWindow, self).__init__()
 
         self._image = None
-        self.data_array = None
+        self.dot_array = None
         self.set_loging(False)  # todo checkbox in settings
         self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY[2])
         self.initUI()
@@ -137,9 +137,9 @@ class GUIMainWindow(QtGui.QMainWindow):
     def make_new_array(self):
 
         try:
-            self.data_array = random_dot_array.create(n_dots=self.get_number(),
-                                                      specs=self.get_specs(),
-                                                logger=self.logger)
+            self.dot_array = random_dot_array.create(n_dots=self.get_number(),
+                                                     specs=self.get_specs(),
+                                                     logger=self.logger)
         except (RuntimeError, ValueError) as error:
             self.main_widget.text_error_feedback(error)
             raise error
@@ -147,13 +147,13 @@ class GUIMainWindow(QtGui.QMainWindow):
         if self.settings.bicoloured.isChecked():
             data_array2 = random_dot_array.create(n_dots=self.main_widget.number2.value,
                                                   specs=self.get_specs(),
-                                                  occupied_space=self.data_array,
-                                             logger=self.logger)
+                                                  occupied_space=self.dot_array,
+                                                  logger=self.logger)
             data_array2.set_attributes(
                 ItemAttributes(colour=self.main_widget.dot_colour2.text))
-            self.data_array.join(data_array2, realign=False)
+            self.dot_array.join(data_array2, realign=False)
 
-        self.data_array.round(decimals=self.settings.rounding_decimals.value)
+        self.dot_array.round(decimals=self.settings.rounding_decimals.value)
         self._image = None
 
     def image(self):
@@ -169,7 +169,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                 center_of_outer_positions=para.center_of_outer_positions,
                 background=para.background)
 
-            self._image = pil_image.create(dot_array=self.data_array,
+            self._image = pil_image.create(dot_array=self.dot_array,
                                            colours=image_colours,
                                            antialiasing=self.settings.antialiasing.isChecked())
                                             # todo maybe: gabor_filter=ImageFilter.GaussianBlur
@@ -250,10 +250,10 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.data_array.feature.get_features_text(extended_format=True,
-                                                 with_hash=True)
+        txt = self.dot_array.feature.get_features_text(extended_format=True,
+                                                       with_hash=True)
         if self.settings.bicoloured.isChecked():
-            for da in self.data_array.split_array_by_colour():
+            for da in self.dot_array.split_array_by_colour():
                 txt += "Colour {}\n".format(da.get_colours()[0])
                 txt += da.feature.get_features_text(extended_format=True,
                                             with_hash=False)
@@ -264,7 +264,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_print_xy(self):
         """"""
-        txt = self.data_array.get_csv(hash_column=False, num_idx_column=False, colour_column=True)
+        txt = self.dot_array.get_csv(hash_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_out(txt)
 
     def action_print_para(self):
@@ -291,7 +291,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                 filename = filename + ext
 
             if ext == ".json":
-                self.data_array.save(filename)
+                self.dot_array.save(filename)
 
             elif ext == ".png" or ext == ".bmp":
                 self.image().save(filename)
@@ -299,13 +299,14 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.data_array.feature.get_features_dict()
+        prop = self.dot_array.feature.get_features_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
+        print(response)
         if response is not None:
-            self.data_array.match(response)
+            self.dot_array.match(response)
             if isinstance(response, vf.SIZE_FEATURES):
-                self.data_array.center_array()
-                self.data_array.realign()
+                self.dot_array.center_array()
+                self.dot_array.realign()
             self.show_current_image(remake_image=True)
             self.write_properties()
             self.main_widget.updateUI()
@@ -319,13 +320,13 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_dot_colour_change(self):
         """"""
-        self.data_array.set_attributes(self.get_specs().item_attributes)
+        self.dot_array.set_attributes(self.get_specs().item_attributes)
         self.show_current_image(remake_image=True)
 
     def action_slider_released(self):
         """"""
-        change = self.main_widget.number.value - self.data_array.feature.numerosity
-        self.data_array = self.data_array.number_deviant(change)
+        change = self.main_widget.number.value - self.dot_array.feature.numerosity
+        self.dot_array = self.dot_array.number_deviant(change)
         self.show_current_image(remake_image=True)
         self.write_properties()
         # todo slider does not work correctly for multi colour arrays
@@ -341,13 +342,13 @@ class GUIMainWindow(QtGui.QMainWindow):
         if match_methods is not None:
             # print("processing")
             sequence = dot_array_sequence.create(
-                reference_dot_array=self.data_array,
+                reference_dot_array=self.dot_array,
                               match_properties=match_methods,
                               min_max_numerosity=match_range,
                               extra_space=extra_space,
                               logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.data_array.feature.numerosity,
+                            start_numerosity=self.dot_array.feature.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
 
