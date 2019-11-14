@@ -8,8 +8,8 @@ import numpy as np
 import atexit
 
 from .. import __version__
-from . import misc
-from .dot_array_sequence import DASequence
+from . import _misc
+from pynsn.dot_array_sequence import DASequence
 from ._dot_array import DotArray
 from ._item_attributes import ItemAttributes
 
@@ -58,8 +58,8 @@ class LogFile(object):
         if isinstance(dot_array_object, (DASequence, DotArray)):
             is_sequence = isinstance(dot_array_object, DASequence)
             feat = dot_array_object.feature.get_features_dict()
-            feat_log = misc.dict_to_csv(feat, variable_names=variable_names,
-                                        dict_of_lists=is_sequence)
+            feat_log = _misc.dict_to_csv(feat, variable_names=variable_names,
+                                         dict_of_lists=is_sequence)
             if not is_sequence:
                 da_log = dot_array_object.get_csv(colour_column=log_colours,
                                                   variable_names=variable_names)
@@ -210,7 +210,7 @@ class LogFileReader(object): # FIXME really required. Better using files for
                        attributes=ItemAttributes(colour=x[2], picture=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
-            radii = misc.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
+            radii = _misc.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
             rtn.target_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 

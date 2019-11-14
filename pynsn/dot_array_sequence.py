@@ -7,9 +7,9 @@ from hashlib import md5 as _md5
 import numpy as _np
 
 from copy import copy as _copy
-from . import misc as _misc
-from . import visual_features as _vf
-from ._dot_array import DotArray as _DotArray
+from pynsn._lib import _misc as _misc
+from pynsn._lib import features as _vf
+from pynsn._lib._dot_array import DotArray as _DotArray
 
 class DASequence(object):
 
@@ -191,7 +191,7 @@ def create(reference_dot_array,
             rtn.error = error
 
     if logger is not None:
-        from ._logging import LogFile # to avoid circular import
+        from .logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile):
             raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
                 type(logger).__name__))

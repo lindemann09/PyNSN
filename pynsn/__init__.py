@@ -15,13 +15,12 @@ if not(_version_info[0] >= 3 and _version_info[1] >= 5):
                                                     _version_info[1]) +
                       "Please use Python 3.5+.")
 
-from ._lib._dot_array import DotCloud, SimpleDotArray, DotArray
+from ._lib._dot_array import DotArray
 from ._lib._colour import Colour, ImageColours
 from ._lib._item_attributes import ItemAttributes
-from ._lib._logging import LogFile, LogFileReader
+from ._lib._shape import Dot, Rectangle
 
-from ._lib import visual_features
-from ._lib import pil_image
-from ._lib import geometry
+from ._lib import features
 from ._lib import random_dot_array
-from ._lib import dot_array_sequence
+from ._lib import pil_image
+from ._lib import logging

@@ -4,9 +4,9 @@ import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
-from .._lib import dot_array_sequence
-from .._lib._logging import LogFile
-from .._lib import visual_features as vf
+from pynsn import dot_array_sequence
+from .._lib.logging import LogFile
+from .._lib import features as vf
 from .._lib import _colour
 from .._lib._item_attributes import ItemAttributes
 from .._lib import pil_image

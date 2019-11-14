@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 import numpy as np
 from scipy import spatial
-from . import misc
-from . import visual_features as vf
+from . import _misc
+from . import features as vf
 
 
 class DotArrayFeatures(object):
@@ -58,12 +58,12 @@ class DotArrayFeatures(object):
 
     @property
     def logSize(self):
-        return misc.log2(self.total_surface_area) + misc.log2(
+        return _misc.log2(self.total_surface_area) + _misc.log2(
             self.mean_item_surface_area)
 
     @property
     def logSpacing(self):
-        return misc.log2(self.field_area) + misc.log2(self.sparsity)
+        return _misc.log2(self.field_area) + _misc.log2(self.sparsity)
 
     @property
     def sparsity(self):

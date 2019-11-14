@@ -1,7 +1,7 @@
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
 
-from . import misc as _misc
+from . import _misc as _misc
 from ._item_attributes import ItemAttributes as _ItemAttributes
 from ._dot_array import DotArray as _DotArray
 
@@ -89,7 +89,7 @@ def create(n_dots, specs, occupied_space=None,
                      attributes=specs.item_attributes)
 
     if logger is not None:
-        from ._logging import LogFile # to avoid circular import
+        from .logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile): #
             raise RuntimeError("logger has to be None or a GeneratorLogger")
         logger.log(rtn)

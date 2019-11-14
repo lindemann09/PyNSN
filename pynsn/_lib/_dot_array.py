@@ -12,11 +12,13 @@ import json
 import numpy as np
 from scipy import spatial
 
+from . import _misc, _geometry
+from ._convex_hull import EfficientConvexHullDots
 from ._item_attributes import ItemAttributes
 from ._dot_array_features import DotArrayFeatures
-from .geometry import Dot
-from . import misc
-from . import visual_features as vf
+from ._shape import Dot
+from . import features
+
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -24,7 +26,7 @@ from . import visual_features as vf
 
 
 
-class DotCloud(object):
+class _DotCloud(object):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -119,7 +121,7 @@ class DotCloud(object):
 
 
     def set_array_modified(self):
-        self._ch = misc.EfficientConvexHullDots(self._xy, self._diameters)
+        self._ch = EfficientConvexHullDots(self._xy, self._diameters)
 
     @property
     def diameters(self):
@@ -129,7 +131,7 @@ class DotCloud(object):
         """append dots using numpy array"""
 
         # ensure numpy array
-        item_diameters = misc.numpy_vector(item_diameters)
+        item_diameters = _misc.numpy_vector(item_diameters)
         # ensure xy is a 2d array
         xy = np.array(xy)
         if xy.ndim == 1 and len(xy) == 2:
@@ -165,8 +167,8 @@ class DotCloud(object):
         if indices is None:
             indices = list(range(self.feature.numerosity))
 
-        return DotCloud(xy=self._xy[indices, :].copy(),
-                        diameters=self._diameters[indices].copy())
+        return _DotCloud(xy=self._xy[indices, :].copy(),
+                         diameters=self._diameters[indices].copy())
 
     def distances(self, xy, diameter):
         """Distances toward a single point (xy, diameter) """
@@ -215,7 +217,7 @@ class DotCloud(object):
 
 
 
-class SimpleDotArray(DotCloud):
+class _BasicDotArray(_DotCloud):
 
     def __init__(self, target_array_radius, minimum_gap):
         """Dot array is restricted to a certain area, it has a target area
@@ -249,7 +251,7 @@ class SimpleDotArray(DotCloud):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] = self._xy[x, :] - misc.polar2cartesian(
+                        self._xy[x, :] = self._xy[x, :] - _geometry.polar2cartesian(
                             [[jitter_size, random.random() * 2 * np.pi]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
@@ -268,9 +270,9 @@ class SimpleDotArray(DotCloud):
                            axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = misc.cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
+            tmp_polar = _geometry.cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = misc.polar2cartesian(tmp_polar)
+            xy = _geometry.polar2cartesian(tmp_polar)
             self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
@@ -280,7 +282,7 @@ class SimpleDotArray(DotCloud):
 
         shift_required = False
         # from inner to outer remove overlaps
-        for i in np.argsort(misc.cartesian2polar(self._xy, radii_only=True)):
+        for i in np.argsort(_geometry.cartesian2polar(self._xy, radii_only=True)):
             if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
                 shift_required = True
 
@@ -311,15 +313,15 @@ class SimpleDotArray(DotCloud):
         # sqeeze in points that pop out of the stimulus area radius
         cnt = 0
         while True:
-            radii = misc.cartesian2polar(self._xy, radii_only=True)
+            radii = _geometry.cartesian2polar(self._xy, radii_only=True)
             too_far = np.where((radii + self._diameters // 2) > self.target_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
-                polar = misc.cartesian2polar([self._xy[too_far[0], :]])[0]
+                polar = _geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
                 polar[0] = self.target_array_radius - self._diameters[
                     too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
-                new_xy = misc.polar2cartesian([polar])[0]
+                new_xy = _geometry.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
@@ -479,57 +481,58 @@ class SimpleDotArray(DotCloud):
         """
 
         # type check
-        assert isinstance(match_feature, vf.ALL_VISUAL_FEATURES)
 
-        vf.check_feature_list([match_feature],
-                              check_set_value=match_dot_array
+        assert isinstance(match_feature, features.ALL_VISUAL_FEATURES)
+
+        features.check_feature_list([match_feature],
+                                    check_set_value=match_dot_array
                                                              is None)
 
         # copy and change values to match this stimulus
-        feat = copy(match_feature)
+        match_feat = copy(match_feature)
         if match_dot_array is not None:
-            feat.adapt_value(match_dot_array)
+            match_feat.adapt_value(match_dot_array)
 
         # Adapt
-        if isinstance(feat, vf.ItemDiameter):
-            self._match_item_diameter(mean_item_diameter=feat.value)
+        if isinstance(match_feat, features.ItemDiameter):
+            self._match_item_diameter(mean_item_diameter=match_feat.value)
 
-        elif isinstance(feat, vf.ItemPerimeter):
-            self._match_item_diameter(mean_item_diameter=feat.value/np.pi)
+        elif isinstance(match_feat, features.ItemPerimeter):
+            self._match_item_diameter(mean_item_diameter=match_feat.value/np.pi)
 
-        elif isinstance(feat, vf.TotalPerimeter):
-            mean_dot_diameter = feat.value / (self.feature.numerosity * np.pi)
+        elif isinstance(match_feat, features.TotalPerimeter):
+            mean_dot_diameter = match_feat.value / (self.feature.numerosity * np.pi)
             self._match_item_diameter(mean_dot_diameter)
 
-        elif isinstance(feat, vf.ItemSurfaceArea):
-            ta = self.feature.numerosity * feat.value
+        elif isinstance(match_feat, features.ItemSurfaceArea):
+            ta = self.feature.numerosity * match_feat.value
             self._match_total_surface_area(surface_area=ta)
 
-        elif isinstance(feat, vf.TotalSurfaceArea):
-            self._match_total_surface_area(surface_area=feat.value)
+        elif isinstance(match_feat, features.TotalSurfaceArea):
+            self._match_total_surface_area(surface_area=match_feat.value)
 
-        elif isinstance(feat, vf.LogSize):
-            logtsa = 0.5 * feat.value + 0.5 * misc.log2(self.feature.numerosity)
+        elif isinstance(match_feat, features.LogSize):
+            logtsa = 0.5 * match_feat.value + 0.5 * _misc.log2(self.feature.numerosity)
             self._match_total_surface_area(2 ** logtsa)
 
-        elif isinstance(feat, vf.LogSpacing):
-            logfa = 0.5 * feat.value + 0.5 * misc.log2(self.feature.numerosity)
+        elif isinstance(match_feat, features.LogSpacing):
+            logfa = 0.5 * match_feat.value + 0.5 * _misc.log2(self.feature.numerosity)
             self._match_field_area(field_area=2 ** logfa,
-                                   precision=feat.spacing_precision)
+                                   precision=match_feat.spacing_precision)
 
-        elif isinstance(feat, vf.Sparsity):
-            fa = feat.value * self.feature.numerosity
+        elif isinstance(match_feat, features.Sparsity):
+            fa = match_feat.value * self.feature.numerosity
             self._match_field_area(field_area=fa,
-                                   precision=feat.spacing_precision)
+                                   precision=match_feat.spacing_precision)
 
-        elif isinstance(feat, vf.FieldArea):
-            self._match_field_area(field_area=feat.value,
-                                   precision=feat.spacing_precision)
+        elif isinstance(match_feat, features.FieldArea):
+            self._match_field_area(field_area=match_feat.value,
+                                   precision=match_feat.spacing_precision)
 
-        elif isinstance(feat, vf.Coverage):
-            self._match_coverage(coverage=feat.value,
-                                 precision=feat.spacing_precision,
-                                 match_FA2TA_ratio=feat.match_ratio_fieldarea2totalarea) #FIXME experimemtal
+        elif isinstance(match_feat, features.Coverage):
+            self._match_coverage(coverage=match_feat.value,
+                                 precision=match_feat.spacing_precision,
+                                 match_FA2TA_ratio=match_feat.match_ratio_fieldarea2totalarea) #FIXME experimemtal
 
 
     def _match_total_surface_area(self, surface_area):
@@ -551,7 +554,7 @@ class SimpleDotArray(DotCloud):
     _ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull
     _TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
     def _match_field_area(self, field_area,
-                          precision=vf._DEFAULT_SPACING_PRECISION,
+                          precision=features._DEFAULT_SPACING_PRECISION,
                           use_scaling_only=False):
         """changes the convex hull area to a desired size with certain precision
 
@@ -594,7 +597,7 @@ class SimpleDotArray(DotCloud):
             self.__decrease_field_area_by_replacement(
                     max_field_area=field_area,
                     iterative_convex_hull_modification=
-                    SimpleDotArray._ITERATIVE_CONVEX_HULL_MODIFICATION)
+                    _BasicDotArray._ITERATIVE_CONVEX_HULL_MODIFICATION)
             # ..and rescaling to avoid to compensate for possible too
             # strong decrease
             return self.__scale_field_area(field_area=field_area,
@@ -623,10 +626,10 @@ class SimpleDotArray(DotCloud):
             while self.feature.field_area > max_field_area:
                 # remove one random outer dot and remember it
                 indices = self.convex_hull.indices
-                if not SimpleDotArray._TAKE_RANDOM_DOT_FROM_CONVEXHULL:
+                if not _BasicDotArray._TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                     # most outer dot from convex hull
-                    radii_outer_dots = misc.cartesian2polar(self.xy[indices],
-                                                   radii_only=True)
+                    radii_outer_dots = _geometry.cartesian2polar(self.xy[indices],
+                                                             radii_only=True)
                     i = np.where(radii_outer_dots==max(radii_outer_dots))[0]
                     idx = indices[i][0]
                 else:
@@ -647,7 +650,7 @@ class SimpleDotArray(DotCloud):
             # eccentricity criterion
             max_radius =  np.sqrt(max_field_area/np.pi) # for circle with
                                                         # required FA
-            idx = np.where(misc.cartesian2polar(self.xy, radii_only=True) > max_radius)[0]
+            idx = np.where(_geometry.cartesian2polar(self.xy, radii_only=True) > max_radius)[0]
             removed_dots.extend(self.get_dots(indices=idx))
             self.delete(idx)
 
@@ -663,7 +666,7 @@ class SimpleDotArray(DotCloud):
         self.set_array_modified()
 
     def __scale_field_area(self, field_area,
-                           precision=vf._DEFAULT_SPACING_PRECISION):
+                           precision=features._DEFAULT_SPACING_PRECISION):
         """change the convex hull area to a desired size by scale the polar
         positions  with certain precision
 
@@ -685,14 +688,14 @@ class SimpleDotArray(DotCloud):
         # centered points
         old_center = self.center_of_outer_positions
         self._xy = self._xy - old_center
-        centered_polar = misc.cartesian2polar(self._xy)
+        centered_polar = _geometry.cartesian2polar(self._xy)
 
         # iteratively determine scale
         while abs(current - field_area) > precision:
 
             scale += step
 
-            self._xy = misc.polar2cartesian(centered_polar * [scale, 1])
+            self._xy = _geometry.polar2cartesian(centered_polar * [scale, 1])
             self.set_array_modified()  # required to recalc convex hull
             current = self.feature.field_area
 
@@ -703,7 +706,7 @@ class SimpleDotArray(DotCloud):
         self._xy = self._xy + old_center
         self.set_array_modified()
 
-    def _match_coverage(self, coverage, precision=vf._DEFAULT_SPACING_PRECISION,
+    def _match_coverage(self, coverage, precision=features._DEFAULT_SPACING_PRECISION,
                         match_FA2TA_ratio=0.5):
         # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         # FIXME when to realign, realignment changes field_area!
@@ -740,7 +743,7 @@ class SimpleDotArray(DotCloud):
         self.target_array_radius = dict["target_array_radius"]
 
 
-class DotArray(SimpleDotArray):
+class DotArray(_BasicDotArray):
 
     def __init__(self, target_array_radius, minimum_gap):
         """ Dot array adds attribues, such as colour to a SimpleDotArray."""
@@ -782,7 +785,7 @@ class DotArray(SimpleDotArray):
         """append dots using numpy array
         attributes ItemAttributes or a list of ItemAttributes"""
 
-        item_diameters = misc.numpy_vector(item_diameters)
+        item_diameters = _misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
@@ -883,7 +886,7 @@ class DotArray(SimpleDotArray):
             feat = da.feature.get_features_dict()
             feat["hash"] = self.hash + str(da.get_colours()[0])
             dicts.append(feat)
-        return misc.join_dict_list(dicts)
+        return _misc.join_dict_list(dicts)
 
     def get_csv(self, variable_names=True,
                 hash_column=True, num_idx_column=True,
@@ -927,7 +930,7 @@ class DotArray(SimpleDotArray):
 
     def as_dict(self):
         d = super().as_dict()
-        if misc.is_all_equal(self._attributes):
+        if _misc.is_all_equal(self._attributes):
             att = [self._attributes[0].as_dict()]
         else:
             att = list(map(lambda x:x.as_dict(), self._attributes))
