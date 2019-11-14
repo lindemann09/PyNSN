@@ -1,117 +1,38 @@
 from copy import copy
 import random
-from hashlib import md5
-import json
-
 import numpy as np
-from scipy import spatial
-
 from . import _misc, _geometry
-from ._convex_hull import EfficientConvexHullDots
-from ._item_attributes import ItemAttributes
-from ._dot_array_features import DotArrayFeatures
-from ._shape import Dot
-from . import features
-from ._dot_array import DotArray
+from . import features as vf
 
-class ArrayFeatureMatcher(object):
+
+class FeatureMatcher(object):
+
+    # some parameter for matching field arrea
+    ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull
+    TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
+    # matching log spacing
+    DEFAULT_SPACING_PRECISION = 0.0001
 
     def __init__(self, dot_array):
         self.da = dot_array
 
-
-    def match(self, match_feature, match_dot_array=None):
-        """
-        match_properties: continuous property or list of continuous properties
-        several properties to be matched
-
-        if match dot array is specified, array will be match to match_dot_array, otherwise
-        the values defined in match_features is used.
-
-        some matching requires realignement to avoid overlaps. However,
-        realigment might result in a different field area. Thus, realign after
-        matching for  Size parameter and realign before matching space
-        parameter.
-
-        """
-
-        # type check
-
-        assert isinstance(match_feature, features.ALL_VISUAL_FEATURES)
-
-        features.check_feature_list([match_feature],
-                                    check_set_value=match_dot_array
-                                                             is None)
-
-        # copy and change values to match this stimulus
-        match_feat = copy(match_feature)
-        if match_dot_array is not None:
-            match_feat.adapt_value(match_dot_array)
-
-        # Adapt
-        if isinstance(match_feat, features.ItemDiameter):
-            self._match_item_diameter(mean_item_diameter=match_feat.value)
-
-        elif isinstance(match_feat, features.ItemPerimeter):
-            self._match_item_diameter(mean_item_diameter=match_feat.value/np.pi)
-
-        elif isinstance(match_feat, features.TotalPerimeter):
-            mean_dot_diameter = match_feat.value / (self.da.feature.numerosity * np.pi)
-            self._match_item_diameter(mean_dot_diameter)
-
-        elif isinstance(match_feat, features.ItemSurfaceArea):
-            ta = self.da.feature.numerosity * match_feat.value
-            self._match_total_surface_area(surface_area=ta)
-
-        elif isinstance(match_feat, features.TotalSurfaceArea):
-            self._match_total_surface_area(surface_area=match_feat.value)
-
-        elif isinstance(match_feat, features.LogSize):
-            logtsa = 0.5 * match_feat.value + 0.5 * _misc.log2(self.da.feature.numerosity)
-            self._match_total_surface_area(2 ** logtsa)
-
-        elif isinstance(match_feat, features.LogSpacing):
-            logfa = 0.5 * match_feat.value + 0.5 * _misc.log2(self.da.feature.numerosity)
-            self._match_field_area(field_area=2 ** logfa,
-                                   precision=match_feat.spacing_precision)
-
-        elif isinstance(match_feat, features.Sparsity):
-            fa = match_feat.value * self.da.feature.numerosity
-            self._match_field_area(field_area=fa,
-                                   precision=match_feat.spacing_precision)
-
-        elif isinstance(match_feat, features.FieldArea):
-            self._match_field_area(field_area=match_feat.value,
-                                   precision=match_feat.spacing_precision)
-
-        elif isinstance(match_feat, features.Coverage):
-            self._match_coverage(coverage=match_feat.value,
-                                 precision=match_feat.spacing_precision,
-                                 match_FA2TA_ratio=match_feat.match_ratio_fieldarea2totalarea) #FIXME experimemtal
-
-
-
-    def _match_total_surface_area(self, surface_area):
-        # changes diameter
-        a_scale = (surface_area / self.da.feature.total_surface_area)
-        self.da._diameters = np.sqrt(self.da.surface_areas * a_scale) * 2 / np.sqrt(
-            np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        self.da.set_array_modified()
-
-    def _match_item_diameter(self, mean_item_diameter):
+    def item_diameter(self, value):
         # changes diameter
 
-        scale = mean_item_diameter / self.da.feature.mean_item_diameter
+        scale = value / self.da.feature.mean_item_diameter
         self.da._diameters = self.da._diameters * scale
         self.da.set_array_modified()
 
+    def total_surface_area(self, value):
+        # changes diameter
+        a_scale = (value / self.da.feature.total_surface_area)
+        self.da._diameters = np.sqrt(
+            self.da.surface_areas * a_scale) * 2 / np.sqrt(
+            np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+        self.da.set_array_modified()
 
-    # some parameter for matching field arrea
-    _ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull
-    _TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
-    def _match_field_area(self, field_area,
-                          precision=features._DEFAULT_SPACING_PRECISION,
-                          use_scaling_only=False):
+
+    def field_area(self, value, precision=None, use_scaling_only=False):
         """changes the convex hull area to a desired size with certain precision
 
         uses scaling radial positions if field area has to be increased
@@ -142,22 +63,25 @@ class ArrayFeatureMatcher(object):
         #      3. increase FA by scaling to match precisely
         #      - this method will result is rather circulr areas
 
+
+        if precision is None:
+            precision = FeatureMatcher.DEFAULT_SPACING_PRECISION
+
         if self.da.feature.field_area is None:
             return  # not defined
-        elif field_area > self.da.feature.field_area or use_scaling_only:
+        elif value > self.da.feature.field_area or use_scaling_only:
             # field area is currently too small or scaling is enforced
-            return self.__scale_field_area(field_area=field_area,
+            return self.__scale_field_area(field_area=value,
                                            precision=precision)
-        elif field_area < self.da.feature.field_area:
+        elif value < self.da.feature.field_area:
             # field area is too large
             self.__decrease_field_area_by_replacement(
-                    max_field_area=field_area,
+                    max_field_area=value,
                     iterative_convex_hull_modification=
-                    ArrayFeatureMatcher._ITERATIVE_CONVEX_HULL_MODIFICATION)
+                    FeatureMatcher.ITERATIVE_CONVEX_HULL_MODIFICATION)
             # ..and rescaling to avoid to compensate for possible too
             # strong decrease
-            return self.__scale_field_area(field_area=field_area,
-                                           precision=precision)
+            return self.__scale_field_area(field_area=value, precision=precision)
         else:
             return
 
@@ -182,7 +106,7 @@ class ArrayFeatureMatcher(object):
             while self.da.feature.field_area > max_field_area:
                 # remove one random outer dot and remember it
                 indices = self.da.convex_hull.indices
-                if not ArrayFeatureMatcher._TAKE_RANDOM_DOT_FROM_CONVEXHULL:
+                if not FeatureMatcher.TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                     # most outer dot from convex hull
                     radii_outer_dots = _geometry.cartesian2polar(self.da.xy[indices],
                                                              radii_only=True)
@@ -221,8 +145,7 @@ class ArrayFeatureMatcher(object):
         self.da._xy = self.da._xy + old_center
         self.da.set_array_modified()
 
-    def __scale_field_area(self, field_area,
-                           precision=features._DEFAULT_SPACING_PRECISION):
+    def __scale_field_area(self, field_area, precision):
         """change the convex hull area to a desired size by scale the polar
         positions  with certain precision
 
@@ -262,8 +185,9 @@ class ArrayFeatureMatcher(object):
         self.da._xy = self.da._xy + old_center
         self.da.set_array_modified()
 
-    def _match_coverage(self, coverage, precision=features._DEFAULT_SPACING_PRECISION,
-                        match_FA2TA_ratio=0.5):
+    def coverage(self, value,
+                 precision=None,
+                 match_FA2TA_ratio=0.5):
 
         # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         # FIXME when to realign, realignment changes field_area!
@@ -280,11 +204,92 @@ class ArrayFeatureMatcher(object):
         if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (coverage * self.da.feature.field_area) - self.da.feature.total_surface_area
+        total_area_change100 = (value * self.da.feature.field_area) - self.da.feature.total_surface_area
         d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
-            self._match_total_surface_area(surface_area=self.da.feature.total_surface_area + d_change_total_area)
+            self.total_surface_area(self.da.feature.total_surface_area + d_change_total_area)
 
-        self._match_field_area(field_area=self.da.feature.total_surface_area / coverage,
-                               precision=precision)
+        self.field_area(self.da.feature.total_surface_area / value,
+                        precision=precision)
 
+
+    def item_perimeter(self, value):
+
+        self.item_diameter(value / np.pi)
+
+    def total_perimeter(self, value):
+        tmp = value / (self.da.feature.numerosity * np.pi)
+        self.item_diameter(tmp)
+
+    def item_surface_area(self, value):
+        ta = self.da.feature.numerosity * value
+        self.total_surface_area(ta)
+
+    def log_spacing(self, value, precision=None):
+
+        logfa = 0.5 * value + 0.5 * _misc.log2(
+            self.da.feature.numerosity)
+        self.field_area(value=2 ** logfa, precision=precision)
+
+    def log_size(self, value):
+        logtsa = 0.5 * value + 0.5 * _misc.log2(self.da.feature.numerosity)
+        self.total_surface_area(2 ** logtsa)
+
+    def sparcity(self, value, precision = None):
+        self.field_area(value= value * self.da.feature.numerosity,
+                        precision=precision)
+
+
+    def match_feature(self, feature, match_dot_array=None):
+        """
+        match_properties: continuous property or list of continuous properties
+        several properties to be matched
+        if match dot array is specified, array will be match to match_dot_array, otherwise
+        the values defined in match_features is used.
+        some matching requires realignement to avoid overlaps. However,
+        realigment might result in a different field area. Thus, realign after
+        matching for  Size parameter and realign before matching space
+        parameter.
+        """
+
+        # type check
+        assert isinstance(feature, vf.ALL_VISUAL_FEATURES)
+
+        vf.check_feature_list([feature], check_set_value=match_dot_array
+                                                         is None)
+
+        # copy and change values to match this stimulus
+        feat = copy(feature)
+        if match_dot_array is not None:
+            feat.adapt_value(match_dot_array)
+
+        # Adapt
+        if isinstance(feat, vf.ItemDiameter):
+            self.item_diameter(value=feat.value)
+
+        elif isinstance(feat, vf.ItemPerimeter):
+            self.item_perimeter(value=feat.value)
+
+        elif isinstance(feat, vf.TotalPerimeter):
+            self.total_perimeter(value=feat.value)
+
+        elif isinstance(feat, vf.ItemSurfaceArea):
+            self.item_surface_area(value=feat.value)
+
+        elif isinstance(feat, vf.TotalSurfaceArea):
+            self.total_surface_area(value=feat.value)
+
+        elif isinstance(feat, vf.LogSize):
+            self.log_size(value=feat.value)
+
+        elif isinstance(feat, vf.LogSpacing):
+            self.log_spacing(value=feat.value, precision=feat.spacing_precision)
+
+        elif isinstance(feat, vf.Sparsity):
+            self.sparcity(value=feat.value, precision=feat.spacing_precision)
+
+        elif isinstance(feat, vf.FieldArea):
+            self.field_area(value=feat.value, precision=feat.spacing_precision)
+
+        elif isinstance(feat, vf.Coverage):
+            self.coverage(value=feat.value, precision=feat.spacing_precision)

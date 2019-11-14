@@ -20,6 +20,7 @@ from ._lib._colour import Colour, ImageColours
 from ._lib._item_attributes import ItemAttributes
 from ._lib._shape import Dot, Rectangle
 
+from ._lib import dot_array_sequence
 from ._lib import features
 from ._lib import random_dot_array
 from ._lib import pil_image

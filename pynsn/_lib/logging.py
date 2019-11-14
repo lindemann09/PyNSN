@@ -8,11 +8,12 @@ import numpy as np
 import atexit
 
 from .. import __version__
-from . import _misc
-from pynsn.dot_array_sequence import DASequence
+from . import _misc, _geometry
+from pynsn._lib.dot_array_sequence import DASequence
 from ._dot_array import DotArray
 from ._item_attributes import ItemAttributes
 
+# FIXME REMOVE FILE LOGGING
 
 class LogFile(object):
 
@@ -210,7 +211,7 @@ class LogFileReader(object): # FIXME really required. Better using files for
                        attributes=ItemAttributes(colour=x[2], picture=x[3]))
         if target_array_radius is None:
             # adjust max_radius if not defined
-            radii = _misc.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
+            radii = _geometry.cartesian2polar(rtn._xy, radii_only=True) + rtn._diameters / 2
             rtn.target_array_radius = int(np.ceil(np.max(radii)))
         return rtn
 

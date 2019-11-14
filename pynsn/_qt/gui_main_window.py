@@ -4,7 +4,7 @@ import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
-from pynsn import dot_array_sequence
+from pynsn._lib import dot_array_sequence
 from .._lib.logging import LogFile
 from .._lib import features as vf
 from .._lib import _colour
@@ -302,7 +302,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         prop = self.dot_array.feature.get_features_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
-            self.dot_array.match(response)
+            self.dot_array.match.match_feature(response)
             if isinstance(response, vf.SIZE_FEATURES):
                 self.dot_array.center_array()
                 self.dot_array.realign()

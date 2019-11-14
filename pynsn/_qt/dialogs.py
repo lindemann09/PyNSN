@@ -2,8 +2,7 @@
 """
 from PyQt4 import QtGui, QtCore
 from . import misc
-from pynsn._lib import features as vf
-
+from .._lib import features as vf
 
 class MatchPropertyDialog(QtGui.QDialog):
 

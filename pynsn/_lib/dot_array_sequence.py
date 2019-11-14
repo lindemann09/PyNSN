@@ -191,7 +191,7 @@ def create(reference_dot_array,
             rtn.error = error
 
     if logger is not None:
-        from .logging import LogFile # to avoid circular import
+        from ._lib.logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile):
             raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
                 type(logger).__name__))
@@ -223,7 +223,7 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
             return [], "ERROR: Can't find the a make matched deviants"
         _vf.check_feature_list(match_props)
         for feat in match_props:
-            da.match(feat)
+            da.match.match_feature(feat)
 
         cnt = 0
         while True:
