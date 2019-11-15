@@ -299,7 +299,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.dot_array.feature.get_features_dict()
+        prop = self.dot_array.feature.as_dict()
         response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
         if response is not None:
             self.dot_array.match.match_feature(response)
@@ -334,7 +334,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
 
         d = {"match range": match_range, "extra_space": extra_space}
-        d["match_methods"] = list(map(lambda x: x.get_features_dict(), match_methods))  # TODO <-- check ERROR
+        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
 

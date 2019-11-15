@@ -18,8 +18,6 @@ from ._dot_array_features import DotArrayFeatures
 from ._shape import Dot
 from ._match import FeatureMatcher
 
-
-
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
@@ -366,6 +364,7 @@ class _BasicDotArray(_DotCloud):
         """
 
         try_out_inside_convex_hull = 1000
+
         if prefer_inside_field_area:
             delaunay = spatial.Delaunay(self.convex_hull.xy)
         else:
@@ -458,17 +457,15 @@ class _BasicDotArray(_DotCloud):
                     # copy a random dot
                     rnd_dot = self.get_dots([rnd])[0]
                     try:
-
-                        rnd_dot.xy = deviant.random_free_dot_position(dot_diameter=rnd_dot.diameter)
+                        rnd_dot.xy = deviant.random_free_dot_position(
+                            dot_diameter=rnd_dot.diameter,
+                            prefer_inside_field_area=prefer_keeping_field_area)
                     except:
                         # no free position
                         raise RuntimeError("Can't make the deviant. No free position")
                     deviant.append_dot(rnd_dot)
 
         return deviant
-
-    # FIXME read_from_dict, as_dict?
-
 
     def as_dict(self):
         d = super().as_dict()

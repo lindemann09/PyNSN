@@ -58,7 +58,7 @@ class DASequence(object):
     def get_features_dict(self):  # todo search for get_features!
         """dictionary with arrays"""
 
-        dicts = [x.feature.get_features_dict() for x in self.dot_arrays]
+        dicts = [x.feature.as_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['hash'] = [self.hash] * len(self.dot_arrays)  # all arrays have the
         # same ID
@@ -191,7 +191,7 @@ def create(reference_dot_array,
             rtn.error = error
 
     if logger is not None:
-        from ._lib.logging import LogFile # to avoid circular import
+        from .logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile):
             raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
                 type(logger).__name__))
@@ -204,6 +204,7 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
                            prefer_keeping_field_area):  # TODO center array OK?
     """helper function. Do not use this method. Please use make"""
 
+
     if reference_da.feature.numerosity == target_numerosity:
         change = 0
     elif reference_da.feature.numerosity > target_numerosity:
@@ -214,14 +215,16 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
     da = reference_da.copy()
     da_sequence = []
 
+
     error = None
     while True:
         try:
             da = da.number_deviant(change_numerosity=change,
-                               prefer_keeping_field_area=prefer_keeping_field_area)
+                                   prefer_keeping_field_area=prefer_keeping_field_area)
         except:
             return [], "ERROR: Can't find the a make matched deviants"
         _vf.check_feature_list(match_props)
+
         for feat in match_props:
             da.match.match_feature(feat)
 
