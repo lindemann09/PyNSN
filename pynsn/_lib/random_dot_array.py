@@ -6,7 +6,6 @@ from ._item_attributes import ItemAttributes as _ItemAttributes
 from ._dot_array import DotArray as _DotArray
 
 
-
 class Specs(object):
 
     def __init__(self,

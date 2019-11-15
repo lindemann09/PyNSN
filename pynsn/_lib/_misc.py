@@ -7,6 +7,7 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from collections import OrderedDict
 import random
 import numpy as np
+from . import features
 
 try:
     from math import log2
@@ -146,3 +147,35 @@ def is_all_smaller(vector, standard=0):
 def is_all_equal(vector):
     # returns true if all elements are equal
     return sum(map(lambda x: x==vector[0], vector))==len(vector)
+
+
+
+def check_feature_list(feature_list):
+    """helper function
+    raises TypeError or Runtime errors if checks fail
+    * type check
+    * dependency check
+    * is value defined
+    """
+
+    size_occured = ""
+    space_occured = ""
+    error = "Incompatible properties to match: {} & {}"
+    for x in feature_list:
+        if x not in features.ALL_FEATURES:
+            raise TypeError("Parameter is not a continuous feature or a " + \
+                            "list of continuous properties")
+            # continious property or visual feature
+
+        if x in features.SIZE_FEATURES:
+            if len(size_occured)>0:
+                raise RuntimeError(error.format(x, size_occured))
+            else:
+                size_occured = x
+
+        if x in features.SPACE_FEATURES:
+            if len(space_occured)>0:
+                raise RuntimeError(error.format(x, space_occured))
+            else:
+                space_occured = x
+

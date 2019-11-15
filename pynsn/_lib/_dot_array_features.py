@@ -5,8 +5,7 @@ from collections import OrderedDict
 import numpy as np
 from scipy import spatial
 from . import _misc
-from . import features as vf
-
+from . import features
 
 class DotArrayFeatures(object):
 
@@ -111,16 +110,16 @@ class DotArrayFeatures(object):
         """ordered dictionary with the most important feature"""
         rtn = [("Hash", self.da.hash),
                ("Numerosity", self.numerosity),
-               (vf.TotalSurfaceArea.label, self.total_surface_area),
-               (vf.ItemSurfaceArea.label, self.mean_item_surface_area),
-               (vf.ItemDiameter.label, self.mean_item_diameter),
-               (vf.ItemPerimeter.label, self.mean_item_perimeter),
-               (vf.TotalPerimeter.label, self.total_perimeter),
-               (vf.FieldArea.label, self.field_area),
-               (vf.Sparsity.label, self.sparsity),
-               (vf.Coverage.label, self.converage),
-               (vf.LogSize.label, self.logSize),
-               (vf.LogSpacing.label, self.logSpacing)]
+               (features.TOTAL_SURFACE_AREA, self.total_surface_area),
+               (features.ITEM_SURFACE_AREA, self.mean_item_surface_area),
+               (features.ITEM_DIAMETER, self.mean_item_diameter),
+               (features.ITEM_PERIMETER, self.mean_item_perimeter),
+               (features.TOTAL_PERIMETER, self.total_perimeter),
+               (features.FIELD_AREA, self.field_area),
+               (features.SPARSITY, self.sparsity),
+               (features.COVERAGE, self.converage),
+               (features.LOG_SIZE, self.logSize),
+               (features.LOG_SPACING, self.logSpacing)]
         return OrderedDict(rtn)
 
     def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):

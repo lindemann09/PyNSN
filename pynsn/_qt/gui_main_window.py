@@ -6,10 +6,10 @@ from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
 from pynsn._lib import dot_array_sequence
 from .._lib.logging import LogFile
-from .._lib import features as vf
 from .._lib import _colour
 from .._lib._item_attributes import ItemAttributes
 from .._lib import pil_image
+from .._lib import features
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
@@ -299,11 +299,12 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.dot_array.feature.as_dict()
-        response = dialogs.MatchPropertyDialog.get_response(self, prop)  #
-        if response is not None:
-            self.dot_array.match.match_feature(response)
-            if isinstance(response, vf.SIZE_FEATURES):
+        prop = self.dot_array.feature.get_features_dict()
+        feature, value = dialogs.MatchPropertyDialog.get_response(self,
+                                                                   prop)  #
+        if feature is not None:
+            self.dot_array.match.match_feature(feature, value=value)
+            if feature in features.SIZE_FEATURES:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)

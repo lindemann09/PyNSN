@@ -7,9 +7,9 @@ from hashlib import md5 as _md5
 import numpy as _np
 
 from copy import copy as _copy
-from pynsn._lib import _misc as _misc
-from pynsn._lib import features as _vf
-from pynsn._lib._dot_array import DotArray as _DotArray
+from . import _misc as _misc
+from ._dot_array import DotArray as _DotArray
+from . import features as _feat
 
 class DASequence(object):
 
@@ -134,7 +134,7 @@ def create(reference_dot_array,
         match_properties = []
     elif not isinstance(match_properties, (tuple, list)):
         match_properties = [match_properties]
-    _vf.check_feature_list(match_properties, check_set_value=False)
+    _misc.check_feature_list(match_properties)
 
     if not isinstance(reference_dot_array, _DotArray):
         raise TypeError("Reference_dot_array has to be DotArray, but not {}".format(
@@ -148,9 +148,7 @@ def create(reference_dot_array,
         m = _copy(m)
         m.adapt_value(reference_dot_array)
         match_props.append(m)
-        if isinstance(m, _vf.LogSpacing().dependencies) or \
-                (isinstance(m, _vf.Coverage) and
-                 m.match_ratio_fieldarea2totalarea < 1):
+        if m in _feat.SPACE_FEATURES or m == _feat.COVERAGE:
             prefer_keeping_field_area = True
             break
 
@@ -223,7 +221,7 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
                                    prefer_keeping_field_area=prefer_keeping_field_area)
         except:
             return [], "ERROR: Can't find the a make matched deviants"
-        _vf.check_feature_list(match_props)
+        _misc.check_feature_list(match_props)
 
         for feat in match_props:
             da.match.match_feature(feat)

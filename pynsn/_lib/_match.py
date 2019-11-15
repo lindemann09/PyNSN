@@ -2,16 +2,19 @@ from copy import copy
 import random
 import numpy as np
 from . import _misc, _geometry
-from . import features as vf
+from . import features
+
+DEFAULT_SPACING_PRECISION = 0.0001
+DEFAULT_MATCH_FA2TA_RATIO = 0.5
+
+# some parameter for matching field arrea
+ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull TODO DOCU
+# and matching log spacing
+TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
 
 
 class FeatureMatcher(object):
 
-    # some parameter for matching field arrea
-    ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull
-    TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
-    # matching log spacing
-    DEFAULT_SPACING_PRECISION = 0.0001
 
     def __init__(self, dot_array):
         self.da = dot_array
@@ -65,7 +68,7 @@ class FeatureMatcher(object):
 
 
         if precision is None:
-            precision = FeatureMatcher.DEFAULT_SPACING_PRECISION
+            precision = DEFAULT_SPACING_PRECISION
 
         if self.da.feature.field_area is None:
             return  # not defined
@@ -78,7 +81,7 @@ class FeatureMatcher(object):
             self.__decrease_field_area_by_replacement(
                     max_field_area=value,
                     iterative_convex_hull_modification=
-                    FeatureMatcher.ITERATIVE_CONVEX_HULL_MODIFICATION)
+                    ITERATIVE_CONVEX_HULL_MODIFICATION)
             # ..and rescaling to avoid to compensate for possible too
             # strong decrease
             return self.__scale_field_area(field_area=value, precision=precision)
@@ -106,7 +109,7 @@ class FeatureMatcher(object):
             while self.da.feature.field_area > max_field_area:
                 # remove one random outer dot and remember it
                 indices = self.da.convex_hull.indices
-                if not FeatureMatcher.TAKE_RANDOM_DOT_FROM_CONVEXHULL:
+                if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                     # most outer dot from convex hull
                     radii_outer_dots = _geometry.cartesian2polar(self.da.xy[indices],
                                                              radii_only=True)
@@ -187,7 +190,7 @@ class FeatureMatcher(object):
 
     def coverage(self, value,
                  precision=None,
-                 match_FA2TA_ratio=0.5):
+                 match_FA2TA_ratio=None):
 
         # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
         # FIXME when to realign, realignment changes field_area!
@@ -201,7 +204,9 @@ class FeatureMatcher(object):
 
         print("WARNING: _match_coverage is a experimental ")
         # dens = convex_hull_area / total_surface_area
-        if match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
+        if match_FA2TA_ratio is None:
+            match_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
+        elif match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
         total_area_change100 = (value * self.da.feature.field_area) - self.da.feature.total_surface_area
@@ -240,7 +245,9 @@ class FeatureMatcher(object):
                         precision=precision)
 
 
-    def match_feature(self, feature, match_dot_array=None):
+    def match_feature(self, feature,
+                      value = None,
+                      reference_dot_array=None):
         """
         match_properties: continuous property or list of continuous properties
         several properties to be matched
@@ -250,46 +257,77 @@ class FeatureMatcher(object):
         realigment might result in a different field area. Thus, realign after
         matching for  Size parameter and realign before matching space
         parameter.
+
         """
 
-        # type check
-        assert isinstance(feature, vf.ALL_VISUAL_FEATURES)
+        if value is None and reference_dot_array is None:
+            raise ValueError("Please specify a value or a "
+                             "reference_dot_array.")
 
-        vf.check_feature_list([feature], check_set_value=match_dot_array
-                                                         is None)
+        if value is not None and reference_dot_array is not None:
+            raise ValueError("Please specify either a value or "
+                             "reference_dot_array, not both.")
+
+        # type check
+        if feature not in features.ALL_FEATURES:
+            raise ValueError("{} is not a visual feature.")
+
+        _misc.check_feature_list([feature])
+
 
         # copy and change values to match this stimulus
-        feat = copy(feature)
-        if match_dot_array is not None:
-            feat.adapt_value(match_dot_array)
+        from ._dot_array import DotArray
+        reference_dot_array = DotArray(target_array_radius=None,
+                                       minimum_gap=None)
 
         # Adapt
-        if isinstance(feat, vf.ItemDiameter):
-            self.item_diameter(value=feat.value)
+        if feature == features.ITEM_DIAMETER:
+            if value is None:
+                value = reference_dot_array.feature.mean_item_diameter
+            self.item_diameter(value=value)
 
-        elif isinstance(feat, vf.ItemPerimeter):
-            self.item_perimeter(value=feat.value)
+        elif feature == features.ITEM_PERIMETER:
+            if value is None:
+                value = reference_dot_array.feature.mean_item_perimeter
+            self.item_perimeter(value=value)
 
-        elif isinstance(feat, vf.TotalPerimeter):
-            self.total_perimeter(value=feat.value)
+        elif feature == features.TOTAL_PERIMETER:
+            if value is None:
+                value = reference_dot_array.feature.total_perimeter
+            self.total_perimeter(value=value)
 
-        elif isinstance(feat, vf.ItemSurfaceArea):
-            self.item_surface_area(value=feat.value)
+        elif feature == features.ITEM_SURFACE_AREA:
+            if value is None:
+                value = reference_dot_array.feature.mean_item_surface_area
+            self.item_surface_area(value=value)
 
-        elif isinstance(feat, vf.TotalSurfaceArea):
-            self.total_surface_area(value=feat.value)
+        elif feature == features.TOTAL_SURFACE_AREA:
+            if value is None:
+                value = reference_dot_array.feature.total_surface_area
+            self.total_surface_area(value=value)
 
-        elif isinstance(feat, vf.LogSize):
-            self.log_size(value=feat.value)
+        elif feature == features.LOG_SIZE:
+            if value is None:
+                value = reference_dot_array.feature.logSize
+            self.log_size(value=value)
 
-        elif isinstance(feat, vf.LogSpacing):
-            self.log_spacing(value=feat.value, precision=feat.spacing_precision)
+        elif feature == features.LOG_SPACING:
+            if value is None:
+                value = reference_dot_array.feature.logSpacing
+            self.log_spacing(value=value,
+                             precision=DEFAULT_SPACING_PRECISION)
 
-        elif isinstance(feat, vf.Sparsity):
-            self.sparcity(value=feat.value, precision=feat.spacing_precision)
+        elif feature == features.SPARSITY:
+            if value is None:
+                value = reference_dot_array.feature.sparsity
+            self.sparcity(value=value, precision=DEFAULT_SPACING_PRECISION)
 
-        elif isinstance(feat, vf.FieldArea):
-            self.field_area(value=feat.value, precision=feat.spacing_precision)
+        elif feature == features.FIELD_AREA:
+            if value is None:
+                value = reference_dot_array.feature.field_area
+            self.field_area(value=value, precision=DEFAULT_SPACING_PRECISION)
 
-        elif isinstance(feat, vf.Coverage):
-            self.coverage(value=feat.value, precision=feat.spacing_precision)
+        elif feature == features.COVERAGE:
+            if value is None:
+                value = reference_dot_array.feature.converage
+            self.coverage(value=value, precision=DEFAULT_SPACING_PRECISION)
