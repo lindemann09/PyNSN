@@ -275,11 +275,6 @@ class FeatureMatcher(object):
         _misc.check_feature_list([feature])
 
 
-        # copy and change values to match this stimulus
-        from ._dot_array import DotArray
-        reference_dot_array = DotArray(target_array_radius=None,
-                                       minimum_gap=None)
-
         # Adapt
         if feature == features.ITEM_DIAMETER:
             if value is None:

@@ -57,16 +57,16 @@ class LogFile(object):
         """helper function: returns log for dot array and log for properties"""
 
         if isinstance(dot_array_object, (DASequence, DotArray)):
+            da_log = dot_array_object.get_csv(colour_column=log_colours,
+                                              variable_names=variable_names)
             is_sequence = isinstance(dot_array_object, DASequence)
-            feat = dot_array_object.feature.as_dict()
-            feat_log = _misc.dict_to_csv(feat, variable_names=variable_names,
-                                         dict_of_lists=is_sequence)
             if not is_sequence:
-                da_log = dot_array_object.get_csv(colour_column=log_colours,
-                                                  variable_names=variable_names)
+                feat = dot_array_object.feature.get_features_dict()
             else:  # DASequence
-                da_log = dot_array_object.get_csv(colour_column=log_colours,
-                                                  variable_names=variable_names)
+                feat = dot_array_object.get_features_dict()
+            feat_log = _misc.dict_to_csv(feat, variable_names=variable_names,
+                                          dict_of_lists=is_sequence)
+
         else:
             da_log = ""
             feat_log = ""

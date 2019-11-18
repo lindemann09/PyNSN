@@ -58,7 +58,7 @@ class DASequence(object):
     def get_features_dict(self):  # todo search for get_features!
         """dictionary with arrays"""
 
-        dicts = [x.feature.as_dict() for x in self.dot_arrays]
+        dicts = [x.feature.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['hash'] = [self.hash] * len(self.dot_arrays)  # all arrays have the
         # same ID
@@ -80,7 +80,7 @@ class DASequence(object):
         return self.get_csv()
 
     def get_csv(self, variable_names=True, colour_column=False,
-                picture_column=False, hash_column=True):
+                hash_column=True):
 
         rtn = ""
         tmp_var_names = variable_names
@@ -88,8 +88,7 @@ class DASequence(object):
         for da in self.dot_arrays:
             rtn += da.get_csv(num_idx_column=True, hash_column=False,
                               variable_names=tmp_var_names,
-                              colour_column=colour_column,
-                              picture_column=picture_column)
+                              colour_column=colour_column)
             tmp_var_names = False
 
         if hash_column:
@@ -141,13 +140,9 @@ def create(reference_dot_array,
             type(reference_dot_array).__name__))
 
 
-    # copy and change values to match this stimulus
-    match_props = []
+    # keep field area
     prefer_keeping_field_area = False
     for m in match_properties:
-        m = _copy(m)
-        m.adapt_value(reference_dot_array)
-        match_props.append(m)
         if m in _feat.SPACE_FEATURES or m == _feat.COVERAGE:
             prefer_keeping_field_area = True
             break
@@ -162,29 +157,29 @@ def create(reference_dot_array,
 
     # matched deviants
     rtn = DASequence()
-    rtn.method = match_props
+    rtn.method = match_properties
 
     min, max = sorted(min_max_numerosity)
     # decreasing
     if min < reference_dot_array.feature.numerosity:
-        da_sequence, error = _make_matched_deviants(
+        tmp, error = _make_matched_deviants(
             reference_da=reference_da,
-            match_props=match_props,
+            match_props=match_properties,
             target_numerosity=min,
             prefer_keeping_field_area=prefer_keeping_field_area)
-        rtn.append_dot_arrays(list(reversed(da_sequence)))
+        rtn.append_dot_arrays(list(reversed(tmp)))
         if error is not None:
             rtn.error = error
     # reference
     rtn.append_dot_arrays(reference_da)
     # increasing
     if max > reference_dot_array.feature.numerosity:
-        da_sequence, error = _make_matched_deviants(
+        tmp, error = _make_matched_deviants(
             reference_da=reference_da,
-            match_props=match_props,
+            match_props=match_properties,
             target_numerosity=max,
             prefer_keeping_field_area=prefer_keeping_field_area)
-        rtn.append_dot_arrays(da_sequence)
+        rtn.append_dot_arrays(tmp)
         if error is not None:
             rtn.error = error
 
@@ -222,10 +217,9 @@ def _make_matched_deviants(reference_da, match_props, target_numerosity,
         except:
             return [], "ERROR: Can't find the a make matched deviants"
         _misc.check_feature_list(match_props)
-
         for feat in match_props:
-            da.match.match_feature(feat)
-
+            da.match.match_feature(feature=feat,
+                                   reference_dot_array=reference_da)
         cnt = 0
         while True:
             cnt += 1
