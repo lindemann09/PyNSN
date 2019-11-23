@@ -4,12 +4,12 @@ import os
 from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
-from pynsn._lib import dot_array_sequence
-from .._lib.logging import LogFile
+from .. import dot_array_sequence
+from ..logging import LogFile
 from .._lib import _colour
 from .._lib._item_attributes import ItemAttributes
 from .._lib import pil_image
-from .._lib import features
+from .._lib._visual_features import Features
 from .main_widget import MainWidget
 from . import dialogs
 from .sequence_display import SequenceDisplay
@@ -250,13 +250,13 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.dot_array.feature.get_features_text(extended_format=True,
-                                                       with_hash=True)
+        txt = self.dot_array.features.get_features_text(extended_format=True,
+                                                        with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.dot_array.split_array_by_colour():
                 txt += "Colour {}\n".format(da.get_colours()[0])
-                txt += da.feature.get_features_text(extended_format=True,
-                                            with_hash=False)
+                txt += da.features.get_features_text(extended_format=True,
+                                                     with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -299,12 +299,12 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.dot_array.feature.get_features_dict()
+        prop = self.dot_array.features.get_features_dict()
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
                                                                    prop)  #
         if feature is not None:
             self.dot_array.match.match_feature(feature, value=value)
-            if feature in features.SIZE_FEATURES:
+            if feature in Features.SIZE_FEATURES:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)
@@ -325,7 +325,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_slider_released(self):
         """"""
-        change = self.main_widget.number.value - self.dot_array.feature.numerosity
+        change = self.main_widget.number.value - self.dot_array.features.numerosity
         self.dot_array = self.dot_array.number_deviant(change)
         self.show_current_image(remake_image=True)
         self.write_properties()
@@ -343,12 +343,12 @@ class GUIMainWindow(QtGui.QMainWindow):
             # print("processing")
             sequence = dot_array_sequence.create(
                 reference_dot_array=self.dot_array,
-                              match_properties=match_methods,
+                              match_feature=match_methods,
                               min_max_numerosity=match_range,
                               extra_space=extra_space,
                               logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.dot_array.feature.numerosity,
+                            start_numerosity=self.dot_array.features.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
 

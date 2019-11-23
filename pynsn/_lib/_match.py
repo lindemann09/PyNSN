@@ -2,7 +2,7 @@ from copy import copy
 import random
 import numpy as np
 from . import _misc, _geometry
-from . import features
+from ._visual_features import Features
 
 DEFAULT_SPACING_PRECISION = 0.0001
 DEFAULT_MATCH_FA2TA_RATIO = 0.5
@@ -15,20 +15,19 @@ TAKE_RANDOM_DOT_FROM_CONVEXHULL = False  # todo needs testing
 
 class FeatureMatcher(object):
 
-
     def __init__(self, dot_array):
         self.da = dot_array
 
     def item_diameter(self, value):
         # changes diameter
 
-        scale = value / self.da.feature.mean_item_diameter
+        scale = value / self.da.features.mean_item_diameter
         self.da._diameters = self.da._diameters * scale
         self.da.set_array_modified()
 
     def total_surface_area(self, value):
         # changes diameter
-        a_scale = (value / self.da.feature.total_surface_area)
+        a_scale = (value / self.da.features.total_surface_area)
         self.da._diameters = np.sqrt(
             self.da.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
@@ -70,13 +69,13 @@ class FeatureMatcher(object):
         if precision is None:
             precision = DEFAULT_SPACING_PRECISION
 
-        if self.da.feature.field_area is None:
+        if self.da.features.field_area is None:
             return  # not defined
-        elif value > self.da.feature.field_area or use_scaling_only:
+        elif value > self.da.features.field_area or use_scaling_only:
             # field area is currently too small or scaling is enforced
             return self.__scale_field_area(field_area=value,
                                            precision=precision)
-        elif value < self.da.feature.field_area:
+        elif value < self.da.features.field_area:
             # field area is too large
             self.__decrease_field_area_by_replacement(
                     max_field_area=value,
@@ -106,7 +105,7 @@ class FeatureMatcher(object):
         removed_dots = []
 
         if iterative_convex_hull_modification:
-            while self.da.feature.field_area > max_field_area:
+            while self.da.features.field_area > max_field_area:
                 # remove one random outer dot and remember it
                 indices = self.da.convex_hull.indices
                 if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
@@ -157,7 +156,7 @@ class FeatureMatcher(object):
         Note: see doc string `_match_field_area`
         """
 
-        current = self.da.feature.field_area
+        current = self.da.features.field_area
 
         if current is None:
             return  # not defined
@@ -179,7 +178,7 @@ class FeatureMatcher(object):
 
             self.da._xy = _geometry.polar2cartesian(centered_polar * [scale, 1])
             self.da.set_array_modified()  # required to recalc convex hull
-            current = self.da.feature.field_area
+            current = self.da.features.field_area
 
             if (current < field_area and step < 0) or \
                     (current > field_area and step > 0):
@@ -209,12 +208,12 @@ class FeatureMatcher(object):
         elif match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (value * self.da.feature.field_area) - self.da.feature.total_surface_area
+        total_area_change100 = (value * self.da.features.field_area) - self.da.features.total_surface_area
         d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
-            self.total_surface_area(self.da.feature.total_surface_area + d_change_total_area)
+            self.total_surface_area(self.da.features.total_surface_area + d_change_total_area)
 
-        self.field_area(self.da.feature.total_surface_area / value,
+        self.field_area(self.da.features.total_surface_area / value,
                         precision=precision)
 
 
@@ -223,25 +222,25 @@ class FeatureMatcher(object):
         self.item_diameter(value / np.pi)
 
     def total_perimeter(self, value):
-        tmp = value / (self.da.feature.numerosity * np.pi)
+        tmp = value / (self.da.features.numerosity * np.pi)
         self.item_diameter(tmp)
 
     def item_surface_area(self, value):
-        ta = self.da.feature.numerosity * value
+        ta = self.da.features.numerosity * value
         self.total_surface_area(ta)
 
     def log_spacing(self, value, precision=None):
 
         logfa = 0.5 * value + 0.5 * _misc.log2(
-            self.da.feature.numerosity)
+            self.da.features.numerosity)
         self.field_area(value=2 ** logfa, precision=precision)
 
     def log_size(self, value):
-        logtsa = 0.5 * value + 0.5 * _misc.log2(self.da.feature.numerosity)
+        logtsa = 0.5 * value + 0.5 * _misc.log2(self.da.features.numerosity)
         self.total_surface_area(2 ** logtsa)
 
     def sparcity(self, value, precision = None):
-        self.field_area(value= value * self.da.feature.numerosity,
+        self.field_area(value= value * self.da.features.numerosity,
                         precision=precision)
 
 
@@ -269,60 +268,40 @@ class FeatureMatcher(object):
                              "reference_dot_array, not both.")
 
         # type check
-        if feature not in features.ALL_FEATURES:
-            raise ValueError("{} is not a visual feature.")
+        if feature not in Features.ALL_FEATURES:
+            raise ValueError("{} is not a visual feature.".format(feature))
 
-        _misc.check_feature_list([feature])
-
+        if value is None:
+            value = reference_dot_array.features.get(feature)
 
         # Adapt
-        if feature == features.ITEM_DIAMETER:
-            if value is None:
-                value = reference_dot_array.feature.mean_item_diameter
+        if feature == Features.ITEM_DIAMETER:
             self.item_diameter(value=value)
 
-        elif feature == features.ITEM_PERIMETER:
-            if value is None:
-                value = reference_dot_array.feature.mean_item_perimeter
+        elif feature == Features.ITEM_PERIMETER:
             self.item_perimeter(value=value)
 
-        elif feature == features.TOTAL_PERIMETER:
-            if value is None:
-                value = reference_dot_array.feature.total_perimeter
+        elif feature == Features.TOTAL_PERIMETER:
             self.total_perimeter(value=value)
 
-        elif feature == features.ITEM_SURFACE_AREA:
-            if value is None:
-                value = reference_dot_array.feature.mean_item_surface_area
+        elif feature == Features.ITEM_SURFACE_AREA:
             self.item_surface_area(value=value)
 
-        elif feature == features.TOTAL_SURFACE_AREA:
-            if value is None:
-                value = reference_dot_array.feature.total_surface_area
+        elif feature == Features.TOTAL_SURFACE_AREA:
             self.total_surface_area(value=value)
 
-        elif feature == features.LOG_SIZE:
-            if value is None:
-                value = reference_dot_array.feature.logSize
+        elif feature == Features.LOG_SIZE:
             self.log_size(value=value)
 
-        elif feature == features.LOG_SPACING:
-            if value is None:
-                value = reference_dot_array.feature.logSpacing
+        elif feature == Features.LOG_SPACING:
             self.log_spacing(value=value,
                              precision=DEFAULT_SPACING_PRECISION)
 
-        elif feature == features.SPARSITY:
-            if value is None:
-                value = reference_dot_array.feature.sparsity
+        elif feature == Features.SPARSITY:
             self.sparcity(value=value, precision=DEFAULT_SPACING_PRECISION)
 
-        elif feature == features.FIELD_AREA:
-            if value is None:
-                value = reference_dot_array.feature.field_area
+        elif feature == Features.FIELD_AREA:
             self.field_area(value=value, precision=DEFAULT_SPACING_PRECISION)
 
-        elif feature == features.COVERAGE:
-            if value is None:
-                value = reference_dot_array.feature.converage
+        elif feature == Features.COVERAGE:
             self.coverage(value=value, precision=DEFAULT_SPACING_PRECISION)

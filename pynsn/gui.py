@@ -15,6 +15,3 @@ def start():
     ex = _GUIMainWindow()
     ex.show()
     _sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    start()

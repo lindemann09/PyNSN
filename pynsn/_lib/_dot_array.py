@@ -14,7 +14,7 @@ from scipy import spatial
 from . import _misc, _geometry
 from ._convex_hull import EfficientConvexHullDots
 from ._item_attributes import ItemAttributes
-from ._dot_array_features import DotArrayFeatures
+from ._visual_features import Features
 from ._shape import Dot
 from ._match import FeatureMatcher
 
@@ -41,7 +41,7 @@ class _DotCloud(object):
         self.set_array_modified()
 
     def __str__(self):
-        return self.feature.get_features_text(extended_format=True)
+        return self.features.get_features_text(extended_format=True)
 
 
     @property
@@ -63,8 +63,8 @@ class _DotCloud(object):
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
 
     @property
-    def feature(self):
-        return DotArrayFeatures(self)
+    def features(self):
+        return Features(self)
 
     @property
     def convex_hull(self):
@@ -167,7 +167,7 @@ class _DotCloud(object):
 
         """
         if indices is None:
-            indices = list(range(self.feature.numerosity))
+            indices = list(range(self.features.numerosity))
 
         return _DotCloud(xy=self._xy[indices, :].copy(),
                          diameters=self._diameters[indices].copy())
@@ -206,7 +206,7 @@ class _DotCloud(object):
          """
 
         if indices is not None:
-            indices = range(self.feature.numerosity)
+            indices = range(self.features.numerosity)
         try:
             indices = list(indices)  # check if iterable
         except:
@@ -343,7 +343,7 @@ class _BasicDotArray(_DotCloud):
 
         if error:
             return False, u"Can't find solution when removing outlier (n=" + \
-                   str(self.feature.numerosity) + ")"
+                   str(self.features.numerosity) + ")"
 
         self.set_array_modified()
         if not shift_required:
@@ -436,7 +436,7 @@ class _BasicDotArray(_DotCloud):
         TRY_OUT = 100
         # make a copy for the deviant
         deviant = self.copy()
-        if self.feature.numerosity + change_numerosity <= 0:
+        if self.features.numerosity + change_numerosity <= 0:
             deviant.clear()
         else:
             # add or remove random dots
@@ -446,7 +446,7 @@ class _BasicDotArray(_DotCloud):
                 else:
                     ch = []
                 for x in range(TRY_OUT):##
-                    rnd = random.randint(0, deviant.feature.numerosity-1) # do not use np.random
+                    rnd = random.randint(0, deviant.features.numerosity - 1) # do not use np.random
                     if rnd not in ch or change_numerosity > 0:
                         break
 
@@ -503,12 +503,12 @@ class DotArray(_BasicDotArray):
         ItemAttributes.check_type(attributes)
 
         if isinstance(attributes, (list, tuple)):
-            if len(attributes) != self.feature.numerosity:
+            if len(attributes) != self.features.numerosity:
                 raise ValueError("Length of attribute list does not match the " +\
                                  "size of the dot array.")
             self._attributes = np.array(attributes)
         else:
-            self._attributes = np.array([attributes] * self.feature.numerosity)
+            self._attributes = np.array([attributes] * self.features.numerosity)
 
     def get_colours(self):
         return list(map(lambda x:x.colour, self._attributes))
@@ -548,7 +548,7 @@ class DotArray(_BasicDotArray):
 
         """
         if indices is None:
-            indices = list(range(self.feature.numerosity))
+            indices = list(range(self.features.numerosity))
 
         rtn = DotArray(target_array_radius=self.target_array_radius,
                         minimum_gap=self.minimum_gap)
@@ -619,7 +619,7 @@ class DotArray(_BasicDotArray):
 
         dicts = []
         for da in self.split_array_by_colour():
-            feat = da.feature.get_features_dict()
+            feat = da.features.get_features_dict()
             feat["hash"] = self.hash + str(da.get_colours()[0])
             dicts.append(feat)
         return _misc.join_dict_list(dicts)
@@ -653,7 +653,7 @@ class DotArray(_BasicDotArray):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
-                rtn += "{},".format(self.feature.numerosity)
+                rtn += "{},".format(self.features.numerosity)
             #rtn += num_format % self._xy[cnt, 0] + "," + num_format %
                 # self._xy[cnt, 1] + "," + \
             #       num_format % self._diameters[cnt]
@@ -678,7 +678,7 @@ class DotArray(_BasicDotArray):
         if len(dict["attributes"]) == 1:
             ia = ItemAttributes()
             ia.read_from_dict(dict["attributes"][0])
-            att = [ia] * self.feature.numerosity
+            att = [ia] * self.features.numerosity
         else:
             att = []
             for d in dict["attributes"]:

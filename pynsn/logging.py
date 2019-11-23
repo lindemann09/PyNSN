@@ -7,11 +7,11 @@ import gzip
 import numpy as np
 import atexit
 
-from ..__init__ import __version__
-from . import _misc, _geometry
-from pynsn._lib.dot_array_sequence import DASequence
-from ._dot_array import DotArray
-from ._item_attributes import ItemAttributes
+from pynsn import __version__
+from pynsn._lib import _misc, _geometry
+from pynsn.dot_array_sequence import DASequence
+from pynsn._lib._dot_array import DotArray
+from pynsn._lib._item_attributes import ItemAttributes
 
 # FIXME REMOVE FILE LOGGING
 
@@ -61,7 +61,7 @@ class LogFile(object):
                                               variable_names=variable_names)
             is_sequence = isinstance(dot_array_object, DASequence)
             if not is_sequence:
-                feat = dot_array_object.feature.get_features_dict()
+                feat = dot_array_object.features.get_features_dict()
             else:  # DASequence
                 feat = dot_array_object.get_features_dict()
             feat_log = _misc.dict_to_csv(feat, variable_names=variable_names,

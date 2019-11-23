@@ -5,9 +5,35 @@ from collections import OrderedDict
 import numpy as np
 from scipy import spatial
 from . import _misc
-from . import features
 
-class DotArrayFeatures(object):
+class Features(object):
+
+    LOG_SIZE = "Log Size"
+    TOTAL_SURFACE_AREA = "Total surface area"
+    ITEM_DIAMETER = "Mean item diameter"
+    ITEM_SURFACE_AREA = "Mean item surface area"
+    ITEM_PERIMETER = "Total perimeter"
+    TOTAL_PERIMETER = "Mean item perimeter"
+    LOG_SPACING = "Log Spacing"
+    SPARSITY = "Sparsity"
+    FIELD_AREA = "Field area"
+    COVERAGE = "Coverage"
+
+    SIZE_FEATURES = (LOG_SIZE, TOTAL_SURFACE_AREA, ITEM_DIAMETER,
+                     ITEM_SURFACE_AREA, ITEM_PERIMETER, TOTAL_PERIMETER)
+
+    SPACE_FEATURES = (LOG_SPACING, SPARSITY, FIELD_AREA)
+
+    ALL_FEATURES = SIZE_FEATURES + SPACE_FEATURES + (COVERAGE,)
+
+    @staticmethod
+    def are_dependent(featureA, featureB):
+        """returns true if both features are not independent"""
+        for l in [Features.SIZE_FEATURES, Features.SPACE_FEATURES]:
+            if featureA in l and featureB in l:
+                return True
+        return False
+
 
     def __init__(self, dot_array):
         # dot_array or dot_cloud
@@ -96,30 +122,68 @@ class DotArrayFeatures(object):
         dist += radii_mtx.T  # add two each column
         return np.max(dist)
 
-    @property
-    def featureXX_coverage_target_area(self):
-        """density takes into account the full possible target area (i.e., stimulus radius) """
-        try:
-            return np.pi * self.da.target_array_radius ** 2 / \
-                self.total_surface_area
-        except:
-            return None # dot defined for DotCloud with no target_array_radius
+    #@property
+    #def featureXX_coverage_target_area(self):
+    #    """density takes into account the full possible target area (i.e.,
+    #        stimulus radius) """
+    #    try:
+    #        return np.pi * self.da.target_array_radius ** 2 / \
+    #            self.total_surface_area
+    #    except:
+    #        return None # dot defined for DotCloud with no target_array_radius
+
+    def get(self, feature):
+        """returns a feature"""
+
+       # Adapt
+        if feature == Features.ITEM_DIAMETER:
+            return self.mean_item_diameter
+
+        elif feature == Features.ITEM_PERIMETER:
+            return self.mean_item_perimeter
+
+        elif feature == Features.TOTAL_PERIMETER:
+            return self.total_perimeter
+
+        elif feature == Features.ITEM_SURFACE_AREA:
+            return self.mean_item_surface_area
+
+        elif feature == Features.TOTAL_SURFACE_AREA:
+            return self.total_surface_area
+
+        elif feature == Features.LOG_SIZE:
+            return self.logSize
+
+        elif feature == Features.LOG_SPACING:
+            return self.logSpacing
+
+        elif feature == Features.SPARSITY:
+            return self.sparsity
+
+        elif feature == Features.FIELD_AREA:
+            return self.field_area
+
+        elif feature == Features.COVERAGE:
+            return self.converage
+
+        else:
+            raise ValueError("{} is a unkown visual feature".format(feature))
 
 
     def get_features_dict(self):
         """ordered dictionary with the most important feature"""
         rtn = [("Hash", self.da.hash),
                ("Numerosity", self.numerosity),
-               (features.TOTAL_SURFACE_AREA, self.total_surface_area),
-               (features.ITEM_SURFACE_AREA, self.mean_item_surface_area),
-               (features.ITEM_DIAMETER, self.mean_item_diameter),
-               (features.ITEM_PERIMETER, self.mean_item_perimeter),
-               (features.TOTAL_PERIMETER, self.total_perimeter),
-               (features.FIELD_AREA, self.field_area),
-               (features.SPARSITY, self.sparsity),
-               (features.COVERAGE, self.converage),
-               (features.LOG_SIZE, self.logSize),
-               (features.LOG_SPACING, self.logSpacing)]
+               (Features.TOTAL_SURFACE_AREA, self.total_surface_area),
+               (Features.ITEM_SURFACE_AREA, self.mean_item_surface_area),
+               (Features.ITEM_DIAMETER, self.mean_item_diameter),
+               (Features.ITEM_PERIMETER, self.mean_item_perimeter),
+               (Features.TOTAL_PERIMETER, self.total_perimeter),
+               (Features.FIELD_AREA, self.field_area),
+               (Features.SPARSITY, self.sparsity),
+               (Features.COVERAGE, self.converage),
+               (Features.LOG_SIZE, self.logSize),
+               (Features.LOG_SPACING, self.logSpacing)]
         return OrderedDict(rtn)
 
     def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):

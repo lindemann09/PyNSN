@@ -2,7 +2,7 @@
 """
 from PyQt4 import QtGui, QtCore
 from . import misc
-from .._lib import features
+from .._lib._visual_features import Features
 
 class MatchPropertyDialog(QtGui.QDialog):
 
@@ -13,13 +13,13 @@ class MatchPropertyDialog(QtGui.QDialog):
         self.features = properties
         self._selection = None
         self.comboBox = QtGui.QComboBox(self)
-        for feat in features.ALL_FEATURES:
+        for feat in Features.ALL_FEATURES:
             self.comboBox.addItem(feat)
 
         self.comboBox.activated[str].connect(self.choice)
 
         self._num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(features.ITEM_DIAMETER)
+        self.choice(Features.ITEM_DIAMETER)
 
 
 
@@ -41,7 +41,7 @@ class MatchPropertyDialog(QtGui.QDialog):
 
     def choice(self, selection):
 
-        for feat in features.ALL_FEATURES:
+        for feat in Features.ALL_FEATURES:
             if selection == feat:
                 self._num_input.value = self.features[feat]
                 self._selection = feat
@@ -130,17 +130,17 @@ class SequenceDialog(QtGui.QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QtGui.QCheckBox(features.ITEM_DIAMETER)
-        self.match_item_perimeter= QtGui.QCheckBox(features.ITEM_PERIMETER)
-        self.match_item_area = QtGui.QCheckBox(features.ITEM_SURFACE_AREA)
-        self.match_area = QtGui.QCheckBox(features.TOTAL_SURFACE_AREA)
-        self.match_total_perimeter = QtGui.QCheckBox(features.TOTAL_PERIMETER)
-        self.match_coverage = QtGui.QCheckBox(features.COVERAGE)
-        self.match_sparsity = QtGui.QCheckBox(features.SPARSITY)
+        self.match_diameter = QtGui.QCheckBox(Features.ITEM_DIAMETER)
+        self.match_item_perimeter= QtGui.QCheckBox(Features.ITEM_PERIMETER)
+        self.match_item_area = QtGui.QCheckBox(Features.ITEM_SURFACE_AREA)
+        self.match_area = QtGui.QCheckBox(Features.TOTAL_SURFACE_AREA)
+        self.match_total_perimeter = QtGui.QCheckBox(Features.TOTAL_PERIMETER)
+        self.match_coverage = QtGui.QCheckBox(Features.COVERAGE)
+        self.match_sparsity = QtGui.QCheckBox(Features.SPARSITY)
 
-        self.match_convex_hull = QtGui.QCheckBox(features.FIELD_AREA)
-        self.match_size = QtGui.QCheckBox(features.LOG_SIZE)
-        self.match_spacing = QtGui.QCheckBox(features.LOG_SPACING)
+        self.match_convex_hull = QtGui.QCheckBox(Features.FIELD_AREA)
+        self.match_size = QtGui.QCheckBox(Features.LOG_SIZE)
+        self.match_spacing = QtGui.QCheckBox(Features.LOG_SPACING)
         self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -203,43 +203,43 @@ class SequenceDialog(QtGui.QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [features.ITEM_DIAMETER]
+        all = [Features.ITEM_DIAMETER]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(features.ITEM_SURFACE_AREA)
+        all.append(Features.ITEM_SURFACE_AREA)
         if self.match_item_area.isChecked():
             selected.append(all[-1])
 
-        all.append(features.ITEM_PERIMETER)
+        all.append(Features.ITEM_PERIMETER)
         if self.match_item_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(features.TOTAL_PERIMETER)
+        all.append(Features.TOTAL_PERIMETER)
         if self.match_total_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(features.TOTAL_SURFACE_AREA)
+        all.append(Features.TOTAL_SURFACE_AREA)
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(features.FIELD_AREA)
+        all.append(Features.FIELD_AREA)
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(features.COVERAGE)
+        all.append(Features.COVERAGE)
         if self.match_coverage.isChecked():
             selected.append(all[-1])
 
-        all.append(features.SPARSITY)
+        all.append(Features.SPARSITY)
         if self.match_sparsity.isChecked():
             selected.append(all[-1])
 
-        all.append(features.LOG_SIZE)
+        all.append(Features.LOG_SIZE)
         if self.match_size.isChecked():
             selected.append(all[-1])
 
-        all.append(features.LOG_SPACING)
+        all.append(Features.LOG_SPACING)
         if self.match_spacing.isChecked():
             selected.append(all[-1])
 
@@ -257,36 +257,36 @@ class SequenceDialog(QtGui.QDialog):
         for x in all:
             if x not in selected:
                 # test dependency of non-selected item, x, from any selected
-                check = map(lambda s: features.are_dependent(x, s), selected)
+                check = map(lambda s: Features.are_dependent(x, s), selected)
                 if sum(check) > 0:  # any dependency
-                    if x == features.ITEM_DIAMETER:
+                    if x == Features.ITEM_DIAMETER:
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    elif x == features.ITEM_PERIMETER:
+                    elif x == Features.ITEM_PERIMETER:
                         self.match_item_perimeter.setEnabled(False)
                         self.match_item_perimeter.setChecked(False)
-                    elif x == features.ITEM_SURFACE_AREA:
+                    elif x == Features.ITEM_SURFACE_AREA:
                         self.match_item_area.setEnabled(False)
                         self.match_item_area.setChecked(False)
-                    elif x == features.TOTAL_SURFACE_AREA:
+                    elif x == Features.TOTAL_SURFACE_AREA:
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    elif x == features.TOTAL_PERIMETER:
+                    elif x == Features.TOTAL_PERIMETER:
                         self.match_total_perimeter.setEnabled(False)
                         self.match_total_perimeter.setChecked(False)
-                    elif x == features.FIELD_AREA:
+                    elif x == Features.FIELD_AREA:
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
-                    elif x == features.COVERAGE:
+                    elif x == Features.COVERAGE:
                         self.match_coverage.setEnabled(False)
                         self.match_coverage.setChecked(False)
-                    elif x == features.SPARSITY:
+                    elif x == Features.SPARSITY:
                         self.match_sparsity.setEnabled(False)
                         self.match_sparsity.setChecked(False)
-                    elif x == features.LOG_SIZE:
+                    elif x == Features.LOG_SIZE:
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
-                    elif x == features.LOG_SPACING:
+                    elif x == Features.LOG_SPACING:
                         self.match_spacing.setEnabled(False)
                         self.match_spacing.setChecked(False)
 

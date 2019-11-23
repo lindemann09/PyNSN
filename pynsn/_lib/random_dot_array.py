@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 
-
+import copy as _copy
 from . import _misc as _misc
 from ._item_attributes import ItemAttributes as _ItemAttributes
 from ._dot_array import DotArray as _DotArray
@@ -57,6 +57,10 @@ class Specs(object):
                 "minimum_gap": self.minimum_gap,
                 "min_distance_area_boarder": self.min_distance_area_boarder}
 
+    def copy(self):
+        """returns a deepcopy of the specs"""
+        return _copy.deepcopy(self)
+
 
 def create(n_dots, specs, occupied_space=None,
            logger=None):
@@ -88,7 +92,7 @@ def create(n_dots, specs, occupied_space=None,
                      attributes=specs.item_attributes)
 
     if logger is not None:
-        from .logging import LogFile # to avoid circular import
+        from ..logging import LogFile # to avoid circular import
         if not isinstance(logger, LogFile): #
             raise RuntimeError("logger has to be None or a GeneratorLogger")
         logger.log(rtn)
