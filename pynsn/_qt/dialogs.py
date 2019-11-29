@@ -3,6 +3,7 @@
 from PyQt4 import QtGui, QtCore
 from . import misc
 from .._lib._visual_features import Features
+from .._lib._match import DEFAULT_SPACING_PRECISION, DEFAULT_MATCH_FA2TA_RATIO
 
 class MatchPropertyDialog(QtGui.QDialog):
 
@@ -121,6 +122,8 @@ class SettingsDialog(QtGui.QDialog):
 class SequenceDialog(QtGui.QDialog):
     extra_space = 50
     sequence_range = [10, 100]
+    spacing_precision = DEFAULT_SPACING_PRECISION
+    match_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
 
     def __init__(self, parent):
 
@@ -145,7 +148,7 @@ class SequenceDialog(QtGui.QDialog):
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
         self.match_fa2ta = misc.LabeledNumberInput("Ratio convex_hull/area",
-                                                   value=SequenceDialog.fieldarea2totalarea,
+                                                   value=SequenceDialog.match_FA2TA_ratio,
                                                    integer_only=False, min=0, max=1)
         self.match_range = misc.LabeledNumberInputTwoValues("Sequence Range",
                                                             value1=SequenceDialog.sequence_range[0],
@@ -300,7 +303,7 @@ class SequenceDialog(QtGui.QDialog):
         if result == QtGui.QDialog.Accepted:
             SequenceDialog.extra_space = dialog.match_extra_space.value
             SequenceDialog.spacing_precision = dialog.match_spacing_presision.value
-            SequenceDialog.fieldarea2totalarea = dialog.match_fa2ta.value
+            SequenceDialog.match_FA2TA_ratio = dialog.match_fa2ta.value
             SequenceDialog.sequence_range = [dialog.match_range.value1, dialog.match_range.value2]
 
             return (dialog.match_methods, SequenceDialog.sequence_range,

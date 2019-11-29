@@ -138,11 +138,12 @@ def create(specs,
             type(specs).__name__))
 
     # keep field area
-    if match_feature in [_Feat.SPACE_FEATURES, _Feat.COVERAGE]:
+    if match_feature in list(_Feat.SPACE_FEATURES) + [_Feat.COVERAGE]:
         prefer_keeping_field_area = True
     else:
         prefer_keeping_field_area = False
 
+    print(prefer_keeping_field_area)
     # make source stimulus
     if source_number is None:
         source_number = min + int((max - min)/2)

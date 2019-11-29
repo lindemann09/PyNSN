@@ -193,7 +193,8 @@ class GUIMainWindow(QtGui.QMainWindow):
                                       item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
                                       item_diameter_std=self.main_widget.item_diameter_std.value,
-                                      minimum_gap=self.main_widget.minimum_gap.value)
+                                      minimum_gap=self.main_widget.minimum_gap.value,
+                                      min_distance_area_boarder=0)
 
     def get_image_colours(self):
         # check colour input
@@ -333,19 +334,23 @@ class GUIMainWindow(QtGui.QMainWindow):
 
     def action_make_sequence(self):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
+        match_methods = match_methods[0] #FIXME just match the first
 
         d = {"match range": match_range, "extra_space": extra_space}
-        d["match_methods"] = list(map(lambda x: x.as_dict(), match_methods))
+        d["match_methods"] = match_methods
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
 
         if match_methods is not None:
-            # print("processing")
+            specs = self.get_specs()
+            specs.min_distance_area_boarder = extra_space//2
+            specs.target_array_radius += specs.min_distance_area_boarder
+
             sequence = dot_array_sequence.create(
-                reference_dot_array=self.dot_array,
+                              specs=self.get_specs(),
                               match_feature=match_methods,
+                              match_value=self.dot_array.features.get(match_methods),
                               min_max_numerosity=match_range,
-                              extra_space=extra_space,
                               logger=self.logger)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.dot_array.features.numerosity,
