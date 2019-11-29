@@ -130,7 +130,6 @@ class GUIMainWindow(QtGui.QMainWindow):
 
         self.setWindowIcon(QtGui.QIcon(self.pixmap()))
         self._image = None
-
         self.action_generate_btn()
 
     def make_new_array(self):
@@ -186,7 +185,7 @@ class GUIMainWindow(QtGui.QMainWindow):
             colour_dot = DEFAULT_ARRAY[1].item_attributes.colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
+        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value ,
                                       item_colour=colour_dot,
                                       item_diameter_mean=self.main_widget.item_diameter_mean.value,
                                       item_diameter_range=[self.main_widget.item_diameter_range.value1,
@@ -296,7 +295,6 @@ class GUIMainWindow(QtGui.QMainWindow):
             elif ext == ".png" or ext == ".bmp":
                 self.image().save(filename)
 
-
     def action_match(self):
         """"""
         prop = self.dot_array.features.get_features_dict()
@@ -311,7 +309,6 @@ class GUIMainWindow(QtGui.QMainWindow):
             self.write_properties()
             self.main_widget.updateUI()
 
-
     def action_settings(self):
         """"""
         result = self.settings.exec_()
@@ -324,21 +321,23 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):
-        match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)
+        match_methods, match_range, source_number, extra_space = \
+                                    dialogs.SequenceDialog.get_response(self)
         match_methods = match_methods[0] #FIXME just match the first
+        print(source_number)
 
-        d = {"match range": match_range, "extra_space": extra_space}
+        d = {"match range": match_range,
+             "extra_space": extra_space}
         d["match_methods"] = match_methods
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
+        specs = self.get_specs().copy()
+        specs.min_distance_area_boarder = extra_space//2
+        specs.target_array_radius += specs.min_distance_area_boarder
 
         if match_methods is not None:
-            specs = self.get_specs()
-            specs.min_distance_area_boarder = extra_space//2
-            specs.target_array_radius += specs.min_distance_area_boarder
-
             sequence = dot_array_sequence.create(
-                              specs=self.get_specs(),
+                              specs=specs,
                               match_feature=match_methods,
                               match_value=self.dot_array.features.get(match_methods),
                               min_max_numerosity=match_range,
