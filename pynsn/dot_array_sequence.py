@@ -143,7 +143,6 @@ def create(specs,
     else:
         prefer_keeping_field_area = False
 
-    print(prefer_keeping_field_area)
     # make source stimulus
     if source_number is None:
         source_number = min + int((max - min)/2)

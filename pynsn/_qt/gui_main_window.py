@@ -118,7 +118,6 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
         self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
-        self.main_widget.slider.sliderReleased.connect(self.action_slider_released)
 
         self.move(300, -300)
         self.setWindowTitle('PyNSN GUI')
@@ -323,14 +322,6 @@ class GUIMainWindow(QtGui.QMainWindow):
         """"""
         self.dot_array.set_attributes(self.get_specs().item_attributes)
         self.show_current_image(remake_image=True)
-
-    def action_slider_released(self):
-        """"""
-        change = self.main_widget.number.value - self.dot_array.features.numerosity
-        self.dot_array = self.dot_array.number_deviant(change)
-        self.show_current_image(remake_image=True)
-        self.write_properties()
-        # todo slider does not work correctly for multi colour arrays
 
     def action_make_sequence(self):
         match_methods, match_range, extra_space = dialogs.SequenceDialog.get_response(self)

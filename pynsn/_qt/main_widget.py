@@ -27,7 +27,6 @@ class MainWidget(QtGui.QWidget):
 
         self.dot_colour = LabeledInput("Colour", text=generator.item_attributes.colour, case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
-        self.slider = QtGui.QSlider(QtCore.Qt.Vertical)
 
         ctrl = QtGui.QVBoxLayout()
         ctrl.addWidget(self.btn_generate)
@@ -63,29 +62,20 @@ class MainWidget(QtGui.QWidget):
         hlayout = QtGui.QHBoxLayout()
         hlayout.addLayout(ctrl)
         hlayout.addLayout(fields)
-        hlayout.addWidget(self.slider)
         self.setLayout(hlayout)
 
         self.updateUI()
-        self.slider.valueChanged.connect(self.action_slider_change)
 
     def updateUI(self):
         self.dot_colour2.setVisible(self.settings.bicoloured.isChecked())
         self.number2.setVisible(self.settings.bicoloured.isChecked())
 
-        self.slider.setVisible(True)
-        self.slider.setMinimum(1)
-        self.slider.setMaximum(150)
-        self.slider.setValue(self.number.value)
 
     def resize_fields(self, width, text_height=150, minium_text_width=300):
         self.picture_field.setFixedSize(width, width)
         if width < minium_text_width:
             width = minium_text_width
         self._text_field.setMinimumSize(width, text_height)
-
-    def action_slider_change(self):
-        self.number.value = self.slider.value()
 
     def text_clear(self):
         self._text_field.clear()
