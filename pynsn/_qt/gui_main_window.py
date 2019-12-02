@@ -321,10 +321,9 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):
-        match_methods, match_range, source_number, extra_space = \
+        match_methods, match_range, extra_space = \
                                     dialogs.SequenceDialog.get_response(self)
         match_methods = match_methods[0] #FIXME just match the first
-        print(source_number)
 
         d = {"match range": match_range,
              "extra_space": extra_space}

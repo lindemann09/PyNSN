@@ -6,7 +6,6 @@ __author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
 from hashlib import md5 as _md5
 import numpy as _np
 
-from copy import copy as _copy
 from pynsn._lib import _misc as _misc
 from pynsn._lib._dot_array import DotArray as _DotArray
 from pynsn._lib._visual_features import Features as _Feat
@@ -111,7 +110,7 @@ def create(specs,
            match_feature,
            match_value,
            min_max_numerosity,
-           source_number = None,
+           source_number = None, # not suggested to change
            logger=None):  # todo could be an iterator
     """factory function
 
@@ -121,7 +120,6 @@ def create(specs,
                 or None
      returns False is error occured (see self.error)
     """
-
     try:
         l = len(min_max_numerosity)
     except:
@@ -130,6 +128,14 @@ def create(specs,
         raise ValueError("min_max_numerosity has to be a pair of (min, max)")
 
     min, max = sorted(min_max_numerosity)
+
+    if source_number is None:
+        if match_feature in [_Feat.SPARSITY]:
+            source_number = min
+        elif match_feature in [_Feat.FIELD_AREA, _Feat.COVERAGE] :
+            source_number = max
+        else:
+            source_number = min + ((max - min)//2)
 
     _misc.check_feature_list(match_feature)
 
@@ -157,19 +163,20 @@ def create(specs,
     rtn.method = match_feature
 
     # decreasing
-    if min < source_number: # actually always
+    if min < source_number:
         tmp, error = _make_matched_deviants(
             reference_da=source_da,
             match_feature=match_feature,
             target_numerosity=min,
             prefer_keeping_field_area=prefer_keeping_field_area)
+
         rtn.append_dot_arrays(list(reversed(tmp)))
         if error is not None:
             rtn.error = error
     # source number
     rtn.append_dot_arrays(source_da)
     # increasing
-    if max > source_number: # actually always
+    if max > source_number:
         tmp, error = _make_matched_deviants(
             reference_da=source_da,
             match_feature=match_feature,
@@ -192,6 +199,7 @@ def create(specs,
 def _make_matched_deviants(reference_da, match_feature, target_numerosity,
                            prefer_keeping_field_area):
     """helper function. Do not use this method. Please use make"""
+
 
 
     if reference_da.features.numerosity == target_numerosity:

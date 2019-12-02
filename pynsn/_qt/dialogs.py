@@ -3,7 +3,7 @@
 from PyQt4 import QtGui, QtCore
 from . import misc
 from .._lib._visual_features import Features
-from .._lib._match import DEFAULT_SPACING_PRECISION, DEFAULT_MATCH_FA2TA_RATIO
+from .._lib import _match
 
 class MatchPropertyDialog(QtGui.QDialog):
 
@@ -122,10 +122,8 @@ class SettingsDialog(QtGui.QDialog):
 class SequenceDialog(QtGui.QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    source_number = sequence_range[0] + int((sequence_range[1] -
-                                             sequence_range[0]) / 2)
-    spacing_precision = DEFAULT_SPACING_PRECISION
-    match_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
+    spacing_precision = _match._DEFAULT_SPACING_PRECISION
+    match_FA2TA_ratio = _match._DEFAULT_MATCH_FA2TA_RATIO
 
 
     def __init__(self, parent):
@@ -159,10 +157,6 @@ class SequenceDialog(QtGui.QDialog):
         self.match_extra_space = misc.LabeledNumberInput("Extra space",
                                                          value=SequenceDialog.extra_space,
                                                          integer_only=True, min=0)
-        self.match_source_number = misc.LabeledNumberInput("Source number",
-                                                           value=SequenceDialog.source_number,
-                                                           integer_only=True,
-                                                           min=0)
 
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
@@ -205,8 +199,6 @@ class SequenceDialog(QtGui.QDialog):
         vlayout.addSpacing(10)
         vlayout.addLayout(self.match_extra_space.layout())
         vlayout.addSpacing(10)
-        vlayout.addLayout(self.match_source_number.layout())
-        vlayout.addSpacing(20)
 
         vlayout.addWidget(buttons)
         self.setLayout(vlayout)
@@ -314,10 +306,8 @@ class SequenceDialog(QtGui.QDialog):
             SequenceDialog.spacing_precision = dialog.match_spacing_presision.value
             SequenceDialog.match_FA2TA_ratio = dialog.match_fa2ta.value
             SequenceDialog.sequence_range = [dialog.match_range.value1, dialog.match_range.value2]
-            SequenceDialog.source_number = dialog.match_source_number.value
             return (dialog.match_methods,
                     SequenceDialog.sequence_range,
-                    SequenceDialog.source_number,
                     SequenceDialog.extra_space)
         else:
             return (None, None, None)
