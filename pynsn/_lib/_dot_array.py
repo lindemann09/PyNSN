@@ -91,6 +91,9 @@ class _DotCloud(object):
     def round(self, decimals=0):
         """Round values of the array."""
 
+        if decimals is None:
+            return
+
         self._xy = np.round(self._xy, decimals=decimals)
         self._diameters = np.round(self._diameters, decimals=decimals)
         if decimals==0:
@@ -112,7 +115,7 @@ class _DotCloud(object):
     def as_dict(self):
         """
         """
-        return {"hash": self.hash, "xy": self._xy.tolist(),
+        return {"xy": self._xy.tolist(),
                 "diameters": self._diameters.tolist()}
 
     def read_from_dict(self, dict):

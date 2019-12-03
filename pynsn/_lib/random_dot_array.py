@@ -27,8 +27,6 @@ class Specs(object):
         n_dots : int
             number of moving dots
 
-        automatic logging log only the create process. If colours a changes later they are not log.
-        Use manual logging in this case.
 
         """
 
@@ -62,8 +60,7 @@ class Specs(object):
         return _copy.deepcopy(self)
 
 
-def create(n_dots, specs, occupied_space=None,
-           logger=None):
+def create(n_dots, specs, occupied_space=None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     returns None if not possible
@@ -90,11 +87,5 @@ def create(n_dots, specs, occupied_space=None,
             return None
         rtn.append(xy=xy, item_diameters=dia,
                      attributes=specs.item_attributes)
-
-    if logger is not None:
-        from ..logging import LogFile # to avoid circular import
-        if not isinstance(logger, LogFile): #
-            raise RuntimeError("logger has to be None or a GeneratorLogger")
-        logger.log(rtn)
 
     return rtn

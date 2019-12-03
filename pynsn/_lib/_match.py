@@ -1,4 +1,3 @@
-from copy import copy
 import random
 import numpy as np
 from . import _misc, _geometry

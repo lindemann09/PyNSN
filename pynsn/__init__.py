@@ -26,5 +26,5 @@ from ._lib import random_dot_array
 from ._lib import pil_image
 
 #Further modules
-# gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, logging
+# gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, dot_array_archive
 

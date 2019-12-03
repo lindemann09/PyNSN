@@ -5,7 +5,6 @@ from PyQt4 import QtGui
 from PIL.ImageQt import ImageQt
 from .._lib import random_dot_array
 from .. import dot_array_sequence
-from ..logging import LogFile
 from .._lib import _colour
 from .._lib._item_attributes import ItemAttributes
 from .._lib import pil_image
@@ -49,19 +48,10 @@ class GUIMainWindow(QtGui.QMainWindow):
 
         self._image = None
         self.dot_array = None
-        self.set_loging(False)  # todo checkbox in settings
         self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY[2])
         self.initUI()
         self.show()
 
-    def set_loging(self, onoff):
-
-        if onoff:
-            self.logger = LogFile(log_filename="log/_qt",
-                                  override_log_files=True,
-                                  log_colours=False)
-        else:
-            self.logger = None
 
     def initUI(self):
 
@@ -136,8 +126,7 @@ class GUIMainWindow(QtGui.QMainWindow):
 
         try:
             self.dot_array = random_dot_array.create(n_dots=self.get_number(),
-                                                     specs=self.get_specs(),
-                                                     logger=self.logger)
+                                                     specs=self.get_specs())
         except (RuntimeError, ValueError) as error:
             self.main_widget.text_error_feedback(error)
             raise error
@@ -145,8 +134,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         if self.settings.bicoloured.isChecked():
             data_array2 = random_dot_array.create(n_dots=self.main_widget.number2.value,
                                                   specs=self.get_specs(),
-                                                  occupied_space=self.dot_array,
-                                                  logger=self.logger)
+                                                  occupied_space=self.dot_array)
             data_array2.set_attributes(
                 ItemAttributes(colour=self.main_widget.dot_colour2.text))
             self.dot_array.join(data_array2, realign=False)
@@ -339,8 +327,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                               specs=specs,
                               match_feature=match_methods,
                               match_value=self.dot_array.features.get(match_methods),
-                              min_max_numerosity=match_range,
-                              logger=self.logger)
+                              min_max_numerosity=match_range)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.dot_array.features.numerosity,
                             image_colours=self.get_image_colours(),

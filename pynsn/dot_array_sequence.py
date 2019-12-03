@@ -110,8 +110,8 @@ def create(specs,
            match_feature,
            match_value,
            min_max_numerosity,
-           source_number = None, # not suggested to change
-           logger=None):  # todo could be an iterator
+           round_decimals = None,
+           source_number = None):  # todo could be an iterator
     """factory function
 
     Methods takes take , you might use make Process
@@ -153,10 +153,10 @@ def create(specs,
     if source_number is None:
         source_number = min + int((max - min)/2)
     source_da = random_dot_array.create(n_dots=source_number,
-                                        specs=specs,
-                                        logger=logger)
+                                        specs=specs)
     source_da.match.match_feature(feature=match_feature, value=match_value)
     source_da.center_array()
+    source_da.round(round_decimals)
 
     # matched deviants
     rtn = DASequence()
@@ -168,6 +168,7 @@ def create(specs,
             reference_da=source_da,
             match_feature=match_feature,
             target_numerosity=min,
+            round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
 
         rtn.append_dot_arrays(list(reversed(tmp)))
@@ -181,23 +182,16 @@ def create(specs,
             reference_da=source_da,
             match_feature=match_feature,
             target_numerosity=max,
+            round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
         rtn.append_dot_arrays(tmp)
         if error is not None:
             rtn.error = error
 
-    if logger is not None:
-        from .logging import LogFile # to avoid circular import
-        if not isinstance(logger, LogFile):
-            raise TypeError("logger has to be None or a GeneratorLogger, and not {}".format(
-                type(logger).__name__))
-
-        logger.log(rtn)
-
     return rtn
 
 def _make_matched_deviants(reference_da, match_feature, target_numerosity,
-                           prefer_keeping_field_area):
+                           round_decimals, prefer_keeping_field_area):
     """helper function. Do not use this method. Please use make"""
 
 
@@ -233,6 +227,7 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
                 error = u"ERROR: realign, " + str(cnt) + ", " + str(da.features.numerosity)
 
         #print(da.feature.get_features_text())
+        da.round(round_decimals)
         da_sequence.append(da)
 
         if error is not None or da.features.numerosity == target_numerosity:
