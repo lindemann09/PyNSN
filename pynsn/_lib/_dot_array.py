@@ -101,14 +101,14 @@ class _DotCloud(object):
             self._diameters = self._diameters.astype(np.int32)
 
 
-    def save(self, json_filename, indent=None):
+    def save(self, json_file_name, indent=None):
 
-        with open(json_filename, 'w') as fl:
+        with open(json_file_name, 'w') as fl:
             json.dump(self.as_dict(), fl, indent=indent)
 
-    def load(self, json_filename):
+    def load(self, json_file_name):
 
-        with open(json_filename, 'r') as fl:
+        with open(json_file_name, 'r') as fl:
             dict = json.load(fl)
         self.read_from_dict(dict)
 
