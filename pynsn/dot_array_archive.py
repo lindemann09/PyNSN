@@ -1,9 +1,10 @@
 import os
 import json
+import gzip
 from ._lib._dot_array import DotArray
 from .dot_array_sequence import DASequence
 
-def load(json_file_name):
+def load(json_file_name, zipped=False):
 
     if not os.path.exists(json_file_name):
         new_flname = json_file_name + ".json"
@@ -12,9 +13,14 @@ def load(json_file_name):
         else:
             raise RuntimeError("File '{}' does not exists.".format(json_file_name))
 
+    if zipped:
+        fl = gzip.open(json_file_name, 'r')
+    else:
+        fl = open(json_file_name, 'r')
+
     rtn = DotArrayArchive()
-    with open(json_file_name, 'r') as fl:
-        rtn.dict = json.load(fl)
+    rtn.dict = json.load(fl)
+    fl.close()
     return rtn
 
 class DotArrayArchive(object):
@@ -105,8 +111,17 @@ class DotArrayArchive(object):
         array, varnames = self._all_features()
         return DataFrame(array, columns=varnames)
 
-    def save(self, json_file_name, indent=None):
-        if not json_file_name.endwith(".json"):
+    def save(self, json_file_name, indent=None, zipped=False):
+        if not (json_file_name.endwith(".json") or
+                json_file_name.endwith(".json.gz")):
             json_file_name += ".json"
-        with open(json_file_name, 'w') as fl:
-            json.dump(self.dict, fl, indent=indent)
+            if zipped:
+                json_file_name += ".gz"
+
+        if zipped:
+            fl = gzip.open(json_file_name, 'w')
+        else:
+            fl = open(json_file_name, 'w')
+
+        json.dump(self.dict, fl, indent=indent)
+        fl.close()
