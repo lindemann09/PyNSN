@@ -112,16 +112,19 @@ class DotArrayArchive(object):
         return DataFrame(array, columns=varnames)
 
     def save(self, json_file_name, indent=None, zipped=False):
-        if not (json_file_name.endwith(".json") or
-                json_file_name.endwith(".json.gz")):
-            json_file_name += ".json"
-            if zipped:
-                json_file_name += ".gz"
 
         if zipped:
-            fl = gzip.open(json_file_name, 'w')
-        else:
-            fl = open(json_file_name, 'w')
+            if not json_file_name.endswith(".json.gz"):
+                if json_file_name.endswith(".json"):
+                    json_file_name += ".gz"
+                else:
+                    json_file_name += ".json.gz"
+            fl = gzip.open(json_file_name, "wb")
 
-        json.dump(self.dict, fl, indent=indent)
+        else:
+            if not json_file_name.endswith(".json"):
+                json_file_name += ".json"
+            fl = open(json_file_name, 'wb')
+
+        fl.write(json.dumps(self.dict, indent=indent).encode("utf-8"))
         fl.close()
