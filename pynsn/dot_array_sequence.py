@@ -55,14 +55,23 @@ class DASequence(object):
             m.update(da.hash.encode("UTF-8"))
         return m.hexdigest()
 
-    def get_features_dict(self):  # todo search for get_features!
+    def get_features_dict(self):
         """dictionary with arrays"""
 
         dicts = [x.features.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
-        rtn['hash'] = [self.hash] * len(self.dot_arrays)  # all arrays have the
-        # same ID
+        rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same sequence ID
         return rtn
+
+    def get_features_dataframe(self):
+        from pandas import DataFrame, np
+        d = self.get_features_dict()
+        array = []
+        for x in range(len(d["Hash"])):
+            # transposing (numpy not possible, because of data types
+            row = map(lambda k: d[k][x], d.keys())
+            array.append(list(row))
+        return DataFrame(array, columns=list(d.keys()))
 
     def get_numerosity_correlations(self):
         feat = self.get_features_dict()

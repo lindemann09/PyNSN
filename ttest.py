@@ -1,8 +1,7 @@
-
-
 import pynsn
-from pynsn.expyriment_stimulus import ExprimentDotArray
+from pynsn import dot_array_sequence, Features, dot_array_archive
 import json
+import numpy as np
 
 da_specs = pynsn.random_dot_array.Specs(
     target_area_radius=200,
@@ -12,12 +11,13 @@ da_specs = pynsn.random_dot_array.Specs(
     item_colour=pynsn.Colour("skyblue"),
     minimum_gap=2)
 
+seq = dot_array_sequence.create(specs=da_specs, match_feature=Features.ITEM_DIAMETER,
+                           match_value=5,
+                           min_max_numerosity=[10, 50],
+                           round_decimals=0)
 
-stim = pynsn.random_dot_array.create(n_dots=32, specs=da_specs)
-stim.round(decimals=0)
-stim.save("/tmp/test.json")
 
-stim2 = pynsn.DotArray(target_array_radius=100, minimum_gap=2)
-stim2.load("/tmp/test.json")
-print(stim2.xy)
-print(stim2.get_attributes())
+da = dot_array_archive.DotArrayArchive()
+da.add(seq)
+da.save("archive_demo.json", indent=2)
+

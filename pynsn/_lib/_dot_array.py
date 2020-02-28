@@ -43,7 +43,6 @@ class _DotCloud(object):
     def __str__(self):
         return self.features.get_features_text(extended_format=True)
 
-
     @property
     def xy(self):
         return self._xy
@@ -55,7 +54,7 @@ class _DotCloud(object):
     @property
     def xy_rounded_integer(self):
         """rounded to integer"""
-        return np.array(np.round(self._xy), dtype=np.int32)
+        return np.array(np.round(self._xy))
 
     @property
     def center_of_outer_positions(self):
@@ -88,7 +87,7 @@ class _DotCloud(object):
         m.update(self.surface_areas.tobytes())
         return m.hexdigest()
 
-    def round(self, decimals=0):
+    def round(self, decimals=0, int_type=np.int64):
         """Round values of the array."""
 
         if decimals is None:
@@ -97,8 +96,8 @@ class _DotCloud(object):
         self._xy = np.round(self._xy, decimals=decimals)
         self._diameters = np.round(self._diameters, decimals=decimals)
         if decimals==0:
-            self._xy = self._xy.astype(np.int32)
-            self._diameters = self._diameters.astype(np.int32)
+            self._xy = self._xy.astype(int_type)
+            self._diameters = self._diameters.astype(int_type)
 
 
     def save(self, json_file_name, indent=None):

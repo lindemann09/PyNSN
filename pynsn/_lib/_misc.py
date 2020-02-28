@@ -100,7 +100,6 @@ def join_dict_list(list_of_dicts):
     """make a dictionary of lists from a list of dictionaries"""
     rtn = OrderedDict()
     for d in list_of_dicts:
-
         for k, v in d.items():
             if k in rtn:
                 rtn[k].append(v)

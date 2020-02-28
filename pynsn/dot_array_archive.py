@@ -1,6 +1,7 @@
 import os
 import json
 import gzip
+
 from ._lib._dot_array import DotArray
 from .dot_array_sequence import DASequence
 
@@ -40,6 +41,13 @@ class DotArrayArchive(object):
         else:
             RuntimeError("dot_array has to be a pynsn.DotArray or a "
                          "pynsn.dot_array_sequence.DASequence")
+
+    def remove(self, id):
+        try:
+            self.dict.pop(id)
+        except:
+            return False
+        return True
 
     @property
     def array_ids(self):
@@ -128,3 +136,4 @@ class DotArrayArchive(object):
 
         fl.write(json.dumps(self.dict, indent=indent).encode("utf-8"))
         fl.close()
+
