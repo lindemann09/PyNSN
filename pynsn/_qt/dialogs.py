@@ -1,11 +1,15 @@
 """
 """
-from PyQt4 import QtGui, QtCore
-from . import misc
-from .._lib._visual_features import Features
-from .._lib import _match
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
+    QDialogButtonBox, QComboBox, QHBoxLayout
 
-class MatchPropertyDialog(QtGui.QDialog):
+from . import misc
+from .._lib import _match
+from .._lib._visual_features import Features
+
+
+class MatchPropertyDialog(QDialog):
 
     def __init__(self, parent, properties):
         super(MatchPropertyDialog, self).__init__(parent)
@@ -13,7 +17,7 @@ class MatchPropertyDialog(QtGui.QDialog):
         self.setWindowTitle("Match Dot Array Property")
         self.features = properties
         self._selection = None
-        self.comboBox = QtGui.QComboBox(self)
+        self.comboBox = QComboBox(self)
         for feat in Features.ALL_FEATURES:
             self.comboBox.addItem(feat)
 
@@ -24,16 +28,16 @@ class MatchPropertyDialog(QtGui.QDialog):
 
 
 
-        vlayout = QtGui.QVBoxLayout(self)
-        hlayout = QtGui.QHBoxLayout()
+        vlayout = QVBoxLayout(self)
+        hlayout = QHBoxLayout()
 
         hlayout.addWidget(self.comboBox)
         hlayout.addWidget(self._num_input.edit)
 
         # OK and Cancel buttons
-        buttons = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
-            QtCore.Qt.Horizontal, self)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
@@ -57,13 +61,13 @@ class MatchPropertyDialog(QtGui.QDialog):
 
         dialog = MatchPropertyDialog(parent, prop)
         result = dialog.exec_()
-        if result == QtGui.QDialog.Accepted:
+        if result == QDialog.Accepted:
             return dialog.current_state()
         else:
             return None
 
 
-class SettingsDialog(QtGui.QDialog):
+class SettingsDialog(QDialog):
 
     def __init__(self, parent, image_colours):
         super(SettingsDialog, self).__init__(parent)
@@ -88,15 +92,15 @@ class SettingsDialog(QtGui.QDialog):
         self.colour_convex_hull_dots = misc.LabeledInput("Colour field area outer",
                                                          text=image_colours.field_area_outer.colour,
                                                          case_sensitive=False)
-        self.antialiasing = QtGui.QCheckBox("Antialiasing")
+        self.antialiasing = QCheckBox("Antialiasing")
         self.antialiasing.setChecked(True)
 
-        self.bicoloured = QtGui.QCheckBox("bicoloured")
+        self.bicoloured = QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)
 
 
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QVBoxLayout()
         vlayout.addLayout(self.rounding_decimals.layout())
 
         vlayout.addWidget(misc.heading("Colour"))
@@ -112,14 +116,14 @@ class SettingsDialog(QtGui.QDialog):
         vlayout.addStretch(1)
 
         # OK and Cancel buttons
-        buttons = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok, Qt.Horizontal, self)
         buttons.accepted.connect(self.accept)
 
         vlayout.addWidget(buttons)
         self.setLayout(vlayout)
 
 
-class SequenceDialog(QtGui.QDialog):
+class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
     spacing_precision = _match._DEFAULT_SPACING_PRECISION
@@ -134,17 +138,17 @@ class SequenceDialog(QtGui.QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QtGui.QCheckBox(Features.ITEM_DIAMETER)
-        self.match_item_perimeter= QtGui.QCheckBox(Features.ITEM_PERIMETER)
-        self.match_item_area = QtGui.QCheckBox(Features.ITEM_SURFACE_AREA)
-        self.match_area = QtGui.QCheckBox(Features.TOTAL_SURFACE_AREA)
-        self.match_total_perimeter = QtGui.QCheckBox(Features.TOTAL_PERIMETER)
-        self.match_coverage = QtGui.QCheckBox(Features.COVERAGE)
-        self.match_sparsity = QtGui.QCheckBox(Features.SPARSITY)
+        self.match_diameter = QCheckBox(Features.ITEM_DIAMETER)
+        self.match_item_perimeter= QCheckBox(Features.ITEM_PERIMETER)
+        self.match_item_area = QCheckBox(Features.ITEM_SURFACE_AREA)
+        self.match_area = QCheckBox(Features.TOTAL_SURFACE_AREA)
+        self.match_total_perimeter = QCheckBox(Features.TOTAL_PERIMETER)
+        self.match_coverage = QCheckBox(Features.COVERAGE)
+        self.match_sparsity = QCheckBox(Features.SPARSITY)
 
-        self.match_convex_hull = QtGui.QCheckBox(Features.FIELD_AREA)
-        self.match_size = QtGui.QCheckBox(Features.LOG_SIZE)
-        self.match_spacing = QtGui.QCheckBox(Features.LOG_SPACING)
+        self.match_convex_hull = QCheckBox(Features.FIELD_AREA)
+        self.match_size = QCheckBox(Features.LOG_SIZE)
+        self.match_spacing = QCheckBox(Features.LOG_SPACING)
         self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -172,13 +176,13 @@ class SequenceDialog(QtGui.QDialog):
         self.match_fa2ta.edit.editingFinished.connect(self.ui_update)
 
         # OK and Cancel buttons
-        buttons = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
-            QtCore.Qt.Horizontal, self)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QVBoxLayout()
         vlayout.addWidget(misc.heading("Matching"))
         vlayout.addWidget(self.match_diameter)
         vlayout.addWidget(self.match_item_perimeter)
@@ -301,7 +305,7 @@ class SequenceDialog(QtGui.QDialog):
 
         dialog = SequenceDialog(parent)
         result = dialog.exec_()
-        if result == QtGui.QDialog.Accepted:
+        if result == QDialog.Accepted:
             SequenceDialog.extra_space = dialog.match_extra_space.value
             SequenceDialog.spacing_precision = dialog.match_spacing_presision.value
             SequenceDialog.match_FA2TA_ratio = dialog.match_fa2ta.value

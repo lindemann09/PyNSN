@@ -1,17 +1,19 @@
 """
 """
-from PyQt4 import QtGui, QtCore
+from PyQt5.QtCore import Qt, QCoreApplication
+from PyQt5.QtGui import QFont, QIntValidator, QDoubleValidator
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QProgressDialog
 
 
 class LabeledInput(object):
 
     def __init__(self, label, text, width_label=180, width_edit=70, case_sensitive=True):
 
-        self.label = QtGui.QLabel(label)
+        self.label = QLabel(label)
         self.label.setFixedWidth(width_label)
-        self.edit = QtGui.QLineEdit()
+        self.edit = QLineEdit()
         self.edit.setFixedWidth(width_edit)
-        self.edit.setAlignment(QtCore.Qt.AlignRight)
+        self.edit.setAlignment(Qt.AlignRight)
         self.case_sensitive = case_sensitive
         self.text = text
 
@@ -32,9 +34,9 @@ class LabeledInput(object):
 
     def layout(self, vertical=False):
         if vertical:
-            layout = QtGui.QVBoxLayout()
+            layout = QVBoxLayout()
         else:
-            layout = QtGui.QHBoxLayout()
+            layout = QHBoxLayout()
         layout.addWidget(self.label)
         layout.addWidget(self.edit)
         return layout
@@ -52,9 +54,9 @@ class LabeledNumberInput(LabeledInput):
                               width_edit=width_edit)
         self.integer_only = integer_only
         if integer_only:
-            self.edit.setValidator(QtGui.QIntValidator())
+            self.edit.setValidator(QIntValidator())
         else:
-            self.edit.setValidator(QtGui.QDoubleValidator())
+            self.edit.setValidator(QDoubleValidator())
         self.min = min
         self.max = max
         self.value = value
@@ -119,9 +121,9 @@ class LabeledNumberInputTwoValues(object):
 
 
 def heading(text):
-    boldFont = QtGui.QFont()
+    boldFont = QFont()
     boldFont.setBold(True)
-    heading = QtGui.QLabel(text)
+    heading = QLabel(text)
     heading.setFont(boldFont)
     heading.setStyleSheet("QLabel { color : black; }")
     return heading
@@ -131,14 +133,14 @@ class NumberInput(object):
 
     def __init__(self, value, width_edit=70, integer_only=False, min=None, max=None):
 
-        self.edit = QtGui.QLineEdit()
+        self.edit = QLineEdit()
         self.edit.setFixedWidth(width_edit)
-        self.edit.setAlignment(QtCore.Qt.AlignRight)
+        self.edit.setAlignment(Qt.AlignRight)
         self.integer_only = integer_only
         if integer_only:
-            self.edit.setValidator(QtGui.QIntValidator())
+            self.edit.setValidator(QIntValidator())
         else:
-            self.edit.setValidator(QtGui.QDoubleValidator())
+            self.edit.setValidator(QDoubleValidator())
         self.min = min
         self.max = max
         self.value = value
@@ -173,14 +175,14 @@ class NumberInput(object):
 
 def progressbar_iterator(iteratable, n_elements, label, win_title):
     # iterator function with prgress bar
-    dialog = QtGui.QProgressDialog()
+    dialog = QProgressDialog()
     dialog.setMaximum(100)
     dialog.setLabelText(label)
     dialog.setWindowTitle(win_title)
     dialog.open()
     for cnt, item in enumerate(iteratable):
         p = (cnt * 100) // n_elements
-        QtCore.QCoreApplication.instance().processEvents()
+        QCoreApplication.instance().processEvents()
         if dialog.wasCanceled():
             raise StopIteration
         dialog.setValue(p)

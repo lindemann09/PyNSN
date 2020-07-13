@@ -1,11 +1,15 @@
 """
 """
 from multiprocessing import Pool
-from PyQt4 import QtGui, QtCore
+
 from PIL.ImageQt import ImageQt
-from pynsn._lib import pil_image
-from pynsn._lib._colour import ImageColours
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QSlider
+
+from .._lib import pil_image
 from . import misc
+
 
 def _map_make_image(x):
     da, colours, aa = x
@@ -13,7 +17,7 @@ def _map_make_image(x):
                             antialiasing=aa)
 
 
-class SequenceDisplay(QtGui.QDialog):
+class SequenceDisplay(QDialog):
 
     def __init__(self, parent, da_sequence, start_numerosity, image_colours,
                  antialiasing):
@@ -23,17 +27,17 @@ class SequenceDisplay(QtGui.QDialog):
         self.da_sequence = da_sequence
         self.pixmap_width = da_sequence.dot_arrays[0].target_array_radius * 2
 
-        self.picture_field = QtGui.QLabel(self)
+        self.picture_field = QLabel(self)
         self.picture_field.setFixedSize(self.pixmap_width, self.pixmap_width)
 
-        self.slider = QtGui.QSlider(QtCore.Qt.Vertical)
+        self.slider = QSlider(Qt.Vertical)
         num_range = da_sequence.min_max_numerosity
         self.slider.setMinimum(num_range[0])
         self.slider.setMaximum(num_range[1])
         self.slider.setValue(start_numerosity)
         self.slider.valueChanged.connect(self.action_slider_change)
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QHBoxLayout()
         hlayout.addWidget(self.picture_field)
         hlayout.addWidget(self.slider)
         self.setLayout(hlayout)
@@ -49,7 +53,7 @@ class SequenceDisplay(QtGui.QDialog):
                                                  n_elements=len(self.da_sequence.dot_arrays),
                                                  label="make images", win_title="Dot Array Sequence")
 
-        self.pixmaps = list(map(lambda im: QtGui.QPixmap.fromImage(ImageQt(im)), progbar_iter))
+        self.pixmaps = list(map(lambda im: QPixmap.fromImage(ImageQt(im)), progbar_iter))
         self.updateUI()
 
     def updateUI(self):

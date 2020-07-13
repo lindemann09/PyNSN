@@ -1,9 +1,14 @@
 """
 """
-from PyQt4 import QtGui, QtCore
-from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, LabeledInput
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
+    QTextBrowser, QScrollBar, QPushButton
 
-class MainWidget(QtGui.QWidget):
+from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
+    LabeledInput
+
+
+class MainWidget(QWidget):
 
     def __init__(self, parent, settings, number, generator):
         super(MainWidget, self).__init__(parent)
@@ -11,7 +16,7 @@ class MainWidget(QtGui.QWidget):
         self.initUI(number, generator)
 
     def initUI(self, number, generator):
-        self.btn_generate = QtGui.QPushButton("Generate new array")
+        self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 0)
@@ -28,7 +33,7 @@ class MainWidget(QtGui.QWidget):
         self.dot_colour = LabeledInput("Colour", text=generator.item_attributes.colour, case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
 
-        ctrl = QtGui.QVBoxLayout()
+        ctrl = QVBoxLayout()
         ctrl.addWidget(self.btn_generate)
         ctrl.addSpacing(10)
         ctrl.addLayout(self.number.layout())
@@ -47,19 +52,19 @@ class MainWidget(QtGui.QWidget):
         ctrl.addStretch(1)
 
         # Add text field
-        fields = QtGui.QVBoxLayout()
-        self._text_field = QtGui.QTextBrowser(self)
-        self._text_field.setFont(QtGui.QFont("Courier New", 8))
+        fields = QVBoxLayout()
+        self._text_field = QTextBrowser(self)
+        self._text_field.setFont(QFont("Courier New", 8))
         self._text_field.setReadOnly(True)
         self._text_field.setWordWrapMode(False)
-        self._text_field.setVerticalScrollBar(QtGui.QScrollBar())
-        self._text_field.setHorizontalScrollBar(QtGui.QScrollBar())
-        self.picture_field = QtGui.QLabel(self)
+        self._text_field.setVerticalScrollBar(QScrollBar())
+        self._text_field.setHorizontalScrollBar(QScrollBar())
+        self.picture_field = QLabel(self)
         self.resize_fields(400)
         fields.addWidget(self.picture_field)
         fields.addWidget(self._text_field)
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QHBoxLayout()
         hlayout.addLayout(ctrl)
         hlayout.addLayout(fields)
         self.setLayout(hlayout)

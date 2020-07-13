@@ -1,18 +1,20 @@
 
 import json
 import os
-from PyQt4 import QtGui
-from PIL.ImageQt import ImageQt
-from .._lib import random_dot_array
-from .. import dot_array_sequence
-from .._lib import _colour
-from .._lib._item_attributes import ItemAttributes
-from .._lib import pil_image
-from .._lib._visual_features import Features
-from .main_widget import MainWidget
-from . import dialogs
-from .sequence_display import SequenceDisplay
 
+from PIL.ImageQt import ImageQt
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QAction, QMainWindow, qApp, QFileDialog
+
+from . import dialogs
+from .main_widget import MainWidget
+from .sequence_display import SequenceDisplay
+from .. import dot_array_sequence, __version__
+from .._lib import _colour
+from .._lib import pil_image
+from .._lib import random_dot_array
+from .._lib._item_attributes import ItemAttributes
+from .._lib._visual_features import Features
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_colour="lime",
@@ -40,7 +42,7 @@ ICON = (11, random_dot_array.Specs(target_area_radius=200,
                                background=None))
 
 
-class GUIMainWindow(QtGui.QMainWindow):
+class GUIMainWindow(QMainWindow):
 
     def __init__(self):
 
@@ -56,31 +58,32 @@ class GUIMainWindow(QtGui.QMainWindow):
     def initUI(self):
 
         # menues
-        exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
+        exitAction = QAction(QIcon('exit.png'), '&Exit',
+                                       self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(QtGui.qApp.quit)
+        exitAction.triggered.connect(qApp.quit)
 
-        settingsAction = QtGui.QAction('&Settings', self)
+        settingsAction = QAction('&Settings', self)
         settingsAction.triggered.connect(self.action_settings)
 
-        saveAction = QtGui.QAction('&Save current stimulus', self)
+        saveAction = QAction('&Save current stimulus', self)
         saveAction.setShortcut('Ctrl+S')
         saveAction.triggered.connect(self.save_array)
 
 
-        printxyAction = QtGui.QAction('&Print array', self)
+        printxyAction = QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
-        printparaAction = QtGui.QAction('&Print parameter', self)
+        printparaAction = QAction('&Print parameter', self)
         printparaAction.triggered.connect(self.action_print_para)
 
-        matchAction = QtGui.QAction('&Match property', self)
+        matchAction = QAction('&Match property', self)
         matchAction.triggered.connect(self.action_match)
 
-        sequenceAction = QtGui.QAction('&Make sequence', self)
+        sequenceAction = QAction('&Make sequence', self)
         sequenceAction.triggered.connect(self.action_make_sequence)
 
-        aboutAction = QtGui.QAction('&About', self)
+        aboutAction = QAction('&About', self)
 
         # self.statusBar()
         menubar = self.menuBar()
@@ -110,7 +113,7 @@ class GUIMainWindow(QtGui.QMainWindow):
         self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
 
         self.move(300, -300)
-        self.setWindowTitle('PyNSN GUI')
+        self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
         colours = ICON[2]
@@ -118,7 +121,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                         dot_array=random_dot_array.create(n_dots=ICON[0], specs = ICON[1]),
                         colours=colours, antialiasing=True)
 
-        self.setWindowIcon(QtGui.QIcon(self.pixmap()))
+        self.setWindowIcon(QIcon(self.pixmap()))
         self._image = None
         self.action_generate_btn()
 
@@ -217,7 +220,7 @@ class GUIMainWindow(QtGui.QMainWindow):
                                       background=colour_background)
 
     def pixmap(self):
-        return QtGui.QPixmap.fromImage(ImageQt(self.image()))
+        return QPixmap.fromImage(ImageQt(self.image()))
 
     def show_current_image(self, remake_image=False):
         """"""
@@ -263,7 +266,7 @@ class GUIMainWindow(QtGui.QMainWindow):
     def save_array(self):
         """"""
 
-        filename, extension = QtGui.QFileDialog.getSaveFileNameAndFilter(
+        filename, extension = QFileDialog.getSaveFileNameAndFilter(
             self,
             'Save file',
             "",

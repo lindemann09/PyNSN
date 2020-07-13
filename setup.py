@@ -80,8 +80,7 @@ if __name__ == '__main__':
     )
 
     try:
-        import PyQt4
+        import PyQt5
     except:
         print("Pleae note:\n"
-          "Running the PyNSN GUI requires the installation 'PyQt4' "
-          "(version 4.10 or larger)")
+          "Running the PyNSN GUI requires the installation 'PyQt5' ")

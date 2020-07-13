@@ -24,7 +24,7 @@ Dependencies
 Additional Python packages, which are optional and required only for some 
 features:
 
-* PyQT4 (>=4.10)
+* PyQT5 
 * pygame (>=1.9)
 * expyriment (>=0.8)
 
@@ -47,7 +47,7 @@ python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn[expyrimen
 RUN GUI tool
 -------------
 
-Note: Using the PyNSN-GUI requires the installation of `PyQt4 4.10` or larger
+Note: Using the PyNSN-GUI requires the installation of `PyQt5` 
 
 ```
 python3 -m pynsn.gui
