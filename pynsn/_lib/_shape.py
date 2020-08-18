@@ -5,97 +5,9 @@ import math
 from ._geometry import lines_intersect, distance_between_edge_and_point
 from ._item_attributes import ItemAttributes
 
-class _Coordinate2D(object):
+from ._coordinate2D import Coordinate2D
 
-    def __init__(self, x=0, y=0):
-        self._x = x
-        self._y = y
-        self._polar_radius = None
-        self._polar_angle = None
-
-    @property
-    def x(self):
-        if self._x is None:
-            self._x = self._polar_radius * math.cos(self._polar_angle)
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        self.xy = (value, self.y)
-
-    @property
-    def y(self):
-        if self._y is None:
-            self._y = self._polar_radius * math.sin(self._polar_angle)
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        self.xy = (self.x, value)
-
-    @property
-    def xy(self):
-        return (self.x, self.y)
-
-    @xy.setter
-    def xy(self, xy_tuple):
-        self._x = xy_tuple[0]
-        self._y = xy_tuple[1]
-        self._polar_radius = None
-        self._polar_angle = None
-
-    @property
-    def polar_radius(self):
-        if self._polar_radius is None:
-            self._polar_radius = math.hypot(self._x, self._y)
-        return self._polar_radius
-
-    @polar_radius.setter
-    def polar_radius(self, value):
-        self.polar = (value, self.polar_angle)
-
-    @property
-    def polar_angle(self):
-        if self._polar_angle is None:
-            self._polar_angle = math.atan2(self._y, self._x)
-        return self._polar_angle
-
-    @polar_angle.setter
-    def polar_angle(self, value):
-        self.polar = (self.polar_radius, value)
-
-    @property
-    def polar(self):
-        """polar coordinate (radius, pos_angle) """
-        return (self.polar_radius, self.polar_angle)
-
-    @polar.setter
-    def polar(self, rad_ang):
-        """polar coordinate (radius, angle) """
-
-        self._polar_radius = rad_ang[0]
-        self._polar_angle = rad_ang[1]
-        self._x = None
-        self._y = None
-
-    def distance(self, d):
-        """Return Euclidean distance to the another Coordinate. The function take the
-        diameter of the points into account.
-
-        Parameters
-        ----------
-        d : _Coordinate2D
-
-        Returns
-        -------
-        distance : float
-
-        """
-
-        return math.hypot(self.x - d.x, self.y - d.y)
-
-
-class Dot(_Coordinate2D):  # TODO becomes maybe an item
+class Dot(Coordinate2D):  # TODO becomes maybe an item
 
     def __init__(self, x=0, y=0, diameter=1, attributes=None):
         """Initialize a point
@@ -111,7 +23,7 @@ class Dot(_Coordinate2D):  # TODO becomes maybe an item
         attributes : ItemAttributes
         """
 
-        _Coordinate2D.__init__(self, x=x, y=y)
+        Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
         if attributes is None:
             self.attributes = ItemAttributes()
@@ -134,7 +46,7 @@ class Dot(_Coordinate2D):  # TODO becomes maybe an item
 
         """
 
-        return _Coordinate2D.distance(self, d) - \
+        return Coordinate2D.distance(self, d) - \
                ((self.diameter + d.diameter) / 2.0)
 
     @property
@@ -146,7 +58,7 @@ class Dot(_Coordinate2D):  # TODO becomes maybe an item
         return math.pi * self.diameter
 
 
-class Rectangle(_Coordinate2D):
+class Rectangle(Coordinate2D):
 
     def __init__(self, center_x=0, center_y=0, width=0, height=0, attributes=None):
         """Initialize a point
@@ -162,7 +74,7 @@ class Rectangle(_Coordinate2D):
         height : numeric (default=1)
         """
 
-        _Coordinate2D.__init__(self, x=center_x, y=center_y)
+        Coordinate2D.__init__(self, x=center_x, y=center_y)
         if attributes is None:
             self.attributes = ItemAttributes()
         else:
