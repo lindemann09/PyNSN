@@ -1,4 +1,4 @@
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math as _math
 import pygame as _pygame

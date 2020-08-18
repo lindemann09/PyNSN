@@ -1,5 +1,5 @@
 
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
 from ._geometry import lines_intersect, distance_between_edge_and_point

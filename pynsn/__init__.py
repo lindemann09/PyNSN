@@ -4,7 +4,7 @@ NonSyNum package
 Creating Non-Symbolic Number Displays
 """
 
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 __version__ = '0.8'
 
 from sys import version_info as _python_version_info

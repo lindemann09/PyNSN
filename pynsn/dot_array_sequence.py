@@ -1,7 +1,7 @@
 """
 Dot Array Sequence
 """
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5 as _md5
 import numpy as _np

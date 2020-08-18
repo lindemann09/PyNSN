@@ -1,4 +1,4 @@
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
 
@@ -80,8 +80,8 @@ class Coordinate2D(object):
 
 
     def distance(self, d):
-        """Return Euclidean distance to the another Coordinate. The function take the
-        diameter of the points into account.
+        """Returns Euclidean distance to the another Coordinate. The function
+        does not takes the size of an object into account.
 
         Parameters
         ----------

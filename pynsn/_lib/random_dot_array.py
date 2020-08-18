@@ -1,4 +1,4 @@
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy as _copy
 from . import _misc as _misc

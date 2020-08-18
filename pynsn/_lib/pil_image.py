@@ -1,4 +1,4 @@
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw

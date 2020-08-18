@@ -2,7 +2,7 @@
 Draw a random number from a beta dirstribution
 """
 
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 from scipy import spatial

@@ -1,7 +1,7 @@
 """
 Dot Array
 """
-__author__ = 'Oliver Lindemann <oliver.lindemann@cognitive-psychology.eu>'
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from ._colour import Colour
 
