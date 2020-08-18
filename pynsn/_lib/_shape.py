@@ -85,19 +85,19 @@ class Rectangle(Coordinate2D):
 
     @property
     def left(self):
-        return self._x - 0.5 * self.width
+        return self.x - 0.5 * self.width
 
     @property
     def top(self):
-        return self._y + 0.5 * self.height
+        return self.y + 0.5 * self.height
 
     @property
     def right(self):
-        return self._x + 0.5 * self.width
+        return self.x + 0.5 * self.width
 
     @property
     def bottom(self):
-        return self._y - 0.5 * self.height
+        return self.y - 0.5 * self.height
 
 
     def iter_edges(self):
