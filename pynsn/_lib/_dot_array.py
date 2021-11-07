@@ -22,8 +22,6 @@ from ._match import FeatureMatcher
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
 
-
-
 class _DotCloud(object):
     """Numpy Position list for optimized for numpy calculations
 
