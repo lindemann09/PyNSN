@@ -96,7 +96,7 @@ class Features(object):
 
     @property
     def field_area_full(self):  # FIXME not used (correct?)
-        return self.da._ch.full_field_area
+        return self.da.convex_hull.full_field_area
 
     def _get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""

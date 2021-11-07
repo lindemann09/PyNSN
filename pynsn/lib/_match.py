@@ -22,7 +22,7 @@ class FeatureMatcher(object):
 
         scale = value / self.da.features.mean_item_diameter
         self.da._diameters = self.da._diameters * scale
-        self.da.set_array_modified()
+        self.da._convex_hull = None
 
     def total_surface_area(self, value):
         # changes diameter
@@ -30,7 +30,7 @@ class FeatureMatcher(object):
         self.da._diameters = np.sqrt(
             self.da.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        self.da.set_array_modified()
+        self.da._convex_hull = None
 
 
     def field_area(self, value, precision=None, use_scaling_only=False):
@@ -161,7 +161,7 @@ class FeatureMatcher(object):
                 self.da.append_dot(d)
 
         self.da._xy = self.da._xy + old_center
-        self.da.set_array_modified()
+        self.da._convex_hull = None
 
     def __scale_field_area(self, field_area, precision):
         """change the convex hull area to a desired size by scale the polar
@@ -193,7 +193,7 @@ class FeatureMatcher(object):
             scale += step
 
             self.da._xy = _geometry.polar2cartesian(centered_polar * [scale, 1])
-            self.da.set_array_modified()  # required to recalc convex hull
+            self.da._convex_hull = None  # required to recalc convex hull
             current = self.da.features.field_area
 
             if (current < field_area and step < 0) or \
@@ -201,7 +201,7 @@ class FeatureMatcher(object):
                 step *= -0.2  # change direction and finer grain
 
         self.da._xy = self.da._xy + old_center
-        self.da.set_array_modified()
+        self.da._convex_hull = None
 
     def coverage(self, value,
                  precision=None,

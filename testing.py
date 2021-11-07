@@ -12,8 +12,15 @@ da_specs = pynsn.random_dot_array.Specs(
     minimum_gap=2)
 
 
-rda = random_dot_array.create(4, da_specs)
-print(rda)
+rda = random_dot_array.create(5, da_specs)
+print(rda.convex_hull.scipy_convex_hull)
+print(rda.features.field_area)
+
+rda.delete(2)
+rda.delete(3)
+
+#print(rda.convex_hull.xy)
+print(rda.features.field_area)
 
 exit()
 

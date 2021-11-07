@@ -8,22 +8,13 @@ import numpy as np
 from scipy import spatial
 from ._geometry import cartesian2polar, polar2cartesian
 
-class EfficientConvexHull(object):
-    """helper class for efficent (and not repeated) calulations convex hull
-    convex hull not be recalulated
+class ConvexHull(object):
+    """convenient wrapper class for calculation of convex hulls
     """
 
     def __init__(self, xy):
         self._xy = xy
-        self._scipy_ch_object = None
-
-    @property
-    def scipy_convex_hull(self):
-        if self._scipy_ch_object is None:
-            self._scipy_ch_object = spatial.ConvexHull(self._xy)
-
-        return self._scipy_ch_object
-
+        self.scipy_convex_hull = spatial.ConvexHull(self._xy)
 
     @property
     def indices(self):
@@ -34,11 +25,12 @@ class EfficientConvexHull(object):
         return self._xy[self.indices, :]
 
 
-class EfficientConvexHullDots(EfficientConvexHull):
-    """helper class for efficent (and not repeated) calulations convex hull"""
+class ConvexHullDots(ConvexHull):
+    """convenient wrapper class for calculation of convex hulls
+    """
 
     def __init__(self, xy, diameters):
-        EfficientConvexHull.__init__(self, xy=xy)
+        ConvexHull.__init__(self, xy=xy)
         self._diameters = diameters
         self._full_xy = None
         self._full_area = None
