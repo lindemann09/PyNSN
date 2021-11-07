@@ -2,7 +2,7 @@ import os
 import json
 import gzip
 
-from ._lib._dot_array import DotArray
+from .lib._dot_array import DotArray
 from .dot_array_sequence import DASequence
 
 def load(json_file_name, zipped=False):

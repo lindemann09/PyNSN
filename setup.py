@@ -15,14 +15,15 @@ install_requires = ["numpy>=1.6",
                     "pillow>=5.0"]
 
 extras_require = {
-    'pygame':             ["pygame>=1.9,<2"],
-    'expyriment':         ["expyriment>=0.8"]
+    'gui':                ['PyQt5>=5.14'],
+    'pygame':             ["pygame>=1.9"],
+    'expyriment':         ["expyriment>=0.9"]
 }
 
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["_lib", "_qt"]:
+for subp in ["lib", "qt"]:
     packages.append("{}.{}".format(package_name, subp))
 
 

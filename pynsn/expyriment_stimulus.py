@@ -6,8 +6,8 @@ from multiprocessing import Pool as _Pool
 
 from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
-from ._lib import pil_image as _pil_image
-from ._lib import _colour
+from .lib import pil_image as _pil_image
+from .lib import _colour
 
 
 class ExprimentDotArray(_Canvas):

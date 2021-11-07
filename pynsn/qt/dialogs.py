@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
-from .._lib import _match
-from .._lib._visual_features import Features
+from ..lib import _match
+from ..lib._visual_features import Features
 
 
 class MatchPropertyDialog(QDialog):

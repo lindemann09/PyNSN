@@ -6,10 +6,10 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from hashlib import md5 as _md5
 import numpy as _np
 
-from pynsn._lib import _misc as _misc
-from pynsn._lib._dot_array import DotArray as _DotArray
-from pynsn._lib._visual_features import Features as _Feat
-from pynsn._lib import random_dot_array
+from pynsn.lib import _misc as _misc
+from pynsn.lib._dot_array import DotArray as _DotArray
+from pynsn.lib._visual_features import Features as _Feat
+from pynsn.lib import random_dot_array
 
 class DASequence(object):
 

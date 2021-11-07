@@ -10,11 +10,11 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import dot_array_sequence, __version__
-from .._lib import _colour
-from .._lib import pil_image
-from .._lib import random_dot_array
-from .._lib._item_attributes import ItemAttributes
-from .._lib._visual_features import Features
+from ..lib import _colour
+from ..lib import pil_image
+from ..lib import random_dot_array
+from ..lib._item_attributes import ItemAttributes
+from ..lib._visual_features import Features
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_colour="lime",

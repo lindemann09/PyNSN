@@ -10,7 +10,7 @@ except:
 
 import sys as _sys
 
-from ._qt.gui_main_window import GUIMainWindow as _GUIMainWindow
+from .qt.gui_main_window import GUIMainWindow as _GUIMainWindow
 
 
 def start():
