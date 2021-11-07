@@ -4,12 +4,11 @@ from collections import OrderedDict
 
 import numpy as np
 from scipy import spatial
-from . import _misc
+from ..lib import misc
+from .convex_hull import ConvexHullDots
 
-from ._convex_hull import ConvexHullDots
 
-
-class Features(object):
+class VisualFeatures(object):
 
     LOG_SIZE = "Log Size"
     TOTAL_SURFACE_AREA = "Total surface area"
@@ -32,7 +31,7 @@ class Features(object):
     @staticmethod
     def are_dependent(featureA, featureB):
         """returns true if both features are not independent"""
-        for l in [Features.SIZE_FEATURES, Features.SPACE_FEATURES]:
+        for l in [VisualFeatures.SIZE_FEATURES, VisualFeatures.SPACE_FEATURES]:
             if featureA in l and featureB in l:
                 return True
         return False
@@ -96,12 +95,12 @@ class Features(object):
 
     @property
     def logSize(self):
-        return _misc.log2(self.total_surface_area) + _misc.log2(
+        return misc.log2(self.total_surface_area) + misc.log2(
             self.mean_item_surface_area)
 
     @property
     def logSpacing(self):
-        return _misc.log2(self.field_area) + _misc.log2(self.sparsity)
+        return misc.log2(self.field_area) + misc.log2(self.sparsity)
 
     @property
     def sparsity(self):
@@ -138,7 +137,7 @@ class Features(object):
     #@property
     #def featureXX_coverage_target_area(self):
     #    """density takes into account the full possible target area (i.e.,
-    #        stimulus radius) """
+    #        image radius) """
     #    try:
     #        return np.pi * self.da.target_array_radius ** 2 / \
     #            self.total_surface_area
@@ -149,34 +148,34 @@ class Features(object):
         """returns a feature"""
 
        # Adapt
-        if feature == Features.ITEM_DIAMETER:
+        if feature == VisualFeatures.ITEM_DIAMETER:
             return self.mean_item_diameter
 
-        elif feature == Features.ITEM_PERIMETER:
+        elif feature == VisualFeatures.ITEM_PERIMETER:
             return self.mean_item_perimeter
 
-        elif feature == Features.TOTAL_PERIMETER:
+        elif feature == VisualFeatures.TOTAL_PERIMETER:
             return self.total_perimeter
 
-        elif feature == Features.ITEM_SURFACE_AREA:
+        elif feature == VisualFeatures.ITEM_SURFACE_AREA:
             return self.mean_item_surface_area
 
-        elif feature == Features.TOTAL_SURFACE_AREA:
+        elif feature == VisualFeatures.TOTAL_SURFACE_AREA:
             return self.total_surface_area
 
-        elif feature == Features.LOG_SIZE:
+        elif feature == VisualFeatures.LOG_SIZE:
             return self.logSize
 
-        elif feature == Features.LOG_SPACING:
+        elif feature == VisualFeatures.LOG_SPACING:
             return self.logSpacing
 
-        elif feature == Features.SPARSITY:
+        elif feature == VisualFeatures.SPARSITY:
             return self.sparsity
 
-        elif feature == Features.FIELD_AREA:
+        elif feature == VisualFeatures.FIELD_AREA:
             return self.field_area
 
-        elif feature == Features.COVERAGE:
+        elif feature == VisualFeatures.COVERAGE:
             return self.converage
 
         else:
@@ -187,16 +186,16 @@ class Features(object):
         """ordered dictionary with the most important feature"""
         rtn = [("Hash", self.da.hash),
                ("Numerosity", self.numerosity),
-               (Features.TOTAL_SURFACE_AREA, self.total_surface_area),
-               (Features.ITEM_SURFACE_AREA, self.mean_item_surface_area),
-               (Features.ITEM_DIAMETER, self.mean_item_diameter),
-               (Features.ITEM_PERIMETER, self.mean_item_perimeter),
-               (Features.TOTAL_PERIMETER, self.total_perimeter),
-               (Features.FIELD_AREA, self.field_area),
-               (Features.SPARSITY, self.sparsity),
-               (Features.COVERAGE, self.converage),
-               (Features.LOG_SIZE, self.logSize),
-               (Features.LOG_SPACING, self.logSpacing)]
+               (VisualFeatures.TOTAL_SURFACE_AREA, self.total_surface_area),
+               (VisualFeatures.ITEM_SURFACE_AREA, self.mean_item_surface_area),
+               (VisualFeatures.ITEM_DIAMETER, self.mean_item_diameter),
+               (VisualFeatures.ITEM_PERIMETER, self.mean_item_perimeter),
+               (VisualFeatures.TOTAL_PERIMETER, self.total_perimeter),
+               (VisualFeatures.FIELD_AREA, self.field_area),
+               (VisualFeatures.SPARSITY, self.sparsity),
+               (VisualFeatures.COVERAGE, self.converage),
+               (VisualFeatures.LOG_SIZE, self.logSize),
+               (VisualFeatures.LOG_SPACING, self.logSpacing)]
         return OrderedDict(rtn)
 
     def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):

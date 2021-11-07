@@ -1,9 +1,9 @@
 import pynsn
-from pynsn import dot_array_sequence, Features, dot_array_archive, random_dot_array
-import json
-import numpy as np
+from pynsn import VisualFeatures
+from pynsn.dot_array import random_dot_array
+from pynsn.sequence import dot_array_archive, dot_array_sequence
 
-da_specs = pynsn.random_dot_array.Specs(
+da_specs = pynsn.dot_array.random_dot_array.Specs(
     target_area_radius=200,
     item_diameter_mean=5,
     item_diameter_range=(3, 8),
@@ -36,10 +36,10 @@ exit()
 
 
 
-seq = dot_array_sequence.create(specs=da_specs, match_feature=Features.ITEM_DIAMETER,
-                           match_value=5,
-                           min_max_numerosity=[10, 50],
-                           round_decimals=0)
+seq = dot_array_sequence.create(specs=da_specs, match_feature=VisualFeatures.ITEM_DIAMETER,
+                                match_value=5,
+                                min_max_numerosity=[10, 50],
+                                round_decimals=0)
 
 
 

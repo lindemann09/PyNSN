@@ -3,7 +3,7 @@ Dot Array
 """
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from ._colour import Colour
+from ..lib.colour import Colour
 
 class ItemAttributes(object):
 

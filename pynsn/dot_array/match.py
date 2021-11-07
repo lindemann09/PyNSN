@@ -1,7 +1,7 @@
 import random
 import numpy as np
-from . import _misc, _geometry
-from ._visual_features import Features
+from ..lib import misc, geometry
+from .visual_features import VisualFeatures
 
 _DEFAULT_SPACING_PRECISION = 0.0001
 _DEFAULT_MATCH_FA2TA_RATIO = 0.5
@@ -109,8 +109,8 @@ class FeatureMatcher(object):
                 indices = self.da.features.convex_hull.indices
                 if not FeatureMatcher.TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                     # most outer dot from convex hull
-                    radii_outer_dots = _geometry.cartesian2polar(self.da.xy[indices],
-                                                             radii_only=True)
+                    radii_outer_dots = geometry.cartesian2polar(self.da.xy[indices],
+                                                                radii_only=True)
                     i = np.where(radii_outer_dots==max(radii_outer_dots))[0]
                     idx = indices[i][0]
                 else:
@@ -139,7 +139,7 @@ class FeatureMatcher(object):
             # eccentricity criterion
             max_radius =  np.sqrt(max_field_area/np.pi) # for circle with
                                                         # required FA
-            idx = np.where(_geometry.cartesian2polar(self.da.xy, radii_only=True) > max_radius)[0]
+            idx = np.where(geometry.cartesian2polar(self.da.xy, radii_only=True) > max_radius)[0]
             removed_dots.extend(self.da.get_dots(indices=idx))
             self.da.delete(idx)
 
@@ -185,14 +185,14 @@ class FeatureMatcher(object):
         # centered points
         old_center = self.da.center_of_outer_positions
         self.da._xy = self.da._xy - old_center
-        centered_polar = _geometry.cartesian2polar(self.da._xy)
+        centered_polar = geometry.cartesian2polar(self.da._xy)
 
         # iteratively determine scale
         while abs(current - field_area) > precision:
 
             scale += step
 
-            self.da._xy = _geometry.polar2cartesian(centered_polar * [scale, 1])
+            self.da._xy = geometry.polar2cartesian(centered_polar * [scale, 1])
             self.da.features.reset() # required to recalc convex hull
             current = self.da.features.field_area
 
@@ -248,12 +248,12 @@ class FeatureMatcher(object):
 
     def log_spacing(self, value, precision=None):
 
-        logfa = 0.5 * value + 0.5 * _misc.log2(
+        logfa = 0.5 * value + 0.5 * misc.log2(
             self.da.features.numerosity)
         self.field_area(value=2 ** logfa, precision=precision)
 
     def log_size(self, value):
-        logtsa = 0.5 * value + 0.5 * _misc.log2(self.da.features.numerosity)
+        logtsa = 0.5 * value + 0.5 * misc.log2(self.da.features.numerosity)
         self.total_surface_area(2 ** logtsa)
 
     def sparcity(self, value, precision = None):
@@ -285,40 +285,40 @@ class FeatureMatcher(object):
                              "reference_dot_array, not both.")
 
         # type check
-        if feature not in Features.ALL_FEATURES:
+        if feature not in VisualFeatures.ALL_FEATURES:
             raise ValueError("{} is not a visual feature.".format(feature))
 
         if value is None:
             value = reference_dot_array.features.get(feature)
 
         # Adapt
-        if feature == Features.ITEM_DIAMETER:
+        if feature == VisualFeatures.ITEM_DIAMETER:
             self.item_diameter(value=value)
 
-        elif feature == Features.ITEM_PERIMETER:
+        elif feature == VisualFeatures.ITEM_PERIMETER:
             self.item_perimeter(value=value)
 
-        elif feature == Features.TOTAL_PERIMETER:
+        elif feature == VisualFeatures.TOTAL_PERIMETER:
             self.total_perimeter(value=value)
 
-        elif feature == Features.ITEM_SURFACE_AREA:
+        elif feature == VisualFeatures.ITEM_SURFACE_AREA:
             self.item_surface_area(value=value)
 
-        elif feature == Features.TOTAL_SURFACE_AREA:
+        elif feature == VisualFeatures.TOTAL_SURFACE_AREA:
             self.total_surface_area(value=value)
 
-        elif feature == Features.LOG_SIZE:
+        elif feature == VisualFeatures.LOG_SIZE:
             self.log_size(value=value)
 
-        elif feature == Features.LOG_SPACING:
+        elif feature == VisualFeatures.LOG_SPACING:
             self.log_spacing(value=value,
                              precision=_DEFAULT_SPACING_PRECISION)
 
-        elif feature == Features.SPARSITY:
+        elif feature == VisualFeatures.SPARSITY:
             self.sparcity(value=value, precision=_DEFAULT_SPACING_PRECISION)
 
-        elif feature == Features.FIELD_AREA:
+        elif feature == VisualFeatures.FIELD_AREA:
             self.field_area(value=value, precision=_DEFAULT_SPACING_PRECISION)
 
-        elif feature == Features.COVERAGE:
+        elif feature == VisualFeatures.COVERAGE:
             self.coverage(value=value, precision=_DEFAULT_SPACING_PRECISION)

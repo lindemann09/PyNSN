@@ -2,10 +2,10 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from ._geometry import lines_intersect, distance_between_edge_and_point
-from ._item_attributes import ItemAttributes
+from ..lib.geometry import lines_intersect, distance_between_edge_and_point
+from ..lib.coordinate2D import Coordinate2D
+from .item_attributes import ItemAttributes
 
-from ._coordinate2D import Coordinate2D
 
 class Dot(Coordinate2D):  # TODO becomes maybe an item
 

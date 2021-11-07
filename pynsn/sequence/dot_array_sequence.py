@@ -6,10 +6,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from hashlib import md5 as _md5
 import numpy as _np
 
-from pynsn.lib import _misc as _misc
-from pynsn.lib._dot_array import DotArray as _DotArray
-from pynsn.lib._visual_features import Features as _Feat
-from pynsn.lib import random_dot_array
+from pynsn.lib import misc as _misc
+from pynsn.dot_array.dot_array import DotArray as _DotArray
+from pynsn.dot_array.visual_features import VisualFeatures as _Feat
+from pynsn.dot_array import random_dot_array
+
 
 class DASequence(object):
 
@@ -64,7 +65,7 @@ class DASequence(object):
         return rtn
 
     def get_features_dataframe(self):
-        from pandas import DataFrame, np
+        from pandas import DataFrame
         d = self.get_features_dict()
         array = []
         for x in range(len(d["Hash"])):
@@ -158,7 +159,7 @@ def create(specs,
     else:
         prefer_keeping_field_area = False
 
-    # make source stimulus
+    # make source image
     if source_number is None:
         source_number = min + int((max - min)/2)
     source_da = random_dot_array.create(n_dots=source_number,

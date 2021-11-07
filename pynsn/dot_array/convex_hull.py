@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 from scipy import spatial
-from ._geometry import cartesian2polar, polar2cartesian
+from ..lib.geometry import cartesian2polar, polar2cartesian
 
 class ConvexHull(object):
     """convenient wrapper class for calculation of convex hulls

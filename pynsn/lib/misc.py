@@ -7,7 +7,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from collections import OrderedDict
 import random
 import numpy as np
-from ._visual_features import Features
+from pynsn.dot_array.visual_features import VisualFeatures
 
 try:
     from math import log2
@@ -164,18 +164,18 @@ def check_feature_list(feature_list):
         feature_list = [feature_list]
 
     for x in feature_list:
-        if x not in Features.ALL_FEATURES:
+        if x not in VisualFeatures.ALL_FEATURES:
             raise TypeError("Parameter is not a continuous feature or a " + \
                             "list of continuous properties")
             # continious property or visual feature
 
-        if x in Features.SIZE_FEATURES:
+        if x in VisualFeatures.SIZE_FEATURES:
             if len(size_occured)>0:
                 raise RuntimeError(error.format(x, size_occured))
             else:
                 size_occured = x
 
-        if x in Features.SPACE_FEATURES:
+        if x in VisualFeatures.SPACE_FEATURES:
             if len(space_occured)>0:
                 raise RuntimeError(error.format(x, space_occured))
             else:

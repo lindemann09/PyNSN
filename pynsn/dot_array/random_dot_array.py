@@ -1,9 +1,9 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy as _copy
-from . import _misc as _misc
-from ._item_attributes import ItemAttributes as _ItemAttributes
-from ._dot_array import DotArray as _DotArray
+from ..lib import misc as _misc
+from .item_attributes import ItemAttributes as _ItemAttributes
+from .dot_array import DotArray as _DotArray
 
 
 class Specs(object):
@@ -23,7 +23,7 @@ class Specs(object):
         Parameters:
         -----------
         stimulus_area_radius : int
-            the radius of the stimulus area
+            the radius of the image area
         n_dots : int
             number of moving dots
 

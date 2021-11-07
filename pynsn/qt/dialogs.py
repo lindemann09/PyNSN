@@ -5,8 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
-from ..lib import _match
-from ..lib._visual_features import Features
+from ..dot_array import match, VisualFeatures
 
 
 class MatchPropertyDialog(QDialog):
@@ -18,13 +17,13 @@ class MatchPropertyDialog(QDialog):
         self.features = properties
         self._selection = None
         self.comboBox = QComboBox(self)
-        for feat in Features.ALL_FEATURES:
+        for feat in VisualFeatures.ALL_FEATURES:
             self.comboBox.addItem(feat)
 
         self.comboBox.activated[str].connect(self.choice)
 
         self._num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(Features.ITEM_DIAMETER)
+        self.choice(VisualFeatures.ITEM_DIAMETER)
 
 
 
@@ -46,7 +45,7 @@ class MatchPropertyDialog(QDialog):
 
     def choice(self, selection):
 
-        for feat in Features.ALL_FEATURES:
+        for feat in VisualFeatures.ALL_FEATURES:
             if selection == feat:
                 self._num_input.value = self.features[feat]
                 self._selection = feat
@@ -126,8 +125,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = _match._DEFAULT_SPACING_PRECISION
-    match_FA2TA_ratio = _match._DEFAULT_MATCH_FA2TA_RATIO
+    spacing_precision = match._DEFAULT_SPACING_PRECISION
+    match_FA2TA_ratio = match._DEFAULT_MATCH_FA2TA_RATIO
 
 
     def __init__(self, parent):
@@ -138,17 +137,17 @@ class SequenceDialog(QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QCheckBox(Features.ITEM_DIAMETER)
-        self.match_item_perimeter= QCheckBox(Features.ITEM_PERIMETER)
-        self.match_item_area = QCheckBox(Features.ITEM_SURFACE_AREA)
-        self.match_area = QCheckBox(Features.TOTAL_SURFACE_AREA)
-        self.match_total_perimeter = QCheckBox(Features.TOTAL_PERIMETER)
-        self.match_coverage = QCheckBox(Features.COVERAGE)
-        self.match_sparsity = QCheckBox(Features.SPARSITY)
+        self.match_diameter = QCheckBox(VisualFeatures.ITEM_DIAMETER)
+        self.match_item_perimeter= QCheckBox(VisualFeatures.ITEM_PERIMETER)
+        self.match_item_area = QCheckBox(VisualFeatures.ITEM_SURFACE_AREA)
+        self.match_area = QCheckBox(VisualFeatures.TOTAL_SURFACE_AREA)
+        self.match_total_perimeter = QCheckBox(VisualFeatures.TOTAL_PERIMETER)
+        self.match_coverage = QCheckBox(VisualFeatures.COVERAGE)
+        self.match_sparsity = QCheckBox(VisualFeatures.SPARSITY)
 
-        self.match_convex_hull = QCheckBox(Features.FIELD_AREA)
-        self.match_size = QCheckBox(Features.LOG_SIZE)
-        self.match_spacing = QCheckBox(Features.LOG_SPACING)
+        self.match_convex_hull = QCheckBox(VisualFeatures.FIELD_AREA)
+        self.match_size = QCheckBox(VisualFeatures.LOG_SIZE)
+        self.match_spacing = QCheckBox(VisualFeatures.LOG_SPACING)
         self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -211,43 +210,43 @@ class SequenceDialog(QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [Features.ITEM_DIAMETER]
+        all = [VisualFeatures.ITEM_DIAMETER]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.ITEM_SURFACE_AREA)
+        all.append(VisualFeatures.ITEM_SURFACE_AREA)
         if self.match_item_area.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.ITEM_PERIMETER)
+        all.append(VisualFeatures.ITEM_PERIMETER)
         if self.match_item_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.TOTAL_PERIMETER)
+        all.append(VisualFeatures.TOTAL_PERIMETER)
         if self.match_total_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.TOTAL_SURFACE_AREA)
+        all.append(VisualFeatures.TOTAL_SURFACE_AREA)
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.FIELD_AREA)
+        all.append(VisualFeatures.FIELD_AREA)
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.COVERAGE)
+        all.append(VisualFeatures.COVERAGE)
         if self.match_coverage.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.SPARSITY)
+        all.append(VisualFeatures.SPARSITY)
         if self.match_sparsity.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.LOG_SIZE)
+        all.append(VisualFeatures.LOG_SIZE)
         if self.match_size.isChecked():
             selected.append(all[-1])
 
-        all.append(Features.LOG_SPACING)
+        all.append(VisualFeatures.LOG_SPACING)
         if self.match_spacing.isChecked():
             selected.append(all[-1])
 
@@ -265,36 +264,36 @@ class SequenceDialog(QDialog):
         for x in all:
             if x not in selected:
                 # test dependency of non-selected item, x, from any selected
-                check = map(lambda s: Features.are_dependent(x, s), selected)
+                check = map(lambda s: VisualFeatures.are_dependent(x, s), selected)
                 if sum(check) > 0:  # any dependency
-                    if x == Features.ITEM_DIAMETER:
+                    if x == VisualFeatures.ITEM_DIAMETER:
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    elif x == Features.ITEM_PERIMETER:
+                    elif x == VisualFeatures.ITEM_PERIMETER:
                         self.match_item_perimeter.setEnabled(False)
                         self.match_item_perimeter.setChecked(False)
-                    elif x == Features.ITEM_SURFACE_AREA:
+                    elif x == VisualFeatures.ITEM_SURFACE_AREA:
                         self.match_item_area.setEnabled(False)
                         self.match_item_area.setChecked(False)
-                    elif x == Features.TOTAL_SURFACE_AREA:
+                    elif x == VisualFeatures.TOTAL_SURFACE_AREA:
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    elif x == Features.TOTAL_PERIMETER:
+                    elif x == VisualFeatures.TOTAL_PERIMETER:
                         self.match_total_perimeter.setEnabled(False)
                         self.match_total_perimeter.setChecked(False)
-                    elif x == Features.FIELD_AREA:
+                    elif x == VisualFeatures.FIELD_AREA:
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
-                    elif x == Features.COVERAGE:
+                    elif x == VisualFeatures.COVERAGE:
                         self.match_coverage.setEnabled(False)
                         self.match_coverage.setChecked(False)
-                    elif x == Features.SPARSITY:
+                    elif x == VisualFeatures.SPARSITY:
                         self.match_sparsity.setEnabled(False)
                         self.match_sparsity.setChecked(False)
-                    elif x == Features.LOG_SIZE:
+                    elif x == VisualFeatures.LOG_SIZE:
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
-                    elif x == Features.LOG_SPACING:
+                    elif x == VisualFeatures.LOG_SPACING:
                         self.match_spacing.setEnabled(False)
                         self.match_spacing.setChecked(False)
 

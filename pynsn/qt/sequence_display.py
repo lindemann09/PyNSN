@@ -7,14 +7,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QSlider
 
-from ..lib import pil_image
+from ..image import pil
 from . import misc
 
 
 def _map_make_image(x):
     da, colours, aa = x
-    return pil_image.create(dot_array=da, colours=colours,
-                            antialiasing=aa)
+    return pil.create(dot_array=da, colours=colours,
+                      antialiasing=aa)
 
 
 class SequenceDisplay(QDialog):

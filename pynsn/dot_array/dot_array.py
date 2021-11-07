@@ -11,11 +11,11 @@ import json
 import numpy as np
 from scipy import spatial
 
-from . import _misc, _geometry
-from ._item_attributes import ItemAttributes
-from ._visual_features import Features
-from ._shape import Dot
-from ._match import FeatureMatcher
+from ..lib import misc, geometry
+from pynsn.dot_array.shape import Dot
+from .item_attributes import ItemAttributes
+from .visual_features import VisualFeatures
+from .match import FeatureMatcher
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -32,7 +32,7 @@ class _DotCloud(object):
 
         self._xy = np.array([])
         self._diameters = np.array([])
-        self.features = Features(self)
+        self.features = VisualFeatures(self)
 
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
@@ -120,7 +120,7 @@ class _DotCloud(object):
         """append dots using numpy array"""
 
         # ensure numpy array
-        item_diameters = _misc.numpy_vector(item_diameters)
+        item_diameters = misc.numpy_vector(item_diameters)
         # ensure xy is a 2d array
         xy = np.array(xy)
         if xy.ndim == 1 and len(xy) == 2:
@@ -206,7 +206,9 @@ class _DotCloud(object):
 
 
 
-class _BasicDotArray(_DotCloud):
+class _GenericDotArray(_DotCloud):
+    """Dot array without attributes such as coloZZr"""
+
 
     def __init__(self, target_array_radius, minimum_gap):
         """Dot array is restricted to a certain area, it has a target area
@@ -240,7 +242,7 @@ class _BasicDotArray(_DotCloud):
             if len(identical) > 1:
                 for x in identical:  # jitter all identical positions
                     if x != idx:
-                        self._xy[x, :] = self._xy[x, :] - _geometry.polar2cartesian(
+                        self._xy[x, :] = self._xy[x, :] - geometry.polar2cartesian(
                             [[jitter_size, random.random() * 2 * np.pi]])[0]
 
     def _remove_overlap_for_dot(self, dot_id, minimum_gap):
@@ -259,9 +261,9 @@ class _BasicDotArray(_DotCloud):
                            axis=1)) > 0:  # check if there is an identical position
                 self._jitter_identical_positions()
 
-            tmp_polar = _geometry.cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
+            tmp_polar = geometry.cartesian2polar(self._xy[idx, :] - self._xy[dot_id, :])
             tmp_polar[:, 0] = 0.000000001 + minimum_gap - dist[idx]  # determine movement size
-            xy = _geometry.polar2cartesian(tmp_polar)
+            xy = geometry.polar2cartesian(tmp_polar)
             self._xy[idx, :] = np.array([self._xy[idx, 0] + xy[:, 0], self._xy[idx, 1] + xy[:, 1]]).T
             shift_required = True
 
@@ -271,7 +273,7 @@ class _BasicDotArray(_DotCloud):
 
         shift_required = False
         # from inner to outer remove overlaps
-        for i in np.argsort(_geometry.cartesian2polar(self._xy, radii_only=True)):
+        for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
             if self._remove_overlap_for_dot(dot_id=i, minimum_gap=minimum_gap):
                 shift_required = True
 
@@ -299,18 +301,18 @@ class _BasicDotArray(_DotCloud):
 
         shift_required = self.remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
 
-        # sqeeze in points that pop out of the stimulus area radius
+        # sqeeze in points that pop out of the image area radius
         cnt = 0
         while True:
-            radii = _geometry.cartesian2polar(self._xy, radii_only=True)
+            radii = geometry.cartesian2polar(self._xy, radii_only=True)
             too_far = np.where((radii + self._diameters // 2) > self.target_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
-                polar = _geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
+                polar = geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
                 polar[0] = self.target_array_radius - self._diameters[
                     too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
-                new_xy = _geometry.polar2cartesian([polar])[0]
+                new_xy = geometry.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 
                 # remove overlaps centered around new outlier position
@@ -466,7 +468,8 @@ class _BasicDotArray(_DotCloud):
         self.target_array_radius = dict["target_array_radius"]
 
 
-class DotArray(_BasicDotArray):
+class DotArray(_GenericDotArray):
+    """Dot array with attributes"""
 
     def __init__(self, target_array_radius, minimum_gap):
         """ Dot array adds attribues, such as colour to a SimpleDotArray."""
@@ -508,7 +511,7 @@ class DotArray(_BasicDotArray):
         """append dots using numpy array
         attributes ItemAttributes or a list of ItemAttributes"""
 
-        item_diameters = _misc.numpy_vector(item_diameters)
+        item_diameters = misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
         if attributes is None:
@@ -609,7 +612,7 @@ class DotArray(_BasicDotArray):
             feat = da.features.get_features_dict()
             feat["hash"] = self.hash + str(da.get_colours()[0])
             dicts.append(feat)
-        return _misc.join_dict_list(dicts)
+        return misc.join_dict_list(dicts)
 
     def get_csv(self, variable_names=True,
                 hash_column=True, num_idx_column=True,
@@ -653,7 +656,7 @@ class DotArray(_BasicDotArray):
 
     def as_dict(self):
         d = super().as_dict()
-        if _misc.is_all_equal(self._attributes):
+        if misc.is_all_equal(self._attributes):
             att = [self._attributes[0].as_dict()]
         else:
             att = list(map(lambda x:x.as_dict(), self._attributes))

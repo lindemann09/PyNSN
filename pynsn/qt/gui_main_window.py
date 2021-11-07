@@ -9,12 +9,12 @@ from PyQt5.QtWidgets import QAction, QMainWindow, qApp, QFileDialog
 from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
-from .. import dot_array_sequence, __version__
-from ..lib import _colour
-from ..lib import pil_image
-from ..lib import random_dot_array
-from ..lib._item_attributes import ItemAttributes
-from ..lib._visual_features import Features
+from .. import __version__
+from ..lib import colour
+from ..image import pil
+from ..dot_array import random_dot_array, ItemAttributes, VisualFeatures
+from ..sequence import dot_array_sequence
+
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_colour="lime",
@@ -22,24 +22,24 @@ DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_diameter_range=[5, 40],
                                             item_diameter_std=8,
                                             minimum_gap=2),
-                 _colour .ImageColours(target_area="#3e3e3e",
-                                        field_area=None,
-                                        field_area_outer=None,
-                                        center_of_mass=None,
-                                        center_of_outer_positions=None,
-                                        background="gray"))
+                 colour .ImageColours(target_area="#3e3e3e",
+                                      field_area=None,
+                                      field_area_outer=None,
+                                      center_of_mass=None,
+                                      center_of_outer_positions=None,
+                                      background="gray"))
 
 ICON = (11, random_dot_array.Specs(target_area_radius=200,
                                    item_colour="lime",
                                    item_diameter_mean=35,
                                    item_diameter_range=[5, 80],
                                    item_diameter_std=20),
-        _colour .ImageColours(target_area="#3e3e3e",
-                               field_area=None,
-                               field_area_outer="expyriment_orange",
-                               center_of_mass=None,
-                               center_of_outer_positions=None,
-                               background=None))
+        colour .ImageColours(target_area="#3e3e3e",
+                             field_area=None,
+                             field_area_outer="expyriment_orange",
+                             center_of_mass=None,
+                             center_of_outer_positions=None,
+                             background=None))
 
 
 class GUIMainWindow(QMainWindow):
@@ -67,7 +67,7 @@ class GUIMainWindow(QMainWindow):
         settingsAction = QAction('&Settings', self)
         settingsAction.triggered.connect(self.action_settings)
 
-        saveAction = QAction('&Save current stimulus', self)
+        saveAction = QAction('&Save current image', self)
         saveAction.setShortcut('Ctrl+S')
         saveAction.triggered.connect(self.save_array)
 
@@ -117,7 +117,7 @@ class GUIMainWindow(QMainWindow):
 
         # ICON
         colours = ICON[2]
-        self._image = pil_image.create(
+        self._image = pil.create(
                         dot_array=random_dot_array.create(n_dots=ICON[0], specs = ICON[1]),
                         colours=colours, antialiasing=True)
 
@@ -150,7 +150,7 @@ class GUIMainWindow(QMainWindow):
             return self._image
         else:
             para = self.get_image_colours()
-            image_colours = _colour.ImageColours(
+            image_colours = colour.ImageColours(
                 target_area=para.target_area,
                 field_area=para.field_area,
                 field_area_outer=para.field_area_outer,
@@ -158,9 +158,9 @@ class GUIMainWindow(QMainWindow):
                 center_of_outer_positions=para.center_of_outer_positions,
                 background=para.background)
 
-            self._image = pil_image.create(dot_array=self.dot_array,
-                                           colours=image_colours,
-                                           antialiasing=self.settings.antialiasing.isChecked())
+            self._image = pil.create(dot_array=self.dot_array,
+                                     colours=image_colours,
+                                     antialiasing=self.settings.antialiasing.isChecked())
                                             # todo maybe: gabor_filter=ImageFilter.GaussianBlur
 
             return self._image
@@ -171,12 +171,12 @@ class GUIMainWindow(QMainWindow):
     def get_specs(self):
 
         try:
-            colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
+            colour_dot = colour.Colour(self.main_widget.dot_colour.text)
         except:
             colour_dot = DEFAULT_ARRAY[1].item_attributes.colour
             self.main_widget.dot_colour.text = colour_dot
 
-        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value ,
+        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
                                       item_colour=colour_dot,
                                       item_diameter_mean=self.main_widget.item_diameter_mean.value,
                                       item_diameter_range=[self.main_widget.item_diameter_range.value1,
@@ -189,35 +189,35 @@ class GUIMainWindow(QMainWindow):
         # check colour input
 
         try:
-            colour_area = _colour.Colour(self.settings.colour_area.text)
+            colour_area = colour.Colour(self.settings.colour_area.text)
         except:
             colour_area = None
             self.settings.colour_area.text = "None"
         try:
-            colour_convex_hull_positions = _colour.Colour(
+            colour_convex_hull_positions = colour.Colour(
                 self.settings.colour_convex_hull_positions.text)
         except:
             colour_convex_hull_positions = None
             self.settings.colour_convex_hull_positions.text = "None"
         try:
-            colour_convex_hull_dots = _colour.Colour(
+            colour_convex_hull_dots = colour.Colour(
                 self.settings.colour_convex_hull_dots.text)
         except:
             colour_convex_hull_dots = None
             self.settings.colour_convex_hull_dots.text = "None"
         try:
-            colour_background = _colour.Colour(
+            colour_background = colour.Colour(
                 self.settings.colour_background.text)
         except:
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return _colour.ImageColours(target_area=colour_area,
-                                      field_area=colour_convex_hull_positions,
-                                      field_area_outer=colour_convex_hull_dots,
-                                      center_of_mass=None,
-                                      center_of_outer_positions=None,
-                                      background=colour_background)
+        return colour.ImageColours(target_area=colour_area,
+                                   field_area=colour_convex_hull_positions,
+                                   field_area_outer=colour_convex_hull_dots,
+                                   center_of_mass=None,
+                                   center_of_outer_positions=None,
+                                   background=colour_background)
 
     def pixmap(self):
         return QPixmap.fromImage(ImageQt(self.image()))
@@ -293,7 +293,7 @@ class GUIMainWindow(QMainWindow):
                                                                    prop)  #
         if feature is not None:
             self.dot_array.match.match_feature(feature, value=value)
-            if feature in Features.SIZE_FEATURES:
+            if feature in VisualFeatures.SIZE_FEATURES:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)

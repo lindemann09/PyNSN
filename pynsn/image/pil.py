@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 import numpy as _np
-from ._colour import ImageColours as _ImageColours
+from ..lib.colour import ImageColours as _ImageColours
 
 def create(dot_array, colours, antialiasing=True,
            gabor_filter=None):
