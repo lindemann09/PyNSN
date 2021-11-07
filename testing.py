@@ -13,14 +13,18 @@ da_specs = pynsn.random_dot_array.Specs(
 
 
 rda = random_dot_array.create(5, da_specs)
-print(rda.convex_hull.scipy_convex_hull)
+#print(rda.convex_hull.scipy_convex_hull)
 print(rda.features.field_area)
+print(rda.features.mean_item_diameter)
+print(rda.features.da.xy)
 
 rda.delete(2)
 rda.delete(3)
 
 #print(rda.convex_hull.xy)
+print(rda.features.da.xy)
 print(rda.features.field_area)
+print(rda.features.mean_item_diameter)
 
 exit()
 

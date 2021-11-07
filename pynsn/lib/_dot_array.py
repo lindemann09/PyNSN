@@ -12,7 +12,6 @@ import numpy as np
 from scipy import spatial
 
 from . import _misc, _geometry
-from ._convex_hull import ConvexHullDots
 from ._item_attributes import ItemAttributes
 from ._visual_features import Features
 from ._shape import Dot
@@ -33,7 +32,8 @@ class _DotCloud(object):
 
         self._xy = np.array([])
         self._diameters = np.array([])
-        self._convex_hull = None
+        self.features = Features(self)
+
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
 
@@ -57,16 +57,6 @@ class _DotCloud(object):
     def center_of_outer_positions(self):
         minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
-
-    @property
-    def features(self):
-        return Features(self)
-
-    @property
-    def convex_hull(self):
-        if self._convex_hull is None:
-            self._convex_hull = ConvexHullDots(self._xy, self._diameters)
-        return self._convex_hull
 
     @property
     def surface_areas(self):
@@ -120,7 +110,7 @@ class _DotCloud(object):
         """read Dot collection from dict"""
         self._xy = np.array(dict["xy"])
         self._diameters = np.array(dict["diameters"])
-        self._convex_hull = None
+        self.features.reset()
 
     @property
     def diameters(self):
@@ -145,17 +135,17 @@ class _DotCloud(object):
             self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
         self._xy = np.append(self._xy, xy, axis=0)
         self._diameters = np.append(self._diameters, item_diameters)
-        self._convex_hull = None
+        self.features.reset()
 
     def clear(self):
         self._xy = np.array([[]])
         self._diameters = np.array([])
-        self._convex_hull = None
+        self.features.reset()
 
     def delete(self, index):
         self._xy = np.delete(self._xy, index, axis=0)
         self._diameters = np.delete(self._diameters, index)
-        self._convex_hull = None
+        self.features.reset()
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -185,7 +175,7 @@ class _DotCloud(object):
 
     def center_array(self):
         self._xy = self._xy - self.center_of_outer_positions
-        self._convex_hull = None
+        self.features.reset()
 
     def append_dot(self, dot):
         assert isinstance(dot, Dot)
@@ -286,7 +276,7 @@ class _BasicDotArray(_DotCloud):
                 shift_required = True
 
         if shift_required:
-            self._convex_hull = None
+            self.features.reset()
 
         return shift_required
 
@@ -342,7 +332,7 @@ class _BasicDotArray(_DotCloud):
             return False, u"Can't find solution when removing outlier (n=" + \
                    str(self.features.numerosity) + ")"
 
-        self._convex_hull = None
+        self.features.reset()
         if not shift_required:
             return True, ""
         else:
@@ -363,7 +353,7 @@ class _BasicDotArray(_DotCloud):
         try_out_inside_convex_hull = 1000
 
         if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self.convex_hull.xy)
+            delaunay = spatial.Delaunay(self.features.convex_hull.xy)
         else:
             delaunay = None
         cnt = 0
@@ -424,7 +414,7 @@ class _BasicDotArray(_DotCloud):
                 new_xy = np.append(new_xy, [xy], axis=0)
 
         self._xy = new_xy
-        self._convex_hull = None
+        self.features.reset()
 
     def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
         """number deviant
@@ -439,7 +429,7 @@ class _BasicDotArray(_DotCloud):
             # add or remove random dots
             for _ in range(abs(change_numerosity)):
                 if prefer_keeping_field_area:
-                    ch = deviant.convex_hull.indices
+                    ch = deviant.features.convex_hull.indices
                 else:
                     ch = []
                 for x in range(TRY_OUT):##

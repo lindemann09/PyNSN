@@ -235,7 +235,7 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
             if cnt > 10:
                 error = u"ERROR: realign, " + str(cnt) + ", " + str(da.features.numerosity)
 
-        #print(da.feature.get_features_text())
+        #print(da.features.get_features_text())
         da.round(round_decimals)
         da_sequence.append(da)
 

@@ -6,6 +6,9 @@ import numpy as np
 from scipy import spatial
 from . import _misc
 
+from ._convex_hull import ConvexHullDots
+
+
 class Features(object):
 
     LOG_SIZE = "Log Size"
@@ -37,12 +40,22 @@ class Features(object):
 
     def __init__(self, dot_array):
         # dot_array or dot_cloud
-
         self.da = dot_array
+        self._convex_hull = None
+
+    def reset(self):
+        """reset to enforce recalculation of certain parameter """
+        self._convex_hull = None
+
+    @property
+    def convex_hull(self):
+        if self._convex_hull is None:
+            self._convex_hull = ConvexHullDots(self.da.xy, self.da.diameters)
+        return self._convex_hull
 
     @property
     def mean_item_diameter(self):
-        return np.mean(self.da._diameters)
+        return np.mean(self.da.diameters)
 
     @property
     def total_surface_area(self):
@@ -62,11 +75,11 @@ class Features(object):
 
     @property
     def field_area(self):
-        return self.da.convex_hull.scipy_convex_hull.volume
+        return self.convex_hull.scipy_convex_hull.volume
 
     @property
     def numerosity(self):
-        return len(self.da._xy)
+        return len(self.da.xy)
 
     @property
     def converage(self):
@@ -95,17 +108,17 @@ class Features(object):
         return self.field_area / self.numerosity
 
     @property
-    def field_area_full(self):  # FIXME not used (correct?)
-        return self.da.convex_hull.full_field_area
+    def field_area_full(self):  # TODO not tested
+        return self.convex_hull.full_field_area
 
     def _get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
-        dist = spatial.distance.cdist(self.da._xy, self.da._xy)  #
+        dist = spatial.distance.cdist(self.da.xy, self.da.xy)  #
         # matrix with all distance between all points
         if not between_positions:
             # subtract dot diameter
             radii_mtx = np.ones((self.numerosity, 1)) + \
-                        self.da._diameters[:, np.newaxis].T / 2
+                        self.da.diameters[:, np.newaxis].T / 2
             dist -= radii_mtx  # for each row
             dist -= radii_mtx.T  # each each column
         return dist
@@ -116,7 +129,7 @@ class Features(object):
 
         dist = self._get_distance_matrix(between_positions=True)
         # add dot diameter
-        radii_mtx = np.ones((self.numerosity, 1)) + self.da._diameters[:,
+        radii_mtx = np.ones((self.numerosity, 1)) + self.da.diameters[:,
                                                     np.newaxis].T / 2
         dist += radii_mtx  # add to each row
         dist += radii_mtx.T  # add two each column
