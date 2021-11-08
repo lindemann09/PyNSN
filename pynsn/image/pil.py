@@ -46,12 +46,11 @@ def create(dot_array, colours, antialiasing=True,
     dot_array.round(decimals=0)
 
     # draw dots
-    default_dot_colour = colours.default_dot_colour
     for xy, d, c in zip(_convert_pos(dot_array.xy * aa, image_size),
                         dot_array.diameters * aa,
                         dot_array.get_colours()):
         if c.colour is None:
-            c = default_dot_colour
+            c = colours.default_dot_colour
         _draw_dot(img, xy=xy, diameter=d, colour=c.colour)  # todo draw pictures
 
     tmp_colour = colours.field_area.colour

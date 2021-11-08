@@ -17,7 +17,8 @@ install_requires = ["numpy>=1.6",
 extras_require = {
     'gui':                ['PyQt5>=5.14'],
     'pygame':             ["pygame>=1.9"],
-    'expyriment':         ["expyriment>=0.9"]
+    'expyriment':         ["expyriment>=0.9"],
+    'svg':                ["svgwrite>=1.4"]
 }
 
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
