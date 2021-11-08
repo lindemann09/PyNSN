@@ -33,13 +33,13 @@ Installing via `pip`
 --------------------
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn
+python3 -m pip install --index-url https://test.pypi.org/simple/ pynsn
 ```
 
 To generate `pygame` or `expyriment` stimuli install some optional packages
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ psnsn[expyriment]
+python3 -m pip install --index-url https://test.pypi.org/simple/ pynsn[expyriment]
 ```
 
 

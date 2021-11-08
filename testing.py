@@ -13,15 +13,7 @@ da_specs = random_dot_array.Specs(
     item_colour=pynsn.Colour("skyblue"),
     minimum_gap=2)
 
-
-seq = dot_array_sequence.create(specs=da_specs, match_feature=VisualFeatures.ITEM_DIAMETER,
-                                match_value=5,
-                                min_max_numerosity=[10, 50],
-                                round_decimals=0)
-
-
-
-da = dot_array_archive.DotArrayArchive()
-da.add(seq)
-da.save("archive_demo.json", indent=2)
+rda = pynsn.random_dot_array.create(100, da_specs)
+rda.round(decimals=1)
+rda.save("demp.json", indent=2, include_hash=False)
 

@@ -12,21 +12,21 @@ package_name = "pynsn"
 
 install_requires = ["numpy>=1.6",
                     "scipy>=1.0",
-                    "pillow>=5.0"]
+                    "Pillow>=5.0"]
 
 extras_require = {
     'gui':                ['PyQt5>=5.14'],
     'pygame':             ["pygame>=1.9"],
     'expyriment':         ["expyriment>=0.9"],
+    'dataframe':          ["pandas>=1.3"],
     'svg':                ["svgwrite>=1.4"]
 }
 
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["lib", "qt"]:
+for subp in ["dot_array","image", "lib", "qt", "sequence"]:
     packages.append("{}.{}".format(package_name, subp))
-
 
 if _vi.major< 1:
     raise RuntimeError("{0} requires Python 3 or larger.".format(package_name))
