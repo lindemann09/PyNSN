@@ -19,13 +19,14 @@ def load(json_file_name, zipped=False):
     else:
         fl = open(json_file_name, 'r')
 
-    rtn = DotArrayArchive()
+    rtn = DotArraySequenceArchive()
     rtn.dict = json.load(fl)
     fl.close()
     return rtn
 
-class DotArrayArchive(object):
-
+class DotArraySequenceArchive(object):
+    ## should actually use new sqlite achrive
+    
     def __init__(self):
         self.dict = {}
 
