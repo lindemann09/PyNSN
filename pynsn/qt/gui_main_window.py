@@ -10,9 +10,9 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
+from .. import random_dot_array, ItemAttributes, VisualFeatures
 from ..lib import colour
 from ..image import pil
-from ..dot_array import random_dot_array, ItemAttributes, VisualFeatures
 from ..sequence import dot_array_sequence
 
 

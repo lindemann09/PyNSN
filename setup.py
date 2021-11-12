@@ -25,7 +25,7 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["dot_array","image", "lib", "qt", "sequence"]:
+for subp in ["dot_array","image", "lib", "qt", "database", "sequence"]:
     packages.append("{}.{}".format(package_name, subp))
 
 if _vi.major< 1:
