@@ -7,7 +7,7 @@ from ..lib.colour import ImageColours as _ImageColours
 
 def create(dot_array, colours = _ImageColours(), filename="noname.svg"):
     if not isinstance(colours, _ImageColours):
-        raise ValueError("Colours must be a ImageColours instance")
+        raise ValueError("Colours must be a pynsn.ImageColours instance")
 
     image_size = int(round(dot_array.target_array_radius * 2))
     px = "{}px".format(image_size)
@@ -31,8 +31,6 @@ def create(dot_array, colours = _ImageColours(), filename="noname.svg"):
                                     fill=c.colour))
 
     # FIXME TODO draw convex hulls
-
-
     return svgdraw
 
 

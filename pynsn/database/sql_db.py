@@ -34,40 +34,44 @@ class DotArraySQLDB(object):
         conn.close()
 
 
-    def add_array(self, dot_array):
+    def add_arrays(self, dot_arrays):
 
-        attributes = dot_array.as_dict()['attributes']
-        # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
+        if not isinstance(dot_arrays, (list, tuple)):
+            dot_arrays = [dot_arrays]
 
-        # assume single colour
-        colour = attributes[0]["colour"]
         conn = sqlite3.connect(self.db_file)
         cur = conn.cursor()
 
+        for da in dot_arrays:
+            attributes = da.as_dict()['attributes']
+            # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
 
-        sql = "INSERT INTO ARRAYS (" + \
-              "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \
-              ") \n VALUES\n" + \
-              "('{}',{},{},{},{},{},{},{},{},'{}');".format(
-                      dot_array.hash,
-                      dot_array.features.numerosity,
-                      dot_array.features.total_surface_area,
-                      dot_array.features.mean_item_surface_area,
-                      dot_array.features.field_area,
-                      dot_array.features.sparsity,
-                      dot_array.features.logSize,
-                      dot_array.features.logSpacing,
-                      dot_array.features.converage,
-                      colour)
-        cur.execute(sql)
-        conn.commit()
+            # assume single colour
+            colour = attributes[0]["colour"]
 
-        ## add dots
-        sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
-        for xy, d in zip(dot_array.xy, dot_array.diameters):
-            sql += "\n  ('{}', {}, {}, {}),".format(dot_array.hash, xy[0], xy[1], d)
-        sql = sql[:-1] + ";"
-        cur.execute(sql)
+            sql = "INSERT INTO ARRAYS (" + \
+                  "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \
+                  ") \n VALUES\n" + \
+                  "('{}',{},{},{},{},{},{},{},{},'{}');".format(
+                          da.hash,
+                          da.features.numerosity,
+                          da.features.total_surface_area,
+                          da.features.mean_item_surface_area,
+                          da.features.field_area,
+                          da.features.sparsity,
+                          da.features.logSize,
+                          da.features.logSpacing,
+                          da.features.converage,
+                          colour)
+            cur.execute(sql)
+
+            ## add dots
+            sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
+            for xy, d in zip(da.xy, da.diameters):
+                sql += "\n  ('{}', {}, {}, {}),".format(da.hash, xy[0], xy[1], d)
+            sql = sql[:-1] + ";"
+            cur.execute(sql)
+
         conn.commit()
         conn.close()
 
