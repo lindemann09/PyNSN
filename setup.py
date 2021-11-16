@@ -22,6 +22,8 @@ extras_require = {
     'svg':                ["svgwrite>=1.4"]
 }
 
+# FIXME Docu extra requirements, make some packages suggested
+
 entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
 
 packages = [package_name]
@@ -84,5 +86,5 @@ if __name__ == '__main__':
     try:
         import PyQt5
     except:
-        print("Pleae note:\n"
+        print("Please note:\n"
           "Running the PyNSN GUI requires the installation 'PyQt5' ")

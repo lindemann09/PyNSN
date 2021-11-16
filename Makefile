@@ -8,7 +8,7 @@ install:
 
 publish:
 	twine check dist/*
-	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+	twine upload dist/*
 
 clean:
 		@rm -rf build \
