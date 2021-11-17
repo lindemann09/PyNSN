@@ -27,19 +27,20 @@ features:
 * PyQT5 
 * pygame (>=1.9)
 * expyriment (>=0.8)
-
+* pandas>=1.3
+* svgwrite>=1.4
 
 Installing via `pip`
 --------------------
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ pynsn
+python3 -m pip install  pynsn
 ```
 
 To generate `pygame` or `expyriment` stimuli install some optional packages
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ pynsn[expyriment]
+python3 -m pip install pynsn [expyriment]
 ```
 
 

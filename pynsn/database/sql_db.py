@@ -2,8 +2,12 @@ import sqlite3
 
 class DotArraySQLDB(object):
 
-    def __init__(self, db_file):
+    def __init__(self, db_file, setup=False):
         self.db_file = db_file
+        if setup:
+            self.setup()
+
+    def setup(self):
         conn = sqlite3.connect(self.db_file)
 
         cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -32,7 +36,6 @@ class DotArraySQLDB(object):
 
         cursor.close()
         conn.close()
-
 
     def add_arrays(self, dot_arrays):
 
