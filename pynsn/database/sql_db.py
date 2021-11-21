@@ -37,6 +37,12 @@ class DotArraySQLDB(object):
         cursor.close()
         conn.close()
 
+    def vacuum(self):
+        conn = sqlite3.connect(self.db_file)
+        conn.execute("VACUUM;")
+        conn.close()
+
+
     def add_arrays(self, dot_arrays):
 
         if not isinstance(dot_arrays, (list, tuple)):

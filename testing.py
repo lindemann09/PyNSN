@@ -3,7 +3,7 @@ import os
 from pynsn import VisualFeatures, dot_array, ImageColours
 from pynsn.dot_array import random_dot_array
 from pynsn.sequence import dot_array_archive, dot_array_sequence
-
+from pynsn.image import svg
 
 da_specs = random_dot_array.Specs(
     target_area_radius=200,
@@ -15,5 +15,8 @@ da_specs = random_dot_array.Specs(
 
 rda = pynsn.random_dot_array.create(100, da_specs)
 rda.round(decimals=1)
-rda.save("demp.json", indent=2, include_hash=False)
+#sv = svg.create(rda, filename="demo.svg")
+#sv.save()
+print(rda.json(include_hash=True))
+
 
