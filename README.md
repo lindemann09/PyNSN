@@ -34,14 +34,11 @@ Installing via `pip`
 --------------------
 
 ```
-python3 -m pip install  pynsn
+python3 -m pip install pynsn
 ```
 
-To generate `pygame` or `expyriment` stimuli install some optional packages
-
-```
-python3 -m pip install pynsn [expyriment]
-```
+To generate [Pygame](https://www.pygame.org/news) or [Expyriment](http://expyriment.org) stimuli, please install the
+respective packages.
 
 
 
