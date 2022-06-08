@@ -52,3 +52,4 @@ venv/
 
 test-*
 *.json
+*.svg
