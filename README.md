@@ -17,18 +17,18 @@ Dependencies
 ------------
 
 * Python 3 (>=3.5)
+* PyQT5 
 * numpy (>=1.6)
 * scipy (>=1.0)
 * pillow (>=5.0)
+* svgwrite>=1.4
+* pandas>=1.3
 
 Additional Python packages, which are optional and required only for some 
 features:
 
-* PyQT5 
 * pygame (>=1.9)
 * expyriment (>=0.8)
-* pandas>=1.3
-* svgwrite>=1.4
 
 Installing via `pip`
 --------------------
@@ -51,13 +51,13 @@ RUN GUI tool
 Note: Using the PyNSN-GUI requires the installation of `PyQt5` 
 
 ```
-python3 -m pynsn.gui
+python3 -m pynsn
 ```
 
 or if installed correctly:
 
 ```
-pynsn-gui
+pynsn
 ```
 
 
