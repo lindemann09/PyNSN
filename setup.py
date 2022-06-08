@@ -24,7 +24,7 @@ extras_require = {
 
 # FIXME Docu extra requirements, make some packages suggested
 
-entry_points = {'console_scripts': ['pynsn-gui=pynsn.gui:start']}
+entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]
 for subp in ["dot_array","image", "lib", "qt", "database", "sequence"]:
