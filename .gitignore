@@ -49,6 +49,7 @@ venv/
 .bak
 .Rproj.user
 
+.ipynb*/
 
 test-*
 *.json
