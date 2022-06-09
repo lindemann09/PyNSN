@@ -23,7 +23,6 @@ from .dot_array.visual_features import VisualFeatures
 from .dot_array.match import FeatureMatcher # just for setting ITERATIVE_CONVEX_HULL_MODIFICATION and TAKE_RANDOM_DOT_FROM_CONVEXHULL toDO maybe another solution possible
 from .dot_array import random_dot_array
 from .lib.colour import Colour, ImageColours
-from .image import pil
 
 #Further modules
 # gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, dot_array_archive

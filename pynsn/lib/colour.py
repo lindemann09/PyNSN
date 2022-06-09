@@ -45,7 +45,7 @@ class Colour(object):
             self._colour = value._colour
         else:
             try:
-                Colour.hextriplet2rgb(value)  # check if vaild hextriplet
+                Colour.hextriplet2rgb(value)  # check if valid hextriplet
                 if value[0] != "#":
                     value = "#" + value
                 self._colour = value.upper()

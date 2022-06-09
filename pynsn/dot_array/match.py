@@ -8,7 +8,7 @@ _DEFAULT_MATCH_FA2TA_RATIO = 0.5
 
 
 class FeatureMatcher(object):
-    # some parameter for matching field arrea
+    # some parameter for matching field array
     ITERATIVE_CONVEX_HULL_MODIFICATION = False  # matching convexhull TODO DOCU
     # and matching log spacing
     TAKE_RANDOM_DOT_FROM_CONVEXHULL = True  # TODO DOCU, maybe method for modification, set via GUI

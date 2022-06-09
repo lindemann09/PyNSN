@@ -140,7 +140,7 @@ class GUIMainWindow(QMainWindow):
                                                   occupied_space=self.dot_array)
             data_array2.set_attributes(
                 ItemAttributes(colour=self.main_widget.dot_colour2.text))
-            self.dot_array.join(data_array2, realign=False)
+            self.dot_array.join(data_array2)
 
         self.dot_array.round(decimals=self.settings.rounding_decimals.value)
         self._image = None
