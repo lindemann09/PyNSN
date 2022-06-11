@@ -33,7 +33,7 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
             self.attributes = attributes
 
     def distance(self, d):
-        """Return Euclidean distance to the dot d. The function take the
+        """Return Euclidean distance to the dot d. The function takes the
         diameter of the points into account.
 
         Parameters
@@ -120,17 +120,7 @@ class Rectangle(Coordinate2D):
         return False
 
     def distance(self, rect):
-        """Return Euclidean distance to other rect. The function take the
-        diameter of the points into account.
-
-        Parameters
-        ----------
-        d : Dot
-
-        Returns
-        -------
-        distance : float or -1 if overlapping
-
+        """
         """
 
         # 1. see if they overlap
