@@ -500,7 +500,7 @@ class DotArray(_GenericDotArray):
 
         Parameter
         ---------
-        attributes:  attribute (e.g. Colour or string) or list of attributes
+        attributes:  attribute (string) or list of attributes
 
         """
 

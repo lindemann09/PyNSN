@@ -21,22 +21,24 @@ DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_diameter_range=[5, 40],
                                             item_diameter_std=8,
                                             minimum_gap=2),
-                 colour .ImageColours(target_area="#3e3e3e",
+                 colour.ImageColours(target_area="#3e3e3e",
                                       field_area=None,
                                       field_area_outer=None,
                                       center_of_mass=None,
                                       center_of_outer_positions=None,
+                                      default_dot_colour="gray",
                                       background="gray"))
 
 ICON = (11, random_dot_array.Specs(target_area_radius=200,
                                    item_diameter_mean=35,
                                    item_diameter_range=[5, 80],
                                    item_diameter_std=20),
-        colour .ImageColours(target_area="#3e3e3e",
+        colour.ImageColours(target_area="#3e3e3e",
                              field_area=None,
                              field_area_outer="expyriment_orange",
                              center_of_mass=None,
                              center_of_outer_positions=None,
+                             default_dot_colour="lime",
                              background=None))
 
 
@@ -153,6 +155,7 @@ class GUIMainWindow(QMainWindow):
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
+                default_dot_colour=para.default_dot_colour,
                 background=para.background)
 
             self._image = pil.create(dot_array=self.dot_array,
@@ -176,7 +179,6 @@ class GUIMainWindow(QMainWindow):
 
     def get_image_colours(self):
         # check colour input
-
         try:
             colour_area = colour.Colour(self.settings.colour_area.text)
         except:
@@ -206,6 +208,7 @@ class GUIMainWindow(QMainWindow):
                                    field_area_outer=colour_convex_hull_dots,
                                    center_of_mass=None,
                                    center_of_outer_positions=None,
+                                   default_dot_colour=self.settings.default_dot_colour,
                                    background=colour_background)
 
     def pixmap(self):
@@ -300,11 +303,12 @@ class GUIMainWindow(QMainWindow):
         """
         try:
             colour_dot = colour.Colour(self.main_widget.dot_colour.text)
+            self.settings.default_dot_colour = colour_dot
         except:
-            colour_dot = DEFAULT_ARRAY[1].item_attributes.colour
-            self.main_widget.dot_colour.text = colour_dot
+            colour_dot = self.settings.default_dot_colour
+            self.main_widget.dot_colour.text = colour_dot.colour
 
-        self.dot_array.set_attributes(colour_dot)
+        self.dot_array.set_attributes(colour_dot.colour)
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):

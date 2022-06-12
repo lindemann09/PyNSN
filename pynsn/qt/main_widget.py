@@ -10,28 +10,30 @@ from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
 
 class MainWidget(QWidget):
 
-    def __init__(self, parent, settings, number, generator):
+    def __init__(self, parent, settings, number, da_specs):
         super(MainWidget, self).__init__(parent)
         self.settings = settings
-        self.initUI(number, generator)
 
-    def initUI(self, number, generator):
+        self.initUI(number, da_specs)
+
+    def initUI(self, number, da_specs):
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 0)
 
-        self.target_array_radius = LabeledNumberInput("Max radius", generator.target_array_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", generator.item_diameter_mean)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", generator.item_diameter_std)
+        self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.item_diameter_mean)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.item_diameter_std)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=generator.item_diameter_range[0],
-                                                               value2=generator.item_diameter_range[1])
+                                                               value1=da_specs.item_diameter_range[0],
+                                                               value2=da_specs.item_diameter_range[1])
 
-        self.minimum_gap = LabeledNumberInput("Minimum gap", generator.minimum_gap)
+        self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
 
-        self.dot_colour = LabeledInput("Colour", text="red", case_sensitive=False)
-        self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
+        self.dot_colour = LabeledInput("Colour", text=self.settings.default_dot_colour,
+                                       case_sensitive=False)
+        self.dot_colour2 = LabeledInput("Colour 2", text="", case_sensitive=False)
 
         ctrl = QVBoxLayout()
         ctrl.addWidget(self.btn_generate)
