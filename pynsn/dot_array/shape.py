@@ -4,12 +4,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import math
 from ..lib.geometry import lines_intersect, distance_between_edge_and_point
 from ..lib.coordinate2D import Coordinate2D
-from .item_attributes import ItemAttributes
 
 
-class Dot(Coordinate2D):  # TODO becomes maybe an item
+class Dot(Coordinate2D):
 
-    def __init__(self, x=0, y=0, diameter=1, attributes=None):
+    def __init__(self, x=0, y=0, diameter=1, attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -20,17 +19,14 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
         x : numeric (default=0)
         y : numeric (default=0)
         diameter : numeric (default=1)
-        attributes : ItemAttributes
+        attribute : attribute (string)
         """
 
         Coordinate2D.__init__(self, x=x, y=y)
         self.diameter = diameter
-        if attributes is None:
-            self.attributes = ItemAttributes()
-        elif not isinstance(attributes, ItemAttributes):
-            raise TypeError("features must be a ItemFeatures, not {}".format(type(attributes).__name__))
-        else:
-            self.attributes = attributes
+        if attribute is not None and not isinstance(attribute, str):
+            raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
+        self.attribute = attribute
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the
@@ -60,7 +56,7 @@ class Dot(Coordinate2D):  # TODO becomes maybe an item
 
 class Rectangle(Coordinate2D):
 
-    def __init__(self, center_x=0, center_y=0, width=0, height=0, attributes=None):
+    def __init__(self, center_x=0, center_y=0, width=0, height=0, attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -72,14 +68,13 @@ class Rectangle(Coordinate2D):
         y : numeric (default=0)
         width : numeric (default=1)
         height : numeric (default=1)
+        attribute : attribute (string)
         """
 
         Coordinate2D.__init__(self, x=center_x, y=center_y)
-        if attributes is None:
-            self.attributes = ItemAttributes()
-        else:
-            self.attributes = attributes
-
+        if attribute is not None and not isinstance(attribute, str):
+            raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
+        self.attribute = attribute
         self.height = height
         self.width = width
 
@@ -98,7 +93,6 @@ class Rectangle(Coordinate2D):
     @property
     def bottom(self):
         return self.y - 0.5 * self.height
-
 
     def iter_edges(self):
         yield self.left, self.top

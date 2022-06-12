@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.9.3-2'
+__version__ = '0.9.4'
 
 from sys import version_info as _python_version_info
 if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 5):
@@ -17,7 +17,6 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 5):
 
 
 from .dot_array.dot_array import DotArray
-from .dot_array.item_attributes import ItemAttributes
 from .dot_array.shape import Dot, Rectangle
 from .dot_array.visual_features import VisualFeatures
 from .dot_array.match import FeatureMatcher # just for setting ITERATIVE_CONVEX_HULL_MODIFICATION and TAKE_RANDOM_DOT_FROM_CONVEXHULL toDO maybe another solution possible

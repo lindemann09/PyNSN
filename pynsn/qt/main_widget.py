@@ -30,7 +30,7 @@ class MainWidget(QWidget):
 
         self.minimum_gap = LabeledNumberInput("Minimum gap", generator.minimum_gap)
 
-        self.dot_colour = LabeledInput("Colour", text=generator.item_attributes.colour, case_sensitive=False)
+        self.dot_colour = LabeledInput("Colour", text="red", case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="skyblue", case_sensitive=False)
 
         ctrl = QVBoxLayout()

@@ -13,7 +13,6 @@ from scipy import spatial
 
 from ..lib import misc, geometry
 from pynsn.dot_array.shape import Dot
-from .item_attributes import ItemAttributes
 from .visual_features import VisualFeatures
 from .match import FeatureMatcher
 
@@ -32,7 +31,8 @@ class _DotCloud(object):
 
         self._xy = np.array([])
         self._diameters = np.array([])
-        self.features = VisualFeatures(self)
+        self._match = FeatureMatcher(self)
+        self._features = VisualFeatures(self)
 
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
@@ -46,7 +46,11 @@ class _DotCloud(object):
 
     @property
     def match(self):
-        return FeatureMatcher(self)
+        return self._match
+
+    @property
+    def features(self):
+        return self._features
 
     @property
     def xy_rounded_integer(self):
@@ -215,13 +219,13 @@ class _DotCloud(object):
 
 
 class _GenericDotArray(_DotCloud):
-    """Dot array without attributes such as coloZZr"""
+    """Generic Dot array is restricted to a certain area, but it has not attributes"""
 
 
     def __init__(self, target_array_radius, minimum_gap):
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
-        This features allow find shuffling free position and mathing
+        This features allow find shuffling free position and matching
         features.
 
         target_array_radius or dot_array_file needs to be define."""
@@ -477,16 +481,18 @@ class _GenericDotArray(_DotCloud):
 
 
 class DotArray(_GenericDotArray):
-    """Dot array with attributes"""
+    """Dot array with attributes
+    """
 
     def __init__(self, target_array_radius, minimum_gap):
-        """ Dot array adds attribues, such as colour to a SimpleDotArray."""
+        """ Dot array adds attributes, such as colour to a SimpleDotArray."""
 
         super().__init__(target_array_radius=target_array_radius,
                          minimum_gap=minimum_gap)
         self._attributes = np.array([])
 
-    def get_attributes(self):
+    @property
+    def attributes(self):
         return self._attributes
 
     def set_attributes(self, attributes):
@@ -494,11 +500,9 @@ class DotArray(_GenericDotArray):
 
         Parameter
         ---------
-        attributes:  ItemAttributes or list of ItemAttributes
+        attributes:  attribute (e.g. Colour or string) or list of attributes
 
         """
-
-        ItemAttributes.check_type(attributes)
 
         if isinstance(attributes, (list, tuple)):
             if len(attributes) != self.features.numerosity:
@@ -508,25 +512,17 @@ class DotArray(_GenericDotArray):
         else:
             self._attributes = np.array([attributes] * self.features.numerosity)
 
-    def get_colours(self):
-        return list(map(lambda x:x.colour, self._attributes))
-
     def clear(self):
         super().clear()
         self._attributes = np.array([])
 
     def append(self, xy, item_diameters, attributes=None):
-        """append dots using numpy array
-        attributes ItemAttributes or a list of ItemAttributes"""
+        """append dots with attribvute"""
 
         item_diameters = misc.numpy_vector(item_diameters)
         super().append(xy=xy, item_diameters=item_diameters)
 
-        if attributes is None:
-            attributes = ItemAttributes()
-
-        ItemAttributes.check_type(attributes)
-        if isinstance(attributes, ItemAttributes):
+        if not isinstance(attributes, (tuple, list)):
             attributes = [attributes] * len(item_diameters)
 
         if len(attributes) != len(item_diameters):
@@ -559,7 +555,7 @@ class DotArray(_GenericDotArray):
         assert isinstance(dot, Dot)
         self.append(xy=[dot.x, dot.y],
                     item_diameters=dot.diameter,
-                    attributes=dot.attributes)
+                    attributes=dot.attribute)
 
     def get_dots(self, indices=None, diameter=None, item_attributes=None):
         """returns all dots
@@ -582,29 +578,27 @@ class DotArray(_GenericDotArray):
             i += 1
             if (indices is not None and i not in indices) or \
                     (diameter is not None and dia != diameter) or \
-                    (item_attributes is not None and att.is_different(
-                        item_attributes)):
+                    (item_attributes is not None and att !=  item_attributes):
                 continue
 
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attributes=att))
+            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attribute=att))
         return rtn
 
     def join(self, dot_array):
         """add another dot arrays"""
 
         self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
-                    attributes=dot_array.get_attributes())
+                    attributes=dot_array.attributes)
 
-    def split_array_by_colour(self):
+    def split_array_by_colour(self): #FIXME atributes
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self.get_colours()):
+        for c in np.unique(self.attributes):
             if c is not None:
                 da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
-                for d in self.get_dots(
-                        item_attributes =ItemAttributes(colour=c)):
+                for d in self.get_dots(item_attributes =c):
                     da.append_dot(d)
                 rtn.append(da)
         return rtn
@@ -612,19 +606,19 @@ class DotArray(_GenericDotArray):
 
     def get_features_split_by_colours(self): # Todo: Is this function required
         """returns None if uni-color or no color"""
-        if len(np.unique(self.get_colours())) == 1:
+        if len(np.unique(self.attributes)) == 1:
             return None
 
         dicts = []
         for da in self.split_array_by_colour():
             feat = da.features.get_features_dict()
-            feat["hash"] = self.hash + str(da.get_colours()[0])
+            feat["hash"] = self.hash + str(da.attributes[0])
             dicts.append(feat)
         return misc.join_dict_list(dicts)
 
     def get_csv(self, variable_names=True,
                 hash_column=True, num_idx_column=True,
-                colour_column=False):  # todo print features
+                attribute_column=False):  # todo print features
         """Return the dot array as csv text
 
         Parameter
@@ -641,12 +635,11 @@ class DotArray(_GenericDotArray):
             if num_idx_column:
                 rtn += u"num_id,"
             rtn += u"x,y,diameter"
-            if colour_column:
-                rtn += u",colour"
+            if attribute_column:
+                rtn += u",attribute"
             rtn += u"\n"
 
         obj_id = self.hash
-        colours = self.get_colours()
         for cnt in range(len(self._xy)):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
@@ -657,31 +650,24 @@ class DotArray(_GenericDotArray):
             #       num_format % self._diameters[cnt]
             rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
                                      self._diameters[cnt])
-            if colour_column:
-                rtn += ", {}".format(colours[cnt])
+            if attribute_column:
+                rtn += ", {}".format(self.attributes[cnt])
             rtn += "\n"
         return rtn
 
     def as_dict(self):
         d = super().as_dict()
         if misc.is_all_equal(self._attributes):
-            att = [self._attributes[0].as_dict()]
+            d.update({"attributes": self._attributes[0]})
         else:
-            att = list(map(lambda x:x.as_dict(), self._attributes))
-        d.update({"attributes": att})
+            d.update({"attributes": self._attributes.tolist()})
         return d
 
-    def read_from_dict(self, dict):
-        super().read_from_dict(dict)
-        if len(dict["attributes"]) == 1:
-            ia = ItemAttributes()
-            ia.read_from_dict(dict["attributes"][0])
-            att = [ia] * self.features.numerosity
+    def read_from_dict(self, d):
+        super().read_from_dict(d)
+        if not isinstance(d["attributes"], (list, tuple)):
+            att = [d["attributes"]] * self.features.numerosity
         else:
-            att = []
-            for d in dict["attributes"]:
-                ia = ItemAttributes()
-                ia.read_from_dict(d)
-                att.append(ia)
+            att = d["attributes"]
 
         self._attributes = np.array(att)

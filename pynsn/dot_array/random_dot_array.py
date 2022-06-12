@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy as _copy
 from ..lib import misc as _misc
-from .item_attributes import ItemAttributes as _ItemAttributes
+from ..lib.colour import Colour as _Colour
 from .dot_array import DotArray as _DotArray
 
 
@@ -13,7 +13,6 @@ class Specs(object):
                  item_diameter_mean,
                  item_diameter_range=None,
                  item_diameter_std=None,
-                 item_colour=None,  # todo feature
                  minimum_gap=2,
                  min_distance_area_boarder=0):
         # minim gap
@@ -44,14 +43,12 @@ class Specs(object):
         self.item_diameter_mean = item_diameter_mean
         self.item_diameter_std = item_diameter_std
         self.min_distance_area_boarder = min_distance_area_boarder
-        self.item_attributes = _ItemAttributes(colour=item_colour)
 
     def as_dict(self):
         return {"target_array_radius": self.target_array_radius,
                 "dot_diameter_mean": self.item_diameter_mean,
                 "dot_diameter_range": self.item_diameter_range,
                 "dot_diameter_std": self.item_diameter_std,
-                "dot_colour": str(self.item_attributes.colour),  ##todo feature
                 "minimum_gap": self.minimum_gap,
                 "min_distance_area_boarder": self.min_distance_area_boarder}
 
@@ -60,7 +57,7 @@ class Specs(object):
         return _copy.deepcopy(self)
 
 
-def create(n_dots, specs, occupied_space=None):
+def create(n_dots, specs, attributes=None, occupied_space=None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     returns None if not possible
@@ -85,7 +82,8 @@ def create(n_dots, specs, occupied_space=None):
                                             specs.min_distance_area_boarder)
         except:
             return None
-        rtn.append(xy=xy, item_diameters=dia,
-                     attributes=specs.item_attributes)
+        rtn.append(xy=xy, item_diameters=dia)
 
+    if attributes is not None:
+        rtn.set_attributes(attributes=attributes)
     return rtn

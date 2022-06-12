@@ -7,12 +7,13 @@ from functools import total_ordering
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
+_DEFAULT_DOT_COLOUR = "lime" # used if no color specified in dot array
 
 @total_ordering
 class Colour(object):
 
-    def __init__(self, colour=None):
-        self.colour = colour
+    def __init__(self, colour):
+        self.colour = colour # using setter
 
     def __repr__(self):
         return "Colour({})".format(self.colour)
@@ -38,7 +39,6 @@ class Colour(object):
 
     @colour.setter
     def colour(self, value):
-
         if value is None:
             self._colour = None
         elif isinstance(value, Colour):
@@ -235,8 +235,7 @@ class ImageColours(object):
                  center_of_mass=None,
                  center_of_outer_positions=None,
                  background=None,
-                 default_dot_colour=Colour("lightgreen"),  # used if no color
-                 # specified in dot array
+                 default_dot_colour=_DEFAULT_DOT_COLOUR,
                  ):
 
         self.target_area = Colour(target_area)
@@ -254,5 +253,5 @@ class ImageColours(object):
                 "colour_center_of_mass": self.center_of_mass.colour,
                 "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
                 "colour_background": self.background.colour,
-                "default_dot_colour": self.default_dot_colour.colour}
+                "dot_colour": self.default_dot_colour.colour}
 
