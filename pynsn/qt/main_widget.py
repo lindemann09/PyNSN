@@ -20,7 +20,7 @@ class MainWidget(QWidget):
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
-        self.number2 = LabeledNumberInput("Number 2", 0)
+        self.number2 = LabeledNumberInput("Number 2", 5)
 
         self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
         self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.item_diameter_mean)
@@ -33,7 +33,7 @@ class MainWidget(QWidget):
 
         self.dot_colour = LabeledInput("Colour", text=self.settings.default_dot_colour,
                                        case_sensitive=False)
-        self.dot_colour2 = LabeledInput("Colour 2", text="", case_sensitive=False)
+        self.dot_colour2 = LabeledInput("Colour 2", text="expyriment_orange", case_sensitive=False)
 
         ctrl = QVBoxLayout()
         ctrl.addWidget(self.btn_generate)

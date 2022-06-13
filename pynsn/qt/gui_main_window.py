@@ -21,12 +21,12 @@ DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                             item_diameter_range=[5, 40],
                                             item_diameter_std=8,
                                             minimum_gap=2),
-                 colour.ImageColours(target_area="#3e3e3e",
+                 colour.ImageColours(target_area="#303030",
                                       field_area=None,
                                       field_area_outer=None,
                                       center_of_mass=None,
                                       center_of_outer_positions=None,
-                                      default_dot_colour="gray",
+                                      default_dot_colour="green",
                                       background="gray"))
 
 ICON = (11, random_dot_array.Specs(target_area_radius=200,
@@ -235,7 +235,7 @@ class GUIMainWindow(QMainWindow):
         txt = self.dot_array.features.get_features_text(extended_format=True,
                                                         with_hash=True)
         if self.settings.bicoloured.isChecked():
-            for da in self.dot_array.split_array_by_colour():
+            for da in self.dot_array.split_array_by_attributes():
                 txt += "Attribute {}\n".format(da.attributes[0])
                 txt += da.features.get_features_text(extended_format=True,
                                                      with_hash=False)
@@ -258,11 +258,11 @@ class GUIMainWindow(QMainWindow):
     def save_array(self):
         """"""
 
-        filename, extension = QFileDialog.getSaveFileNameAndFilter(
+        filename, extension = QFileDialog.getSaveFileName(
             self,
-            'Save file',
-            "",
-            "Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
+            caption='Save file',
+            directory=".",
+            filter="Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
 
         if len(filename)>0:
             filename = os.path.abspath(filename)
@@ -296,7 +296,8 @@ class GUIMainWindow(QMainWindow):
         """"""
         result = self.settings.exec_()
         self.main_widget.updateUI()
-        self.show_current_image(remake_image=True)
+        self.action_generate_btn()
+        #self.show_current_image(remake_image=True)
 
     def action_dot_colour_change(self):
         """

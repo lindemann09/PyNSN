@@ -13,7 +13,8 @@ _DEFAULT_DOT_COLOUR = "lime" # used if no color specified in dot array
 class Colour(object):
 
     def __init__(self, colour):
-        self.colour = colour # using setter
+        self._colour = None
+        self.set(colour) # using setter
 
     def __repr__(self):
         return "Colour({})".format(self.colour)
@@ -37,8 +38,7 @@ class Colour(object):
     def colour(self):
         return self._colour
 
-    @colour.setter
-    def colour(self, value):
+    def set(self, value):
         if value is None:
             self._colour = None
         elif isinstance(value, Colour):

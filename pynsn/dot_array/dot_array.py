@@ -586,15 +586,17 @@ class DotArray(_GenericDotArray):
 
     def join(self, dot_array):
         """add another dot arrays"""
-
         self.append(xy=dot_array._xy, item_diameters=dot_array._diameters,
                     attributes=dot_array.attributes)
 
-    def split_array_by_colour(self): #FIXME atributes
+    def split_array_by_attributes(self):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         rtn = []
-        for c in np.unique(self.attributes):
+        att = self.attributes
+        att[np.where(att==None )] = "None"
+
+        for c in np.unique(att):
             if c is not None:
                 da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
@@ -604,17 +606,6 @@ class DotArray(_GenericDotArray):
         return rtn
 
 
-    def get_features_split_by_colours(self): # Todo: Is this function required
-        """returns None if uni-color or no color"""
-        if len(np.unique(self.attributes)) == 1:
-            return None
-
-        dicts = []
-        for da in self.split_array_by_colour():
-            feat = da.features.get_features_dict()
-            feat["hash"] = self.hash + str(da.attributes[0])
-            dicts.append(feat)
-        return misc.join_dict_list(dicts)
 
     def get_csv(self, variable_names=True,
                 hash_column=True, num_idx_column=True,
