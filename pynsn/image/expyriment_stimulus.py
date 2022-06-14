@@ -6,7 +6,7 @@ from multiprocessing import Pool as _Pool
 
 from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
-from ..lib import colour
+from ..lib import colour as _colour
 from . import pil as _pil_image
 
 
@@ -14,10 +14,10 @@ class ExprimentDotArray(_Canvas):
 
     def __init__(self, dot_array,
                  position=(0, 0),
-                 colours = colour.ImageColours(),
+                 colours = _colour.ImageColours(),
                  antialiasing=True):
 
-        if not isinstance(colours, colour.ImageColours):
+        if not isinstance(colours, _colour.ImageColours):
             raise ValueError("Colours must be a ImageColours instance")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
@@ -51,12 +51,12 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colours = colour.ImageColours(),
+                 colours = _colour.ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):
 
-        if not isinstance(colours, colour.ImageColours):
+        if not isinstance(colours, _colour.ImageColours):
             raise ValueError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence

@@ -10,35 +10,35 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import random_dot_array, ItemAttributes, VisualFeatures
+from .. import random_dot_array,  VisualFeatures
 from ..lib import colour
 from ..image import pil
 from ..sequence import dot_array_sequence
 
 
 DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
-                                            item_colour="lime",
                                             item_diameter_mean=15,
                                             item_diameter_range=[5, 40],
                                             item_diameter_std=8,
                                             minimum_gap=2),
-                 colour .ImageColours(target_area="#3e3e3e",
+                 colour.ImageColours(target_area="#303030",
                                       field_area=None,
                                       field_area_outer=None,
                                       center_of_mass=None,
                                       center_of_outer_positions=None,
+                                      default_dot_colour="green",
                                       background="gray"))
 
 ICON = (11, random_dot_array.Specs(target_area_radius=200,
-                                   item_colour="lime",
                                    item_diameter_mean=35,
                                    item_diameter_range=[5, 80],
                                    item_diameter_std=20),
-        colour .ImageColours(target_area="#3e3e3e",
+        colour.ImageColours(target_area="#3e3e3e",
                              field_area=None,
                              field_area_outer="expyriment_orange",
                              center_of_mass=None,
                              center_of_outer_positions=None,
+                             default_dot_colour="lime",
                              background=None))
 
 
@@ -138,8 +138,7 @@ class GUIMainWindow(QMainWindow):
             data_array2 = random_dot_array.create(n_dots=self.main_widget.number2.value,
                                                   specs=self.get_specs(),
                                                   occupied_space=self.dot_array)
-            data_array2.set_attributes(
-                ItemAttributes(colour=self.main_widget.dot_colour2.text))
+            data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
         self.dot_array.round(decimals=self.settings.rounding_decimals.value)
@@ -156,6 +155,7 @@ class GUIMainWindow(QMainWindow):
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
+                default_dot_colour=para.default_dot_colour,
                 background=para.background)
 
             self._image = pil.create(dot_array=self.dot_array,
@@ -169,15 +169,7 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_specs(self):
-
-        try:
-            colour_dot = colour.Colour(self.main_widget.dot_colour.text)
-        except:
-            colour_dot = DEFAULT_ARRAY[1].item_attributes.colour
-            self.main_widget.dot_colour.text = colour_dot
-
         return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
-                                      item_colour=colour_dot,
                                       item_diameter_mean=self.main_widget.item_diameter_mean.value,
                                       item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
@@ -187,7 +179,6 @@ class GUIMainWindow(QMainWindow):
 
     def get_image_colours(self):
         # check colour input
-
         try:
             colour_area = colour.Colour(self.settings.colour_area.text)
         except:
@@ -217,6 +208,7 @@ class GUIMainWindow(QMainWindow):
                                    field_area_outer=colour_convex_hull_dots,
                                    center_of_mass=None,
                                    center_of_outer_positions=None,
+                                   default_dot_colour=self.settings.default_dot_colour,
                                    background=colour_background)
 
     def pixmap(self):
@@ -243,8 +235,8 @@ class GUIMainWindow(QMainWindow):
         txt = self.dot_array.features.get_features_text(extended_format=True,
                                                         with_hash=True)
         if self.settings.bicoloured.isChecked():
-            for da in self.dot_array.split_array_by_colour():
-                txt += "Colour {}\n".format(da.get_colours()[0])
+            for da in self.dot_array.split_array_by_attributes():
+                txt += "Attribute {}\n".format(da.attributes[0])
                 txt += da.features.get_features_text(extended_format=True,
                                                      with_hash=False)
         if clear_field:
@@ -266,11 +258,11 @@ class GUIMainWindow(QMainWindow):
     def save_array(self):
         """"""
 
-        filename, extension = QFileDialog.getSaveFileNameAndFilter(
+        filename, extension = QFileDialog.getSaveFileName(
             self,
-            'Save file',
-            "",
-            "Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
+            caption='Save file',
+            directory=".",
+            filter="Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
 
         if len(filename)>0:
             filename = os.path.abspath(filename)
@@ -304,11 +296,20 @@ class GUIMainWindow(QMainWindow):
         """"""
         result = self.settings.exec_()
         self.main_widget.updateUI()
-        self.show_current_image(remake_image=True)
+        self.action_generate_btn()
+        #self.show_current_image(remake_image=True)
 
     def action_dot_colour_change(self):
-        """"""
-        self.dot_array.set_attributes(self.get_specs().item_attributes)
+        """
+        """
+        try:
+            colour_dot = colour.Colour(self.main_widget.dot_colour.text)
+            self.settings.default_dot_colour = colour_dot
+        except:
+            colour_dot = self.settings.default_dot_colour
+            self.main_widget.dot_colour.text = colour_dot.colour
+
+        self.dot_array.set_attributes(colour_dot.colour)
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):
