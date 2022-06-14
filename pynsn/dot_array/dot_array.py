@@ -376,7 +376,7 @@ class _GenericDotArray(_DotCloud):
             #  proposal_polar =  np.array([random.random(), random.random()]) *
             #                      (target_radius, TWO_PI)
             #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-            # note: np.random produceing identical numbers under multiprocessing
+            #Note! np.random generates identical numbers under multiprocessing
 
             proposal_xy = np.array([random.random(), random.random()]) \
                           * 2 * self.target_array_radius - self.target_array_radius
