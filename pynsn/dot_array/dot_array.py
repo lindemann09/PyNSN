@@ -92,8 +92,8 @@ class _DotCloud(object):
             self._xy = self._xy.astype(int_type)
             self._diameters = self._diameters.astype(int_type)
 
-
     def json(self, indent=None, include_hash=False):
+        """"""
         d = self.as_dict()
         if include_hash:
             d.update({"hash": self.hash})
@@ -102,7 +102,7 @@ class _DotCloud(object):
         return json.dumps(d, indent=indent)
 
     def save(self, json_file_name, indent=None, include_hash=False):
-
+        """"""
         with open(json_file_name, 'w') as fl:
             fl.write(self.json(indent=indent, include_hash=include_hash))
 

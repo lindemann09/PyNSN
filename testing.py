@@ -12,13 +12,18 @@ da_specification = random_dot_array.Specs(
 
 # generate on array with 100 dots
 stimulus = random_dot_array.create(12, da_specification)
+print(stimulus.as_dict())
 
-stimulus2 = random_dot_array.create(23, da_specification, attributes="yellow",
+exit()
+
+
+stimulus2 = random_dot_array.create(23, da_specification, attributes="skyblue",
                                     occupied_space=stimulus)
 
-#stimulus.join(stimulus2)
+
+
+stimulus.join(stimulus2)
 print(stimulus.split_array_by_attributes())
-#stimulus.set_attributes("red")
 print(stimulus.features.get_features_text())
 
 stimulus.save("mystim.json", indent=2)

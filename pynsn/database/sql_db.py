@@ -1,6 +1,8 @@
 import sqlite3
+from ..lib.colour import Colour, DEFAULT_DOT_COLOUR
 
 class DotArraySQLDB(object):
+    """DotArray DB (two tables: arrays, dots)"""
 
     def __init__(self, db_file, setup=False):
         self.db_file = db_file
@@ -42,7 +44,6 @@ class DotArraySQLDB(object):
         conn.execute("VACUUM;")
         conn.close()
 
-
     def add_arrays(self, dot_arrays):
 
         if not isinstance(dot_arrays, (list, tuple)):
@@ -53,10 +54,14 @@ class DotArraySQLDB(object):
 
         for da in dot_arrays:
             attributes = da.as_dict()['attributes']
-            # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
 
-            # assume single colour
-            colour = attributes[0]["colour"]
+            # assuming single colour dot arrays
+            # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
+            try:
+                colour = Colour(attributes[0])
+            except:
+                # if attribute is no colour, use default coolour
+                colour = Colour(DEFAULT_DOT_COLOUR)
 
             sql = "INSERT INTO ARRAYS (" + \
                   "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \
@@ -71,7 +76,7 @@ class DotArraySQLDB(object):
                           da.features.logSize,
                           da.features.logSpacing,
                           da.features.converage,
-                          colour)
+                          colour.colour)
             cur.execute(sql)
 
             ## add dots
