@@ -2,7 +2,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from ..lib.geometry import lines_intersect, distance_between_edge_and_point
 from ..lib.coordinate2D import Coordinate2D
 
 
@@ -94,59 +93,13 @@ class Rectangle(Coordinate2D):
     def bottom(self):
         return self.y - 0.5 * self.height
 
-    def iter_edges(self):
-        yield self.left, self.top
-        yield self.right, self.top
-        yield self.right, self.bottom
-        yield self.left, self.bottom
-
     def is_point_inside_rect(self, xy):
         return (self.left <= xy[0] <= self.right and
                 self.top <= xy[1] <= self.bottom)
 
     def overlaps_with(self, rect):
-        for corner in rect.iter_edges():
-            if self.is_point_inside_rect(corner):
-                return True
-        for corner in self.iter_edges():
-            if rect.is_point_inside_rect(corner):
-                return True
-        return False
-
-    def distance(self, rect):
-        """
-        """
-
-        # 1. see if they overlap
-        if self.overlaps_with(rect):
-            return 0
-
-        # 2. draw a line between rectangles
-        line = (self.xy, rect.xy)
-
-        # 3. find the two edges that intersect the line
-        edge1 = None
-        edge2 = None
-        for edge in self.iter_edges():
-            if lines_intersect(edge, line):
-                edge1 = edge
-                break
-        for edge in rect.iter_edges():
-            if lines_intersect(edge, line):
-                edge2 = edge
-                break
-        assert edge1
-        assert edge2
-
-        # 4. find shortest distance between these two edges
-        distances = [
-            distance_between_edge_and_point(edge1, edge2[0]),
-            distance_between_edge_and_point(edge1, edge2[1]),
-            distance_between_edge_and_point(edge2, edge1[0]),
-            distance_between_edge_and_point(edge2, edge1[1]),
-        ]
-
-        return min(distances)
+        d = self.xy_distances(rect)
+        return not(d[0]>0 or d[1]>0)
 
     @property
     def area(self):
@@ -155,4 +108,43 @@ class Rectangle(Coordinate2D):
     @property
     def perimeter(self):
         return 2 * (self.width + self.height)
+
+    def xy_distances(self, other):
+        """return distances on both axes between rectangles. 0 indicates
+        overlap off edges along that dimension.
+        """
+
+        assert isinstance(other, Rectangle)
+        #overlaps in x or y
+        center_dist = abs(self.x - other.x), abs(self.y - other.y)
+        max_overlap_dist = (self.width + other.width)/2, (self.height + other.height)/2
+        if  center_dist[0] <= max_overlap_dist[0]:
+            dx = 0
+        else:
+            dx = center_dist[0] - max_overlap_dist[0]
+
+        if  center_dist[1] <= max_overlap_dist[1]:
+            dy = 0
+        else:
+            dy = center_dist[1] - max_overlap_dist[1]
+
+        return dx, dy
+
+
+    def distance(self, other):
+        """Return Euclidean distance to the dot d. The function takes the
+        size of the rectangles into account.
+
+        Parameters
+        ----------
+        d : Dot
+
+        Returns
+        -------
+        distance : float
+
+        """
+
+        dx, dy = self.xy_distances(other=other)
+        return math.hypot(dx, dy)
 
