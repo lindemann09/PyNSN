@@ -32,7 +32,7 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
                 c = _colour.Colour(att)
             except:
                 c = colours.default_dot_colour
-        print((att, c.colour))
+
         svgdraw.add(svgdraw.circle(center=xy, r = d//2,
                                    #stroke_width="0", stroke="black",
                                     fill=c.colour))
