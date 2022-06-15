@@ -19,8 +19,9 @@ from .match import FeatureMatcher
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
+from .object_cloud import _ObjectCloud, np_array_2d
 
-class _DotCloud(object):
+class _DotCloud(_ObjectCloud):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -29,100 +30,42 @@ class _DotCloud(object):
 
     def __init__(self, xy=None, diameters=None):
 
-        self._xy = np.array([])
+        super().__init__()
         self._diameters = np.array([])
-        self._match = FeatureMatcher(self)
-        self._features = VisualFeatures(self)
-
         if (xy, diameters) != (None, None):
             self.append(xy, diameters)
 
-    def __str__(self):
-        return self.features.get_features_text(extended_format=True)
-
     @property
-    def xy(self):
-        return self._xy
-
-    @property
-    def match(self):
-        return self._match
-
-    @property
-    def features(self):
-        return self._features
-
-    @property
-    def xy_rounded_integer(self):
-        """rounded to integer"""
-        return np.array(np.round(self._xy))
-
-    @property
-    def center_of_outer_positions(self):
-        minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
-        return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
-
-    @property
-    def surface_areas(self):
+    def surface_areas(self): #FIXME abstract method?
         # a = pi r**2 = pi d**2 / 4
         return np.pi * (self._diameters ** 2) / 4.0
 
     @property
-    def perimeter(self):
+    def perimeter(self): #FIXME abstract method?
         return np.pi * self._diameters
 
-    @property
-    def hash(self):
-        """md5_hash of position, diameter"""
-
-        m = md5()
-        m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
-        m.update(self.surface_areas.tobytes())
-        return m.hexdigest()
 
     def round(self, decimals=0, int_type=np.int64):
         """Round values of the array."""
 
         if decimals is None:
             return
-
-        self._xy = np.round(self._xy, decimals=decimals)
+        super().round(decimals, int_type)
         self._diameters = np.round(self._diameters, decimals=decimals)
-        if decimals==0:
-            self._xy = self._xy.astype(int_type)
+        if decimals == 0:
             self._diameters = self._diameters.astype(int_type)
-
-    def json(self, indent=None, include_hash=False):
-        """"""
-        d = self.as_dict()
-        if include_hash:
-            d.update({"hash": self.hash})
-        if not indent:
-            indent = None
-        return json.dumps(d, indent=indent)
-
-    def save(self, json_file_name, indent=None, include_hash=False):
-        """"""
-        with open(json_file_name, 'w') as fl:
-            fl.write(self.json(indent=indent, include_hash=include_hash))
-
-    def load(self, json_file_name):
-
-        with open(json_file_name, 'r') as fl:
-            dict = json.load(fl)
-        self.read_from_dict(dict)
 
     def as_dict(self):
         """
         """
-        return {"xy": self._xy.tolist(),
-                "diameters": self._diameters.tolist()}
+        d = super().as_dict()
+        d.update({"diameters": self._diameters.tolist()})
+        return d
 
     def read_from_dict(self, dict):
         """read Dot collection from dict"""
-        self._xy = np.array(dict["xy"])
+        super().read_from_dict()
         self._diameters = np.array(dict["diameters"])
-        self.features.reset()
 
     @property
     def diameters(self):
@@ -131,33 +74,23 @@ class _DotCloud(object):
     def append(self, xy, item_diameters):
         """append dots using numpy array"""
 
+        xy = np_array_2d(xy)
         # ensure numpy array
         item_diameters = misc.numpy_vector(item_diameters)
-        # ensure xy is a 2d array
-        xy = np.array(xy)
-        if xy.ndim == 1 and len(xy) == 2:
-            xy = xy.reshape((1, 2))
-        if xy.ndim != 2:
-            raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
-
         if xy.shape[0] != len(item_diameters):
             raise RuntimeError("Bad shaped data: " + u"xy has not the same length as item_diameters")
 
-        if len(self._xy) == 0:
-            self._xy = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
-        self._xy = np.append(self._xy, xy, axis=0)
         self._diameters = np.append(self._diameters, item_diameters)
+        self._xy = np.append(self.xy, xy, axis=0)
         self.features.reset()
 
     def clear(self):
-        self._xy = np.array([[]])
+        super().clear()
         self._diameters = np.array([])
-        self.features.reset()
 
     def delete(self, index):
-        self._xy = np.delete(self._xy, index, axis=0)
+        super().delete(index)
         self._diameters = np.delete(self._diameters, index)
-        self.features.reset()
 
     def copy(self, indices=None):
         """returns a (deep) copy of the dot array.
@@ -183,11 +116,6 @@ class _DotCloud(object):
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self._diameters)
-
-
-    def center_array(self):
-        self._xy = self._xy - self.center_of_outer_positions
-        self.features.reset()
 
     def append_dot(self, dot):
         assert isinstance(dot, Dot)
@@ -215,7 +143,6 @@ class _DotCloud(object):
         for xy, dia in zip(self._xy[indices, :], self._diameters[indices]):
             rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia))
         return rtn
-
 
 
 class _GenericDotArray(_DotCloud):

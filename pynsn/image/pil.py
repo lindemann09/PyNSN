@@ -5,6 +5,7 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from ..lib import colour as _colour
 
+
 def create(dot_array, colours, antialiasing=True,
            gabor_filter=None):
     # ImageParameter

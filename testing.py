@@ -12,9 +12,6 @@ da_specification = random_dot_array.Specs(
 
 # generate on array with 100 dots
 stimulus = random_dot_array.create(12, da_specification)
-print(stimulus.as_dict())
-
-exit()
 
 
 stimulus2 = random_dot_array.create(23, da_specification, attributes="skyblue",
