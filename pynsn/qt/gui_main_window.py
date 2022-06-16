@@ -232,13 +232,13 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.dot_array.features.get_features_text(extended_format=True,
-                                                        with_hash=True)
+        txt = self.dot_array._features.get_features_text(extended_format=True,
+                                                         with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.dot_array.split_array_by_attributes():
-                txt += "Attribute {}\n".format(da.attributes[0])
-                txt += da.features.get_features_text(extended_format=True,
-                                                     with_hash=False)
+                txt += "Attribute {}\n".format(da._attributes[0])
+                txt += da._features.get_features_text(extended_format=True,
+                                                      with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -246,7 +246,7 @@ class GUIMainWindow(QMainWindow):
 
     def action_print_xy(self):
         """"""
-        txt = self.dot_array.get_csv(hash_column=False, num_idx_column=False, colour_column=True)
+        txt = self.dot_array.csv(hash_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_out(txt)
 
     def action_print_para(self):
@@ -280,11 +280,11 @@ class GUIMainWindow(QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.dot_array.features.get_features_dict()
+        prop = self.dot_array._features.get_features_dict()
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
                                                                    prop)  #
         if feature is not None:
-            self.dot_array.match.match_feature(feature, value=value)
+            self.dot_array._match.match_feature(feature, value=value)
             if feature in VisualFeatures.SIZE_FEATURES:
                 self.dot_array.center_array()
                 self.dot_array.realign()
@@ -330,10 +330,10 @@ class GUIMainWindow(QMainWindow):
             sequence = dot_array_sequence.create(
                               specs=specs,
                               match_feature=match_methods,
-                              match_value=self.dot_array.features.get(match_methods),
+                              match_value=self.dot_array._features.get(match_methods),
                               min_max_numerosity=match_range)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.dot_array.features.numerosity,
+                            start_numerosity=self.dot_array._features.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
 

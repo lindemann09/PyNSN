@@ -68,20 +68,20 @@ class DotArraySQLDB(object):
                   ") \n VALUES\n" + \
                   "('{}',{},{},{},{},{},{},{},{},'{}');".format(
                           da.hash,
-                          da.features.numerosity,
-                          da.features.total_surface_area,
-                          da.features.mean_item_surface_area,
-                          da.features.field_area,
-                          da.features.sparsity,
-                          da.features.logSize,
-                          da.features.logSpacing,
-                          da.features.converage,
+                          da._features.numerosity,
+                          da._features.total_surface_area,
+                          da._features.mean_item_surface_area,
+                          da._features.field_area,
+                          da._features.sparsity,
+                          da._features.logSize,
+                          da._features.logSpacing,
+                          da._features.converage,
                           colour.colour)
             cur.execute(sql)
 
             ## add dots
             sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
-            for xy, d in zip(da.xy, da.diameters):
+            for xy, d in zip(da._xy, da.diameters):
                 sql += "\n  ('{}', {}, {}, {}),".format(da.hash, xy[0], xy[1], d)
             sql = sql[:-1] + ";"
             cur.execute(sql)

@@ -27,6 +27,10 @@ class Dot(Coordinate2D):
             raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
 
+    def __repr__(self):
+        return "Dot(x={}, y={}, diameter={}, attribute={})".format(self.x,
+                            self.y,self.diameter, repr(self.attribute))
+
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the
         diameter of the points into account.

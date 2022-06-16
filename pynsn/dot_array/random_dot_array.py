@@ -3,7 +3,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import copy as _copy
 from ..lib import misc as _misc
 from ..lib.colour import Colour as _Colour
-from .dot_array import DotArray as _DotArray
+from .dot_array import DotArray
+from .shape import Dot
 
 
 class Specs(object):
@@ -57,7 +58,7 @@ class Specs(object):
         return _copy.deepcopy(self)
 
 
-def create(n_dots, specs, attributes=None, occupied_space=None):
+def create(n_dots, specs, attribute=None, occupied_space=None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     returns None if not possible
@@ -65,7 +66,7 @@ def create(n_dots, specs, attributes=None, occupied_space=None):
 
     assert isinstance(specs, Specs)
 
-    rtn = _DotArray(target_array_radius=specs.target_array_radius,
+    rtn = DotArray(target_array_radius=specs.target_array_radius,
                    minimum_gap=specs.minimum_gap)
 
     # random diameter from beta distribution with exact mean and str
@@ -76,14 +77,12 @@ def create(n_dots, specs, attributes=None, occupied_space=None):
 
     for dia in diameters:
         try:
-            xy = rtn.random_free_dot_position(dot_diameter=dia,
-                                              occupied_space=occupied_space,
-                                              min_distance_area_boarder=
+            xy = rtn.random_free_position(dot_diameter=dia,
+                                          occupied_space=occupied_space,
+                                          min_distance_area_boarder=
                                             specs.min_distance_area_boarder)
         except:
             return None
-        rtn.append(xy=xy, item_diameters=dia)
+        rtn.add([Dot(x=xy[0], y=xy[1], diameter=dia, attribute=attribute)])
 
-    if attributes is not None:
-        rtn.set_attributes(attributes=attributes)
     return rtn

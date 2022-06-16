@@ -23,8 +23,8 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
     dot_array = dot_array.copy()
     dot_array.round(decimals=1,int_type=float)
     for xy, d, att in zip(_convert_pos(dot_array.xy, image_size),
-                        dot_array.diameters,
-                        dot_array.attributes):
+                          dot_array.diameters,
+                          dot_array.attributes):
         if att is None:
             c = colours.default_dot_colour
         else:

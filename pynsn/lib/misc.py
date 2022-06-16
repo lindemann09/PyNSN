@@ -136,6 +136,15 @@ def numpy_vector(x):
     else:
         return x.flatten()
 
+def numpy_array_2d(two_d_data):
+    """ensures well shaped to 2d numpy array"""
+    rtn = np.array(two_d_data)
+    if rtn.ndim == 1 and len(rtn) == 2:
+        rtn = rtn.reshape((1, 2))
+    if rtn.ndim != 2:
+        raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+    return rtn
+
 
 def is_all_larger(vector, standard=0):
     return sum(map(lambda x: x > standard, vector))==len(vector)

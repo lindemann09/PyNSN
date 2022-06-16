@@ -100,7 +100,7 @@ class DotArraySequenceArchive(object):
         array = []
         feat = {}
         for id in self.array_ids:
-            feat = self.get_dot_array(id).features.get_features_dict()
+            feat = self.get_dot_array(id)._features.get_features_dict()
             array.append(list(feat.values()))
 
         varnames = map(lambda x:x.replace(" ", "_"), feat.keys())

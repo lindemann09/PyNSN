@@ -20,17 +20,17 @@ class FeatureMatcher(object):
     def item_diameter(self, value):
         # changes diameter
 
-        scale = value / self.da.features.mean_item_diameter
+        scale = value / self.da._features.mean_item_diameter
         self.da._diameters = self.da._diameters * scale
-        self.da.features.reset()
+        self.da._features.reset()
 
     def total_surface_area(self, value):
         # changes diameter
-        a_scale = (value / self.da.features.total_surface_area)
+        a_scale = (value / self.da._features.total_surface_area)
         self.da._diameters = np.sqrt(
             self.da.surface_areas * a_scale) * 2 / np.sqrt(
             np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        self.da.features.reset()
+        self.da._features.reset()
 
 
     def field_area(self, value, precision=None, use_scaling_only=False):
@@ -68,13 +68,13 @@ class FeatureMatcher(object):
         if precision is None:
             precision = _DEFAULT_SPACING_PRECISION
 
-        if self.da.features.field_area is None:
+        if self.da._features.field_area is None:
             return  # not defined
-        elif value > self.da.features.field_area or use_scaling_only:
+        elif value > self.da._features.field_area or use_scaling_only:
             # field area is currently too small or scaling is enforced
             return self.__scale_field_area(field_area=value,
                                            precision=precision)
-        elif value < self.da.features.field_area:
+        elif value < self.da._features.field_area:
             # field area is too large
             self.__decrease_field_area_by_replacement(
                     max_field_area=value,
@@ -104,12 +104,12 @@ class FeatureMatcher(object):
         removed_dots = []
 
         if iterative_convex_hull_modification:
-            while self.da.features.field_area > max_field_area:
+            while self.da._features.field_area > max_field_area:
                 # remove one random outer dot and remember it
-                indices = self.da.features.convex_hull.indices
+                indices = self.da._features.convex_hull.indices
                 if not FeatureMatcher.TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                     # most outer dot from convex hull
-                    radii_outer_dots = geometry.cartesian2polar(self.da.xy[indices],
+                    radii_outer_dots = geometry.cartesian2polar(self.da._xy[indices],
                                                                 radii_only=True)
                     i = np.where(radii_outer_dots==max(radii_outer_dots))[0]
                     idx = indices[i][0]
@@ -117,20 +117,20 @@ class FeatureMatcher(object):
                     # remove random
                     idx = indices[random.randint(0, len(indices)-1)]
 
-                removed_dots.extend(self.da.get_dots(indices=[idx]))
+                removed_dots.extend(self.da.get(indices=[idx]))
                 self.da.delete(idx)
 
             # add dots to free pos inside the convex hall
             for d in removed_dots:
                 try:
-                    d.xy = self.da.random_free_dot_position(d.diameter,
-                                                   allow_overlapping=False,
-                                                   prefer_inside_field_area=True)
+                    d._xy = self.da.random_free_position(d.diameter,
+                                                         allow_overlapping=False,
+                                                         prefer_inside_field_area=True)
                 except:
                     raise RuntimeError("Can't find a free position while decreasing field area.\n" +\
                                         "n={}; current FA={}, max_FA={}".format(
-                                            self.da.features.numerosity+1,
-                                            self.da.features.field_area,
+                                            self.da._features.numerosity + 1,
+                                            self.da._features.field_area,
                                             max_field_area ))
 
                 self.da.append_dot(d)
@@ -139,29 +139,29 @@ class FeatureMatcher(object):
             # eccentricity criterion
             max_radius =  np.sqrt(max_field_area/np.pi) # for circle with
                                                         # required FA
-            idx = np.where(geometry.cartesian2polar(self.da.xy, radii_only=True) > max_radius)[0]
-            removed_dots.extend(self.da.get_dots(indices=idx))
+            idx = np.where(geometry.cartesian2polar(self.da._xy, radii_only=True) > max_radius)[0]
+            removed_dots.extend(self.da.get(indices=idx))
             self.da.delete(idx)
 
             # add inside the circle
             min_dist = self.da.target_array_radius - max_radius + 1
             for d in removed_dots:
                 try:
-                    d.xy = self.da.random_free_dot_position(d.diameter,
-                                            prefer_inside_field_area=False,
-                                            allow_overlapping=False,
-                                            min_distance_area_boarder=min_dist)
+                    d._xy = self.da.random_free_position(d.diameter,
+                                                         prefer_inside_field_area=False,
+                                                         allow_overlapping=False,
+                                                         min_distance_area_boarder=min_dist)
                 except:
                     raise RuntimeError(
                         "Can't find a free position while decreasing field area.\n" + \
                         "n={}; current FA={}, max_FA={}".format(
-                            self.da.features.numerosity + 1,
-                            self.da.features.field_area,
+                            self.da._features.numerosity + 1,
+                            self.da._features.field_area,
                             max_field_area))
                 self.da.append_dot(d)
 
         self.da._xy = self.da._xy + old_center
-        self.da.features.reset()
+        self.da._features.reset()
 
     def __scale_field_area(self, field_area, precision):
         """change the convex hull area to a desired size by scale the polar
@@ -172,7 +172,7 @@ class FeatureMatcher(object):
         Note: see doc string `_match_field_area`
         """
 
-        current = self.da.features.field_area
+        current = self.da._features.field_area
 
         if current is None:
             return  # not defined
@@ -193,15 +193,15 @@ class FeatureMatcher(object):
             scale += step
 
             self.da._xy = geometry.polar2cartesian(centered_polar * [scale, 1])
-            self.da.features.reset() # required to recalc convex hull
-            current = self.da.features.field_area
+            self.da._features.reset() # required to recalc convex hull
+            current = self.da._features.field_area
 
             if (current < field_area and step < 0) or \
                     (current > field_area and step > 0):
                 step *= -0.2  # change direction and finer grain
 
         self.da._xy = self.da._xy + old_center
-        self.da.features.reset()
+        self.da._features.reset()
 
 
     def coverage(self, value,
@@ -225,12 +225,12 @@ class FeatureMatcher(object):
         elif match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
             match_FA2TA_ratio = 0.5
 
-        total_area_change100 = (value * self.da.features.field_area) - self.da.features.total_surface_area
+        total_area_change100 = (value * self.da._features.field_area) - self.da._features.total_surface_area
         d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
         if abs(d_change_total_area) > 0:
-            self.total_surface_area(self.da.features.total_surface_area + d_change_total_area)
+            self.total_surface_area(self.da._features.total_surface_area + d_change_total_area)
 
-        self.field_area(self.da.features.total_surface_area / value,
+        self.field_area(self.da._features.total_surface_area / value,
                         precision=precision)
 
 
@@ -239,25 +239,25 @@ class FeatureMatcher(object):
         self.item_diameter(value / np.pi)
 
     def total_perimeter(self, value):
-        tmp = value / (self.da.features.numerosity * np.pi)
+        tmp = value / (self.da._features.numerosity * np.pi)
         self.item_diameter(tmp)
 
     def item_surface_area(self, value):
-        ta = self.da.features.numerosity * value
+        ta = self.da._features.numerosity * value
         self.total_surface_area(ta)
 
     def log_spacing(self, value, precision=None):
 
         logfa = 0.5 * value + 0.5 * misc.log2(
-            self.da.features.numerosity)
+            self.da._features.numerosity)
         self.field_area(value=2 ** logfa, precision=precision)
 
     def log_size(self, value):
-        logtsa = 0.5 * value + 0.5 * misc.log2(self.da.features.numerosity)
+        logtsa = 0.5 * value + 0.5 * misc.log2(self.da._features.numerosity)
         self.total_surface_area(2 ** logtsa)
 
     def sparcity(self, value, precision = None):
-        self.field_area(value= value * self.da.features.numerosity,
+        self.field_area(value= value * self.da._features.numerosity,
                         precision=precision)
 
 

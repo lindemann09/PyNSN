@@ -29,11 +29,11 @@ class DASequence(object):
         if isinstance(arr, _DotArray):
             arr = [arr]
         self.dot_arrays.extend(arr)
-        self.numerosity_idx = {da.features.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da._features.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
         self.dot_arrays.pop(array_id)
-        self.numerosity_idx = {da.features.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
+        self.numerosity_idx = {da._features.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def get_array(self, numerosity):
         """returns array with a particular numerosity"""
@@ -45,7 +45,7 @@ class DASequence(object):
 
     @property
     def min_max_numerosity(self):
-        return (self.dot_arrays[0].features.numerosity, self.dot_arrays[-1].features.numerosity)
+        return (self.dot_arrays[0]._features.numerosity, self.dot_arrays[-1]._features.numerosity)
 
     @property
     def hash(self):
@@ -59,7 +59,7 @@ class DASequence(object):
     def get_features_dict(self):
         """dictionary with arrays"""
 
-        dicts = [x.features.get_features_dict() for x in self.dot_arrays]
+        dicts = [x._features.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same sequence ID
         return rtn
@@ -96,9 +96,9 @@ class DASequence(object):
         tmp_var_names = variable_names
 
         for da in self.dot_arrays:
-            rtn += da.get_csv(num_idx_column=True, hash_column=False,
-                              variable_names=tmp_var_names,
-                              colour_column=colour_column)
+            rtn += da.csv(num_idx_column=True, hash_column=False,
+                          variable_names=tmp_var_names,
+                          colour_column=colour_column)
             tmp_var_names = False
 
         if hash_column:
@@ -164,7 +164,7 @@ def create(specs,
         source_number = min + int((max - min)/2)
     source_da = random_dot_array.create(n_dots=source_number,
                                         specs=specs)
-    source_da.match.match_feature(feature=match_feature, value=match_value)
+    source_da._match.match_feature(feature=match_feature, value=match_value)
     source_da.center_array()
     source_da.round(round_decimals)
 
@@ -206,9 +206,9 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
 
 
 
-    if reference_da.features.numerosity == target_numerosity:
+    if reference_da._features.numerosity == target_numerosity:
         change = 0
-    elif reference_da.features.numerosity > target_numerosity:
+    elif reference_da._features.numerosity > target_numerosity:
         change = -1
     else:
         change = 1
@@ -225,8 +225,8 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
         except:
             return [], "ERROR: Can't find the a make matched deviants"
 
-        da.match.match_feature(feature=match_feature,
-                                   reference_dot_array=reference_da)
+        da._match.match_feature(feature=match_feature,
+                                reference_dot_array=reference_da)
         cnt = 0
         while True:
             cnt += 1
@@ -234,13 +234,13 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
             if ok:
                 break
             if cnt > 10:
-                error = u"ERROR: realign, " + str(cnt) + ", " + str(da.features.numerosity)
+                error = u"ERROR: realign, " + str(cnt) + ", " + str(da._features.numerosity)
 
         #print(da.features.get_features_text())
         da.round(round_decimals)
         da_sequence.append(da)
 
-        if error is not None or da.features.numerosity == target_numerosity:
+        if error is not None or da._features.numerosity == target_numerosity:
             break
 
     return da_sequence, error

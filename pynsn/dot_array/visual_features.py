@@ -49,7 +49,7 @@ class VisualFeatures(object):
     @property
     def convex_hull(self):
         if self._convex_hull is None:
-            self._convex_hull = ConvexHullDots(self.da.xy, self.da.diameters)
+            self._convex_hull = ConvexHullDots(self.da._xy, self.da.diameters)
         return self._convex_hull
 
     @property
@@ -78,7 +78,7 @@ class VisualFeatures(object):
 
     @property
     def numerosity(self):
-        return len(self.da.xy)
+        return len(self.da._xy)
 
     @property
     def converage(self):
@@ -112,7 +112,7 @@ class VisualFeatures(object):
 
     def _get_distance_matrix(self, between_positions=False):
         """between position ignores the dot size"""
-        dist = spatial.distance.cdist(self.da.xy, self.da.xy)  #
+        dist = spatial.distance.cdist(self.da._xy, self.da._xy)  #
         # matrix with all distance between all points
         if not between_positions:
             # subtract dot diameter

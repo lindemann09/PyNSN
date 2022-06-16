@@ -46,9 +46,9 @@ def create(dot_array, colours, antialiasing=True,
     dot_array.round(decimals=0)
 
     # draw dots
-    for xy, d, att in zip(_convert_pos(dot_array.xy * aa, image_size),
+    for xy, d, att in zip(_convert_pos(dot_array._xy * aa, image_size),
                         dot_array.diameters * aa,
-                        dot_array.attributes):
+                          dot_array._attributes):
         if att is None:
             c = colours.default_dot_colour
         else:
@@ -62,14 +62,14 @@ def create(dot_array, colours, antialiasing=True,
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_convert_pos(
-                              dot_array.features.convex_hull.xy * aa, image_size),
+                              dot_array._features.convex_hull._xy * aa, image_size),
                           convex_hull_colour=colours.field_area.colour)
 
     if colours.field_area_outer.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_convert_pos(
-                              dot_array.features.convex_hull.full_xy * aa,
+                              dot_array._features.convex_hull.full_xy * aa,
                               image_size),
                           convex_hull_colour=colours.field_area_outer.colour)
 
