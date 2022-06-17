@@ -11,7 +11,7 @@ from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import factory,  VisualFeatures, match
-from ..nsn import colour
+from ..image import _colour
 from ..image import pil
 from ..sequence import dot_array_sequence
 
@@ -21,7 +21,7 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                            item_diameter_range=[5, 40],
                                            item_diameter_std=8,
                                            minimum_gap=2),
-                 colour.ImageColours(target_area="#303030",
+                 _colour.ImageColours(target_area="#303030",
                                      field_area=None,
                                      field_area_outer=None,
                                      center_of_mass=None,
@@ -33,7 +33,7 @@ ICON = (11, factory.DotArraySpecs(target_area_radius=200,
                                   item_diameter_mean=35,
                                   item_diameter_range=[5, 80],
                                   item_diameter_std=20),
-        colour.ImageColours(target_area="#3e3e3e",
+        _colour.ImageColours(target_area="#3e3e3e",
                             field_area=None,
                             field_area_outer="expyriment_orange",
                             center_of_mass=None,
@@ -149,7 +149,7 @@ class GUIMainWindow(QMainWindow):
             return self._image
         else:
             para = self.get_image_colours()
-            image_colours = colour.ImageColours(
+            image_colours = _colour.ImageColours(
                 target_area=para.target_area,
                 field_area=para.field_area,
                 field_area_outer=para.field_area_outer,
@@ -180,30 +180,30 @@ class GUIMainWindow(QMainWindow):
     def get_image_colours(self):
         # check colour input
         try:
-            colour_area = colour.Colour(self.settings.colour_area.text)
+            colour_area = _colour.Colour(self.settings.colour_area.text)
         except:
             colour_area = None
             self.settings.colour_area.text = "None"
         try:
-            colour_convex_hull_positions = colour.Colour(
+            colour_convex_hull_positions = _colour.Colour(
                 self.settings.colour_convex_hull_positions.text)
         except:
             colour_convex_hull_positions = None
             self.settings.colour_convex_hull_positions.text = "None"
         try:
-            colour_convex_hull_dots = colour.Colour(
+            colour_convex_hull_dots = _colour.Colour(
                 self.settings.colour_convex_hull_dots.text)
         except:
             colour_convex_hull_dots = None
             self.settings.colour_convex_hull_dots.text = "None"
         try:
-            colour_background = colour.Colour(
+            colour_background = _colour.Colour(
                 self.settings.colour_background.text)
         except:
             colour_background = None
             self.settings.colour_background.text = "None"
 
-        return colour.ImageColours(target_area=colour_area,
+        return _colour.ImageColours(target_area=colour_area,
                                    field_area=colour_convex_hull_positions,
                                    field_area_outer=colour_convex_hull_dots,
                                    center_of_mass=None,
@@ -304,7 +304,7 @@ class GUIMainWindow(QMainWindow):
         """
         """
         try:
-            colour_dot = colour.Colour(self.main_widget.dot_colour.text)
+            colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
             self.settings.default_dot_colour = colour_dot
         except:
             colour_dot = self.settings.default_dot_colour
