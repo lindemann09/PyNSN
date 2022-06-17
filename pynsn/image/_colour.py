@@ -7,7 +7,7 @@ from functools import total_ordering
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
-DEFAULT_DOT_COLOUR = "lime" # used if no color specified in dot array
+DEFAULT_ITEM_COLOUR = "lime" # used if no color specified in dot array
 
 @total_ordering
 class Colour(object):
@@ -235,7 +235,7 @@ class ImageColours(object):
                  center_of_mass=None,
                  center_of_outer_positions=None,
                  background=None,
-                 default_dot_colour=DEFAULT_DOT_COLOUR,
+                 item_colour=DEFAULT_ITEM_COLOUR,
                  ):
 
         self.target_area = Colour(target_area)
@@ -244,7 +244,7 @@ class ImageColours(object):
         self.center_of_mass = Colour(center_of_mass)
         self.center_of_outer_positions = Colour(center_of_outer_positions)
         self.background = Colour(background)
-        self.default_dot_colour = Colour(default_dot_colour)
+        self.default_dot_colour = Colour(item_colour)
 
     def as_dict(self):
         return {"colour_total_area": self.target_area.colour,

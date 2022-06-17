@@ -11,7 +11,6 @@ from random import random
 import numpy as np
 from ..lib import misc, geometry
 from .visual_features import VisualFeatures
-from .match import FeatureMatcher
 
 class _Cloud(object):
     """Numpy Position lists with attributes for optimized for numpy calculations
@@ -24,7 +23,6 @@ class _Cloud(object):
         self._xy = np.array([])
         self._attributes = np.array([])
         self._features = VisualFeatures(self)
-        self._match = FeatureMatcher(self)
 
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)
@@ -48,10 +46,6 @@ class _Cloud(object):
     @property
     def features(self):
         return self._features
-
-    @property
-    def match(self):
-        return self._match
 
     def _append_xy_attribute(self, xy, attributes=None):
         """returns number of added rows"""

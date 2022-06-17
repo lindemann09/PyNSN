@@ -1,5 +1,4 @@
 """
-Draw a random number from a beta dirstribution
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'

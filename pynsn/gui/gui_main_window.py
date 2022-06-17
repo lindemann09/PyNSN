@@ -10,7 +10,7 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import factory,  VisualFeatures
+from .. import factory,  VisualFeatures, match
 from ..nsn import colour
 from ..image import pil
 from ..sequence import dot_array_sequence
@@ -22,24 +22,24 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                            item_diameter_std=8,
                                            minimum_gap=2),
                  colour.ImageColours(target_area="#303030",
-                                      field_area=None,
-                                      field_area_outer=None,
-                                      center_of_mass=None,
-                                      center_of_outer_positions=None,
-                                      default_dot_colour="green",
-                                      background="gray"))
+                                     field_area=None,
+                                     field_area_outer=None,
+                                     center_of_mass=None,
+                                     center_of_outer_positions=None,
+                                     item_colour="green",
+                                     background="gray"))
 
 ICON = (11, factory.DotArraySpecs(target_area_radius=200,
                                   item_diameter_mean=35,
                                   item_diameter_range=[5, 80],
                                   item_diameter_std=20),
         colour.ImageColours(target_area="#3e3e3e",
-                             field_area=None,
-                             field_area_outer="expyriment_orange",
-                             center_of_mass=None,
-                             center_of_outer_positions=None,
-                             default_dot_colour="lime",
-                             background=None))
+                            field_area=None,
+                            field_area_outer="expyriment_orange",
+                            center_of_mass=None,
+                            center_of_outer_positions=None,
+                            item_colour="lime",
+                            background=None))
 
 
 class GUIMainWindow(QMainWindow):
@@ -155,7 +155,7 @@ class GUIMainWindow(QMainWindow):
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
-                default_dot_colour=para.default_dot_colour,
+                item_colour=para.default_dot_colour,
                 background=para.background)
 
             self._image = pil.create(dot_array=self.dot_array,
@@ -208,7 +208,7 @@ class GUIMainWindow(QMainWindow):
                                    field_area_outer=colour_convex_hull_dots,
                                    center_of_mass=None,
                                    center_of_outer_positions=None,
-                                   default_dot_colour=self.settings.default_dot_colour,
+                                   item_colour=self.settings.default_dot_colour,
                                    background=colour_background)
 
     def pixmap(self):
@@ -284,7 +284,8 @@ class GUIMainWindow(QMainWindow):
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
                                                                    prop)  #
         if feature is not None:
-            self.dot_array._match.match_feature(feature, value=value)
+            self.dot_array = match.visual_feature(self.dot_array,
+                                                   feature, value=value)
             if feature in VisualFeatures.SIZE_FEATURES:
                 self.dot_array.center_array()
                 self.dot_array.realign()

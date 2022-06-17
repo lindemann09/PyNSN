@@ -10,7 +10,7 @@ from pynsn.lib import misc as _misc
 from pynsn.nsn.dot_array import DotArray as _DotArray
 from pynsn.nsn.visual_features import VisualFeatures as _Feat
 from pynsn.nsn import factory
-
+from pynsn.nsn import match
 
 class DASequence(object):
 
@@ -164,7 +164,7 @@ def create(specs,
         source_number = min + int((max - min)/2)
     source_da = factory.random_array(n_dots=source_number,
                                      specs=specs)
-    source_da._match.match_feature(feature=match_feature, value=match_value)
+    source_da = match.visual_feature(source_da, feature=match_feature, value=match_value)
     source_da.center_array()
     source_da.round(round_decimals)
 
@@ -225,7 +225,7 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
         except:
             return [], "ERROR: Can't find the a make matched deviants"
 
-        da._match.match_feature(feature=match_feature,
+        da = match.visual_feature(da, feature=match_feature,
                                 value=reference_da.features.get(match_feature))
         cnt = 0
         while True:

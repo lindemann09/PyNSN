@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 import numpy as _np
-from ..nsn import colour as _colour
+from . import _colour
 from ..lib.geometry import cartesian2image_coordinates as _c2i_coord
 
 

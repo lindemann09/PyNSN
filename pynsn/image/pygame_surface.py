@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import pygame as _pygame
 
-from ..nsn import colour as _colour
+from . import _colour
 from . import pil as _pil_image
 
 def create(dot_array,

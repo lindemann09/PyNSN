@@ -126,8 +126,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = match.FeatureMatcher.DEFAULT_SPACING_PRECISION
-    match_FA2TA_ratio = match.FeatureMatcher.DEFAULT_MATCH_FA2TA_RATIO
+    spacing_precision = match.DEFAULT_SPACING_PRECISION
+    match_FA2TA_ratio = match.DEFAULT_MATCH_FA2TA_RATIO
 
 
     def __init__(self, parent):

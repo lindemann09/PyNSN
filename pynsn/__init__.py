@@ -17,10 +17,9 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 5):
 
 
 from .nsn.shape import Dot, Rectangle
-from .nsn.colour import Colour, ImageColours
+from .image import Colour, ImageColours
 from .nsn.dot_array import DotArray
-from .nsn import factory
-
+from .nsn import factory, match
 from .nsn.visual_features import VisualFeatures
 #Further modules
 # gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, dot_array_archive

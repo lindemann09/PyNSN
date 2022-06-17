@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 import svgwrite as _svg
-from ..nsn import colour as _colour
+from . import _colour
 from ..nsn.dot_array import DotArray as _DotArray
 from ..lib.geometry import cartesian2image_coordinates as _c2i_pos
 
