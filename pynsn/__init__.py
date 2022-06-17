@@ -16,13 +16,12 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 5):
                       "Please use Python 3.5+.")
 
 
-from .dot_array.dot_array import DotArray
-from .dot_array.shape import Dot, Rectangle
-from .dot_array.visual_features import VisualFeatures
-from .dot_array.match import FeatureMatcher # just for setting ITERATIVE_CONVEX_HULL_MODIFICATION and TAKE_RANDOM_DOT_FROM_CONVEXHULL toDO maybe another solution possible
-from .dot_array import random_dot_array
-from .lib.colour import Colour, ImageColours
+from .nsn.shape import Dot, Rectangle
+from .nsn.colour import Colour, ImageColours
+from .nsn.dot_array import DotArray
+from .nsn import factory
 
+from .nsn.visual_features import VisualFeatures
 #Further modules
 # gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, dot_array_archive
 

@@ -2,7 +2,7 @@ import os
 import json
 import gzip
 
-from pynsn.dot_array.dot_array import DotArray
+from pynsn.nsn.dot_array import DotArray
 from pynsn.sequence.dot_array_sequence import DASequence
 
 def load(json_file_name, zipped=False):
@@ -40,7 +40,7 @@ class DotArraySequenceArchive(object):
             for da in dot_array.dot_arrays:
                 self.add(da)
         else:
-            RuntimeError("dot_array has to be a pynsn.DotArray or a "
+            RuntimeError("nsn has to be a pynsn.DotArray or a "
                          "pynsn.dot_array_sequence.DASequence")
 
     def remove(self, id):
@@ -90,7 +90,7 @@ class DotArraySequenceArchive(object):
         for id in d["sequence"]:
             tmp.append(self.get_dot_array(id))
             if tmp[-1] is None:
-                raise RuntimeError("Can't find dot_array {}".format(id))
+                raise RuntimeError("Can't find nsn {}".format(id))
         rtn = DASequence()
         rtn.append_dot_arrays(tmp)
         return rtn

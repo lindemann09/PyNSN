@@ -1,9 +1,9 @@
-from pynsn import random_dot_array, Colour, ImageColours, DotArray
+from pynsn import factory, Colour, ImageColours, DotArray
 from pynsn.image import svg
 
 
 # define the visual features of the  dot array
-da_specification = random_dot_array.Specs(
+da_specification = factory.DotArraySpecs(
     target_area_radius=200,
     item_diameter_mean=15,
     item_diameter_range=(10, 30),
@@ -11,9 +11,9 @@ da_specification = random_dot_array.Specs(
     minimum_gap=2)
 
 # generate on array with 100 dots
-stimulus = random_dot_array.create(5, da_specification)
-stimulus2 = random_dot_array.create(4, da_specification, attribute="skyblue",
-                                    occupied_space=stimulus)
+stimulus = factory.random_array(da_specification, 5)
+stimulus2 = factory.random_array(da_specification, 4, attribute="skyblue",
+                                 occupied_space=stimulus)
 stimulus.join(stimulus2)
 
 

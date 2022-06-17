@@ -3,7 +3,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 import numpy as _np
-from ..lib import colour as _colour
+from ..nsn import colour as _colour
+from ..lib.geometry import cartesian2image_coordinates as _c2i_coord
 
 
 def create(dot_array, colours, antialiasing=True,
@@ -16,7 +17,7 @@ def create(dot_array, colours, antialiasing=True,
     antialiasing: Ture or integer
 
     gabor_filter: from PIL.ImageFilter
-    default_dot_colour: if colour is undefined in dot_array
+    default_dot_colour: if colour is undefined in nsn
     """
 
     if isinstance(antialiasing, bool):
@@ -38,7 +39,7 @@ def create(dot_array, colours, antialiasing=True,
                     color=colours.background.colour)
 
     if colours.target_area.colour is not None:
-        _draw_dot(img, xy=_convert_pos(_np.zeros(2), image_size),
+        _draw_dot(img, xy=_c2i_coord(_np.zeros(2), image_size),
                   diameter=image_size,
                   colour=colours.target_area.colour)
 
@@ -46,9 +47,9 @@ def create(dot_array, colours, antialiasing=True,
     dot_array.round(decimals=0)
 
     # draw dots
-    for xy, d, att in zip(_convert_pos(dot_array._xy * aa, image_size),
+    for xy, d, att in zip(_c2i_coord(dot_array.xy * aa, image_size),
                         dot_array.diameters * aa,
-                          dot_array._attributes):
+                          dot_array.attributes):
         if att is None:
             c = colours.default_dot_colour
         else:
@@ -61,24 +62,24 @@ def create(dot_array, colours, antialiasing=True,
     if colours.field_area.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
-                          convex_hull=_convert_pos(
-                              dot_array._features.convex_hull._xy * aa, image_size),
+                          convex_hull=_c2i_coord(
+                              dot_array.features.convex_hull.xy * aa, image_size),
                           convex_hull_colour=colours.field_area.colour)
 
     if colours.field_area_outer.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
-                          convex_hull=_convert_pos(
-                              dot_array._features.convex_hull.full_xy * aa,
+                          convex_hull=_c2i_coord(
+                              dot_array.features.convex_hull.full_xy * aa,
                               image_size),
                           convex_hull_colour=colours.field_area_outer.colour)
 
     if colours.center_of_mass.colour is not None:
-        _draw_dot(img, xy=_convert_pos(dot_array.center_of_mass * aa, image_size),
+        _draw_dot(img, xy=_c2i_coord(dot_array.center_of_mass * aa, image_size),
                   diameter=10 * aa, colour=colours.center_of_mass.colour)
 
     if colours.center_of_outer_positions.colour is not None:
-        _draw_dot(img, xy=_convert_pos(dot_array.center_of_outer_positions * aa, image_size),
+        _draw_dot(img, xy=_c2i_coord(dot_array.center_of_outer_positions * aa, image_size),
                   diameter=10 * aa, colour=colours.center_of_outer_positions.colour)
 
     if aa != 1:
@@ -92,11 +93,6 @@ def create(dot_array, colours, antialiasing=True,
             raise RuntimeError("Can't apply gabor_filter {}".format(gabor_filter))
 
     return img
-
-
-def _convert_pos(xy, image_size):
-    """convert dot pos to pil image coordinates"""
-    return (xy * [1, -1]) + image_size // 2
 
 
 def _draw_dot(img, xy, diameter, colour, picture=None):

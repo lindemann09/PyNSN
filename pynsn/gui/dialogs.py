@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
 
 from . import misc
 from .. import VisualFeatures
-from ..dot_array import match
+from ..nsn import match
 
 
 class MatchPropertyDialog(QDialog):
@@ -126,8 +126,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = match._DEFAULT_SPACING_PRECISION
-    match_FA2TA_ratio = match._DEFAULT_MATCH_FA2TA_RATIO
+    spacing_precision = match.FeatureMatcher.DEFAULT_SPACING_PRECISION
+    match_FA2TA_ratio = match.FeatureMatcher.DEFAULT_MATCH_FA2TA_RATIO
 
 
     def __init__(self, parent):

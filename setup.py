@@ -12,14 +12,15 @@ package_name = "pynsn"
 
 install_requires = ["numpy>=1.6",
                     "scipy>=1.0",
+                    "pandas>=1.3",
                     "Pillow>=5.0",
-                    'PyQt5>=5.14',
-                    "svgwrite>=1.4",
-                    "pandas>=1.3"]
+                    "svgwrite>=1.4"
+                    ]
 
 extras_require = {
+    'gui':                ["PyQt5>=5.14"],
     'pygame':             ["pygame>=1.9"],
-    'expyriment':         ["expyriment>=0.9"],
+    'expyriment':         ["expyriment>=0.9"]
 }
 
 # FIXME Docu extra requirements, make some packages suggested
@@ -27,11 +28,11 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["dot_array","image", "lib", "qt", "database", "sequence"]:
+for subp in ["nsn","image", "lib", "gui", "database", "sequence"]:
     packages.append("{}.{}".format(package_name, subp))
 
-if _vi.major< 1:
-    raise RuntimeError("{0} requires Python 3 or larger.".format(package_name))
+if _vi.major < 1 and _vi.minor < 5:
+    raise RuntimeError("{0} requires Python 3.5 or larger.".format(package_name))
 
 def readme():
     directory = os.path.dirname(os.path.join(

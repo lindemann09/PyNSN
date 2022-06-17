@@ -26,6 +26,13 @@ def cartesian2polar(xy, radii_only=False):
         return np.array([radii, np.arctan2(xy[:, 1], xy[:, 0])]).T
 
 
+def cartesian2image_coordinates(xy, image_size):
+    """convert cartesian to image coordinates with (0,0) at top left and
+    reversed y axis
+    """
+    return (np.array(xy) * [1, -1]) + image_size // 2
+
+
 def lines_intersect(line1, line2):
     # lines_overlap_on_x_axis
     x1, x2 = line1[0].x, line1[1].x

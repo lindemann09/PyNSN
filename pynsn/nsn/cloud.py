@@ -207,3 +207,15 @@ class _Cloud(object):
         xy = geometry.polar2cartesian(tmp_polar)
         self._xy[neighbour_ids, :] = np.array([self._xy[neighbour_ids, 0] + xy[:, 0],
                                                self._xy[neighbour_ids, 1] + xy[:, 1]]).T
+
+
+class _RestrictedCloud(_Cloud):
+
+    def __init__(self, target_array_radius, minimum_gap,
+                 xy=None, attributes=None):
+        """Just a Cloud with additional variables target_array_radius, minimum_gap
+         used as parent for Object Arrays"""
+        super().__init__(xy=xy, attributes=attributes)
+
+        self.target_array_radius = target_array_radius
+        self.minimum_gap = minimum_gap

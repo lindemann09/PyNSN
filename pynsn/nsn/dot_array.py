@@ -8,15 +8,15 @@ import random
 import numpy as np
 from scipy import spatial
 
-from .cloud import _Cloud
+from .cloud import _RestrictedCloud
 from ..lib import misc, geometry
-from pynsn.dot_array.shape import Dot
+from pynsn.nsn.shape import Dot
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
 
-class DotArray(_Cloud):
+class DotArray(_RestrictedCloud):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -27,12 +27,15 @@ class DotArray(_Cloud):
                  xy=None, diameters=None, attributes=None):
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
-        This features allow find shuffling free position and matching
+
+        This features allows shuffling free position and matching
         features.
 
         target_array_radius or dot_array_file needs to be define."""
 
-        super().__init__(xy=xy, attributes=attributes)
+        super().__init__(xy=xy, attributes=attributes,
+                         target_array_radius=target_array_radius,
+                         minimum_gap=minimum_gap)
         if diameters is None:
             self._diameters = np.array([])
         else:
@@ -40,9 +43,6 @@ class DotArray(_Cloud):
         if self._xy.shape[0] != len(self._diameters):
             raise RuntimeError("Bad shaped data: " +
                     u"xy has not the same length as item_diameters")
-
-        self.target_array_radius = target_array_radius
-        self.minimum_gap = minimum_gap
 
     @property
     def diameters(self):
@@ -319,7 +319,7 @@ class DotArray(_Cloud):
                          min_distance_area_boarder) - (dot_diameter / 2.0)
         while True:
             cnt += 1
-            ##  polar method seems to produce centeral clustering
+            ##  polar method seems to produce central clustering
             #  proposal_polar =  np.array([random.random(), random.random()]) *
             #                      (target_radius, TWO_PI)
             #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
@@ -400,15 +400,15 @@ class DotArray(_Cloud):
                     deviant.delete(rnd)
                 else:
                     # copy a random dot
-                    rnd_dot = self.get([rnd])[0]
+                    rnd_object = self.get([rnd])[0]
                     try:
-                        rnd_dot.xy = deviant.random_free_position(
-                            dot_diameter=rnd_dot.diameter,
+                        rnd_object.xy = deviant.random_free_position(
+                            dot_diameter=rnd_object.diameter,
                             prefer_inside_field_area=prefer_keeping_field_area)
                     except:
                         # no free position
                         raise RuntimeError("Can't make the deviant. No free position")
-                    deviant.add(rnd_dot)
+                    deviant.add(rnd_object)
 
         return deviant
 

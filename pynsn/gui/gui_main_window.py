@@ -10,17 +10,17 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import random_dot_array,  VisualFeatures
-from ..lib import colour
+from .. import factory,  VisualFeatures
+from ..nsn import colour
 from ..image import pil
 from ..sequence import dot_array_sequence
 
 
-DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
-                                            item_diameter_mean=15,
-                                            item_diameter_range=[5, 40],
-                                            item_diameter_std=8,
-                                            minimum_gap=2),
+DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
+                                           item_diameter_mean=15,
+                                           item_diameter_range=[5, 40],
+                                           item_diameter_std=8,
+                                           minimum_gap=2),
                  colour.ImageColours(target_area="#303030",
                                       field_area=None,
                                       field_area_outer=None,
@@ -29,10 +29,10 @@ DEFAULT_ARRAY = (40, random_dot_array.Specs(target_area_radius=200,
                                       default_dot_colour="green",
                                       background="gray"))
 
-ICON = (11, random_dot_array.Specs(target_area_radius=200,
-                                   item_diameter_mean=35,
-                                   item_diameter_range=[5, 80],
-                                   item_diameter_std=20),
+ICON = (11, factory.DotArraySpecs(target_area_radius=200,
+                                  item_diameter_mean=35,
+                                  item_diameter_range=[5, 80],
+                                  item_diameter_std=20),
         colour.ImageColours(target_area="#3e3e3e",
                              field_area=None,
                              field_area_outer="expyriment_orange",
@@ -118,7 +118,7 @@ class GUIMainWindow(QMainWindow):
         # ICON
         colours = ICON[2]
         self._image = pil.create(
-                        dot_array=random_dot_array.create(n_dots=ICON[0], specs = ICON[1]),
+                        dot_array=factory.random_array(n_dots=ICON[0], specs= ICON[1]),
                         colours=colours, antialiasing=True)
 
         self.setWindowIcon(QIcon(self.pixmap()))
@@ -128,16 +128,16 @@ class GUIMainWindow(QMainWindow):
     def make_new_array(self):
 
         try:
-            self.dot_array = random_dot_array.create(n_dots=self.get_number(),
-                                                     specs=self.get_specs())
+            self.dot_array = factory.random_array(n_dots=self.get_number(),
+                                                  specs=self.get_specs())
         except (RuntimeError, ValueError) as error:
             self.main_widget.text_error_feedback(error)
             raise error
 
         if self.settings.bicoloured.isChecked():
-            data_array2 = random_dot_array.create(n_dots=self.main_widget.number2.value,
-                                                  specs=self.get_specs(),
-                                                  occupied_space=self.dot_array)
+            data_array2 = factory.random_array(n_dots=self.main_widget.number2.value,
+                                               specs=self.get_specs(),
+                                               occupied_space=self.dot_array)
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
@@ -169,13 +169,13 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_specs(self):
-        return random_dot_array.Specs(target_area_radius=self.main_widget.target_array_radius.value,
-                                      item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                                      item_diameter_range=[self.main_widget.item_diameter_range.value1,
+        return factory.DotArraySpecs(target_area_radius=self.main_widget.target_array_radius.value,
+                                     item_diameter_mean=self.main_widget.item_diameter_mean.value,
+                                     item_diameter_range=[self.main_widget.item_diameter_range.value1,
                                                       self.main_widget.item_diameter_range.value2],
-                                      item_diameter_std=self.main_widget.item_diameter_std.value,
-                                      minimum_gap=self.main_widget.minimum_gap.value,
-                                      min_distance_area_boarder=0)
+                                     item_diameter_std=self.main_widget.item_diameter_std.value,
+                                     minimum_gap=self.main_widget.minimum_gap.value,
+                                     min_distance_area_boarder=0)
 
     def get_image_colours(self):
         # check colour input

@@ -2,12 +2,10 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy as _copy
 from ..lib import misc as _misc
-from ..lib.colour import Colour as _Colour
-from .dot_array import DotArray
-from .shape import Dot
+from .dot_array import DotArray as _DotArray
+from . import shape as _shape
 
-
-class Specs(object):
+class DotArraySpecs(object):
 
     def __init__(self,
                  target_area_radius,
@@ -58,31 +56,33 @@ class Specs(object):
         return _copy.deepcopy(self)
 
 
-def create(n_dots, specs, attribute=None, occupied_space=None):
+def random_array(specs, n_dots, attribute=None, occupied_space=None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     returns None if not possible
     """
 
-    assert isinstance(specs, Specs)
+    if isinstance(specs, DotArraySpecs):
+        rtn = _DotArray(target_array_radius=specs.target_array_radius,
+                        minimum_gap=specs.minimum_gap)
 
-    rtn = DotArray(target_array_radius=specs.target_array_radius,
-                   minimum_gap=specs.minimum_gap)
+        # random diameter from beta distribution with exact mean and str
+        diameters = _misc.random_beta(size=n_dots,
+                                      number_range=specs.item_diameter_range,
+                                      mean=specs.item_diameter_mean,
+                                      std=specs.item_diameter_std)
 
-    # random diameter from beta distribution with exact mean and str
-    diameters = _misc.random_beta(size=n_dots,
-                                 number_range=specs.item_diameter_range,
-                                 mean=specs.item_diameter_mean,
-                                 std=specs.item_diameter_std)
+        for dia in diameters:
+            try:
+                xy = rtn.random_free_position(dot_diameter=dia,
+                                              occupied_space=occupied_space,
+                                              min_distance_area_boarder=
+                                                specs.min_distance_area_boarder)
+            except:
+                return None
+            rtn.add([_shape.Dot(x=xy[0], y=xy[1], diameter=dia, attribute=attribute)])
 
-    for dia in diameters:
-        try:
-            xy = rtn.random_free_position(dot_diameter=dia,
-                                          occupied_space=occupied_space,
-                                          min_distance_area_boarder=
-                                            specs.min_distance_area_boarder)
-        except:
-            return None
-        rtn.add([Dot(x=xy[0], y=xy[1], diameter=dia, attribute=attribute)])
-
+    else:
+        raise TypeError("specs has to be of type DotArraySpecs, but not {}".format(
+                        type(specs).__name__))
     return rtn

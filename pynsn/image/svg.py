@@ -2,11 +2,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 import svgwrite as _svg
-from ..lib import colour as _colour
-from ..dot_array.dot_array import DotArray
+from ..nsn import colour as _colour
+from ..nsn.dot_array import DotArray as _DotArray
+from ..lib.geometry import cartesian2image_coordinates as _c2i_pos
 
 def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
-    assert isinstance(dot_array, DotArray)
+    assert isinstance(dot_array, _DotArray)
     if not isinstance(colours, _colour.ImageColours):
         raise ValueError("Colours must be a pynsn.ImageColours instance")
 
@@ -15,14 +16,14 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
     svgdraw = _svg.Drawing(size = (px, px), filename=filename)
 
     if colours.target_area.colour is not None:
-        svgdraw.add(svgdraw.circle(center=_convert_pos(_np.zeros(2), image_size),
+        svgdraw.add(svgdraw.circle(center=_c2i_pos(_np.zeros(2), image_size),
                                    r= image_size // 2,
                                    # stroke_width="0", stroke="black",
                                    fill=colours.target_area.colour))
 
     dot_array = dot_array.copy()
     dot_array.round(decimals=1,int_type=float)
-    for xy, d, att in zip(_convert_pos(dot_array.xy, image_size),
+    for xy, d, att in zip(_c2i_pos(dot_array.xy, image_size),
                           dot_array.diameters,
                           dot_array.attributes):
         if att is None:
@@ -38,8 +39,3 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
                                     fill=c.colour))
     # FIXME TODO draw convex hulls
     return svgdraw
-
-
-def _convert_pos(xy, image_size): # TODO coordinate system
-    """convert dot pos to svg coordinates"""
-    return (xy * [1, -1]) + image_size // 2

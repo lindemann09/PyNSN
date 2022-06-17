@@ -7,9 +7,9 @@ from hashlib import md5 as _md5
 import numpy as _np
 
 from pynsn.lib import misc as _misc
-from pynsn.dot_array.dot_array import DotArray as _DotArray
-from pynsn.dot_array.visual_features import VisualFeatures as _Feat
-from pynsn.dot_array import random_dot_array
+from pynsn.nsn.dot_array import DotArray as _DotArray
+from pynsn.nsn.visual_features import VisualFeatures as _Feat
+from pynsn.nsn import factory
 
 
 class DASequence(object):
@@ -147,10 +147,10 @@ def create(specs,
         else:
             source_number = min + ((max - min)//2)
 
-    _misc.check_feature_list(match_feature)
+    check_feature_list(match_feature)
 
-    if not isinstance(specs, random_dot_array.Specs):
-        raise TypeError("Specs have to be random_dot_array.Specs, but not {}".format(
+    if not isinstance(specs, factory.DotArraySpecs):
+        raise TypeError("Specs has to be of type DotArraySpecs, but not {}".format(
             type(specs).__name__))
 
     # keep field area
@@ -162,8 +162,8 @@ def create(specs,
     # make source image
     if source_number is None:
         source_number = min + int((max - min)/2)
-    source_da = random_dot_array.create(n_dots=source_number,
-                                        specs=specs)
+    source_da = factory.random_array(n_dots=source_number,
+                                     specs=specs)
     source_da._match.match_feature(feature=match_feature, value=match_value)
     source_da.center_array()
     source_da.round(round_decimals)
@@ -226,7 +226,7 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
             return [], "ERROR: Can't find the a make matched deviants"
 
         da._match.match_feature(feature=match_feature,
-                                reference_dot_array=reference_da)
+                                value=reference_da.features.get(match_feature))
         cnt = 0
         while True:
             cnt += 1
@@ -244,4 +244,37 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
             break
 
     return da_sequence, error
+
+
+def check_feature_list(feature_list):
+    """helper function
+    raises TypeError or Runtime errors if checks fail
+    * type check
+    * dependency check
+    """
+
+    size_occured = ""
+    space_occured = ""
+    error = "Incompatible properties to match: {} & {}"
+
+    if not isinstance(feature_list, (tuple, list)):
+        feature_list = [feature_list]
+
+    for x in feature_list:
+        if x not in _Feat.ALL_FEATURES:
+            raise TypeError("Parameter is not a continuous feature or a " + \
+                            "list of continuous properties")
+            # continious property or visual feature
+
+        if x in _Feat.SIZE_FEATURES:
+            if len(size_occured)>0:
+                raise RuntimeError(error.format(x, size_occured))
+            else:
+                size_occured = x
+
+        if x in _Feat.SPACE_FEATURES:
+            if len(space_occured)>0:
+                raise RuntimeError(error.format(x, space_occured))
+            else:
+                space_occured = x
 
