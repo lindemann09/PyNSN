@@ -57,7 +57,7 @@ class GUIMainWindow(QMainWindow):
 
     def initUI(self):
 
-        # menues
+        # menus
         exitAction = QAction(QIcon('exit.png'), '&Exit',
                                        self)
         exitAction.setShortcut('Ctrl+Q')

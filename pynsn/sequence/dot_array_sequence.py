@@ -45,7 +45,8 @@ class DASequence(object):
 
     @property
     def min_max_numerosity(self):
-        return (self.dot_arrays[0]._features.numerosity, self.dot_arrays[-1]._features.numerosity)
+        return self.dot_arrays[0].features.numerosity, \
+               self.dot_arrays[-1].features.numerosity
 
     @property
     def hash(self):
@@ -137,15 +138,15 @@ def create(specs,
     if l != 2:
         raise ValueError("min_max_numerosity has to be a pair of (min, max)")
 
-    min, max = sorted(min_max_numerosity)
+    min_, max_ = sorted(min_max_numerosity)
 
     if source_number is None:
         if match_feature in [_Feat.SPARSITY]:
-            source_number = min
+            source_number = min_
         elif match_feature in [_Feat.FIELD_AREA, _Feat.COVERAGE] :
-            source_number = max
+            source_number = max_
         else:
-            source_number = min + ((max - min)//2)
+            source_number = min_ + ((max_ - min_)//2)
 
     check_feature_list(match_feature)
 
@@ -161,7 +162,7 @@ def create(specs,
 
     # make source image
     if source_number is None:
-        source_number = min + int((max - min)/2)
+        source_number = min_ + int((max_ - min_)/2)
     source_da = factory.random_array(n_dots=source_number,
                                      specs=specs)
     source_da = match.visual_feature(source_da, feature=match_feature, value=match_value)
@@ -173,11 +174,11 @@ def create(specs,
     rtn.method = match_feature
 
     # decreasing
-    if min < source_number:
+    if min_ < source_number:
         tmp, error = _make_matched_deviants(
             reference_da=source_da,
             match_feature=match_feature,
-            target_numerosity=min,
+            target_numerosity=min_,
             round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
 
@@ -187,11 +188,11 @@ def create(specs,
     # source number
     rtn.append_dot_arrays(source_da)
     # increasing
-    if max > source_number:
+    if max_ > source_number:
         tmp, error = _make_matched_deviants(
             reference_da=source_da,
             match_feature=match_feature,
-            target_numerosity=max,
+            target_numerosity=max_,
             round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
         rtn.append_dot_arrays(tmp)
