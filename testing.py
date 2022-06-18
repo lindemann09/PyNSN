@@ -5,6 +5,8 @@ import pynsn
 import numpy as np
 
 
+
+
 # define the visual features of the  dot array
 da_specification = factory.DotArraySpecs(
     target_area_radius=200,

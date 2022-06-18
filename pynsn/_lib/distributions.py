@@ -29,7 +29,17 @@ class _PyNSNDistribution(object):
         return np_vector
 
     def sample(self, n):
-        pass
+        return _np.array([0]*n)
+
+    def pyplot_samples(self, n=100000):
+
+        try:
+            from matplotlib.pyplot import hist
+        except:
+            raise ImportError("To use pyplot, please install matplotlib.")
+
+        return hist(self.sample(n=n), bins=100)[2]
+
 
 class _PyNSNDistributionMuSigma(_PyNSNDistribution):
 
