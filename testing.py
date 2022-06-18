@@ -1,22 +1,28 @@
-from pynsn import factory, Colour, ImageColours, DotArray
+from pynsn import factory, Colour, ImageColours, DotArray, distr
 from pynsn.image import svg
+
+import pynsn
+import numpy as np
 
 
 # define the visual features of the  dot array
 da_specification = factory.DotArraySpecs(
     target_area_radius=200,
-    item_diameter_mean=15,
-    item_diameter_range=(10, 30),
-    item_diameter_std=2,
+    diameter_distribution=distr.Beta(min_max=(10, 30), mu=15, sigma=2),
     minimum_gap=2)
+#da_specification = factory.RectangleArraySpecs(
+#    target_area_radius=200,
+#    width_distribution=distr.Beta(min_max=(10, 30), mu=15, sigma=2),
+#    height_distribution=distr.Beta(min_max=(10, 30), mu=15, sigma=2),
+#    minimum_gap=2)
 
+print(da_specification.as_dict())
 # generate on array with 100 dots
 stimulus = factory.random_array(da_specification, 5)
+
 stimulus2 = factory.random_array(da_specification, 4, attribute="skyblue",
                                  occupied_space=stimulus)
 stimulus.join(stimulus2)
-
-
 
 for x in stimulus.get():
     print(x)

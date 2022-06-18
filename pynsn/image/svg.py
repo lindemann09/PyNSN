@@ -3,8 +3,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as _np
 import svgwrite as _svg
 from . import _colour
-from ..nsn.dot_array import DotArray as _DotArray
-from ..lib.geometry import cartesian2image_coordinates as _c2i_pos
+from .._nsn.dot_array import DotArray as _DotArray
+from .._lib.geometry import cartesian2image_coordinates as _c2i_pos
 
 def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
     assert isinstance(dot_array, _DotArray)

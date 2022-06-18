@@ -9,8 +9,8 @@ import numpy as np
 from scipy import spatial
 
 from .cloud import _RestrictedCloud
-from ..lib import misc, geometry
-from pynsn.nsn.shape import Dot
+from .._lib import misc, geometry
+from .shape import Dot
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -30,9 +30,7 @@ class DotArray(_RestrictedCloud):
 
         This features allows shuffling free position and matching
         features.
-
-        target_array_radius or dot_array_file needs to be define."""
-
+        """
         super().__init__(xy=xy, attributes=attributes,
                          target_array_radius=target_array_radius,
                          minimum_gap=minimum_gap)
@@ -44,6 +42,15 @@ class DotArray(_RestrictedCloud):
             raise RuntimeError("Bad shaped data: " +
                     u"xy has not the same length as item_diameters")
 
+    def add(self, dots):
+        """append one dot or list of dots"""
+        if not isinstance(dots, (list, tuple)):
+            dots = [dots]
+        for d in dots:
+            assert isinstance(d, Dot)
+            self._append_xy_attribute(xy=d.xy, attributes=d.attribute)
+            self._diameters = np.append(self._diameters, d.diameter)
+    
     @property
     def diameters(self):
         return self._diameters
@@ -83,15 +90,6 @@ class DotArray(_RestrictedCloud):
         self.minimum_gap = dict["minimum_gap"]
         self.target_array_radius = dict["target_array_radius"]
 
-    def add(self, dots):
-        """append one dot or list of dots"""
-        if not isinstance(dots, (list, tuple)):
-            dots = [dots]
-        for d in dots:
-            assert isinstance(d, Dot)
-            self._append_xy_attribute(xy=d.xy, attributes=d.attribute)
-            self._diameters = np.append(self._diameters, d.diameter)
-
     def clear(self):
         super().clear()
         self._diameters = np.array([])
@@ -116,16 +114,20 @@ class DotArray(_RestrictedCloud):
                         diameters=self._diameters[indices].copy(),
                         attributes=self._attributes[indices].copy())
 
-    def distances(self, xy, diameter):
-        """Distances toward a single point (numpy arrays xy, diameter)
-
+    def distances(self, dot):
+        """Distances toward a single dot
         negative numbers indicate overlap
+
+        Returns
+        -------
+        distances : numpy array of distances
         """
+        assert isinstance(dot, Dot)
         if len(self._xy) == 0:
             return np.array([])
         else:
-            return np.hypot(self._xy[:, 0] - xy[0], self._xy[:, 1] - xy[1]) - \
-                   ((self._diameters + diameter) / 2.0)
+            return np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
+                   ((self._diameters + dot.diameter) / 2.0)
 
     @property
     def center_of_mass(self):
@@ -136,14 +138,10 @@ class DotArray(_RestrictedCloud):
         """returns all dots
 
         indices int or list of ints
-         filtering possible:
-         if diameter is defined it returns only dots a particular
-         diameter
-
-         """
+        """
 
         if indices is None:
-            return [Dot(x=xy[0], y=xy[1], diameter=dia, attribute=att) \
+            return [Dot(xy=xy, diameter=dia, attribute=att) \
                     for xy, dia, att in zip(self._xy, self._diameters,
                                             self._attributes)]
         try:
@@ -151,27 +149,21 @@ class DotArray(_RestrictedCloud):
         except:
             indices = [indices]
 
-        return [Dot(x=xy[0], y=xy[1], diameter=dia, attribute=att) \
+        return [Dot(xy=xy, diameter=dia, attribute=att) \
                     for xy, dia, att in zip(self._xy[indices, :],
                                         self._diameters[indices],
                                         self._attributes[indices])]
 
-    def find(self, diameter=None, item_attributes=None):
-        """returns all dots
-        indices : int or list of ins
-
-         filtering possible:
-         if diameter/colour/picture is defined it returns only dots a
-         particular diameter/colour/picture
-
-         """
+    def find(self, diameter=None, attribute=None):
+        """returns filtered dots
+        """
         rtn = []
         for xy, dia, att in zip(self._xy, self._diameters, self._attributes):
             if (diameter is not None and dia != diameter) or \
-                    (item_attributes is not None and att !=  item_attributes):
+                    (attribute is not None and att != attribute):
                 continue
 
-            rtn.append(Dot(x=xy[0], y=xy[1], diameter=dia, attribute=att))
+            rtn.append(Dot(xy=xy, diameter=dia, attribute=att))
         return rtn
 
     def csv(self, variable_names=True,
@@ -203,9 +195,6 @@ class DotArray(_RestrictedCloud):
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
                 rtn += "{},".format(self._features.numerosity)
-            #rtn += num_format % self._xy[cnt, 0] + "," + num_format %
-                # self._xy[cnt, 1] + "," + \
-            #       num_format % self._diameters[cnt]
             rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
                                      self._diameters[cnt])
             if attribute_column:
@@ -218,12 +207,69 @@ class DotArray(_RestrictedCloud):
         assert isinstance(dot_array, DotArray)
         self.add(dot_array.get())
 
+    def random_free_position(self, dot_diameter,
+                             allow_overlapping=False,
+                             prefer_inside_field_area=False,
+                             squared_array = False,
+                             min_distance_area_boarder = 0,
+                             occupied_space=None):
+        """returns a available random xy position
+
+        raise exception if not found
+        occupied space: see generator generate
+        """
+
+        try_out_inside_convex_hull = 1000
+
+        if prefer_inside_field_area:
+            delaunay = spatial.Delaunay(self._features.convex_hull._xy)
+        else:
+            delaunay = None
+        cnt = 0
+
+        target_radius = self.target_array_radius - min_distance_area_boarder - \
+                        (dot_diameter / 2.0)
+        proposal_dot = Dot(diameter=dot_diameter)
+        while True:
+            cnt += 1
+            ##  polar method seems to produce central clustering
+            #  proposal_polar =  np.array([random.random(), random.random()]) *
+            #                      (target_radius, TWO_PI)
+            #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
+            #Note! np.random generates identical numbers under multiprocessing
+
+            proposal_dot.xy = np.array([random.random(), random.random()]) \
+                          * 2 * target_radius - target_radius
+
+            if not squared_array:
+                bad_position =  target_radius <= proposal_dot.polar_radius
+            else:
+                bad_position = False
+
+            if not bad_position and prefer_inside_field_area and \
+                    cnt < try_out_inside_convex_hull:
+                bad_position = delaunay.find_simplex(np.array(proposal_dot.xy)) < 0 # TODO check correctness, does it take into account size?
+
+            if not bad_position and not allow_overlapping:
+                # find bad_positions
+                dist = self.distances(proposal_dot)
+                if occupied_space:
+                    dist = np.append(dist, occupied_space.distances(proposal_dot))
+                idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
+                bad_position = len(idx) > 0
+
+            if not bad_position:
+                return proposal_dot.xy
+            elif cnt > 3000:
+                raise RuntimeError(u"Can't find a free position") # TODO
+
     def _remove_overlap_from_inner_to_outer(self, minimum_gap):
 
         shift_required = False
         # from inner to outer remove overlaps
         for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
-            dist = self.distances(self._xy[i, :], self._diameters[i])
+            dist = self.distances(Dot(xy=self._xy[i, :],
+                                      diameter=self._diameters[i]))
             idx_overlaps = np.where(dist < minimum_gap)[0].tolist()  # overlapping dot ids
             if len(idx_overlaps) > 1:
                 shift_required = True
@@ -294,61 +340,6 @@ class DotArray(_RestrictedCloud):
             return True, ""
         else:
             return self.realign()  # recursion
-
-    def random_free_position(self, dot_diameter,
-                             allow_overlapping=False,
-                             prefer_inside_field_area=False,
-                             squared_array = False,
-                             min_distance_area_boarder = 0,
-                             occupied_space=None):
-        """returns a available random xy position
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-
-        try_out_inside_convex_hull = 1000
-
-        if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self._features.convex_hull._xy)
-        else:
-            delaunay = None
-        cnt = 0
-
-        target_radius = (self.target_array_radius -
-                         min_distance_area_boarder) - (dot_diameter / 2.0)
-        while True:
-            cnt += 1
-            ##  polar method seems to produce central clustering
-            #  proposal_polar =  np.array([random.random(), random.random()]) *
-            #                      (target_radius, TWO_PI)
-            #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-            #Note! np.random generates identical numbers under multiprocessing
-
-            proposal_xy = np.array([random.random(), random.random()]) \
-                          * 2 * self.target_array_radius - self.target_array_radius
-
-            bad_position = False
-            if not squared_array:
-                bad_position =  target_radius <= \
-                                np.hypot(proposal_xy[0], proposal_xy[1])
-
-            if not bad_position and prefer_inside_field_area and cnt < \
-                    try_out_inside_convex_hull:
-                bad_position = delaunay.find_simplex(proposal_xy) < 0
-
-            if not bad_position and not allow_overlapping:
-                # find bad_positions
-                dist = self.distances(proposal_xy, dot_diameter)
-                if occupied_space:
-                    dist = np.append(dist, occupied_space.distances(proposal_xy, dot_diameter))
-                idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
-                bad_position = len(idx) > 0
-
-            if not bad_position:
-                return proposal_xy
-            elif cnt > 3000:
-                raise RuntimeError(u"Can't find a free position") #FIXME
 
     def shuffle_all_positions(self, allow_overlapping=False,
                               min_distance_area_boarder=0):
@@ -423,6 +414,6 @@ class DotArray(_RestrictedCloud):
             if c is not None:
                 da = DotArray(target_array_radius=self.target_array_radius,
                               minimum_gap=self.minimum_gap)
-                da.add(self.find(item_attributes =c))
+                da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn

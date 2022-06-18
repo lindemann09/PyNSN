@@ -99,7 +99,7 @@ class ExpyrimentDASequence(object):
 
     def preload(self, until_percent=100, time=None, do_not_return_earlier=False):
         """
-        preloaded all nsn stimuli
+        preloaded all _nsn stimuli
 
         Note: this will take a while!
 

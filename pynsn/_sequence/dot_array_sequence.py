@@ -6,11 +6,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from hashlib import md5 as _md5
 import numpy as _np
 
-from pynsn.lib import misc as _misc
-from pynsn.nsn.dot_array import DotArray as _DotArray
-from pynsn.nsn.visual_features import VisualFeatures as _Feat
-from pynsn.nsn import factory
-from pynsn.nsn import match
+from .._lib import misc as _misc
+from .._nsn.dot_array import DotArray as _DotArray
+from .._nsn.visual_features import VisualFeatures as _Feat
+from .. import factory
+from .. import match
 
 class DASequence(object):
 
@@ -62,7 +62,7 @@ class DASequence(object):
 
         dicts = [x._features.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
-        rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same sequence ID
+        rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same _sequence ID
         return rtn
 
     def get_features_dataframe(self):

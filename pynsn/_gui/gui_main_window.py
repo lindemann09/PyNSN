@@ -10,16 +10,17 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import factory,  VisualFeatures, match
+from .. import factory,  match
+from .._nsn.visual_features import VisualFeatures
 from ..image import _colour
 from ..image import pil
-from ..sequence import dot_array_sequence
+from .._sequence import dot_array_sequence
 
 
 DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
-                                           item_diameter_mean=15,
-                                           item_diameter_range=[5, 40],
-                                           item_diameter_std=8,
+                                           diameter_mean=15,
+                                           diameter_range=[5, 40],
+                                           diameter_std=8,
                                            minimum_gap=2),
                  _colour.ImageColours(target_area="#303030",
                                      field_area=None,
@@ -30,9 +31,9 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                      background="gray"))
 
 ICON = (11, factory.DotArraySpecs(target_area_radius=200,
-                                  item_diameter_mean=35,
-                                  item_diameter_range=[5, 80],
-                                  item_diameter_std=20),
+                                  diameter_mean=35,
+                                  diameter_range=[5, 80],
+                                  diameter_std=20),
         _colour.ImageColours(target_area="#3e3e3e",
                             field_area=None,
                             field_area_outer="expyriment_orange",
@@ -80,7 +81,7 @@ class GUIMainWindow(QMainWindow):
         matchAction = QAction('&Match property', self)
         matchAction.triggered.connect(self.action_match)
 
-        sequenceAction = QAction('&Make sequence', self)
+        sequenceAction = QAction('&Make _sequence', self)
         sequenceAction.triggered.connect(self.action_make_sequence)
 
         aboutAction = QAction('&About', self)
@@ -170,12 +171,11 @@ class GUIMainWindow(QMainWindow):
 
     def get_specs(self):
         return factory.DotArraySpecs(target_area_radius=self.main_widget.target_array_radius.value,
-                                     item_diameter_mean=self.main_widget.item_diameter_mean.value,
-                                     item_diameter_range=[self.main_widget.item_diameter_range.value1,
-                                                      self.main_widget.item_diameter_range.value2],
-                                     item_diameter_std=self.main_widget.item_diameter_std.value,
-                                     minimum_gap=self.main_widget.minimum_gap.value,
-                                     min_distance_area_boarder=0)
+                                     diameter_mean=self.main_widget.item_diameter_mean.value,
+                                     diameter_range=[self.main_widget.item_diameter_range.value1,
+                                                     self.main_widget.item_diameter_range.value2],
+                                     diameter_std=self.main_widget.item_diameter_std.value,
+                                     minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_colours(self):
         # check colour input
@@ -282,7 +282,7 @@ class GUIMainWindow(QMainWindow):
         """"""
         prop = self.dot_array._features.get_features_dict()
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
-                                                                   prop)  #
+                                                                  prop)  #
         if feature is not None:
             self.dot_array = match.visual_feature(self.dot_array,
                                                    feature, value=value)

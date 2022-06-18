@@ -23,11 +23,11 @@ class MainWidget(QWidget):
         self.number2 = LabeledNumberInput("Number 2", 5)
 
         self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.item_diameter_mean)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.item_diameter_std)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.diameter_mean)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.diameter_std)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=da_specs.item_diameter_range[0],
-                                                               value2=da_specs.item_diameter_range[1])
+                                                               value1=da_specs.diameter_range[0],
+                                                               value2=da_specs.diameter_range[1])
 
         self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
 

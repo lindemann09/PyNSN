@@ -4,7 +4,7 @@ from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
-from ..lib.geometry import cartesian2image_coordinates as _c2i_coord
+from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 
 
 def create(dot_array, colours, antialiasing=True,
@@ -17,7 +17,7 @@ def create(dot_array, colours, antialiasing=True,
     antialiasing: Ture or integer
 
     gabor_filter: from PIL.ImageFilter
-    default_dot_colour: if colour is undefined in nsn
+    default_dot_colour: if colour is undefined in _nsn
     """
 
     if isinstance(antialiasing, bool):

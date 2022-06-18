@@ -28,7 +28,7 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["nsn","image", "lib", "gui", "database", "sequence"]:
+for subp in ["_nsn","image", "_lib", "gui", "database", "_sequence"]:
     packages.append("{}.{}".format(package_name, subp))
 
 if _vi.major < 1 and _vi.minor < 5:

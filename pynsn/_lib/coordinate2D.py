@@ -43,7 +43,7 @@ class Coordinate2D(object):
 
     @property
     def xy(self):
-        return (self.x, self.y)
+        return self.x, self.y
 
     @xy.setter
     def xy(self, xy_tuple):
@@ -69,7 +69,7 @@ class Coordinate2D(object):
     @property
     def polar(self):
         """polar coordinate (radius, pos_angle) """
-        return (self.polar_radius, self.polar_angle)
+        return self.polar_radius, self.polar_angle
 
     @polar.setter
     def polar(self, rad_ang):

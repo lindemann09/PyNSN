@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 import numpy as np
 from scipy import spatial
-from ..lib import misc
-from ..lib.geometry import cartesian2polar, polar2cartesian
+from .._lib import misc
+from .._lib.geometry import cartesian2polar, polar2cartesian
 
 
 class VisualFeatures(object):
@@ -38,7 +38,7 @@ class VisualFeatures(object):
 
 
     def __init__(self, dot_array):
-        # nsn or dot_cloud
+        # _nsn or dot_cloud
         self.da = dot_array
         self._convex_hull = None
 

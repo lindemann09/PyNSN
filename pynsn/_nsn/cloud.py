@@ -9,7 +9,7 @@ import json
 from random import random
 
 import numpy as np
-from ..lib import misc, geometry
+from .._lib import misc, geometry
 from .visual_features import VisualFeatures
 
 class _Cloud(object):
@@ -100,11 +100,11 @@ class _Cloud(object):
 
     @property
     def hash(self):
-        """md5_hash of position, diameter"""
+        """md5_hash of positions and perimeter"""
 
         m = md5()
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
-        m.update(self.surface_areas.tobytes())
+        m.update(self.perimeter.tobytes())
         return m.hexdigest()
 
     def round(self, decimals=0, int_type=np.int64):
@@ -126,9 +126,8 @@ class _Cloud(object):
             d.update({"attributes": self._attributes.tolist()})
         return d
 
-
     def read_from_dict(self, dict):
-        """read Dot collection from dict"""
+        """read dot array from dict"""
         self._xy = np.array(dict["xy"])
         if not isinstance(dict["attributes"], (list, tuple)):
             att = [dict["attributes"]] * self._features.numerosity

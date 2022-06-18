@@ -5,9 +5,7 @@ Draw a random number from a beta dirstribution
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
-import random
 import numpy as np
-from pynsn.nsn.visual_features import VisualFeatures
 
 try:
     from math import log2
@@ -25,76 +23,6 @@ def is_unicode_string(s):
 
 def is_byte_string(s):
     return isinstance(s, bytes)
-
-# randomizing
-random.seed()
-
-def random_beta(size, number_range, mean, std):
-    """Draw from beta distribution defined by the
-    number_range [a,b] and mean and standard distribution
-
-    Resulting distribution has the defined mean and std
-
-    for calculated shape parameters [alpha, beta] see `shape_parameter_beta`
-
-    Parameter:
-    ----------
-    number_range : tuple (numeric, numeric)
-        the range of the distribution
-    mean: numeric
-    std: numeric TODO
-
-    Note:
-    -----
-    Depending on the position of the mean in number range the
-    distribution is left or right skewed.
-
-    """
-
-
-    if std is None or number_range is None or std == 0:
-        return np.array([mean]*size)
-
-    alpha, beta = shape_parameter_beta(number_range=number_range,
-                                       mean=mean,
-                                       std=std)
-
-    # NOTE: do not use np.random.beta, because it produces identical numbers for
-    # different threads:
-    dist = np.array([random.betavariate(alpha=alpha, beta=beta) \
-                     for _ in range(size)])
-    dist = (dist - np.mean(dist)) / np.std(dist) # z values
-    return dist*std + mean
-
-def shape_parameter_beta(number_range, mean, std):
-    """Returns alpha (p) & beta (q) parameter for the beta distribution
-    http://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm
-
-    Parameter
-    ---------
-    number_range : tuple (numeric, numeric)
-        the range of the distribution
-    mean : numeric
-        the distribution mean
-    std : numeric
-         the distribution standard deviation
-
-    Returns
-    -------
-    parameter: tuple
-        shape parameter (alpha, beta) of the distribution
-
-    """
-
-    if mean <= number_range[0] or mean >= number_range[1] or \
-            number_range[0] >= number_range[1]:
-        raise RuntimeError("Mean has to be inside the defined number range")
-    f = float(number_range[1] - number_range[0])
-    mean = (mean - number_range[0]) / f
-    std = (std) / f
-    x = (mean * (1 - mean) / std ** 2 - 1)
-    return (x * mean, (1 - mean) * x)
-
 
 def join_dict_list(list_of_dicts):
     """make a dictionary of lists from a list of dictionaries"""

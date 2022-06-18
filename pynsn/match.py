@@ -1,9 +1,9 @@
 import random as _random
 import numpy as _np
-from ..lib import misc as _misc
-from ..lib import geometry as _geometry
-from .dot_array import DotArray as _DotArray
-from .visual_features import VisualFeatures as _VF
+from ._lib import misc as _misc
+from ._lib import geometry as _geometry
+from ._nsn.dot_array import DotArray as _DotArray
+from ._nsn.visual_features import VisualFeatures as _VF
 
 ITERATIVE_CONVEX_HULL_MODIFICATION = False
 TAKE_RANDOM_DOT_FROM_CONVEXHULL = True  # TODO maybe method for modification, set via GUI

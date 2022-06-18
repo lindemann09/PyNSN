@@ -2,12 +2,12 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from ..lib.coordinate2D import Coordinate2D
+from .._lib.coordinate2D import Coordinate2D
 
 
 class Dot(Coordinate2D):
 
-    def __init__(self, x=0, y=0, diameter=1, attribute=None):
+    def __init__(self, xy=(0, 0), diameter=1, attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -15,13 +15,12 @@ class Dot(Coordinate2D):
 
         Parameters
         ----------
-        x : numeric (default=0)
-        y : numeric (default=0)
+        xy : tuple of two numeric (default=(0, 0))
         diameter : numeric (default=1)
         attribute : attribute (string)
         """
 
-        Coordinate2D.__init__(self, x=x, y=y)
+        Coordinate2D.__init__(self, x=xy[0], y=xy[1])
         self.diameter = diameter
         if attribute is not None and not isinstance(attribute, str):
             raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
@@ -59,7 +58,7 @@ class Dot(Coordinate2D):
 
 class Rectangle(Coordinate2D):
 
-    def __init__(self, center_x=0, center_y=0, width=0, height=0, attribute=None):
+    def __init__(self, xy=(0, 0), size=(0,0), attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -67,19 +66,16 @@ class Rectangle(Coordinate2D):
 
         Parameters
         ----------
-        x : numeric (default=0)
-        y : numeric (default=0)
-        width : numeric (default=1)
-        height : numeric (default=1)
+        xy : tuple of two numeric (default=(0, 0))
+        size : tuple of two numeric (default=(0, 0))
         attribute : attribute (string)
         """
 
-        Coordinate2D.__init__(self, x=center_x, y=center_y)
+        Coordinate2D.__init__(self, x=xy[0], y=xy[1])
         if attribute is not None and not isinstance(attribute, str):
             raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
-        self.height = height
-        self.width = width
+        self.width, self.height = size
 
     @property
     def left(self):
@@ -97,6 +93,22 @@ class Rectangle(Coordinate2D):
     def bottom(self):
         return self.y - 0.5 * self.height
 
+    def edges(self):
+        """iterator over Coordinate2D representing all four edges
+        """
+        yield Coordinate2D(self.left, self.top)
+        yield Coordinate2D(self.right, self.top)
+        yield Coordinate2D(self.right, self.bottom)
+        yield Coordinate2D(self.left, self.bottom)
+
+    @property
+    def size(self):
+        return self.width, self.height
+
+    @size.setter
+    def size(self, size):
+        self.width, self.height  = size
+
     def is_point_inside_rect(self, xy):
         return (self.left <= xy[0] <= self.right and
                 self.top <= xy[1] <= self.bottom)
@@ -113,27 +125,29 @@ class Rectangle(Coordinate2D):
     def perimeter(self):
         return 2 * (self.width + self.height)
 
+    @property
+    def diagonal(self):
+        return math.sqrt(self.width**2 + self.height**2)
+
     def xy_distances(self, other):
         """return distances on both axes between rectangles. 0 indicates
         overlap off edges along that dimension.
         """
-
         assert isinstance(other, Rectangle)
         #overlaps in x or y
-        center_dist = abs(self.x - other.x), abs(self.y - other.y)
+        pos_dist = abs(self.x - other.x), abs(self.y - other.y)
         max_overlap_dist = (self.width + other.width)/2, (self.height + other.height)/2
-        if  center_dist[0] <= max_overlap_dist[0]:
+        if  pos_dist[0] <= max_overlap_dist[0]:
             dx = 0
         else:
-            dx = center_dist[0] - max_overlap_dist[0]
+            dx = pos_dist[0] - max_overlap_dist[0]
 
-        if  center_dist[1] <= max_overlap_dist[1]:
+        if  pos_dist[1] <= max_overlap_dist[1]:
             dy = 0
         else:
-            dy = center_dist[1] - max_overlap_dist[1]
+            dy = pos_dist[1] - max_overlap_dist[1]
 
         return dx, dy
-
 
     def distance(self, other):
         """Return Euclidean distance to the dot d. The function takes the
@@ -141,14 +155,13 @@ class Rectangle(Coordinate2D):
 
         Parameters
         ----------
-        d : Dot
+        other : Rectangle
 
         Returns
         -------
         distance : float
 
         """
-
         dx, dy = self.xy_distances(other=other)
         return math.hypot(dx, dy)
 

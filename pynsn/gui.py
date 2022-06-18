@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 """
 try:
@@ -10,7 +8,7 @@ Install `PyQt5` or  reinstall PyNSN via: `pip install pynsn[gui] -U`""")
     exit()
 
 import sys as _sys
-from .gui_main_window import GUIMainWindow as _GUIMainWindow
+from ._gui.gui_main_window import GUIMainWindow as _GUIMainWindow
 
 def start():
     app = _QApplication(_sys.argv)
