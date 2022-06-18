@@ -11,17 +11,16 @@ from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import factory,  match
+from .._lib import distributions as distr
 from .._nsn.visual_features import VisualFeatures
 from ..image import _colour
 from ..image import pil
 from .._sequence import dot_array_sequence
 
-
 DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
-                                           diameter_mean=15,
-                                           diameter_range=[5, 40],
-                                           diameter_std=8,
-                                           minimum_gap=2),
+                                diameter_distribution=distr.Beta(mu=15,
+                                                sigma=8, min_max=(5,40)),
+                                minimum_gap=2),
                  _colour.ImageColours(target_area="#303030",
                                      field_area=None,
                                      field_area_outer=None,
@@ -31,9 +30,9 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                      background="gray"))
 
 ICON = (11, factory.DotArraySpecs(target_area_radius=200,
-                                  diameter_mean=35,
-                                  diameter_range=[5, 80],
-                                  diameter_std=20),
+                                  diameter_distribution=distr.Beta(mu=35,
+                                                  sigma=20, min_max=(5, 80))
+                                  ),
         _colour.ImageColours(target_area="#3e3e3e",
                             field_area=None,
                             field_area_outer="expyriment_orange",
@@ -170,11 +169,12 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_specs(self):
+        d = distr.Beta(mu=self.main_widget.item_diameter_mean.value,
+                       sigma=self.main_widget.item_diameter_std.value,
+                       min_max=[self.main_widget.item_diameter_range.value1,
+                                self.main_widget.item_diameter_range.value2])
         return factory.DotArraySpecs(target_area_radius=self.main_widget.target_array_radius.value,
-                                     diameter_mean=self.main_widget.item_diameter_mean.value,
-                                     diameter_range=[self.main_widget.item_diameter_range.value1,
-                                                     self.main_widget.item_diameter_range.value2],
-                                     diameter_std=self.main_widget.item_diameter_std.value,
+                                     diameter_distribution=d,
                                      minimum_gap=self.main_widget.minimum_gap.value)
 
     def get_image_colours(self):

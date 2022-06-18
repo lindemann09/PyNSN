@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
+from ..factory import DotArraySpecs, distr
 
 
 class MainWidget(QWidget):
@@ -17,17 +18,19 @@ class MainWidget(QWidget):
         self.initUI(number, da_specs)
 
     def initUI(self, number, da_specs):
+        assert isinstance(da_specs, DotArraySpecs)
+        assert isinstance(da_specs.diameter_distr, (distr.Beta, distr.Normal))
+
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
-
         self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.diameter_mean)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.diameter_std)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.diameter_distr.mu)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.diameter_distr.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=da_specs.diameter_range[0],
-                                                               value2=da_specs.diameter_range[1])
+                                                               value1=da_specs.diameter_distr.min_max[0],
+                                                               value2=da_specs.diameter_distr.min_max[1])
 
         self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
 
