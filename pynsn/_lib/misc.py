@@ -73,6 +73,14 @@ def numpy_array_2d(two_d_data):
         raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
     return rtn
 
+def numpy_round2(array, decimals, int_type=np.int32):
+    """rounds and changes to int type if decimals == 0"""
+    array = np.round(array, decimals=decimals)
+    if decimals == 0:
+        return array.astype(int_type)
+    else:
+        return array
+
 
 def is_all_larger(vector, standard=0):
     return sum(map(lambda x: x > standard, vector))==len(vector)

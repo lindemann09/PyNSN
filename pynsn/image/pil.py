@@ -5,10 +5,11 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
+from .._nsn import shape as _shape
 
 
-def create(dot_array, colours, antialiasing=True,
-           gabor_filter=None):
+
+def create(dot_array, colours, antialiasing=True, gabor_filter=None):
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
@@ -19,73 +20,69 @@ def create(dot_array, colours, antialiasing=True,
     gabor_filter: from PIL.ImageFilter
     default_dot_colour: if colour is undefined in _nsn
     """
-
     if isinstance(antialiasing, bool):
         if antialiasing:  # (not if 1)
-            aa = 2  # AA default
+            aaf = 2  # AA default
         else:
-            aa = 1
+            aaf = 1
     else:
         try:
-            aa = int(antialiasing)
+            aaf = int(antialiasing)
         except:
-            aa = 1
+            aaf = 1
 
-    if not isinstance(colours, _colour.ImageColours):
-        raise ValueError("Colours must be a ImageColours instance")
-
-    image_size = int(round(dot_array.target_array_radius * 2)) * aa
-    img = _Image.new("RGBA", (image_size, image_size),
-                    color=colours.background.colour)
-
-    if colours.target_area.colour is not None:
-        _draw_dot(img, xy=_c2i_coord(_np.zeros(2), image_size),
-                  diameter=image_size,
-                  colour=colours.target_area.colour)
+    image_size = int(round(dot_array.target_array_radius * 2)) * aaf
+    img = _prepare_image(image_size=image_size, colours=colours)
 
     dot_array = dot_array.copy()
     dot_array.round(decimals=0)
 
     # draw dots
-    for xy, d, att in zip(_c2i_coord(dot_array.xy * aa, image_size),
-                        dot_array.diameters * aa,
+    for xy, d, att in zip(_c2i_coord(dot_array.xy * aaf, image_size),
+                        dot_array.diameters * aaf,
                           dot_array.attributes):
+        obj = _shape.Dot(xy=xy, diameter=d)
         if att is None:
-            c = colours.default_dot_colour
+            obj.attribute = colours.default_dot_colour
         else:
             try:
-                c = _colour.Colour(att)
-            except:
-                c = colours.default_dot_colour
-        _draw_dot(img, xy=xy, diameter=d, colour=c.colour)
+                obj.attribute = _colour.Colour(att)
+            except TypeError:
+                obj.attribute = colours.default_dot_colour
+        _draw_object(img, obj)
 
+
+    # draw convex hulls and center of mass
     if colours.field_area.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_c2i_coord(
-                              dot_array.features.convex_hull.xy * aa, image_size),
+                              dot_array.features.convex_hull.xy * aaf, image_size),
                           convex_hull_colour=colours.field_area.colour)
-
     if colours.field_area_outer.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_c2i_coord(
-                              dot_array.features.convex_hull.full_xy * aa,
+                              dot_array.features.convex_hull.full_xy * aaf,
                               image_size),
                           convex_hull_colour=colours.field_area_outer.colour)
-
     if colours.center_of_mass.colour is not None:
-        _draw_dot(img, xy=_c2i_coord(dot_array.center_of_mass * aa, image_size),
-                  diameter=10 * aa, colour=colours.center_of_mass.colour)
-
+        obj = _shape.Dot(xy=_c2i_coord(dot_array.center_of_mass * aaf, image_size),
+                         diameter=10 * aaf,
+                         attribute=colours.center_of_mass.colour)
+        _draw_object(img, obj)
     if colours.center_of_outer_positions.colour is not None:
-        _draw_dot(img, xy=_c2i_coord(dot_array.center_of_outer_positions * aa, image_size),
-                  diameter=10 * aa, colour=colours.center_of_outer_positions.colour)
+        obj = _shape.Dot(xy=_c2i_coord(dot_array.center_of_outer_positions * aaf, image_size),
+                         diameter=10 * aaf,
+                         attribute=colours.center_of_outer_positions.colour)
+        _draw_object(img, obj)
 
-    if aa != 1:
-        image_size = int(image_size / aa)
+    # rescale for antialising
+    if aaf != 1:
+        image_size = int(image_size / aaf)
         img = img.resize((image_size, image_size), _Image.LANCZOS)
 
+    # TODO gabor needed?
     if gabor_filter is not None:
         try:
             img = img.filter(gabor_filter)
@@ -95,16 +92,42 @@ def create(dot_array, colours, antialiasing=True,
     return img
 
 
-def _draw_dot(img, xy, diameter, colour, picture=None):
-    # draw a dot on an image
+def _prepare_image(image_size, colours):
+    """prepare the pil image, make target area if required"""
 
-    r = diameter // 2
-    if picture is not None:
-        pict = _Image.open(picture, "r")
-        img.paste(pict, (xy[0] - r, xy[1] - r))
+    if not isinstance(colours, _colour.ImageColours):
+        raise TypeError("Colours must be a ImageColours instance")
+
+    img = _Image.new("RGBA", (image_size, image_size),
+                     color=colours.background.colour)
+
+    if colours.target_area.colour is not None:
+        obj = _shape.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
+                         diameter=image_size,
+                         attribute=colours.target_area.colour)
+        _draw_object(img, obj)
+
+    return img
+
+
+def _draw_object(img, shape, default_color=None):
+    # draw object
+
+    if isinstance(shape, _shape.Dot):
+        r = shape.diameter // 2
+        try:
+            colour = _colour.Colour(shape.attribute)
+        except TypeError:
+            colour = _colour.Colour(default_color)
+
+        _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
+                                      shape.x + r, shape.y + r),
+                                     fill=colour.colour)
     else:
-        _ImageDraw.Draw(img).ellipse((xy[0] - r, xy[1] - r, xy[0] + r,
-                                          xy[1] + r), fill=colour)
+        raise RuntimeError("NOT YET IMPLEMENTED")
+    #if picture is not None:
+    #    pict = _Image.open(picture, "r")
+    #    img.paste(pict, (xy[0] - r, xy[1] - r))
 
 
 def _draw_convex_hull(img, convex_hull, convex_hull_colour):

@@ -64,15 +64,15 @@ class DotArray(_RestrictedCloud):
     def perimeter(self):
         return np.pi * self._diameters
 
-    def round(self, decimals=0, int_type=np.int64):
+    def round(self, decimals=0, int_type=np.int32):
         """Round values of the array."""
 
         if decimals is None:
             return
-        super().round(decimals, int_type)
-        self._diameters = np.round(self._diameters, decimals=decimals)
-        if decimals == 0:
-            self._diameters = self._diameters.astype(int_type)
+        self._xy = misc.numpy_round2(self._xy, decimals=decimals,
+                                     int_type=int_type)
+        self._diameters = misc.numpy_round2(self._diameters, decimals=decimals,
+                                            int_type=int_type)
 
     def as_dict(self):
         """
@@ -83,12 +83,12 @@ class DotArray(_RestrictedCloud):
                   "target_array_radius": self.target_array_radius})
         return d
 
-    def read_from_dict(self, dict):
+    def read_from_dict(self, the_dict):
         """read Dot collection from dict"""
-        super().read_from_dict(dict)
-        self._diameters = np.array(dict["diameters"])
-        self.minimum_gap = dict["minimum_gap"]
-        self.target_array_radius = dict["target_array_radius"]
+        super().read_from_dict(the_dict)
+        self._diameters = np.array(the_dict["diameters"])
+        self.minimum_gap = the_dict["minimum_gap"]
+        self.target_array_radius = the_dict["target_array_radius"]
 
     def clear(self):
         super().clear()
@@ -229,7 +229,7 @@ class DotArray(_RestrictedCloud):
 
         target_radius = self.target_array_radius - min_distance_area_boarder - \
                         (dot_diameter / 2.0)
-        proposal_dot = Dot(diameter=dot_diameter)
+        proposal_dot = Dot(xy = (0,0), diameter=dot_diameter)
         while True:
             cnt += 1
             ##  polar method seems to produce central clustering

@@ -181,25 +181,25 @@ class GUIMainWindow(QMainWindow):
         # check colour input
         try:
             colour_area = _colour.Colour(self.settings.colour_area.text)
-        except:
+        except TypeError:
             colour_area = None
             self.settings.colour_area.text = "None"
         try:
             colour_convex_hull_positions = _colour.Colour(
                 self.settings.colour_convex_hull_positions.text)
-        except:
+        except TypeError:
             colour_convex_hull_positions = None
             self.settings.colour_convex_hull_positions.text = "None"
         try:
             colour_convex_hull_dots = _colour.Colour(
                 self.settings.colour_convex_hull_dots.text)
-        except:
+        except TypeError:
             colour_convex_hull_dots = None
             self.settings.colour_convex_hull_dots.text = "None"
         try:
             colour_background = _colour.Colour(
                 self.settings.colour_background.text)
-        except:
+        except TypeError:
             colour_background = None
             self.settings.colour_background.text = "None"
 
@@ -306,7 +306,7 @@ class GUIMainWindow(QMainWindow):
         try:
             colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
             self.settings.default_dot_colour = colour_dot
-        except:
+        except TypeError:
             colour_dot = self.settings.default_dot_colour
             self.main_widget.dot_colour.text = colour_dot.colour
 

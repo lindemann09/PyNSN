@@ -31,7 +31,7 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
         else:
             try:
                 c = _colour.Colour(att)
-            except:
+            except TypeError:
                 c = colours.default_dot_colour
 
         svgdraw.add(svgdraw.circle(center=xy, r = d//2,

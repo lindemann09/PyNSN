@@ -7,7 +7,7 @@ from .._lib.coordinate2D import Coordinate2D
 
 class Dot(Coordinate2D):
 
-    def __init__(self, xy=(0, 0), diameter=1, attribute=None):
+    def __init__(self, xy, diameter, attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -15,9 +15,9 @@ class Dot(Coordinate2D):
 
         Parameters
         ----------
-        xy : tuple of two numeric (default=(0, 0))
-        diameter : numeric (default=1)
-        attribute : attribute (string)
+        xy : tuple of two numeric
+        diameter : numeric
+        attribute : attribute (string, optional)
         """
 
         Coordinate2D.__init__(self, x=xy[0], y=xy[1])
@@ -27,8 +27,8 @@ class Dot(Coordinate2D):
         self.attribute = attribute
 
     def __repr__(self):
-        return "Dot(x={}, y={}, diameter={}, attribute={})".format(self.x,
-                            self.y,self.diameter, repr(self.attribute))
+        return "Dot(xy={}, diameter={}, attribute={})".format(self.xy,
+                            self.diameter, repr(self.attribute))
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the
@@ -58,7 +58,7 @@ class Dot(Coordinate2D):
 
 class Rectangle(Coordinate2D):
 
-    def __init__(self, xy=(0, 0), size=(0,0), attribute=None):
+    def __init__(self, xy, size, attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -75,7 +75,11 @@ class Rectangle(Coordinate2D):
         if attribute is not None and not isinstance(attribute, str):
             raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
-        self.width, self.height = size
+        self.width, self.height  = size
+
+    def __repr__(self):
+        return "Rectangle(xy={}, size={}, attribute={})".format(self.xy,
+                                    self.size, repr(self.attribute))
 
     @property
     def left(self):

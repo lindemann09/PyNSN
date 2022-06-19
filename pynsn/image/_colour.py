@@ -56,7 +56,7 @@ class Colour(object):
                     try:
                         self._colour = Colour.rgb2hextriplet(value)
                     except:
-                        raise RuntimeError("Incorrect colour " + \
+                        raise TypeError("Incorrect colour " + \
                                            "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
                                                value))
 

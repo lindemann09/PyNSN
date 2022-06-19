@@ -115,6 +115,7 @@ def random_array(specs, n_dots, attribute=None, occupied_space=None):
 
         sizes = zip(specs.width_distr.sample(n=n_dots),
                     specs.height_distr.sample(n=n_dots))
+
         for s in sizes:
             try:
                 xy = rtn.random_free_position(rectangle_size=s,
@@ -122,6 +123,7 @@ def random_array(specs, n_dots, attribute=None, occupied_space=None):
                       min_distance_area_boarder=specs.min_distance_area_boarder)
             except:
                 return None
+
             rtn.add([_shape.Rectangle(xy=xy, size=s, attribute=attribute)])
 
     else:

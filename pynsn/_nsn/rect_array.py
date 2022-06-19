@@ -9,7 +9,7 @@ import numpy as np
 from scipy import spatial
 
 from .cloud import _RestrictedCloud
-from .._lib import misc, geometry
+from .._lib import misc
 from .shape import Rectangle
 
 class RectangleArray(_RestrictedCloud):
@@ -29,7 +29,7 @@ class RectangleArray(_RestrictedCloud):
                          target_array_radius=target_array_radius,
                          minimum_gap=minimum_gap)
         self._sizes = np.array([])
-        if sizes is None:
+        if sizes is not None:
             self._append_sizes(sizes)
 
         if self._xy.shape[0] != self._sizes.shape[0]:
@@ -43,7 +43,7 @@ class RectangleArray(_RestrictedCloud):
             empty = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
             self._sizes = np.append(empty, sizes, axis=0)
         else:
-            self._sizes = np.append(self._xy, sizes, axis=0)
+            self._sizes = np.append(self._sizes, sizes, axis=0)
         return sizes.shape[0]
 
     def add(self, rectangles):
@@ -68,15 +68,15 @@ class RectangleArray(_RestrictedCloud):
     def perimeter(self):
         return 2 * (self._sizes[:,0] + self._sizes[:,1])
 
-    def round(self, decimals=0, int_type=np.int64):
+    def round(self, decimals=0, int_type=np.int32):
         """Round values of the array."""
 
         if decimals is None:
             return
-        super().round(decimals, int_type)
-        self._sizes = np.round(self._sizes, decimals=decimals)
-        if decimals == 0:
-            self._sizes = self._sizes.astype(int_type)
+        self._xy = misc.numpy_round2(self._xy, decimals=decimals,
+                                     int_type=int_type)
+        self._sizes = misc.numpy_round2(self._sizes, decimals=decimals,
+                                     int_type=int_type)
 
     def as_dict(self):
         """
@@ -87,12 +87,12 @@ class RectangleArray(_RestrictedCloud):
                   "target_array_radius": self.target_array_radius})
         return d
 
-    def read_from_dict(self, dict):
+    def read_from_dict(self, the_dict):
         """read rectangle array from dict"""
-        super().read_from_dict(dict)
-        self._sizes = np.array(dict["sizes"])
-        self.minimum_gap = dict["minimum_gap"]
-        self.target_array_radius = dict["target_array_radius"]
+        super().read_from_dict(the_dict)
+        self._sizes = np.array(the_dict["sizes"])
+        self.minimum_gap = the_dict["minimum_gap"]
+        self.target_array_radius = the_dict["target_array_radius"]
 
     def clear(self):
         super().clear()
@@ -160,8 +160,9 @@ class RectangleArray(_RestrictedCloud):
 
         if indices is None:
             return [Rectangle(xy=xy, size=s, attribute=att) \
-                    for xy, s, att in zip(self._xy, self._sizes,
-                                            self._attributes)]
+                    for xy, s, att in zip(self._xy,
+                                          self._sizes,
+                                          self._attributes)]
         try:
             indices = list(indices)  # check if iterable
         except:
@@ -249,7 +250,7 @@ class RectangleArray(_RestrictedCloud):
 
         target_radius = self.target_array_radius - min_distance_area_boarder - \
                         min(rectangle_size)
-        proposal_rect = Rectangle(size=rectangle_size)
+        proposal_rect = Rectangle(xy=(0,0), size=rectangle_size)
         while True:
             cnt += 1
             ##  polar method seems to produce central clustering

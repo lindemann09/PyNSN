@@ -107,15 +107,6 @@ class _Cloud(object):
         m.update(self.perimeter.tobytes())
         return m.hexdigest()
 
-    def round(self, decimals=0, int_type=np.int64):
-        """Round values of the array."""
-
-        if decimals is None:
-            return
-        self._xy = np.round(self._xy, decimals=decimals)
-        if decimals == 0:
-            self._xy = self._xy.astype(int_type)
-
     def as_dict(self):
         """
         """

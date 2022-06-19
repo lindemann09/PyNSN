@@ -2,6 +2,7 @@ import random as _random
 # NOTE: do not use numpy.random, because it produces identical numbers for
 # different threads
 import numpy as _np
+from .misc import numpy_round2 as _round2
 
 _random.seed()
 
@@ -28,7 +29,7 @@ class _PyNSNDistribution(object):
             np_vector = _np.delete(np_vector, np_vector > self.min_max[1])
         return np_vector
 
-    def sample(self, n):
+    def sample(self, n, round_to_decimals=False):
         return _np.array([0]*n)
 
     def pyplot_samples(self, n=100000):
@@ -73,10 +74,15 @@ class Laplace(_PyNSNDistribution):
         """
         super().__init__(min_max)
 
-    def sample(self, n):
+    def sample(self, n, round_to_decimals=None):
         dist = _np.array([_random.random() for _ in range(n)])
         r = float(self.min_max[1] - self.min_max[0])
-        return self.min_max[0] + dist * r
+        rtn = self.min_max[0] + dist * r
+        if round_to_decimals is not None:
+            return _round2(rtn, decimals=round_to_decimals)
+        else:
+            return rtn
+
 
 
 class Normal(_PyNSNDistributionMuSigma):
@@ -98,7 +104,7 @@ class Normal(_PyNSNDistributionMuSigma):
             min_max = (None, None)
         super().__init__(mu, sigma, min_max)
 
-    def sample(self, n):
+    def sample(self, n, round_to_decimals=None):
         rtn = _np.array([])
         required = n
         while required>0:
@@ -106,8 +112,11 @@ class Normal(_PyNSNDistributionMuSigma):
                           for _ in range(required)])
             rtn = self._cutoff_outside_range(_np.append(rtn, draw))
             required = n - len(rtn)
-        return rtn
 
+        if round_to_decimals is not None:
+            return _round2(rtn, decimals=round_to_decimals)
+        else:
+            return rtn
 
 class Beta(_PyNSNDistributionMuSigma):
 
@@ -136,7 +145,7 @@ class Beta(_PyNSNDistributionMuSigma):
         """
         super().__init__(mu=mu, sigma=sigma, min_max=min_max)
 
-    def sample(self, n):
+    def sample(self, n, round_to_decimals=None):
         if self.sigma is None or self.sigma == 0:
             return _np.array([self.mu] * n)
 
@@ -144,7 +153,12 @@ class Beta(_PyNSNDistributionMuSigma):
         dist = _np.array([_random.betavariate(alpha=alpha, beta=beta) \
                          for _ in range(n)])
         dist = (dist - _np.mean(dist)) / _np.std(dist) # z values
-        return dist * self.sigma + self.mu
+        rtn = dist * self.sigma + self.mu
+
+        if round_to_decimals is not None:
+            return _round2(rtn, decimals=round_to_decimals)
+        else:
+            return rtn
 
     @property
     def shape_parameter(self):
