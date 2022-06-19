@@ -6,10 +6,11 @@ import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .._nsn import shape as _shape
+from .._nsn.dot_array import DotArray as _DotArray
+from .._nsn.rect_array import RectangleArray as _RectangleArray
 
 
-
-def create(dot_array, colours, antialiasing=True, gabor_filter=None):
+def create(object_array, colours, antialiasing=True, gabor_filter=None):
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
@@ -20,6 +21,10 @@ def create(dot_array, colours, antialiasing=True, gabor_filter=None):
     gabor_filter: from PIL.ImageFilter
     default_dot_colour: if colour is undefined in _nsn
     """
+
+    assert isinstance(object_array, (_DotArray, _RectangleArray))
+    assert isinstance(colours, _colour.ImageColours)
+
     if isinstance(antialiasing, bool):
         if antialiasing:  # (not if 1)
             aaf = 2  # AA default
@@ -31,25 +36,39 @@ def create(dot_array, colours, antialiasing=True, gabor_filter=None):
         except:
             aaf = 1
 
-    image_size = int(round(dot_array.target_array_radius * 2)) * aaf
+    object_array = object_array.copy() #not really required but save in case of rounding or removing
+    image_size = int(round(object_array.target_array_radius * 2)) * aaf
     img = _prepare_image(image_size=image_size, colours=colours)
 
-    dot_array = dot_array.copy()
-    dot_array.round(decimals=0)
+    image_coord = _c2i_coord(object_array.xy * aaf, image_size)
+    if isinstance(object_array, _DotArray):
+        # draw dots
+        for xy, d, att in zip(image_coord, object_array.diameters * aaf,
+                              object_array.attributes):
+            obj = _shape.Dot(xy=xy, diameter=d)
+            if att is None:
+                obj.attribute = colours.default_item_colour
+            else:
+                try:
+                    obj.attribute = _colour.Colour(att)
+                except TypeError:
+                    obj.attribute = colours.default_item_colour
+            _draw_item(img, obj)
 
-    # draw dots
-    for xy, d, att in zip(_c2i_coord(dot_array.xy * aaf, image_size),
-                        dot_array.diameters * aaf,
-                          dot_array.attributes):
-        obj = _shape.Dot(xy=xy, diameter=d)
-        if att is None:
-            obj.attribute = colours.default_dot_colour
-        else:
-            try:
-                obj.attribute = _colour.Colour(att)
-            except TypeError:
-                obj.attribute = colours.default_dot_colour
-        _draw_object(img, obj)
+    elif isinstance(object_array, _RectangleArray):
+        # draw rectangle
+        for xy, size, att in zip(image_coord,
+                                 object_array.sizes * aaf,
+                              object_array.attributes):
+            obj = _shape.Rectangle(xy=xy, size=size)
+            if att is None:
+                obj.attribute = colours.default_item_colour
+            else:
+                try:
+                    obj.attribute = _colour.Colour(att)
+                except TypeError:
+                    obj.attribute = colours.default_item_colour
+            _draw_item(img, obj)
 
 
     # draw convex hulls and center of mass
@@ -57,25 +76,25 @@ def create(dot_array, colours, antialiasing=True, gabor_filter=None):
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_c2i_coord(
-                              dot_array.features.convex_hull.xy * aaf, image_size),
+                              object_array.features.convex_hull.xy * aaf, image_size),
                           convex_hull_colour=colours.field_area.colour)
     if colours.field_area_outer.colour is not None:
         # plot convey hull
         _draw_convex_hull(img=img,
                           convex_hull=_c2i_coord(
-                              dot_array.features.convex_hull.full_xy * aaf,
+                              object_array.features.convex_hull.full_xy * aaf,
                               image_size),
                           convex_hull_colour=colours.field_area_outer.colour)
     if colours.center_of_mass.colour is not None:
-        obj = _shape.Dot(xy=_c2i_coord(dot_array.center_of_mass * aaf, image_size),
+        obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass * aaf, image_size),
                          diameter=10 * aaf,
                          attribute=colours.center_of_mass.colour)
-        _draw_object(img, obj)
+        _draw_item(img, obj)
     if colours.center_of_outer_positions.colour is not None:
-        obj = _shape.Dot(xy=_c2i_coord(dot_array.center_of_outer_positions * aaf, image_size),
+        obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions * aaf, image_size),
                          diameter=10 * aaf,
                          attribute=colours.center_of_outer_positions.colour)
-        _draw_object(img, obj)
+        _draw_item(img, obj)
 
     # rescale for antialising
     if aaf != 1:
@@ -105,26 +124,33 @@ def _prepare_image(image_size, colours):
         obj = _shape.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
                          diameter=image_size,
                          attribute=colours.target_area.colour)
-        _draw_object(img, obj)
+        _draw_item(img, obj)
 
     return img
 
 
-def _draw_object(img, shape, default_color=None):
+def _draw_item(img, shape, colour=None):
     # draw object
 
+    assert isinstance(shape, (_shape.Dot, _shape.Rectangle))
+
+    if colour is None:
+        colour = _colour.Colour(shape.attribute)
     if isinstance(shape, _shape.Dot):
         r = shape.diameter // 2
-        try:
-            colour = _colour.Colour(shape.attribute)
-        except TypeError:
-            colour = _colour.Colour(default_color)
-
         _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                       shape.x + r, shape.y + r),
                                      fill=colour.colour)
+
+    elif isinstance(shape, _shape.Rectangle):
+        _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
+                                        shape.right, shape.bottom),
+                                       fill=colour.colour)
+
     else:
-        raise RuntimeError("NOT YET IMPLEMENTED")
+        raise RuntimeError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+
+    # TODO pictures in attributes
     #if picture is not None:
     #    pict = _Image.open(picture, "r")
     #    img.paste(pict, (xy[0] - r, xy[1] - r))

@@ -244,7 +244,7 @@ class ImageColours(object):
         self.center_of_mass = Colour(center_of_mass)
         self.center_of_outer_positions = Colour(center_of_outer_positions)
         self.background = Colour(background)
-        self.default_dot_colour = Colour(item_colour)
+        self.default_item_colour = Colour(item_colour)
 
     def as_dict(self):
         return {"colour_total_area": self.target_area.colour,
@@ -253,5 +253,5 @@ class ImageColours(object):
                 "colour_center_of_mass": self.center_of_mass.colour,
                 "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
                 "colour_background": self.background.colour,
-                "dot_colour": self.default_dot_colour.colour}
+                "dot_colour": self.default_item_colour.colour}
 

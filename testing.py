@@ -1,5 +1,5 @@
 from pynsn import factory, Colour, ImageColours, DotArray, distr, Rectangle
-from pynsn.image import svg
+from pynsn.image import svg, pil
 
 import pynsn
 import numpy as np
@@ -17,9 +17,11 @@ da_specification = factory.RectangleArraySpecs(
     width_distribution=distr.Normal(min_max=(10, 80), mu=30, sigma=10),
     height_distribution=distr.Normal(min_max=(10, 80), mu=30, sigma=10),
     minimum_gap=2)
+my_colours = ImageColours(target_area="#EEEEEE", background="gray",
+                         item_colour="darkmagenta") # show named colours see Colour.NAMED_COLOURS
 
 # generate on array with 100 dots
-stimulus = factory.random_array(da_specification, 3)
+stimulus = factory.random_array(da_specification, 8)
 stimulus.round(2)
 #r = Rectangle(xy=(-85.76060604630113, -77.51417327204257), size=(20, 40), attribute=None)
 #print(r)
@@ -31,8 +33,9 @@ for x in stimulus.get():
 #print(stimulus.split_array_by_attributes())
 #print(stimulus._features.get_features_text())
 #print(stimulus2.save("mystim.json", indent=2))
-sv = svg.create(stimulus,  filename="demo.svg")
-sv.save()
+
+pil.create(stimulus, my_colours).save("demo.png")
+exit()
 
 
 

@@ -12,8 +12,8 @@ def create(dot_array,
     if not isinstance(colours, _colour.ImageColours):
         raise ValueError("Colours must be a ImageColours instance")
 
-    img = _pil_image.create(dot_array=dot_array,
-                           colours=colours,
-                           antialiasing=antialiasing)
+    img = _pil_image.create(object_array=dot_array,
+                            colours=colours,
+                            antialiasing=antialiasing)
 
     return _pygame.image.fromstring(img.tobytes(), img.size, img.mode)

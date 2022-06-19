@@ -34,7 +34,7 @@ class MainWidget(QWidget):
 
         self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
 
-        self.dot_colour = LabeledInput("Colour", text=self.settings.default_dot_colour,
+        self.dot_colour = LabeledInput("Colour", text=self.settings.default_item_colour,
                                        case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="expyriment_orange", case_sensitive=False)
 

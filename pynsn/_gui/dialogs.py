@@ -98,7 +98,7 @@ class SettingsDialog(QDialog):
         self.bicoloured = QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)
 
-        self.default_dot_colour = image_colours.default_dot_colour
+        self.default_dot_colour = image_colours.default_item_colour
 
         vlayout = QVBoxLayout()
         vlayout.addLayout(self.rounding_decimals.layout())

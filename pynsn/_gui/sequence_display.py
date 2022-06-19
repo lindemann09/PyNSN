@@ -13,7 +13,7 @@ from . import misc
 
 def _map_make_image(x):
     da, colours, aa = x
-    return pil.create(dot_array=da, colours=colours,
+    return pil.create(object_array=da, colours=colours,
                       antialiasing=aa)
 
 

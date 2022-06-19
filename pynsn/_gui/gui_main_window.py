@@ -118,7 +118,7 @@ class GUIMainWindow(QMainWindow):
         # ICON
         colours = ICON[2]
         self._image = pil.create(
-                        dot_array=factory.random_array(n_dots=ICON[0], specs= ICON[1]),
+                        object_array=factory.random_array(n_dots=ICON[0], specs= ICON[1]),
                         colours=colours, antialiasing=True)
 
         self.setWindowIcon(QIcon(self.pixmap()))
@@ -155,10 +155,10 @@ class GUIMainWindow(QMainWindow):
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
-                item_colour=para.default_dot_colour,
+                item_colour=para.default_item_colour,
                 background=para.background)
 
-            self._image = pil.create(dot_array=self.dot_array,
+            self._image = pil.create(object_array=self.dot_array,
                                      colours=image_colours,
                                      antialiasing=self.settings.antialiasing.isChecked())
                                             # todo maybe: gabor_filter=ImageFilter.GaussianBlur

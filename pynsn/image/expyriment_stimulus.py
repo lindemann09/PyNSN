@@ -34,9 +34,9 @@ class ExprimentDotArray(_Canvas):
         return self._image
 
     def _create_pil_image(self):
-        self._image = _pil_image.create(dot_array=self.dot_array,
-                                       colours= self.colours,
-                                       antialiasing=self.antialiasing) #TODO gabor filter
+        self._image = _pil_image.create(object_array=self.dot_array,
+                                        colours= self.colours,
+                                        antialiasing=self.antialiasing) #TODO gabor filter
         return self._image
 
     def _create_surface(self):

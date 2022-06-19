@@ -6,7 +6,7 @@ from . import _colour
 from .._nsn.dot_array import DotArray as _DotArray
 from .._lib.geometry import cartesian2image_coordinates as _c2i_pos
 
-def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
+def create(dot_array, colours, filename="noname.svg"):
     assert isinstance(dot_array, _DotArray)
     if not isinstance(colours, _colour.ImageColours):
         raise ValueError("Colours must be a pynsn.ImageColours instance")
@@ -27,12 +27,12 @@ def create(dot_array, colours = _colour.ImageColours(), filename="noname.svg"):
                           dot_array.diameters,
                           dot_array.attributes):
         if att is None:
-            c = colours.default_dot_colour
+            c = colours.default_item_colour
         else:
             try:
                 c = _colour.Colour(att)
             except TypeError:
-                c = colours.default_dot_colour
+                c = colours.default_item_colour
 
         svgdraw.add(svgdraw.circle(center=xy, r = d//2,
                                    #stroke_width="0", stroke="black",
