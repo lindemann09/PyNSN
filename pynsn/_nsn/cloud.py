@@ -18,7 +18,9 @@ class _Cloud(object):
     Abstract class for implementation of dot and rect
     """
 
-    def __init__(self, xy=None, attributes=None):
+    def __init__(self,
+                 xy  = None,
+                 attributes=None):
 
         self._xy = np.array([])
         self._attributes = np.array([])
@@ -54,7 +56,7 @@ class _Cloud(object):
             attributes = [attributes] * xy.shape[0]
 
         if len(attributes) != xy.shape[0]:
-            raise RuntimeError(u"Bad shaped data: " + u"attributes have not "
+            raise ValueError(u"Bad shaped data: " + u"attributes have not "
                                                       u"the same length as the coordinates")
 
         self._attributes = np.append(self._attributes, attributes)

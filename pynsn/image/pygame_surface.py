@@ -10,7 +10,7 @@ def create(dot_array,
            antialiasing=True):
 
     if not isinstance(colours, _colour.ImageColours):
-        raise ValueError("Colours must be a ImageColours instance")
+        raise TypeError("Colours must be a ImageColours instance.")
 
     img = _pil_image.create(object_array=dot_array,
                             colours=colours,

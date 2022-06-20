@@ -70,7 +70,7 @@ def numpy_array_2d(two_d_data):
     if rtn.ndim == 1 and len(rtn) == 2:
         rtn = rtn.reshape((1, 2))
     if rtn.ndim != 2:
-        raise RuntimeError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+        raise ValueError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
     return rtn
 
 def numpy_round2(array, decimals, int_type=np.int32):

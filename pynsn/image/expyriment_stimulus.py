@@ -18,7 +18,7 @@ class ExprimentDotArray(_Canvas):
                  antialiasing=True):
 
         if not isinstance(colours, _colour.ImageColours):
-            raise ValueError("Colours must be a ImageColours instance")
+            raise TypeError("Colours must be a ImageColours instance")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = dot_array
@@ -57,7 +57,7 @@ class ExpyrimentDASequence(object):
                  multiprocessing=False):
 
         if not isinstance(colours, _colour.ImageColours):
-            raise ValueError("Colours must be a ImageColours instance")
+            raise TypeError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence
         self.stimuli = []
