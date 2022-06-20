@@ -130,7 +130,7 @@ class GUIMainWindow(QMainWindow):
         try:
             self.dot_array = factory.random_array(n_dots=self.get_number(),
                                                   specs=self.get_specs())
-        except (RuntimeError, ValueError) as error:
+        except StopIteration as error:
             self.main_widget.text_error_feedback(error)
             raise error
 

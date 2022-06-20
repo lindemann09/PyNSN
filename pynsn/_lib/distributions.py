@@ -1,14 +1,12 @@
-import random as _random
+import random
 # NOTE: do not use numpy.random, because it produces identical numbers for
 # different threads
-import numpy as _np
-from .misc import numpy_round2 as _round2
+import numpy as np
+from .misc import numpy_round2
 
-_random.seed()
+random.seed()
 
-
-
-class _PyNSNDistribution(object):
+class PyNSNDistribution(object):
 
     def __init__(self, min_max):
         if not isinstance(min_max, (list, tuple)) or len(min_max) != 2 or \
@@ -24,13 +22,13 @@ class _PyNSNDistribution(object):
     def _cutoff_outside_range(self, np_vector):
         # helper function that cuts off values outside min_max range
         if self.min_max[0] is not None:
-            np_vector = _np.delete(np_vector, np_vector < self.min_max[0])
+            np_vector = np.delete(np_vector, np_vector < self.min_max[0])
         if self.min_max[1] is not None:
-            np_vector = _np.delete(np_vector, np_vector > self.min_max[1])
+            np_vector = np.delete(np_vector, np_vector > self.min_max[1])
         return np_vector
 
     def sample(self, n, round_to_decimals=False):
-        return _np.array([0]*n)
+        return np.array([0] * n)
 
     def pyplot_samples(self, n=100000):
 
@@ -42,7 +40,7 @@ class _PyNSNDistribution(object):
         return hist(self.sample(n=n), bins=100)[2]
 
 
-class _PyNSNDistributionMuSigma(_PyNSNDistribution):
+class _PyNSNDistributionMuSigma(PyNSNDistribution):
 
     def __init__(self, mu, sigma, min_max):
         super().__init__(min_max)
@@ -61,7 +59,7 @@ class _PyNSNDistributionMuSigma(_PyNSNDistribution):
         return d
 
 
-class Laplace(_PyNSNDistribution):
+class Laplace(PyNSNDistribution):
     """
     """
     def __init__(self, min_max):
@@ -75,11 +73,11 @@ class Laplace(_PyNSNDistribution):
         super().__init__(min_max)
 
     def sample(self, n, round_to_decimals=None):
-        dist = _np.array([_random.random() for _ in range(n)])
+        dist = np.array([random.random() for _ in range(n)])
         r = float(self.min_max[1] - self.min_max[0])
         rtn = self.min_max[0] + dist * r
         if round_to_decimals is not None:
-            return _round2(rtn, decimals=round_to_decimals)
+            return numpy_round2(rtn, decimals=round_to_decimals)
         else:
             return rtn
 
@@ -105,16 +103,16 @@ class Normal(_PyNSNDistributionMuSigma):
         super().__init__(mu, sigma, min_max)
 
     def sample(self, n, round_to_decimals=None):
-        rtn = _np.array([])
+        rtn = np.array([])
         required = n
         while required>0:
-            draw = _np.array([_random.normalvariate(self.mu, self.sigma) \
-                          for _ in range(required)])
-            rtn = self._cutoff_outside_range(_np.append(rtn, draw))
+            draw = np.array([random.normalvariate(self.mu, self.sigma) \
+                             for _ in range(required)])
+            rtn = self._cutoff_outside_range(np.append(rtn, draw))
             required = n - len(rtn)
 
         if round_to_decimals is not None:
-            return _round2(rtn, decimals=round_to_decimals)
+            return numpy_round2(rtn, decimals=round_to_decimals)
         else:
             return rtn
 
@@ -147,16 +145,16 @@ class Beta(_PyNSNDistributionMuSigma):
 
     def sample(self, n, round_to_decimals=None):
         if self.sigma is None or self.sigma == 0:
-            return _np.array([self.mu] * n)
+            return np.array([self.mu] * n)
 
         alpha, beta = self.shape_parameter
-        dist = _np.array([_random.betavariate(alpha=alpha, beta=beta) \
+        dist = np.array([random.betavariate(alpha=alpha, beta=beta) \
                          for _ in range(n)])
-        dist = (dist - _np.mean(dist)) / _np.std(dist) # z values
+        dist = (dist - np.mean(dist)) / np.std(dist) # z values
         rtn = dist * self.sigma + self.mu
 
         if round_to_decimals is not None:
-            return _round2(rtn, decimals=round_to_decimals)
+            return numpy_round2(rtn, decimals=round_to_decimals)
         else:
             return rtn
 

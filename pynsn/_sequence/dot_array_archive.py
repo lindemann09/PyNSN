@@ -2,7 +2,7 @@ import os
 import json
 import gzip
 
-from pynsn._nsn.dot_array import DotArray
+from .._nsn.dot_array import DotArray
 from pynsn._sequence.dot_array_sequence import DASequence
 
 def load(json_file_name, zipped=False):
@@ -36,11 +36,11 @@ class DotArraySequenceArchive(object):
             self.dict[dot_array.hash] = dot_array.as_dict()
         elif isinstance(dot_array, DASequence):
             hash_list = list(map(lambda x: x.hash, dot_array.dot_arrays))
-            self.dict[dot_array.hash] = {"_sequence" : hash_list}
+            self.dict[dot_array.hash] = {"sequence" : hash_list}
             for da in dot_array.dot_arrays:
                 self.add(da)
         else:
-            RuntimeError("_nsn has to be a pynsn.DotArray or a "
+            RuntimeError("nsn has to be a pynsn.DotArray or a "
                          "pynsn.dot_array_sequence.DASequence")
 
     def remove(self, id):
@@ -62,7 +62,7 @@ class DotArraySequenceArchive(object):
     def sequence_ids(self):
         rtn = []
         for k,v in self.dict.items():
-            if "_sequence" in v:
+            if "sequence" in v:
                 rtn.append(k)
         return rtn
 
@@ -83,14 +83,14 @@ class DotArraySequenceArchive(object):
             d = self.dict[id]
         except:
             return None
-        if "_sequence" not in d:
+        if "sequence" not in d:
             return None
 
         tmp = []
-        for id in d["_sequence"]:
+        for id in d["sequence"]:
             tmp.append(self.get_dot_array(id))
             if tmp[-1] is None:
-                raise RuntimeError("Can't find _nsn {}".format(id))
+                raise RuntimeError("Can't find nsn {}".format(id))
         rtn = DASequence()
         rtn.append_dot_arrays(tmp)
         return rtn

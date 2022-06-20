@@ -263,13 +263,13 @@ def check_feature_list(feature_list):
 
     for x in feature_list:
         if x not in _Feat.ALL_FEATURES:
-            raise TypeError("Parameter is not a continuous feature or a " + \
+            raise ValueError("Parameter is not a continuous feature or a " + \
                             "list of continuous properties")
             # continious property or visual feature
 
         if x in _Feat.SIZE_FEATURES:
             if len(size_occured)>0:
-                raise RuntimeError(error.format(x, size_occured))
+                raise ValueError(error.format(x, size_occured))
             else:
                 size_occured = x
 

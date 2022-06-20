@@ -23,7 +23,7 @@ class Dot(Coordinate2D):
         Coordinate2D.__init__(self, x=xy[0], y=xy[1])
         self.diameter = diameter
         if attribute is not None and not isinstance(attribute, str):
-            raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
+            raise ValueError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
 
     def __repr__(self):
@@ -73,7 +73,7 @@ class Rectangle(Coordinate2D):
 
         Coordinate2D.__init__(self, x=xy[0], y=xy[1])
         if attribute is not None and not isinstance(attribute, str):
-            raise TypeError("attributes must be a string or None, not {}".format(type(attribute).__name__))
+            raise ValueError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
         self.width, self.height  = size
 

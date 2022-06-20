@@ -9,7 +9,7 @@ from .._lib.geometry import cartesian2image_coordinates as _c2i_pos
 def create(dot_array, colours, filename="noname.svg"):
     assert isinstance(dot_array, _DotArray)
     if not isinstance(colours, _colour.ImageColours):
-        raise ValueError("Colours must be a pynsn.ImageColours instance")
+        raise TypeError("Colours must be a pynsn.ImageColours instance")
 
     image_size = int(round(dot_array.target_array_radius * 2))
     px = "{}px".format(image_size)

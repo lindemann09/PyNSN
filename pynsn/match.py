@@ -151,8 +151,8 @@ def _decrease_field_area_by_replacement(dot_array, max_field_area,
                 d._xy = dot_array.random_free_position(d.diameter,
                                                      allow_overlapping=False,
                                                      prefer_inside_field_area=True)
-            except:
-                raise RuntimeError("Can't find a free position while decreasing field area.\n" + \
+            except StopIteration as e:
+                raise StopIteration("Can't find a free position while decreasing field area.\n" +
                                    "n={}; current FA={}, max_FA={}".format(
                                        dot_array.features.numerosity + 1,
                                        dot_array.features.field_area,
@@ -176,8 +176,8 @@ def _decrease_field_area_by_replacement(dot_array, max_field_area,
                                                      prefer_inside_field_area=False,
                                                      allow_overlapping=False,
                                                      min_distance_area_boarder=min_dist)
-            except:
-                raise RuntimeError(
+            except StopIteration as e:
+                raise StopIteration(
                     "Can't find a free position while decreasing field area.\n" + \
                     "n={}; current FA={}, max_FA={}".format(
                         dot_array.features.numerosity + 1,

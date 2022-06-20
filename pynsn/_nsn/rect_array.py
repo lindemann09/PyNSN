@@ -33,7 +33,7 @@ class RectangleArray(_RestrictedCloud):
             self._append_sizes(sizes)
 
         if self._xy.shape[0] != self._sizes.shape[0]:
-            raise RuntimeError("Bad shaped data: " +
+            raise ValueError("Bad shaped data: " +
                     u"xy has not the same length as sizes array")
 
     def _append_sizes(self, sizes):
@@ -285,4 +285,4 @@ class RectangleArray(_RestrictedCloud):
             if not bad_position:
                 return proposal_rect.xy
             elif cnt > 3000:
-                raise RuntimeError(u"Can't find a free position") # TODO
+                raise StopIteration(u"Can't find a free position") # TODO

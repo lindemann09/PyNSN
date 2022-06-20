@@ -148,7 +148,7 @@ def _draw_item(img, shape, colour=None):
                                        fill=colour.colour)
 
     else:
-        raise RuntimeError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+        raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
     # TODO pictures in attributes
     #if picture is not None:
