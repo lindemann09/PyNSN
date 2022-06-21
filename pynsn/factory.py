@@ -3,9 +3,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import copy as _copy
 
 from ._lib.distributions import PyNSNDistribution as _PyNSNDistribution
-from ._nsn import shape as _shape
-from ._nsn.dot_array import DotArray as _DotArray
-from ._nsn.rect_array import RectangleArray as _RectangleArray
+from ._lib import shape as _shape
+from ._lib.arrays import DotArray as _DotArray
+from ._lib.arrays import RectangleArray as _RectangleArray
 
 
 class _Specs(object):

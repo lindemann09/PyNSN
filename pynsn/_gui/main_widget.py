@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from ..factory import DotArraySpecs, distr
+from ..factory import DotArraySpecs
+from .._lib import distributions as distr
 
 
 class MainWidget(QWidget):

@@ -2,7 +2,7 @@ import os
 import json
 import gzip
 
-from .._nsn.dot_array import DotArray
+from .._lib.arrays import DotArray
 from pynsn._sequence.dot_array_sequence import DASequence
 
 def load(json_file_name, zipped=False):
@@ -95,8 +95,16 @@ class DotArraySequenceArchive(object):
         rtn.append_dot_arrays(tmp)
         return rtn
 
-    def _all_features(self):
-        """helper function returns array with all features and varnames"""
+    def all_features(self):
+        """eturns array with all features and varnames
+
+        Examples
+        --------
+        could be used to make a pandas dataframe
+
+        >>> array, varnames = my_dot_array_archive.all_features()
+        >>> pandas.DataFrame(array, columns=varnames)
+        """
         array = []
         feat = {}
         for id in self.array_ids:
@@ -108,17 +116,11 @@ class DotArraySequenceArchive(object):
 
     def features_csv(self, delimiter =","):
 
-        array, varnames = self._all_features()
+        array, varnames = self.all_features()
         rtn = delimiter.join(varnames)
         for row in array:
             rtn += "\n" + delimiter.join(map(lambda x:str(x), row))
         return rtn
-
-    def features_dataframe(self):
-        """returns pandas dataframe with all features"""
-        from pandas import DataFrame
-        array, varnames = self._all_features()
-        return DataFrame(array, columns=varnames)
 
     def save(self, json_file_name, indent=None, zipped=False):
 

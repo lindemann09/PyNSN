@@ -5,9 +5,8 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._nsn import shape as _shape
-from .._nsn.dot_array import DotArray as _DotArray
-from .._nsn.rect_array import RectangleArray as _RectangleArray
+from .._lib import shape as _shape
+from .._lib  import arrays as _arrays
 
 
 def create(object_array, colours, antialiasing=True, gabor_filter=None):
@@ -19,10 +18,10 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
     antialiasing: Ture or integer
 
     gabor_filter: from PIL.ImageFilter
-    default_dot_colour: if colour is undefined in _nsn
+    default_dot_colour: if colour is undefined in _lib
     """
 
-    assert isinstance(object_array, (_DotArray, _RectangleArray))
+    assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
     assert isinstance(colours, _colour.ImageColours)
 
     if isinstance(antialiasing, bool):
@@ -41,7 +40,7 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
     img = _prepare_image(image_size=image_size, colours=colours)
 
     image_coord = _c2i_coord(object_array.xy * aaf, image_size)
-    if isinstance(object_array, _DotArray):
+    if isinstance(object_array, _arrays.DotArray):
         # draw dots
         for xy, d, att in zip(image_coord, object_array.diameters * aaf,
                               object_array.attributes):
@@ -55,7 +54,7 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
                     obj.attribute = colours.default_item_colour
             _draw_item(img, obj)
 
-    elif isinstance(object_array, _RectangleArray):
+    elif isinstance(object_array, _arrays.RectangleArray):
         # draw rectangle
         for xy, size, att in zip(image_coord,
                                  object_array.sizes * aaf,

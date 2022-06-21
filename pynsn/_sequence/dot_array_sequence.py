@@ -7,8 +7,8 @@ from hashlib import md5 as _md5
 import numpy as _np
 
 from .._lib import misc as _misc
-from .._nsn.dot_array import DotArray as _DotArray
-from .._nsn.visual_features import VisualFeatures as _Feat
+from .._lib.arrays import DotArray as _DotArray
+from .._lib.visual_features import VisualFeatures as _Feat
 from .. import factory
 from .. import match
 
@@ -58,22 +58,23 @@ class DASequence(object):
         return m.hexdigest()
 
     def get_features_dict(self):
-        """dictionary with arrays"""
+        """dictionary with arrays
 
+        Examples
+        --------
+        making a pandas dataframe with aa features
+        >>> d = my_da_sequence.get_features_dict()
+        >>> array = []
+        >>> for x in range(len(d["Hash"])):
+        >>>    row = map(lambda k: d[k][x], d.keys())
+        >>>    array.append(list(row))
+        >>> return pandas.DataFrame(array, columns=list(d.keys()))
+        """
         dicts = [x._features.get_features_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same _sequence ID
         return rtn
 
-    def get_features_dataframe(self):
-        from pandas import DataFrame
-        d = self.get_features_dict()
-        array = []
-        for x in range(len(d["Hash"])):
-            # transposing (numpy not possible, because of data types
-            row = map(lambda k: d[k][x], d.keys())
-            array.append(list(row))
-        return DataFrame(array, columns=list(d.keys()))
 
     def get_numerosity_correlations(self):
         feat = self.get_features_dict()

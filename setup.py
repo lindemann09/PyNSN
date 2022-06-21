@@ -12,7 +12,6 @@ package_name = "pynsn"
 
 install_requires = ["numpy>=1.6",
                     "scipy>=1.0",
-                    "pandas>=1.3",
                     "Pillow>=5.0",
                     "svgwrite>=1.4"
                     ]

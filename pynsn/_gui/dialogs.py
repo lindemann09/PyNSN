@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
-from .._nsn.visual_features import VisualFeatures
+from .._lib.visual_features import VisualFeatures
 from .. import match
 
 

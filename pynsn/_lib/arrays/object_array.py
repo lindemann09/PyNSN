@@ -9,10 +9,10 @@ import json
 from random import random
 
 import numpy as np
-from .._lib import misc, geometry
-from .visual_features import VisualFeatures
+from .. import misc, geometry
+from ..visual_features import VisualFeatures
 
-class _Cloud(object):
+class ObjectCloud(object):
     """Numpy Position lists with attributes for optimized for numpy calculations
 
     Abstract class for implementation of dot and rect
@@ -195,7 +195,7 @@ class _Cloud(object):
                                                self._xy[neighbour_ids, 1] + xy[:, 1]]).T
 
 
-class _RestrictedCloud(_Cloud):
+class GenericObjectArray(ObjectCloud):
 
     def __init__(self, target_array_radius, minimum_gap,
                  xy=None, attributes=None):

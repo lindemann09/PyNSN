@@ -38,7 +38,7 @@ class VisualFeatures(object):
 
 
     def __init__(self, dot_array):
-        # _nsn or dot_cloud
+        # _lib or dot_cloud
         self.da = dot_array
         self._convex_hull = None
 

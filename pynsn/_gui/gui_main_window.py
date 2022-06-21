@@ -12,7 +12,7 @@ from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import factory,  match
 from .._lib import distributions as distr
-from .._nsn.visual_features import VisualFeatures
+from .._lib.visual_features import VisualFeatures
 from ..image import _colour
 from ..image import pil
 from .._sequence import dot_array_sequence

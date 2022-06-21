@@ -17,10 +17,10 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 5):
 
 from .image._colour import Colour, ImageColours
 from . import factory, match
-from ._nsn.shape import Dot, Rectangle
-from ._nsn.dot_array import DotArray
+from ._lib.shape import Dot, Rectangle
+from ._lib.arrays import DotArray
+from ._lib.arrays import RectangleArray
 from ._lib import distributions as distr
+from . import factory
 
-#Further modules
-# gui, pygame_surface, expyriment_stimulus,  dot_array_sequence, dot_array_archive
 

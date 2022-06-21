@@ -5,14 +5,6 @@ import numpy as np
 
 
 
-def scale(scalar: float, vector: NumVector, x : NumArray) -> NumVector:
-    return [scalar * num for num in vector]
-
-
-# typechecks; a list of floats qualifies as a Vector.
-x = np.array([[98, 98], [89, 78]])
-mat = [[1, 3, 2], [5, 6, 4]]
-new_vector = scale(2.0, [1.0, "df", -4.2, 5.4], x=x)
 
 a = distr.Normal(min_max=(10, 100), mu=55, sigma=20)
 

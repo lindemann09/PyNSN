@@ -8,16 +8,16 @@ import random
 import numpy as np
 from scipy import spatial
 
-from .cloud import _RestrictedCloud
-from .._lib import misc, geometry
-from .shape import Dot
+from .object_array import GenericObjectArray
+from .. import misc, geometry
+from ..shape import Dot
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
 #  hash
 
 
-class DotArray(_RestrictedCloud):
+class DotArray(GenericObjectArray):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -218,7 +218,7 @@ class DotArray(_RestrictedCloud):
                              prefer_inside_field_area = False,
                              squared_array = False,
                              min_distance_area_boarder = 0,
-                             occupied_space: _RestrictedCloud = None):
+                             occupied_space: GenericObjectArray = None):
         """returns a available random xy position
 
         raise exception if not found

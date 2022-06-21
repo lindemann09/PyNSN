@@ -13,39 +13,45 @@ Oliver Lindemann (lindemann@cognitive-psychology.eu)
 Project homepage: https://github.com/lindemann09/PyNSN
 
 
-Dependencies
-------------
+## Dependencies
 
 * Python 3 (>=3.5)
-* PyQT5 
 * numpy (>=1.6)
 * scipy (>=1.0)
-* pillow (>=5.0)
-* svgwrite>=1.4
-* pandas>=1.3
+* Pillow ()>=5.0)
+* svgwrite (>=1.4)
 
-Additional Python packages, which are optional and required only for some 
-features:
+### Optional requirements
 
+Additional Python packages, which are optional and required only for 
+some features:
+
+* PyQT5 (>=5.14)
 * pygame (>=1.9)
-* expyriment (>=0.8)
+* expyriment (>=0.9)
+* matplotlib ()>=3.2)
 
-Installing via `pip`
---------------------
+
+## Installing via `pip`
 
 ```
 python3 -m pip install pynsn
 ```
 
-To generate [Pygame](https://www.pygame.org/news) or [Expyriment](http://expyriment.org) stimuli, please install the
-respective packages.
+## Image formats
 
+By default, PyNSN is able to write [SVG](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics) 
+or [Pillow](https://pillow.readthedocs.io/en/stable/) images. 
+To generate [Pygame](https://www.pygame.org/news) or
+[PyPlot](https://matplotlib.org/stable/index.html) images or stimuli 
+for [Expyriment](http://expyriment.org), please install the respective
+packages.
 
 
 RUN GUI tool
 -------------
 
-Note: Using the PyNSN-GUI requires the installation of `PyQt5` 
+*Note:* Using the PyNSN-GUI requires the installation of `PyQt5` 
 
 ```
 python3 -m pynsn

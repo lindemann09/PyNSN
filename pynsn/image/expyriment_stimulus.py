@@ -8,20 +8,22 @@ from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 from . import _colour
 from . import pil as _pil_image
-
+from .._lib.arrays import GenericObjectArray as _GenericObjectArray
 
 class ExprimentDotArray(_Canvas):
 
-    def __init__(self, dot_array,
+    def __init__(self, object_array,
+                 colours,
                  position=(0, 0),
-                 colours = _colour.ImageColours(),
                  antialiasing=True):
+
+        assert isinstance(object_array, _GenericObjectArray)
 
         if not isinstance(colours, _colour.ImageColours):
             raise TypeError("Colours must be a ImageColours instance")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
-        self.dot_array = dot_array
+        self.dot_array = object_array
         self.colours = colours
         self.antialiasing = antialiasing
         self._image = None
@@ -65,7 +67,7 @@ class ExpyrimentDASequence(object):
         self.antialiasing = antialiasing
 
         for da in self.da_sequence.dot_arrays:
-            stim = ExprimentDotArray(dot_array=da, position=position,
+            stim = ExprimentDotArray(object_array=da, position=position,
                                      colours=colours,
                                      antialiasing=antialiasing)
             self.stimuli.append(stim)
@@ -99,7 +101,7 @@ class ExpyrimentDASequence(object):
 
     def preload(self, until_percent=100, time=None, do_not_return_earlier=False):
         """
-        preloaded all _nsn stimuli
+        preloaded all _lib stimuli
 
         Note: this will take a while!
 

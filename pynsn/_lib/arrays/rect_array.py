@@ -8,11 +8,11 @@ import random
 import numpy as np
 from scipy import spatial
 
-from .cloud import _RestrictedCloud
-from .._lib import misc
-from .shape import Rectangle
+from .object_array import GenericObjectArray
+from .. import misc
+from ..shape import Rectangle
 
-class RectangleArray(_RestrictedCloud):
+class RectangleArray(GenericObjectArray):
     """
     """
 
