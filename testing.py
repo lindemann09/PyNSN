@@ -1,4 +1,4 @@
-from pynsn import factory, ImageColours, distr
+from pynsn import factory, ImageColours, distr, RectangleArray, Rectangle
 from pynsn.image import pil
 
 import numpy as np
@@ -15,14 +15,18 @@ da_specification2 = factory.DotArraySpecs(
     minimum_gap=2)
 da_specification = factory.RectangleArraySpecs(
     target_area_radius=200,
-    width_distribution=distr.Normal(min_max=(10, 80), mu=30, sigma=10),
-    height_distribution=distr.Normal(min_max=(10, 80), mu=30, sigma=10),
+    width_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    height_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     minimum_gap=2)
 my_colours = ImageColours(target_area="#EEEEEE", background="gray",
                           item_colour="darkmagenta")  # show named colours see Colour.NAMED_COLOURS
 
+
+ra = RectangleArray(target_array_radius = 200,
+                          minimum_gap = 0)
 # generate on array with 100 dots
-stimulus = factory.random_array(da_specification, 4)
+stimulus = factory.random_array(da_specification, n_objects=40,
+                                attributes=["blue", "green"])
 stimulus.round(2)
 # r = Rectangle(xy=(-85.76060604630113, -77.51417327204257), size=(20, 40), attribute=None)
 # print(r)

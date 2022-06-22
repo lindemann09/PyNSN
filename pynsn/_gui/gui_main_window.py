@@ -118,7 +118,7 @@ class GUIMainWindow(QMainWindow):
         # ICON
         colours = ICON[2]
         self._image = pil.create(
-                        object_array=factory.random_array(n_dots=ICON[0], specs= ICON[1]),
+                        object_array=factory.random_array(n_objects=ICON[0], specs= ICON[1]),
                         colours=colours, antialiasing=True)
 
         self.setWindowIcon(QIcon(self.pixmap()))
@@ -128,14 +128,14 @@ class GUIMainWindow(QMainWindow):
     def make_new_array(self):
 
         try:
-            self.dot_array = factory.random_array(n_dots=self.get_number(),
+            self.dot_array = factory.random_array(n_objects=self.get_number(),
                                                   specs=self.get_specs())
         except StopIteration as error:
             self.main_widget.text_error_feedback(error)
             raise error
 
         if self.settings.bicoloured.isChecked():
-            data_array2 = factory.random_array(n_dots=self.main_widget.number2.value,
+            data_array2 = factory.random_array(n_objects=self.main_widget.number2.value,
                                                specs=self.get_specs(),
                                                occupied_space=self.dot_array)
             data_array2.set_attributes(self.main_widget.dot_colour2.text)

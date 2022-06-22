@@ -109,10 +109,14 @@ class RectangleArray(GenericObjectArray):
 
         """
 
-        if indices is None:
-            indices = list(range(self._features.numerosity))
-
-        return RectangleArray(
+        if self._features.numerosity == 0:
+            return RectangleArray(
+                target_array_radius=self.target_array_radius,
+                minimum_gap=self.minimum_gap)
+        else:
+            if indices is None:
+                indices = list(range(self._features.numerosity))
+            return RectangleArray(
                         target_array_radius=self.target_array_radius,
                         minimum_gap=self.minimum_gap,
                         xy=self._xy[indices, :].copy(),
@@ -126,7 +130,7 @@ class RectangleArray(GenericObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            pos_dist = self._xy - rect.xy
+            pos_dist = np.abs(self._xy - rect.xy)
             max_overlap_dist = (self.sizes + rect.size)/2
             dist = pos_dist - max_overlap_dist
             dist[dist <  0] = 0

@@ -66,8 +66,10 @@ class Rectangle(Coordinate2D):
 
         Parameters
         ----------
-        xy : tuple of two numeric (default=(0, 0))
-        size : tuple of two numeric (default=(0, 0))
+        xy : tuple
+            tuple of two numeric (default=(0, 0))
+        size : tuple
+            tuple of two numeric (default=(0, 0))
         attribute : attribute (string)
         """
 

@@ -1,6 +1,8 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+import copy
 import copy as _copy
+import random
 
 from ._lib.distributions import PyNSNDistribution as _PyNSNDistribution
 from ._lib import shape as _shape
@@ -91,10 +93,13 @@ class RectangleArraySpecs(_Specs):
 
 
 def random_array(specs,
-                 n_dots,
-                 attribute = None,
+                 n_objects,
+                 attributes = None,
+                 allow_overlapping = False,
                  occupied_space = None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
+
+    attribute is an array, arrays are assigned randomly.
 
     """
 
@@ -103,35 +108,47 @@ def random_array(specs,
         rtn = _DotArray(target_array_radius=specs.target_array_radius,
                         minimum_gap=specs.minimum_gap)
 
-        for dia in specs.diameter_distr.sample(n=n_dots):
+        for dia in specs.diameter_distr.sample(n=n_objects):
             try:
                 xy = rtn.random_free_position(dot_diameter=dia,
                           occupied_space=occupied_space,
+                          allow_overlapping=allow_overlapping,
                           min_distance_area_boarder=specs.min_distance_area_boarder)
             except StopIteration as e:
-                raise StopIteration("Can't find a solution for {} items this dot".format(n_dots))
-            rtn.add([_shape.Dot(xy=xy, diameter=dia, attribute=attribute)])
+                raise StopIteration("Can't find a solution for {} items this dot".format(n_objects))
+            rtn.add([_shape.Dot(xy=xy, diameter=dia)])
 
     elif isinstance(specs, RectangleArraySpecs):
         # RectArray
         rtn = _RectangleArray(target_array_radius=specs.target_array_radius,
                         minimum_gap=specs.minimum_gap)
 
-        sizes = zip(specs.width_distr.sample(n=n_dots),
-                    specs.height_distr.sample(n=n_dots))
+        sizes = zip(specs.width_distr.sample(n=n_objects),
+                    specs.height_distr.sample(n=n_objects))
 
         for s in sizes:
             try:
                 xy = rtn.random_free_position(rectangle_size=s,
-                      occupied_space=occupied_space,
-                      min_distance_area_boarder=specs.min_distance_area_boarder)
+                          occupied_space=occupied_space,
+                          allow_overlapping=allow_overlapping,
+                          min_distance_area_boarder=specs.min_distance_area_boarder)
             except StopIteration as e:
-                raise StopIteration("Can't find a solution for {} items this dot".format(n_dots))
+                raise StopIteration("Can't find a solution for {} items this dot".format(n_objects))
 
-            rtn.add([_shape.Rectangle(xy=xy, size=s, attribute=attribute)])
+            rtn.add([_shape.Rectangle(xy=xy, size=s)])
 
     else:
         raise RuntimeError("specs has to be of type DotArraySpecs or , but not {}".format(
                         type(specs).__name__))
+
+    # attribute assignment
+    if isinstance(attributes, (tuple, list)):
+        att = []
+        while len(att) < n_objects:
+            att.extend(copy.deepcopy(attributes))
+        random.shuffle(att)
+        rtn.set_attributes(att[:n_objects])
+    else:
+        rtn.set_attributes(attributes)
 
     return rtn

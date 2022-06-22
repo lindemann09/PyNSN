@@ -164,7 +164,7 @@ def create(specs,
     # make source image
     if source_number is None:
         source_number = min_ + int((max_ - min_)/2)
-    source_da = factory.random_array(n_dots=source_number,
+    source_da = factory.random_array(n_objects=source_number,
                                      specs=specs)
     source_da = match.visual_feature(source_da, feature=match_feature, value=match_value)
     source_da.center_array()

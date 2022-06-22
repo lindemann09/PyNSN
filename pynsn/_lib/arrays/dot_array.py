@@ -270,18 +270,18 @@ class DotArray(GenericObjectArray):
             elif cnt > 3000:
                 raise StopIteration(u"Can't find a free position")
 
-    def _remove_overlap_from_inner_to_outer(self, minimum_gap):
+    def _remove_overlap_from_inner_to_outer(self):
 
         shift_required = False
         # from inner to outer remove overlaps
         for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
             dist = self.distances(Dot(xy=self._xy[i, :],
                                       diameter=self._diameters[i]))
-            idx_overlaps = np.where(dist < minimum_gap)[0].tolist()  # overlapping dot ids
+            idx_overlaps = np.where(dist < self.minimum_gap)[0].tolist()  # overlapping dot ids
             if len(idx_overlaps) > 1:
                 shift_required = True
                 idx_overlaps.remove(i)  # don't move yourself
-                replace_size = minimum_gap - dist[idx_overlaps]  # dist is mostly negative, because of overlap
+                replace_size =self.minimum_gap - dist[idx_overlaps]  # dist is mostly negative, because of overlap
                 self._radial_replacement_from_reference_dots(ref_pos_id=i,
                                                              neighbour_ids=idx_overlaps,
                                                              replacement_size=replace_size)
@@ -307,7 +307,7 @@ class DotArray(GenericObjectArray):
 
         error = False
 
-        shift_required = self._remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
+        shift_required = self._remove_overlap_from_inner_to_outer()
 
         # sqeeze in points that pop out of the image area radius
         cnt = 0
@@ -326,7 +326,7 @@ class DotArray(GenericObjectArray):
                 # remove overlaps centered around new outlier position
                 self._xy = self._xy - new_xy
                 # remove all overlaps (inner to outer, i.e. starting with outlier)
-                self._remove_overlap_from_inner_to_outer(minimum_gap=self.minimum_gap)
+                self._remove_overlap_from_inner_to_outer()
                 # new pos for outlier
                 self._xy = self._xy + new_xy  # move back to old position
                 shift_required = True

@@ -39,61 +39,62 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
     image_size = int(round(object_array.target_array_radius * 2)) * aaf
     img = _prepare_image(image_size=image_size, colours=colours)
 
-    image_coord = _c2i_coord(object_array.xy * aaf, image_size)
-    if isinstance(object_array, _arrays.DotArray):
-        # draw dots
-        for xy, d, att in zip(image_coord, object_array.diameters * aaf,
-                              object_array.attributes):
-            obj = _shape.Dot(xy=xy, diameter=d)
-            if att is None:
-                obj.attribute = colours.default_item_colour
-            else:
-                try:
-                    obj.attribute = _colour.Colour(att)
-                except TypeError:
+    if object_array.features.numerosity > 0:
+        image_coord = _c2i_coord(object_array.xy * aaf, image_size)
+        if isinstance(object_array, _arrays.DotArray):
+            # draw dots
+            for xy, d, att in zip(image_coord, object_array.diameters * aaf,
+                                  object_array.attributes):
+                obj = _shape.Dot(xy=xy, diameter=d)
+                if att is None:
                     obj.attribute = colours.default_item_colour
-            _draw_item(img, obj)
+                else:
+                    try:
+                        obj.attribute = _colour.Colour(att)
+                    except TypeError:
+                        obj.attribute = colours.default_item_colour
+                _draw_item(img, obj)
 
-    elif isinstance(object_array, _arrays.RectangleArray):
-        # draw rectangle
-        for xy, size, att in zip(image_coord,
-                                 object_array.sizes * aaf,
-                              object_array.attributes):
-            obj = _shape.Rectangle(xy=xy, size=size)
-            if att is None:
-                obj.attribute = colours.default_item_colour
-            else:
-                try:
-                    obj.attribute = _colour.Colour(att)
-                except TypeError:
+        elif isinstance(object_array, _arrays.RectangleArray):
+            # draw rectangle
+            for xy, size, att in zip(image_coord,
+                                     object_array.sizes * aaf,
+                                  object_array.attributes):
+                obj = _shape.Rectangle(xy=xy, size=size)
+                if att is None:
                     obj.attribute = colours.default_item_colour
+                else:
+                    try:
+                        obj.attribute = _colour.Colour(att)
+                    except TypeError:
+                        obj.attribute = colours.default_item_colour
+                _draw_item(img, obj)
+
+
+        # draw convex hulls and center of mass
+        if colours.field_area.colour is not None:
+            # plot convey hull
+            _draw_convex_hull(img=img,
+                              convex_hull=_c2i_coord(
+                                  object_array.features.convex_hull.xy * aaf, image_size),
+                              convex_hull_colour=colours.field_area.colour)
+        if colours.field_area_outer.colour is not None:
+            # plot convey hull
+            _draw_convex_hull(img=img,
+                              convex_hull=_c2i_coord(
+                                  object_array.features.convex_hull.full_xy * aaf,
+                                  image_size),
+                              convex_hull_colour=colours.field_area_outer.colour)
+        if colours.center_of_mass.colour is not None:
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass * aaf, image_size),
+                             diameter=10 * aaf,
+                             attribute=colours.center_of_mass.colour)
             _draw_item(img, obj)
-
-
-    # draw convex hulls and center of mass
-    if colours.field_area.colour is not None:
-        # plot convey hull
-        _draw_convex_hull(img=img,
-                          convex_hull=_c2i_coord(
-                              object_array.features.convex_hull.xy * aaf, image_size),
-                          convex_hull_colour=colours.field_area.colour)
-    if colours.field_area_outer.colour is not None:
-        # plot convey hull
-        _draw_convex_hull(img=img,
-                          convex_hull=_c2i_coord(
-                              object_array.features.convex_hull.full_xy * aaf,
-                              image_size),
-                          convex_hull_colour=colours.field_area_outer.colour)
-    if colours.center_of_mass.colour is not None:
-        obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass * aaf, image_size),
-                         diameter=10 * aaf,
-                         attribute=colours.center_of_mass.colour)
-        _draw_item(img, obj)
-    if colours.center_of_outer_positions.colour is not None:
-        obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions * aaf, image_size),
-                         diameter=10 * aaf,
-                         attribute=colours.center_of_outer_positions.colour)
-        _draw_item(img, obj)
+        if colours.center_of_outer_positions.colour is not None:
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions * aaf, image_size),
+                             diameter=10 * aaf,
+                             attribute=colours.center_of_outer_positions.colour)
+            _draw_item(img, obj)
 
     # rescale for antialising
     if aaf != 1:
