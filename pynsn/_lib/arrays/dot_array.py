@@ -131,13 +131,9 @@ class DotArray(GenericObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            return np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
+            rtn = np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
                    ((self._diameters + dot.diameter) / 2.0)
-
-    @property
-    def center_of_mass(self):
-        weighted_sum = np.sum(self._xy * self._diameters[:, np.newaxis], axis=0)
-        return weighted_sum / np.sum(self._diameters)
+            return rtn
 
     def get(self, indices=None):
         """returns all dots

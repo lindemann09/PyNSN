@@ -63,14 +63,14 @@ class DASequence(object):
         Examples
         --------
         making a pandas dataframe with aa features
-        >>> d = my_da_sequence.get_features_dict()
+        >>> d = my_da_sequence.as_dict()
         >>> array = []
         >>> for x in range(len(d["Hash"])):
         >>>    row = map(lambda k: d[k][x], d.keys())
         >>>    array.append(list(row))
         >>> return pandas.DataFrame(array, columns=list(d.keys()))
         """
-        dicts = [x._features.get_features_dict() for x in self.dot_arrays]
+        dicts = [x._features.as_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same _sequence ID
         return rtn
@@ -238,7 +238,6 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
             if cnt > 10:
                 error = u"ERROR: realign, " + str(cnt) + ", " + str(da._features.numerosity)
 
-        #print(da.features.get_features_text())
         da.round(round_decimals)
         da_sequence.append(da)
 

@@ -9,6 +9,7 @@ import json
 from random import random
 
 import numpy as np
+from scipy import spatial
 from .. import misc, geometry
 from ..visual_features import VisualFeatures
 
@@ -30,7 +31,7 @@ class ObjectCloud(object):
             self._append_xy_attribute(xy=xy, attributes=attributes)
 
     def __str__(self):
-        return self._features.get_features_text(extended_format=True)
+        return self._features.as_text(extended_format=True)
 
     @property
     def xy(self):
@@ -108,6 +109,10 @@ class ObjectCloud(object):
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.perimeter.tobytes())
         return m.hexdigest()
+#
+    def distance_matrix(self):
+        """distances between positions"""
+        return spatial.distance.cdist(self._xy, self._xy)
 
     def as_dict(self):
         """
@@ -205,3 +210,27 @@ class GenericObjectArray(ObjectCloud):
 
         self.target_array_radius = target_array_radius
         self.minimum_gap = minimum_gap
+
+    @property
+    def perimeter(self):
+        raise NotImplementedError()
+
+    def center_of_mass(self):
+        weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
+        return weighted_sum / np.sum(self.perimeter)
+
+    def distances(self, object):
+        # override ist method
+        raise NotImplementedError()
+
+    def distance_matrix(self, between_positions=False, overlap_is_zero=False):
+        """between position ignores the dot size"""
+        if between_positions:
+            return super().distance_matrix()
+        # matrix with all distance between all points
+        dist = np.array([self.distances(d) for d in self.get()])
+        if overlap_is_zero:
+            dist[dist<0] = 0
+        print(dist)
+        exit()
+        return dist

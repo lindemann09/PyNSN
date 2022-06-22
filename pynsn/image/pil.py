@@ -86,7 +86,7 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
                                   image_size),
                               convex_hull_colour=colours.field_area_outer.colour)
         if colours.center_of_mass.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass * aaf, image_size),
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
                              diameter=10 * aaf,
                              attribute=colours.center_of_mass.colour)
             _draw_item(img, obj)

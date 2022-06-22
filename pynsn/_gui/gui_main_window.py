@@ -232,13 +232,13 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.dot_array._features.get_features_text(extended_format=True,
-                                                         with_hash=True)
+        txt = self.dot_array._features.as_text(extended_format=True,
+                                               with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.dot_array.split_array_by_attributes():
                 txt += "Attribute {}\n".format(da._attributes[0])
-                txt += da._features.get_features_text(extended_format=True,
-                                                      with_hash=False)
+                txt += da._features.as_text(extended_format=True,
+                                            with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -280,7 +280,7 @@ class GUIMainWindow(QMainWindow):
 
     def action_match(self):
         """"""
-        prop = self.dot_array._features.get_features_dict()
+        prop = self.dot_array._features.as_dict()
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
                                                                   prop)  #
         if feature is not None:

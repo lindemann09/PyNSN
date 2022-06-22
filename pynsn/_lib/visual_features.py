@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 import numpy as np
 from scipy import spatial
-from .._lib import misc
-from .._lib.geometry import cartesian2polar, polar2cartesian
+from . import misc, arrays
+from .geometry import cartesian2polar, polar2cartesian
 
 
 class VisualFeatures(object):
@@ -16,6 +16,7 @@ class VisualFeatures(object):
     ITEM_SURFACE_AREA = "Mean item surface area"
     ITEM_PERIMETER = "Total perimeter"
     TOTAL_PERIMETER = "Mean item perimeter"
+    RECT_SIZE = "Mean Rectangle Size"
     LOG_SPACING = "Log Spacing"
     SPARSITY = "Sparsity"
     FIELD_AREA = "Field area"
@@ -36,10 +37,10 @@ class VisualFeatures(object):
                 return True
         return False
 
-
-    def __init__(self, dot_array):
+    def __init__(self, object_array):
         # _lib or dot_cloud
-        self.da = dot_array
+        assert isinstance(object_array, (arrays.RectangleArray, arrays.DotArray))
+        self.oa = object_array
         self._convex_hull = None
 
     def reset(self):
@@ -48,29 +49,41 @@ class VisualFeatures(object):
 
     @property
     def convex_hull(self):
+        if isinstance(self.oa,arrays.RectangleArray):
+            raise NotImplementedError() # FIXME
+
         if self._convex_hull is None:
-            self._convex_hull = ConvexHullDots(self.da._xy, self.da.diameters)
+            self._convex_hull = ConvexHullDots(self.oa._xy, self.oa.diameters)
         return self._convex_hull
 
     @property
     def mean_item_diameter(self):
-        return np.mean(self.da.diameters)
+        if not isinstance(self.oa, arrays.DotArray):
+            return None
+        return np.mean(self.oa.diameters)
+
+    @property
+    def mean_rectangle_size(self):
+        if not isinstance(self.oa, arrays.RectangleArray):
+            return None
+        return np.mean(self.oa.sizes, axis=0)
+
 
     @property
     def total_surface_area(self):
-        return np.sum(self.da.surface_areas)
+        return np.sum(self.oa.surface_areas)
 
     @property
     def mean_item_surface_area(self):
-        return np.mean(self.da.surface_areas)
+        return np.mean(self.oa.surface_areas)
 
     @property
     def total_perimeter(self):
-        return np.sum(self.da.perimeter)
+        return np.sum(self.oa.perimeter)
 
     @property
     def mean_item_perimeter(self):
-        return np.mean(self.da.perimeter)
+        return np.mean(self.oa.perimeter)
 
     @property
     def field_area(self):
@@ -78,7 +91,7 @@ class VisualFeatures(object):
 
     @property
     def numerosity(self):
-        return len(self.da._xy)
+        return len(self.oa._xy)
 
     @property
     def converage(self):
@@ -109,40 +122,6 @@ class VisualFeatures(object):
     @property
     def field_area_full(self):  # TODO not tested
         return self.convex_hull.full_field_area
-
-    def _get_distance_matrix(self, between_positions=False):
-        """between position ignores the dot size"""
-        dist = spatial.distance.cdist(self.da._xy, self.da._xy)  #
-        # matrix with all distance between all points
-        if not between_positions:
-            # subtract dot diameter
-            radii_mtx = np.ones((self.numerosity, 1)) + \
-                        self.da.diameters[:, np.newaxis].T / 2
-            dist -= radii_mtx  # for each row
-            dist -= radii_mtx.T  # each each column
-        return dist
-
-    @property
-    def expansion(self):
-        """ maximal distance between to points plus diameter of the two points"""
-
-        dist = self._get_distance_matrix(between_positions=True)
-        # add dot diameter
-        radii_mtx = np.ones((self.numerosity, 1)) + self.da.diameters[:,
-                                                    np.newaxis].T / 2
-        dist += radii_mtx  # add to each row
-        dist += radii_mtx.T  # add two each column
-        return np.max(dist)
-
-    #@property
-    #def featureXX_coverage_target_area(self):
-    #    """density takes into account the full possible target area (i.e.,
-    #        image radius) """
-    #    try:
-    #        return np.pi * self.da.target_array_radius ** 2 / \
-    #            self.total_surface_area
-    #    except:
-    #        return None # dot defined for DotCloud with no target_array_radius
 
     def get(self, feature):
         """returns a feature"""
@@ -182,13 +161,13 @@ class VisualFeatures(object):
             raise ValueError("{} is a unkown visual feature".format(feature))
 
 
-    def get_features_dict(self):
+    def as_dict(self):
         """ordered dictionary with the most important feature"""
-        rtn = [("Hash", self.da.hash),
+        rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
                (VisualFeatures.TOTAL_SURFACE_AREA, self.total_surface_area),
                (VisualFeatures.ITEM_SURFACE_AREA, self.mean_item_surface_area),
-               (VisualFeatures.ITEM_DIAMETER, self.mean_item_diameter),
+               ("?", None), # placeholder
                (VisualFeatures.ITEM_PERIMETER, self.mean_item_perimeter),
                (VisualFeatures.TOTAL_PERIMETER, self.total_perimeter),
                (VisualFeatures.FIELD_AREA, self.field_area),
@@ -196,12 +175,20 @@ class VisualFeatures(object):
                (VisualFeatures.COVERAGE, self.converage),
                (VisualFeatures.LOG_SIZE, self.logSize),
                (VisualFeatures.LOG_SPACING, self.logSpacing)]
+
+        if isinstance(self.oa, arrays.DotArray):
+            rtn[4] = (VisualFeatures.ITEM_DIAMETER, self.mean_item_diameter)
+        elif isinstance(self.oa, arrays.RectangleArray):
+            rtn[4] = (VisualFeatures.RECT_SIZE, self.mean_rectangle_size)
         return OrderedDict(rtn)
 
-    def get_features_text(self, with_hash=True, extended_format=False, spacing_char="."):
+    def __str__(self):
+        return self.as_text()
+
+    def as_text(self, with_hash=True, extended_format=False, spacing_char="."):
         if extended_format:
             rtn = None
-            for k, v in self.get_features_dict().items():
+            for k, v in self.as_dict().items():
                 if rtn is None:
                     if with_hash:
                         rtn = "- {}: {}\n".format(k, v)
@@ -220,7 +207,7 @@ class VisualFeatures(object):
                     rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self.da.hash)
+                rtn = "ID: {} ".format(self.oa.hash)
             else:
                 rtn = ""
             rtn += "N: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: " \

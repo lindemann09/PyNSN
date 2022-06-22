@@ -151,11 +151,6 @@ class RectangleArray(GenericObjectArray):
             d_xy = self._xy_distances(rect)
             return np.hypot(d_xy[:,0], d_xy[:,1])
 
-    @property
-    def center_of_mass(self): # TODO does perimeter work for weighting?
-        weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
-        return weighted_sum / np.sum(self.perimeter)
-
     def get(self, indices=None):
         """returns all rectangles
 
@@ -290,3 +285,31 @@ class RectangleArray(GenericObjectArray):
                 return proposal_rect.xy
             elif cnt > 3000:
                 raise StopIteration(u"Can't find a free position") # TODO
+
+    def _remove_overlap_from_inner_to_outer(self):
+        raise NotImplementedError()
+
+    def realign(self):
+        raise NotImplementedError()
+
+    def shuffle_all_positions(self, allow_overlapping=False,
+                              min_distance_area_boarder=0):
+        raise NotImplementedError()
+
+    def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
+        raise NotImplementedError()
+
+    def split_array_by_attributes(self):
+        """returns a list of arrays
+        each array contains all dots of with particular colour"""
+        att = self._attributes
+        att[np.where(att == None)] = "None"  # TODO check "is none"
+
+        rtn = []
+        for c in np.unique(att):
+            if c is not None:
+                da = RectangleArray(target_array_radius=self.target_array_radius,
+                              minimum_gap=self.minimum_gap)
+                da.add(self.find(attribute=c))
+                rtn.append(da)
+        return rtn

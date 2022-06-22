@@ -25,15 +25,10 @@ my_colours = ImageColours(target_area="#EEEEEE", background="gray",
 ra = RectangleArray(target_array_radius = 200,
                           minimum_gap = 0)
 # generate on array with 100 dots
-stimulus = factory.random_array(da_specification, n_objects=40,
+stimulus = factory.random_array(da_specification, n_objects=5,
                                 attributes=["blue", "green"])
-stimulus.round(2)
-# r = Rectangle(xy=(-85.76060604630113, -77.51417327204257), size=(20, 40), attribute=None)
-# print(r)
 
-
-for x in stimulus.get():
-    print(x)
+print(stimulus.features.as_dict())
 
 # print(stimulus.split_array_by_attributes())
 # print(stimulus._features.get_features_text())
