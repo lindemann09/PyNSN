@@ -3,6 +3,7 @@ from pynsn.image import pil
 
 import numpy as np
 
+beta = distr.Beta(alpha = a, beta=b, min_max=(20, 70))
 
 
 

@@ -59,7 +59,7 @@ class _PyNSNDistributionMuSigma(PyNSNDistribution):
         return d
 
 
-class Laplace(PyNSNDistribution):
+class Uniform(PyNSNDistribution):
     """
     """
     def __init__(self, min_max):
@@ -80,7 +80,6 @@ class Laplace(PyNSNDistribution):
             return numpy_round2(rtn, decimals=round_to_decimals)
         else:
             return rtn
-
 
 
 class Normal(_PyNSNDistributionMuSigma):
@@ -116,9 +115,10 @@ class Normal(_PyNSNDistributionMuSigma):
         else:
             return rtn
 
+
 class Beta(_PyNSNDistributionMuSigma):
 
-    def __init__(self, mu, sigma, min_max):
+    def __init__(self, mu=None, sigma=None, alpha=None, beta=None, min_max=None):
         """Beta distribution defined by the number range, min_max=(min, max),
          the mean and the standard deviation (std)
 
@@ -141,6 +141,11 @@ class Beta(_PyNSNDistributionMuSigma):
         for calculated shape parameters [alpha, beta] see property
         `shape_parameter_beta`
         """
+        if alpha is not None and beta is not None and (mu, sigma) == (None, None):
+            mu, sigma = Beta._calc_mu_sigma(alpha, beta, min_max)
+        elif mu is None or sigma is None or alpha is not None or beta is not None:
+            raise TypeError("Either Mu & Sigma or Alpha & Beta have to specified.")
+
         super().__init__(mu=mu, sigma=sigma, min_max=min_max)
 
     def sample(self, n, round_to_decimals=None):
@@ -170,8 +175,29 @@ class Beta(_PyNSNDistributionMuSigma):
 
         """
         r = float(self.min_max[1] - self.min_max[0])
-        mean = (self.mu - self.min_max[0]) / r
+        m = (self.mu - self.min_max[0]) / r # mean
         std = self.sigma / r
-        x = (mean * (1 - mean) / std ** 2 - 1)
-        return x * mean, (1 - mean) * x
+        x = (m * (1 - m) / std ** 2) - 1
+        return x * m, (1 - m) * x
+
+    @property
+    def alpha(self):
+        return self.shape_parameter[0]
+
+    @property
+    def beta(self):
+        return self.shape_parameter[1]
+
+    @staticmethod
+    def _calc_mu_sigma(alpha, beta, min_max):
+        a = float(alpha)
+        b = float(beta)
+        r = float((min_max[1] - min_max[0]))
+
+        e = a / (a + b)
+        mu =  e * r + min_max[0]
+
+        v = (a*b) / ((a+b)**2 * (a+b+1))
+        sigma = np.sqrt(v) * r
+        return mu, sigma
 

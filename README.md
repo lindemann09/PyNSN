@@ -26,10 +26,10 @@ Project homepage: https://github.com/lindemann09/PyNSN
 Additional Python packages, which are optional and required only for 
 some features:
 
-* PyQT5 (>=5.14)
+* matplotlib (>=3.2)
 * pygame (>=1.9)
 * expyriment (>=0.9)
-* matplotlib ()>=3.2)
+* PyQT5 (>=5.14)
 
 
 ## Installing via `pip`
