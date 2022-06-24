@@ -59,8 +59,9 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
             # draw rectangle
             for xy, size, att in zip(image_coord,
                                      object_array.sizes * aaf,
-                                  object_array.attributes):
-                obj = _shape.Rectangle(xy=xy, size=size)
+                                     object_array.attributes):
+                obj = _shape.Rectangle(xy=xy, size=size,
+                                       att=object_array.attributes)
                 if att is None:
                     obj.attribute = colours.default_item_colour
                 else:

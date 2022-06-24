@@ -9,7 +9,7 @@ from .._lib.geometry import cartesian2image_coordinates as _c2i_pos
 def create(object_array, colours, filename="noname.svg"):
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray)) # FIXME implement for rect array
     if not isinstance(colours, _colour.ImageColours):
-        raise TypeError("Colours must be a pynsn.ImageColours instance")
+        raise TypeError("Colours must be of type pynsn.ImageColours")
 
     image_size = int(round(object_array.target_array_radius * 2))
     px = "{}px".format(image_size)
@@ -21,8 +21,6 @@ def create(object_array, colours, filename="noname.svg"):
                                    # stroke_width="0", stroke="black",
                                    fill=colours.target_area.colour))
 
-    object_array = object_array.copy()
-    object_array.round(decimals=1, int_type=float)
     for xy, d, att in zip(_c2i_pos(object_array.xy, image_size),
                           object_array.diameters,
                           object_array.attributes):
