@@ -13,6 +13,7 @@ from scipy import spatial
 from .. import misc, geometry
 from ..visual_features import VisualFeatures
 
+
 class ObjectCloud(object):
     """Numpy Position lists with attributes for optimized for numpy calculations
 

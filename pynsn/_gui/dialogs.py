@@ -86,11 +86,11 @@ class SettingsDialog(QDialog):
         self.colour_background = misc.LabeledInput("Background",
                                                    text=image_colours.background.colour,
                                                    case_sensitive=False)
-        self.colour_convex_hull_positions = misc.LabeledInput("Colour field area",
-                                                              text=image_colours.field_area.colour,
+        self.colour_convex_hull_positions = misc.LabeledInput("Colour field position",
+                                                              text=image_colours.field_area_position.colour,
                                                               case_sensitive=False)
-        self.colour_convex_hull_dots = misc.LabeledInput("Colour field area outer",
-                                                         text=image_colours.field_area_outer.colour,
+        self.colour_convex_hull_dots = misc.LabeledInput("Colour field area",
+                                                         text=image_colours.field_area.colour,
                                                          case_sensitive=False)
         self.antialiasing = QCheckBox("Antialiasing")
         self.antialiasing.setChecked(True)

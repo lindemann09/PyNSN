@@ -4,8 +4,9 @@ from collections import OrderedDict
 
 import numpy as np
 from scipy import spatial
-from . import misc, arrays
+from . import misc
 from .geometry import cartesian2polar, polar2cartesian
+from . import arrays
 
 
 class VisualFeatures(object):
@@ -49,11 +50,8 @@ class VisualFeatures(object):
 
     @property
     def convex_hull(self):
-        if isinstance(self.oa,arrays.RectangleArray):
-            raise NotImplementedError() # FIXME
-
         if self._convex_hull is None:
-            self._convex_hull = ConvexHullDots(self.oa._xy, self.oa.diameters)
+            self._convex_hull = ConvexHull(self.oa)
         return self._convex_hull
 
     @property
@@ -87,7 +85,7 @@ class VisualFeatures(object):
 
     @property
     def field_area(self):
-        return self.convex_hull.scipy_convex_hull.volume
+        return self.convex_hull.convex_hull_position.volume
 
     @property
     def numerosity(self):
@@ -121,7 +119,7 @@ class VisualFeatures(object):
 
     @property
     def field_area_full(self):  # TODO not tested
-        return self.convex_hull.full_field_area
+        return self.convex_hull.outer_field_area
 
     def get(self, feature):
         """returns a feature"""
@@ -223,52 +221,48 @@ class VisualFeatures(object):
         return rtn
 
 
-class _ConvexHull(object):
+class ConvexHull(object):
     """convenient wrapper class for calculation of convex hulls
     """
 
-    def __init__(self, xy):
-        self._xy = xy
-        self.scipy_convex_hull = spatial.ConvexHull(self._xy)
+    def __init__(self, object_array):
+        assert isinstance(object_array, (arrays.RectangleArray, arrays.DotArray))
 
-    @property
-    def indices(self):
-        return self.scipy_convex_hull.vertices
+        self._xy = object_array.xy
 
-    @property
-    def xy(self):
-        return self._xy[self.indices, :]
-
-
-class ConvexHullDots(_ConvexHull):
-    """convenient wrapper class for calculation of convex hulls
-    """
-
-    def __init__(self, xy, diameters):
-        _ConvexHull.__init__(self, xy=xy)
-        self._diameters = diameters
-        self._full_xy = None
-        self._full_area = None
-
-    @property
-    def full_xy(self):
-        """this convex_hull takes into account the dot diameter"""
-        if self._full_xy is None:
-            idx = self.scipy_convex_hull.vertices
-
+        if isinstance(object_array, arrays.DotArray):
+            # centered polar coordinates
             minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
             center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)  # center outer positions
+            xy_centered = self._xy - center
+            # outer positions
+            polar_centered = cartesian2polar(xy_centered)
+            polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameters / 2)
+            self._outer_xy = polar2cartesian(polar_centered) + center
 
-            polar_centered = cartesian2polar(self._xy[idx, :] - center)
-            polar_centered[:, 0] = polar_centered[:, 0] + (self._diameters[idx] / 2)
-            self._full_xy = polar2cartesian(polar_centered) + center
+        elif isinstance(object_array, arrays.RectangleArray):
+            # get all edges
+            edges = []
+            for rect in object_array.get():
+                edges.extend([e.xy for e in rect.edges()])
+            self._outer_xy = np.array(edges)
 
-        return self._full_xy
+        self.convex_hull_position = spatial.ConvexHull(self._xy)
+        self.convex_hull_outer = spatial.ConvexHull(self._outer_xy)
 
     @property
-    def full_field_area(self):
-        if self._full_area is None:
-            self._full_area = spatial.ConvexHull(self.full_xy).volume
+    def position_xy(self):
+        return self._xy[self.convex_hull_position.vertices, :]
 
-        return self._full_area
+    @property
+    def outer_xy(self):
+        return self._outer_xy[self.convex_hull_outer.vertices, :]
+
+    @property
+    def outer_field_area(self):
+        return self.convex_hull_outer.volume
+
+    @property
+    def position_field_area(self):
+        return self.convex_hull_position.volume
 

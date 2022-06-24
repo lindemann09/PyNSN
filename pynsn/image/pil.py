@@ -72,17 +72,17 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
 
 
         # draw convex hulls and center of mass
-        if colours.field_area.colour is not None:
+        if colours.field_area_position.colour is not None:
             # plot convey hull
             _draw_convex_hull(img=img,
                               convex_hull=_c2i_coord(
-                                  object_array.features.convex_hull.xy * aaf, image_size),
-                              convex_hull_colour=colours.field_area.colour)
+                                  object_array.features.convex_hull.position_xy * aaf, image_size),
+                              convex_hull_colour=colours.field_area_position.colour)
         if colours.field_area_outer.colour is not None:
             # plot convey hull
             _draw_convex_hull(img=img,
                               convex_hull=_c2i_coord(
-                                  object_array.features.convex_hull.full_xy * aaf,
+                                  object_array.features.convex_hull.outer_xy * aaf,
                                   image_size),
                               convex_hull_colour=colours.field_area_outer.colour)
         if colours.center_of_mass.colour is not None:

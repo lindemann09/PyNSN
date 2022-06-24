@@ -12,6 +12,7 @@ from .object_array import GenericObjectArray
 from .. import misc
 from ..shape import Rectangle
 
+
 class RectangleArray(GenericObjectArray):
     """
     """

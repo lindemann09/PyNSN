@@ -1,10 +1,9 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import copy
 import copy as _copy
-import random
+from random import shuffle as _shuffle
 
-from ._lib.distributions import PyNSNDistribution as _PyNSNDistribution
+from ._lib import distributions as distr
 from ._lib import shape as _shape
 from ._lib.arrays import DotArray as _DotArray
 from ._lib.arrays import RectangleArray as _RectangleArray
@@ -48,7 +47,7 @@ class DotArraySpecs(_Specs):
         super().__init__(target_area_radius=target_area_radius,
                          minimum_gap=minimum_gap,
                          min_distance_area_boarder=min_distance_area_boarder)
-        if not isinstance(diameter_distribution, _PyNSNDistribution):
+        if not isinstance(diameter_distribution, distr.PyNSNDistribution):
             raise TypeError("diameter_distribution has to be a PyNSNDistribution")
         self.diameter_distr = diameter_distribution
 
@@ -78,9 +77,9 @@ class RectangleArraySpecs(_Specs):
         super().__init__(target_area_radius=target_area_radius,
                          minimum_gap=minimum_gap,
                          min_distance_area_boarder=min_distance_area_boarder)
-        if not isinstance(width_distribution, _PyNSNDistribution):
+        if not isinstance(width_distribution, distr.PyNSNDistribution):
             raise TypeError("width_distribution has to be a PyNSNDistribution")
-        if not isinstance(height_distribution, _PyNSNDistribution):
+        if not isinstance(height_distribution, distr.PyNSNDistribution):
             raise TypeError("height_distribution has to be a PyNSNDistribution")
         self.width_distr = width_distribution
         self.height_distr = height_distribution
@@ -145,8 +144,10 @@ def random_array(specs,
     if isinstance(attributes, (tuple, list)):
         att = []
         while len(att) < n_objects:
-            att.extend(copy.deepcopy(attributes))
-        random.shuffle(att)
+            tmp = _copy.copy(attributes)
+            _shuffle(tmp)
+            att.extend(tmp)
+        _shuffle(att)
         rtn.set_attributes(att[:n_objects])
     else:
         rtn.set_attributes(attributes)

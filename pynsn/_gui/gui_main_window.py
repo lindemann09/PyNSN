@@ -22,24 +22,24 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                                 sigma=8, min_max=(5,40)),
                                 minimum_gap=2),
                  _colour.ImageColours(target_area="#303030",
-                                     field_area=None,
-                                     field_area_outer=None,
-                                     center_of_mass=None,
-                                     center_of_outer_positions=None,
-                                     item_colour="green",
-                                     background="gray"))
+                                      field_area_position=None,
+                                      field_area_outer=None,
+                                      center_of_mass=None,
+                                      center_of_outer_positions=None,
+                                      item_colour="green",
+                                      background="gray"))
 
 ICON = (11, factory.DotArraySpecs(target_area_radius=200,
                                   diameter_distribution=distr.Beta(mu=35,
                                                   sigma=20, min_max=(5, 80))
                                   ),
         _colour.ImageColours(target_area="#3e3e3e",
-                            field_area=None,
-                            field_area_outer="expyriment_orange",
-                            center_of_mass=None,
-                            center_of_outer_positions=None,
-                            item_colour="lime",
-                            background=None))
+                             field_area_position=None,
+                             field_area_outer="expyriment_orange",
+                             center_of_mass=None,
+                             center_of_outer_positions=None,
+                             item_colour="lime",
+                             background=None))
 
 
 class GUIMainWindow(QMainWindow):
@@ -151,7 +151,7 @@ class GUIMainWindow(QMainWindow):
             para = self.get_image_colours()
             image_colours = _colour.ImageColours(
                 target_area=para.target_area,
-                field_area=para.field_area,
+                field_area_position=para.field_area_position,
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
@@ -204,12 +204,12 @@ class GUIMainWindow(QMainWindow):
             self.settings.colour_background.text = "None"
 
         return _colour.ImageColours(target_area=colour_area,
-                                   field_area=colour_convex_hull_positions,
-                                   field_area_outer=colour_convex_hull_dots,
-                                   center_of_mass=None,
-                                   center_of_outer_positions=None,
-                                   item_colour=self.settings.default_dot_colour,
-                                   background=colour_background)
+                                    field_area_position=colour_convex_hull_positions,
+                                    field_area_outer=colour_convex_hull_dots,
+                                    center_of_mass=None,
+                                    center_of_outer_positions=None,
+                                    item_colour=self.settings.default_dot_colour,
+                                    background=colour_background)
 
     def pixmap(self):
         return QPixmap.fromImage(ImageQt(self.image()))

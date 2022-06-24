@@ -230,7 +230,7 @@ class ImageColours(object):
 
     def __init__(self,
                  target_area=None,
-                 field_area=None,
+                 field_area_position=None,
                  field_area_outer=None,
                  center_of_mass=None,
                  center_of_outer_positions=None,
@@ -239,7 +239,7 @@ class ImageColours(object):
                  ):
 
         self.target_area = Colour(target_area)
-        self.field_area = Colour(field_area)
+        self.field_area_position = Colour(field_area_position)
         self.field_area_outer = Colour(field_area_outer)
         self.center_of_mass = Colour(center_of_mass)
         self.center_of_outer_positions = Colour(center_of_outer_positions)

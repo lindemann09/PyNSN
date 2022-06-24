@@ -46,25 +46,6 @@ class PyNSNDistribution(object):
         return hist(self.sample(n=n), bins=100)[2]
 
 
-class _PyNSNDistributionMuSigma(PyNSNDistribution):
-
-    def __init__(self, mu, sigma, min_max):
-        super().__init__(min_max)
-        self.mu = mu
-        self.sigma = abs(sigma)
-        if (min_max[0] is not None and mu <= min_max[0]) or \
-                (min_max[1] is not None and mu >= min_max[1]):
-            txt = "mean ({}) has to be inside the defined min_max range ({})".format(
-                mu, min_max)
-            raise RuntimeError(txt)
-
-    def as_dict(self):
-        d = super().as_dict()
-        d.update({"mu" : self.mu,
-                  "sigma": self.sigma})
-        return d
-
-
 class Uniform(PyNSNDistribution):
     """
     """
@@ -117,6 +98,12 @@ class Triangle(PyNSNDistribution):
     def __init__(self,  mode, min_max):
         super().__init__(min_max=min_max)
         self.mode = mode
+        if (min_max[0] is not None and mode <= min_max[0]) or \
+                (min_max[1] is not None and mode >= min_max[1]):
+            txt = "mode ({}) has to be inside the defined min_max range ({})".format(
+                mode, min_max)
+            raise ValueError(txt)
+
 
     def sample(self, n, round_to_decimals=None):
 
@@ -127,6 +114,25 @@ class Triangle(PyNSNDistribution):
     def as_dict(self):
         d = super().as_dict()
         d.update({"mode" : self.mode})
+        return d
+
+
+class _PyNSNDistributionMuSigma(PyNSNDistribution):
+
+    def __init__(self, mu, sigma, min_max):
+        super().__init__(min_max)
+        self.mu = mu
+        self.sigma = abs(sigma)
+        if (min_max[0] is not None and mu <= min_max[0]) or \
+                (min_max[1] is not None and mu >= min_max[1]):
+            txt = "mean ({}) has to be inside the defined min_max range ({})".format(
+                mu, min_max)
+            raise ValueError(txt)
+
+    def as_dict(self):
+        d = super().as_dict()
+        d.update({"mu": self.mu,
+                  "sigma": self.sigma})
         return d
 
 

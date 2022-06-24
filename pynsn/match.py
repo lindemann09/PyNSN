@@ -139,7 +139,8 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
     if iterative_convex_hull_modification:
         while object_array.features.field_area > max_field_area:
             # remove one random outer dot and remember it
-            indices = object_array.features.convex_hull.indices
+            indices = object_array.features.convex_hull.convex_hull_position.vertices # FIXME works for dot
+            #FIXME for rectagles find rect which have edges of the convexhull
             if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                 # most outer dot from convex hull
                 radii_outer_dots = _geometry.cartesian2polar(
