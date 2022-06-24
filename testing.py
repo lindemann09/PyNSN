@@ -3,10 +3,12 @@ from pynsn.image import pil
 
 import numpy as np
 
-beta = distr.Beta(alpha = a, beta=b, min_max=(20, 70))
+d = distr.Discrete(population=[1,2,3], weights=[10, 43, 10])
+b = d.sample(10)
+print(d.as_dict())
 
 
-
+exit()
 a = distr.Normal(min_max=(10, 100), mu=55, sigma=20)
 
 # define the visual features of the  dot array

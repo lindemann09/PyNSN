@@ -1,10 +1,16 @@
 import random
-# NOTE: do not use numpy.random, because it produces identical numbers for
-# different threads
 import numpy as np
 from .misc import numpy_round2
 
 random.seed()
+
+
+def _round_samples(samples, round_to_decimals):
+    if round_to_decimals is not None:
+        return numpy_round2(samples, decimals=round_to_decimals)
+    else:
+        return np.array(samples)
+
 
 class PyNSNDistribution(object):
 
@@ -28,7 +34,7 @@ class PyNSNDistribution(object):
         return np_vector
 
     def sample(self, n, round_to_decimals=False):
-        return np.array([0] * n)
+        return _round_samples([0]*n, round_to_decimals)
 
     def pyplot_samples(self, n=100000):
 
@@ -63,23 +69,65 @@ class Uniform(PyNSNDistribution):
     """
     """
     def __init__(self, min_max):
-        """Laplace distribution defined by the number range, min_max=(min, max)
+        """Uniform distribution defined by the number range, min_max=(min, max)
 
         Parameter:
         ----------
         min_max : tuple (numeric, numeric)
             the range of the distribution
         """
+
         super().__init__(min_max)
 
     def sample(self, n, round_to_decimals=None):
         dist = np.array([random.random() for _ in range(n)])
-        r = float(self.min_max[1] - self.min_max[0])
-        rtn = self.min_max[0] + dist * r
-        if round_to_decimals is not None:
-            return numpy_round2(rtn, decimals=round_to_decimals)
-        else:
-            return rtn
+        rtn = self.min_max[0] + dist * float(self.min_max[1] - self.min_max[0])
+        return _round_samples(rtn, round_to_decimals)
+
+
+class Discrete(PyNSNDistribution):
+    """
+    """
+    def __init__(self, population, weights=None):
+        """Discrete distribution. Samples from a population defined by population and optional weights.
+
+        Parameter:
+        ----------
+        min_max : tuple (numeric, numeric)
+            the range of the distribution
+        """
+        super().__init__(min_max=(min(population), max(population)))
+        self.population = population
+        self.weights = weights
+
+    def sample(self, n, round_to_decimals=None):
+
+        dist = random.choices(population=self.population, weights=self.weights, k=n)
+        return _round_samples(dist, round_to_decimals)
+
+    def as_dict(self):
+        d = super().as_dict()
+        d.update({"population" : self.population,
+                  "weights": self.weights})
+        return d
+
+
+class Triangle(PyNSNDistribution):
+
+    def __init__(self,  mode, min_max):
+        super().__init__(min_max=min_max)
+        self.mode = mode
+
+    def sample(self, n, round_to_decimals=None):
+
+        dist = [random.triangular(low=self.min_max[0], high=self.min_max[1],
+                                 mode=self.mode) for _ in range(n)]
+        return _round_samples(dist, round_to_decimals)
+
+    def as_dict(self):
+        d = super().as_dict()
+        d.update({"mode" : self.mode})
+        return d
 
 
 class Normal(_PyNSNDistributionMuSigma):
@@ -109,11 +157,7 @@ class Normal(_PyNSNDistributionMuSigma):
                              for _ in range(required)])
             rtn = self._cutoff_outside_range(np.append(rtn, draw))
             required = n - len(rtn)
-
-        if round_to_decimals is not None:
-            return numpy_round2(rtn, decimals=round_to_decimals)
-        else:
-            return rtn
+        return _round_samples(rtn, round_to_decimals)
 
 
 class Beta(_PyNSNDistributionMuSigma):
@@ -145,7 +189,6 @@ class Beta(_PyNSNDistributionMuSigma):
             mu, sigma = Beta._calc_mu_sigma(alpha, beta, min_max)
         elif mu is None or sigma is None or alpha is not None or beta is not None:
             raise TypeError("Either Mu & Sigma or Alpha & Beta have to specified.")
-
         super().__init__(mu=mu, sigma=sigma, min_max=min_max)
 
     def sample(self, n, round_to_decimals=None):
@@ -157,11 +200,7 @@ class Beta(_PyNSNDistributionMuSigma):
                          for _ in range(n)])
         dist = (dist - np.mean(dist)) / np.std(dist) # z values
         rtn = dist * self.sigma + self.mu
-
-        if round_to_decimals is not None:
-            return numpy_round2(rtn, decimals=round_to_decimals)
-        else:
-            return rtn
+        return _round_samples(rtn, round_to_decimals)
 
     @property
     def shape_parameter(self):
