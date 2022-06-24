@@ -11,7 +11,7 @@ from scipy import spatial
 from .object_array import GenericObjectArray
 from .. import misc
 from ..shape import Rectangle
-
+from ..coordinate2D import Coordinate2D
 
 class RectangleArray(GenericObjectArray):
     """
@@ -173,17 +173,28 @@ class RectangleArray(GenericObjectArray):
                                         self._sizes[indices],
                                         self._attributes[indices])]
 
-    def find(self, size=None, attribute=None):
-        """returns filtered dots
+    def find(self, size=None, attribute=None, edge=None):
+        """returns indices of found objects
+
+        2D-tuple
         """
         rtn = []
-        for xy, s, att in zip(self._xy, self._sizes, self._attributes):
-            if (size is not None and s != size) or \
-                    (attribute is not None and att != attribute):
+        for i in range(len(self._sizes)):
+            if (size is not None and self._sizes[i] != size) or \
+                    (attribute is not None and self._attributes[i] != attribute):
                 continue
+            rtn.append(i)
 
-            rtn.append(Rectangle(xy=xy, size=s, attribute=att))
-        return rtn
+        if edge is not None:
+            return rtn
+        elif isinstance(edge, Coordinate2D):
+            new_rtn = []
+            for i, rect in zip(rtn, self.get(indices=rtn)):
+                if edge in list(rect.edges()):
+                    new_rtn.append(i)
+            return new_rtn
+        else:
+            raise TypeError("edge has to be of type Coordinate2D")
 
     def csv(self, variable_names=True,
             hash_column=True, num_idx_column=True,

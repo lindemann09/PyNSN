@@ -8,6 +8,9 @@ class Coordinate2D(object):
         self.x = x
         self.y = y
 
+    def __repr__(self):
+        return "Coordinate2D(xy={})".format(self.xy)
+
     def __add__(self, other):
         return Coordinate2D(self.x + other.x, self.y + other.y)
 
@@ -40,6 +43,12 @@ class Coordinate2D(object):
         self.x /= other
         self.y /= other
         return self
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        return self.x != other.x or self.y != other.y
 
     @property
     def xy(self):

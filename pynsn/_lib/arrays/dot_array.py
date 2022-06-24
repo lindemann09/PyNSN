@@ -156,15 +156,14 @@ class DotArray(GenericObjectArray):
                                         self._attributes[indices])]
 
     def find(self, diameter=None, attribute=None):
-        """returns filtered dots
+        """returns indices of found objects
         """
         rtn = []
-        for xy, dia, att in zip(self._xy, self._diameters, self._attributes):
-            if (diameter is not None and dia != diameter) or \
-                    (attribute is not None and att != attribute):
+        for i in range(len(self._diameters)):
+            if (diameter is not None and self._diameters[i] != diameter) or \
+                    (attribute is not None and self._attributes[i] != attribute):
                 continue
-
-            rtn.append(Dot(xy=xy, diameter=dia, attribute=att))
+            rtn.append(i)
         return rtn
 
     def csv(self, variable_names=True,

@@ -1,6 +1,5 @@
-from pynsn import factory, ImageColours, distr, RectangleArray, Rectangle
+from pynsn import factory, ImageColours, distr, RectangleArray, Rectangle, Coordinate2D
 from pynsn.image import pil
-
 import numpy as np
 
 a = distr.Normal(min_max=(10, 100), mu=55, sigma=20)
@@ -25,13 +24,17 @@ my_colours = ImageColours(target_area="#EEEEEE", background="gray",
 ra = RectangleArray(target_array_radius = 200,
                           minimum_gap = 0)
 # generate on array with 100 dots
-stimulus = factory.random_array(da_specification, n_objects=5,
+stimulus = factory.random_array(da_specification, n_objects=15,
                                 attributes=["blue", "green"])
 
-print(stimulus.features.as_dict())
+
+xy = stimulus.features.convex_hull.outer_xy
+print(xy[2])
+print(stimulus.find(edge=Coordinate2D(x=xy[2][0], y=xy[2][1])))
 
 # print(stimulus.split_array_by_attributes())
 # print(stimulus._features.get_features_text())
 # print(stimulus2.save("mystim.json", indent=2))
 
 pil.create(stimulus, my_colours).save("demo.png")
+
