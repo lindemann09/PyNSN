@@ -18,10 +18,10 @@ da_specification = factory.RectangleArraySpecs(
     minimum_gap=2)
 my_colours = ImageColours(target_area="#EEEEEE", background="gray",
                           item_colour="darkmagenta",
-                          #field_area_position="magenta",
-                          #field_area_outer = "blue",
-                          #center_of_mass="red",
-                         # center_of_outer_positions ="yellow",
+                          field_area_position="magenta",
+                          field_area_outer = "blue",
+                          center_of_mass="red",
+                          center_of_outer_positions ="yellow",
                           )
 
 
@@ -35,8 +35,8 @@ stimulus = factory.random_array(da_specification, n_objects=15,
 p = pil.create(stimulus, my_colours, antialiasing=True)
 p.save("demo.png")
 
-#svg = svg.create(stimulus, my_colours, filename="demo.svg")
-#svg.save()
+svg = svg.create(stimulus, my_colours, filename="demo.svg")
+svg.save()
 
 
 

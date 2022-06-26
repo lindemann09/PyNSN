@@ -10,7 +10,7 @@ from .._lib  import arrays as _arrays
 
 #TODO pillow supports no alpha
 
-def create(object_array, colours, antialiasing=True, gabor_filter=None):
+def create(object_array, colours, antialiasing=True, _gabor_filter=None):
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
@@ -36,8 +36,7 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
         except:
             aaf = 1
 
-    object_array = object_array.copy() #not really required but save in case of rounding or removing
-    image_size = int(round(object_array.target_array_radius * 2)) * aaf
+    image_size = int(_np.ceil(object_array.target_array_radius) * 2) * aaf
     img = _prepare_image(image_size=image_size, colours=colours)
 
     if object_array.features.numerosity > 0:
@@ -91,11 +90,11 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
         img = img.resize((image_size, image_size), _Image.LANCZOS)
 
     # TODO gabor needed?
-    if gabor_filter is not None:
+    if _gabor_filter is not None:
         try:
-            img = img.filter(gabor_filter)
+            img = img.filter(_gabor_filter)
         except:
-            raise RuntimeError("Can't apply gabor_filter {}".format(gabor_filter))
+            raise RuntimeError("Can't apply gabor_filter {}".format(_gabor_filter))
 
     return img
 
