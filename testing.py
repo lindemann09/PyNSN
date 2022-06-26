@@ -32,12 +32,15 @@ stimulus = factory.random_array(da_specification, n_objects=15,
 # print(stimulus._features.get_features_text())
 # print(stimulus2.save("mystim.json", indent=2))
 
-p = pil.create(stimulus, my_colours, antialiasing=False)
+p = pil.create(stimulus, my_colours, antialiasing=True)
 p.save("demo.png")
 
-f = pyplot.create(stimulus, my_colours)
+#svg = svg.create(stimulus, my_colours, filename="demo.svg")
+#svg.save()
+
 
 
 from matplotlib import pyplot as plt
+f = pyplot.create(stimulus, my_colours)
 plt.savefig("demo_pyplot.png", format="png")
 #plt.show()

@@ -124,7 +124,7 @@ def _draw_shape(img, shape):
 
     colour = _colour.Colour(shape.attribute)
     if isinstance(shape, _shape.Dot):
-        r = shape.diameter // 2
+        r = shape.diameter / 2
         _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                       shape.x + r, shape.y + r),
                                      fill=colour.colour)

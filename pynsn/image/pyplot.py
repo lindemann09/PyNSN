@@ -80,7 +80,7 @@ def _draw_shape(axes, shape, alpha=1.0):
 
     colour = _colour.Colour(shape.attribute)
     if isinstance(shape, _shape.Dot):
-        r = shape.diameter // 2
+        r = shape.diameter / 2
         plt_shape = _plt.Circle(xy=shape.xy, radius=r, color=colour.colour,
                                 lw=0)
     elif isinstance(shape, _shape.Rectangle):

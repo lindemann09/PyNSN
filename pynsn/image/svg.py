@@ -17,7 +17,7 @@ def create(object_array, colours, filename="noname.svg"):
 
     if colours.target_area.colour is not None:
         svgdraw.add(svgdraw.circle(center=_c2i_pos(_np.zeros(2), image_size),
-                                   r= image_size // 2,
+                                   r= image_size / 2,
                                    # stroke_width="0", stroke="black",
                                    fill=colours.target_area.colour))
 
@@ -32,7 +32,7 @@ def create(object_array, colours, filename="noname.svg"):
             except TypeError:
                 c = colours.default_item_colour
 
-        svgdraw.add(svgdraw.circle(center=xy, r = d//2,
+        svgdraw.add(svgdraw.circle(center=xy, r = d/2,
                                    #stroke_width="0", stroke="black",
                                     fill=c.colour))
     # FIXME TODO draw convex hulls

@@ -324,7 +324,7 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
         specs = self.get_specs().copy()
-        specs.min_distance_area_boarder = extra_space//2
+        specs.min_distance_area_boarder = extra_space/2
         specs.target_array_radius += specs.min_distance_area_boarder
 
         if match_methods is not None:

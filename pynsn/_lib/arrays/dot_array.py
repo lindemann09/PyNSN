@@ -308,13 +308,13 @@ class DotArray(GenericObjectArray):
         cnt = 0
         while True:
             radii = geometry.cartesian2polar(self._xy, radii_only=True)
-            too_far = np.where((radii + self._diameters // 2) > self.target_array_radius)[0]  # find outlier
+            too_far = np.where((radii + self._diameters / 2) > self.target_array_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
                 polar = geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
                 polar[0] = self.target_array_radius - self._diameters[
-                    too_far[0]] // 2 - 0.000000001  # new radius #todo check if 0.00001 required
+                    too_far[0]] / 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = geometry.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
 

@@ -30,7 +30,7 @@ def cartesian2image_coordinates(xy, image_size):
     """convert cartesian to image coordinates with (0,0) at top left and
     reversed y axis
     """
-    return (np.array(xy) * [1, -1]) + image_size // 2
+    return (np.array(xy) * [1, -1]) + image_size / 2
 
 
 def lines_intersect(line1, line2):
