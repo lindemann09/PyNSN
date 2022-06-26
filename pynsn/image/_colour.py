@@ -64,6 +64,23 @@ class Colour(object):
     def rgb(self):
         return Colour.hextriplet2rgb(self._colour)
 
+    def rgb_alpha(self, alpha):
+        """if alpha can be float <= 1.0 or an integer between [0, 255]"""
+
+        if isinstance(alpha, float):
+            if alpha<0. or alpha>1.:
+                raise TypeError("If alpha is a float, it has to be between 0 and 1.")
+            alpha = round(alpha * 255)
+        elif isinstance(alpha, int):
+            if alpha<0 or alpha>255:
+                raise TypeError("If alpha is an int, it has to be between 0 and 255.")
+        else:
+            raise TypeError("If alpha has to be a float or int and not {}.".format(
+                                    type(alpha)))
+
+        a = Colour.hextriplet2rgb(self._colour)
+        return Colour.hextriplet2rgb(self._colour) + (alpha,)
+
     @staticmethod
     def hextriplet2rgb(hextriplet):
         ht = hextriplet.lstrip("#")
@@ -254,4 +271,17 @@ class ImageColours(object):
                 "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
                 "colour_background": self.background.colour,
                 "dot_colour": self.default_item_colour.colour}
+
+
+def make_colour(value, default_colour):
+    """helper function: returns colour if attribute is a known colour (but not
+    None), otherwise default colour is returned"""
+
+    if value is None:
+        return default_colour
+    else:
+        try:
+            return Colour(value)
+        except TypeError:
+            return default_colour
 

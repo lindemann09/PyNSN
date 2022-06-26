@@ -8,6 +8,7 @@ from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .._lib import shape as _shape
 from .._lib  import arrays as _arrays
 
+#TODO pillow supports no alpha
 
 def create(object_array, colours, antialiasing=True, gabor_filter=None):
     # ImageParameter
@@ -46,56 +47,43 @@ def create(object_array, colours, antialiasing=True, gabor_filter=None):
             for xy, d, att in zip(image_coord, object_array.diameters * aaf,
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
-                if att is None:
-                    obj.attribute = colours.default_item_colour
-                else:
-                    try:
-                        obj.attribute = _colour.Colour(att)
-                    except TypeError:
-                        obj.attribute = colours.default_item_colour
-                _draw_item(img, obj)
+                obj.attribute = _colour.make_colour(att,
+                                                    colours.default_item_colour)
+                _draw_shape(img, obj)
 
         elif isinstance(object_array, _arrays.RectangleArray):
             # draw rectangle
             for xy, size, att in zip(image_coord,
                                      object_array.sizes * aaf,
                                      object_array.attributes):
-                obj = _shape.Rectangle(xy=xy, size=size,
-                                       att=object_array.attributes)
-                if att is None:
-                    obj.attribute = colours.default_item_colour
-                else:
-                    try:
-                        obj.attribute = _colour.Colour(att)
-                    except TypeError:
-                        obj.attribute = colours.default_item_colour
-                _draw_item(img, obj)
+                obj = _shape.Rectangle(xy=xy, size=size)
+                obj.attribute = _colour.make_colour(att,
+                                                    colours.default_item_colour)
+                _draw_shape(img, obj)
 
-
-        # draw convex hulls and center of mass
+        # draw convex hulls
         if colours.field_area_position.colour is not None:
-            # plot convey hull
             _draw_convex_hull(img=img,
-                              convex_hull=_c2i_coord(
+                              points=_c2i_coord(
                                   object_array.features.convex_hull.position_xy * aaf, image_size),
                               convex_hull_colour=colours.field_area_position.colour)
         if colours.field_area_outer.colour is not None:
-            # plot convey hull
             _draw_convex_hull(img=img,
-                              convex_hull=_c2i_coord(
+                              points=_c2i_coord(
                                   object_array.features.convex_hull.outer_xy * aaf,
                                   image_size),
                               convex_hull_colour=colours.field_area_outer.colour)
+        #  and center of mass
         if colours.center_of_mass.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
                              diameter=10 * aaf,
                              attribute=colours.center_of_mass.colour)
-            _draw_item(img, obj)
+            _draw_shape(img, obj)
         if colours.center_of_outer_positions.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions * aaf, image_size),
                              diameter=10 * aaf,
                              attribute=colours.center_of_outer_positions.colour)
-            _draw_item(img, obj)
+            _draw_shape(img, obj)
 
     # rescale for antialising
     if aaf != 1:
@@ -125,18 +113,16 @@ def _prepare_image(image_size, colours):
         obj = _shape.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
                          diameter=image_size,
                          attribute=colours.target_area.colour)
-        _draw_item(img, obj)
+        _draw_shape(img, obj)
 
     return img
 
 
-def _draw_item(img, shape, colour=None):
+def _draw_shape(img, shape):
     # draw object
-
     assert isinstance(shape, (_shape.Dot, _shape.Rectangle))
 
-    if colour is None:
-        colour = _colour.Colour(shape.attribute)
+    colour = _colour.Colour(shape.attribute)
     if isinstance(shape, _shape.Dot):
         r = shape.diameter // 2
         _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
@@ -146,7 +132,7 @@ def _draw_item(img, shape, colour=None):
     elif isinstance(shape, _shape.Rectangle):
         _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
                                         shape.right, shape.bottom),
-                                       fill=colour.colour)
+                                       fill=colour.colour) # FIXME decentral shapes a bit large than with pyplot
 
     else:
         raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
@@ -156,16 +142,15 @@ def _draw_item(img, shape, colour=None):
     #    pict = _Image.open(picture, "r")
     #    img.paste(pict, (xy[0] - r, xy[1] - r))
 
-
-def _draw_convex_hull(img, convex_hull, convex_hull_colour):
+def _draw_convex_hull(img, points, convex_hull_colour):
     # plot convey hull
 
-    hull = _np.append(convex_hull, [convex_hull[0]], axis=0)
     last = None
     draw = _ImageDraw.Draw(img)
-    for p in hull:
+    for p in _np.append(points, [points[0]], axis=0):
         if last is not None:
             draw.line(_np.append(last, p).tolist(),
                       width=2,
                       fill=convex_hull_colour)
         last = p
+
