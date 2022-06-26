@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
-from .._lib.visual_features import VisualFeatures
+from .._lib.visual_features import VisualFeature
 from .. import match
 
 
@@ -18,13 +18,13 @@ class MatchPropertyDialog(QDialog):
         self.features = properties
         self._selection = None
         self.comboBox = QComboBox(self)
-        for feat in VisualFeatures.ALL_FEATURES:
-            self.comboBox.addItem(feat)
+        for feat in VisualFeature:
+            self.comboBox.addItem(feat.label())
 
         self.comboBox.activated[str].connect(self.choice)
 
         self._num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(VisualFeatures.ITEM_DIAMETER)
+        self.choice(VisualFeature.ITEM_DIAMETER)
 
 
 
@@ -46,7 +46,7 @@ class MatchPropertyDialog(QDialog):
 
     def choice(self, selection):
 
-        for feat in VisualFeatures.ALL_FEATURES:
+        for feat in VisualFeature:
             if selection == feat:
                 self._num_input.value = self.features[feat]
                 self._selection = feat
@@ -90,7 +90,7 @@ class SettingsDialog(QDialog):
                                                               text=image_colours.field_area_position.colour,
                                                               case_sensitive=False)
         self.colour_convex_hull_dots = misc.LabeledInput("Colour field area",
-                                                         text=image_colours.field_area.colour,
+                                                         text=image_colours.field_area_outer.colour,
                                                          case_sensitive=False)
         self.antialiasing = QCheckBox("Antialiasing")
         self.antialiasing.setChecked(True)
@@ -98,7 +98,7 @@ class SettingsDialog(QDialog):
         self.bicoloured = QCheckBox("bicoloured")
         self.bicoloured.setChecked(False)
 
-        self.default_dot_colour = image_colours.default_item_colour
+        self.default_item_colour = image_colours.default_item_colour
 
         vlayout = QVBoxLayout()
         vlayout.addLayout(self.rounding_decimals.layout())
@@ -138,17 +138,17 @@ class SequenceDialog(QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QCheckBox(VisualFeatures.ITEM_DIAMETER)
-        self.match_item_perimeter= QCheckBox(VisualFeatures.ITEM_PERIMETER)
-        self.match_item_area = QCheckBox(VisualFeatures.ITEM_SURFACE_AREA)
-        self.match_area = QCheckBox(VisualFeatures.TOTAL_SURFACE_AREA)
-        self.match_total_perimeter = QCheckBox(VisualFeatures.TOTAL_PERIMETER)
-        self.match_coverage = QCheckBox(VisualFeatures.COVERAGE)
-        self.match_sparsity = QCheckBox(VisualFeatures.SPARSITY)
+        self.match_diameter = QCheckBox(VisualFeature.ITEM_DIAMETER.label())
+        self.match_item_perimeter= QCheckBox(VisualFeature.ITEM_PERIMETER.label())
+        self.match_item_area = QCheckBox(VisualFeature.ITEM_SURFACE_AREA.label())
+        self.match_area = QCheckBox(VisualFeature.TOTAL_SURFACE_AREA.label())
+        self.match_total_perimeter = QCheckBox(VisualFeature.TOTAL_PERIMETER.label())
+        self.match_coverage = QCheckBox(VisualFeature.COVERAGE.label())
+        self.match_sparsity = QCheckBox(VisualFeature.SPARSITY.label())
 
-        self.match_convex_hull = QCheckBox(VisualFeatures.FIELD_AREA)
-        self.match_size = QCheckBox(VisualFeatures.LOG_SIZE)
-        self.match_spacing = QCheckBox(VisualFeatures.LOG_SPACING)
+        self.match_convex_hull = QCheckBox(VisualFeature.FIELD_AREA.label())
+        self.match_size = QCheckBox(VisualFeature.LOG_SIZE.label())
+        self.match_spacing = QCheckBox(VisualFeature.LOG_SPACING.label())
         self.match_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -211,43 +211,43 @@ class SequenceDialog(QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [VisualFeatures.ITEM_DIAMETER]
+        all = [VisualFeature.ITEM_DIAMETER]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.ITEM_SURFACE_AREA)
+        all.append(VisualFeature.ITEM_SURFACE_AREA)
         if self.match_item_area.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.ITEM_PERIMETER)
+        all.append(VisualFeature.ITEM_PERIMETER)
         if self.match_item_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.TOTAL_PERIMETER)
+        all.append(VisualFeature.TOTAL_PERIMETER)
         if self.match_total_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.TOTAL_SURFACE_AREA)
+        all.append(VisualFeature.TOTAL_SURFACE_AREA)
         if self.match_area.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.FIELD_AREA)
+        all.append(VisualFeature.FIELD_AREA)
         if self.match_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.COVERAGE)
+        all.append(VisualFeature.COVERAGE)
         if self.match_coverage.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.SPARSITY)
+        all.append(VisualFeature.SPARSITY)
         if self.match_sparsity.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.LOG_SIZE)
+        all.append(VisualFeature.LOG_SIZE)
         if self.match_size.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeatures.LOG_SPACING)
+        all.append(VisualFeature.LOG_SPACING)
         if self.match_spacing.isChecked():
             selected.append(all[-1])
 
@@ -265,36 +265,36 @@ class SequenceDialog(QDialog):
         for x in all:
             if x not in selected:
                 # test dependency of non-selected item, x, from any selected
-                check = map(lambda s: VisualFeatures.are_dependent(x, s), selected)
+                check = [s.is_dependent_from(x) for s in selected]
                 if sum(check) > 0:  # any dependency
-                    if x == VisualFeatures.ITEM_DIAMETER:
+                    if x == VisualFeature.ITEM_DIAMETER:
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    elif x == VisualFeatures.ITEM_PERIMETER:
+                    elif x == VisualFeature.ITEM_PERIMETER:
                         self.match_item_perimeter.setEnabled(False)
                         self.match_item_perimeter.setChecked(False)
-                    elif x == VisualFeatures.ITEM_SURFACE_AREA:
+                    elif x == VisualFeature.ITEM_SURFACE_AREA:
                         self.match_item_area.setEnabled(False)
                         self.match_item_area.setChecked(False)
-                    elif x == VisualFeatures.TOTAL_SURFACE_AREA:
+                    elif x == VisualFeature.TOTAL_SURFACE_AREA:
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)
-                    elif x == VisualFeatures.TOTAL_PERIMETER:
+                    elif x == VisualFeature.TOTAL_PERIMETER:
                         self.match_total_perimeter.setEnabled(False)
                         self.match_total_perimeter.setChecked(False)
-                    elif x == VisualFeatures.FIELD_AREA:
+                    elif x == VisualFeature.FIELD_AREA:
                         self.match_convex_hull.setEnabled(False)
                         self.match_convex_hull.setChecked(False)
-                    elif x == VisualFeatures.COVERAGE:
+                    elif x == VisualFeature.COVERAGE:
                         self.match_coverage.setEnabled(False)
                         self.match_coverage.setChecked(False)
-                    elif x == VisualFeatures.SPARSITY:
+                    elif x == VisualFeature.SPARSITY:
                         self.match_sparsity.setEnabled(False)
                         self.match_sparsity.setChecked(False)
-                    elif x == VisualFeatures.LOG_SIZE:
+                    elif x == VisualFeature.LOG_SIZE:
                         self.match_size.setEnabled(False)
                         self.match_size.setChecked(False)
-                    elif x == VisualFeatures.LOG_SPACING:
+                    elif x == VisualFeature.LOG_SPACING:
                         self.match_spacing.setEnabled(False)
                         self.match_spacing.setChecked(False)
 

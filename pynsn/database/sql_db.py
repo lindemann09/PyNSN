@@ -73,8 +73,8 @@ class DotArraySQLDB(object):
                           da._features.mean_item_surface_area,
                           da._features.field_area,
                           da._features.sparsity,
-                          da._features.logSize,
-                          da._features.logSpacing,
+                          da._features.log_size,
+                          da._features.log_spacing,
                           da._features.converage,
                           colour.colour)
             cur.execute(sql)

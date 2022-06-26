@@ -1,6 +1,7 @@
 # calculates visual features of a dot array/ dot cloud
 
 from collections import OrderedDict
+from enum import IntFlag, auto
 
 import numpy as np
 from scipy import spatial
@@ -9,34 +10,56 @@ from .geometry import cartesian2polar, polar2cartesian
 from . import arrays
 
 
-class VisualFeatures(object):
+class VisualFeature(IntFlag):
 
-    LOG_SIZE = "Log Size"
-    TOTAL_SURFACE_AREA = "Total surface area"
-    ITEM_DIAMETER = "Mean item diameter"
-    ITEM_SURFACE_AREA = "Mean item surface area"
-    ITEM_PERIMETER = "Total perimeter"
-    TOTAL_PERIMETER = "Mean item perimeter"
-    RECT_SIZE = "Mean Rectangle Size"
-    LOG_SPACING = "Log Spacing"
-    SPARSITY = "Sparsity"
-    FIELD_AREA = "Field area"
-    COVERAGE = "Coverage"
+    TOTAL_SURFACE_AREA = auto()
+    ITEM_DIAMETER = auto()
+    ITEM_SURFACE_AREA = auto()
+    ITEM_PERIMETER = auto()
+    TOTAL_PERIMETER = auto()
+    RECT_SIZE = auto()
+    SPARSITY = auto()
+    FIELD_AREA = auto()
+    COVERAGE = auto()
 
-    SIZE_FEATURES = (LOG_SIZE, TOTAL_SURFACE_AREA, ITEM_DIAMETER,
-                     ITEM_SURFACE_AREA, ITEM_PERIMETER, TOTAL_PERIMETER)
+    LOG_SPACING = auto()
+    LOG_SIZE = auto()
 
-    SPACE_FEATURES = (LOG_SPACING, SPARSITY, FIELD_AREA)
-
-    ALL_FEATURES = SIZE_FEATURES + SPACE_FEATURES + (COVERAGE,)
-
-    @staticmethod
-    def are_dependent(featureA, featureB):
+    def is_dependent_from(self, featureB):
         """returns true if both features are not independent"""
-        for l in [VisualFeatures.SIZE_FEATURES, VisualFeatures.SPACE_FEATURES]:
-            if featureA in l and featureB in l:
-                return True
-        return False
+        return (self.is_size_feature() and featureB.is_size_feature()) or \
+               (self.is_space_feature() and featureB.is_space_feature())
+
+    def is_size_feature(self):
+        return self in (VisualFeature.LOG_SIZE,
+                        VisualFeature.TOTAL_SURFACE_AREA,
+                        VisualFeature.ITEM_DIAMETER,
+                        VisualFeature.ITEM_SURFACE_AREA,
+                        VisualFeature.ITEM_PERIMETER,
+                        VisualFeature.TOTAL_PERIMETER)
+
+    def is_space_feature(self):
+        return self in (VisualFeature.LOG_SPACING,
+                        VisualFeature.SPARSITY,
+                        VisualFeature.FIELD_AREA)
+
+    def label(self):
+        labels = {
+            VisualFeature.LOG_SIZE: "Log Size",
+            VisualFeature.TOTAL_SURFACE_AREA: "Total surface area",
+            VisualFeature.ITEM_DIAMETER: "Mean item diameter",
+            VisualFeature.ITEM_SURFACE_AREA: "Mean item surface area",
+            VisualFeature.ITEM_PERIMETER: "Total perimeter",
+            VisualFeature.TOTAL_PERIMETER: "Mean item perimeter",
+            VisualFeature.RECT_SIZE: "Mean Rectangle Size",
+            VisualFeature.LOG_SPACING: "Log Spacing",
+            VisualFeature.SPARSITY: "Sparsity",
+            VisualFeature.FIELD_AREA: "Field area",
+            VisualFeature.COVERAGE: "Coverage"}
+        return labels[self]
+
+
+class ArrayFeatures(object):
 
     def __init__(self, object_array):
         # _lib or dot_cloud
@@ -105,12 +128,12 @@ class VisualFeatures(object):
             return None
 
     @property
-    def logSize(self):
+    def log_size(self):
         return misc.log2(self.total_surface_area) + misc.log2(
             self.mean_item_surface_area)
 
     @property
-    def logSpacing(self):
+    def log_spacing(self):
         return misc.log2(self.field_area) + misc.log2(self.sparsity)
 
     @property
@@ -124,60 +147,61 @@ class VisualFeatures(object):
     def get(self, feature):
         """returns a feature"""
 
+        assert isinstance(feature, VisualFeature)
+
        # Adapt
-        if feature == VisualFeatures.ITEM_DIAMETER:
+        if feature == VisualFeature.ITEM_DIAMETER:
             return self.mean_item_diameter
 
-        elif feature == VisualFeatures.ITEM_PERIMETER:
+        elif feature == VisualFeature.ITEM_PERIMETER:
             return self.mean_item_perimeter
 
-        elif feature == VisualFeatures.TOTAL_PERIMETER:
+        elif feature == VisualFeature.TOTAL_PERIMETER:
             return self.total_perimeter
 
-        elif feature == VisualFeatures.ITEM_SURFACE_AREA:
+        elif feature == VisualFeature.ITEM_SURFACE_AREA:
             return self.mean_item_surface_area
 
-        elif feature == VisualFeatures.TOTAL_SURFACE_AREA:
+        elif feature == VisualFeature.TOTAL_SURFACE_AREA:
             return self.total_surface_area
 
-        elif feature == VisualFeatures.LOG_SIZE:
-            return self.logSize
+        elif feature == VisualFeature.LOG_SIZE:
+            return self.log_size
 
-        elif feature == VisualFeatures.LOG_SPACING:
-            return self.logSpacing
+        elif feature == VisualFeature.LOG_SPACING:
+            return self.log_spacing
 
-        elif feature == VisualFeatures.SPARSITY:
+        elif feature == VisualFeature.SPARSITY:
             return self.sparsity
 
-        elif feature == VisualFeatures.FIELD_AREA:
+        elif feature == VisualFeature.FIELD_AREA:
             return self.field_area
 
-        elif feature == VisualFeatures.COVERAGE:
+        elif feature == VisualFeature.COVERAGE:
             return self.converage
 
         else:
-            raise ValueError("{} is a unkown visual feature".format(feature))
-
+            raise ValueError("{} is a unknown visual feature".format(feature))
 
     def as_dict(self):
         """ordered dictionary with the most important feature"""
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
-               (VisualFeatures.TOTAL_SURFACE_AREA, self.total_surface_area),
-               (VisualFeatures.ITEM_SURFACE_AREA, self.mean_item_surface_area),
-               ("?", None), # placeholder
-               (VisualFeatures.ITEM_PERIMETER, self.mean_item_perimeter),
-               (VisualFeatures.TOTAL_PERIMETER, self.total_perimeter),
-               (VisualFeatures.FIELD_AREA, self.field_area),
-               (VisualFeatures.SPARSITY, self.sparsity),
-               (VisualFeatures.COVERAGE, self.converage),
-               (VisualFeatures.LOG_SIZE, self.logSize),
-               (VisualFeatures.LOG_SPACING, self.logSpacing)]
+               (VisualFeature.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
+               (VisualFeature.ITEM_SURFACE_AREA.label(), self.mean_item_surface_area),
+               ("?", None),  # placeholder
+               (VisualFeature.ITEM_PERIMETER.label(), self.mean_item_perimeter),
+               (VisualFeature.TOTAL_PERIMETER.label(), self.total_perimeter),
+               (VisualFeature.FIELD_AREA.label(), self.field_area),
+               (VisualFeature.SPARSITY.label(), self.sparsity),
+               (VisualFeature.COVERAGE.label(), self.converage),
+               (VisualFeature.LOG_SIZE.label(), self.log_size),
+               (VisualFeature.LOG_SPACING.label(), self.log_spacing)]
 
         if isinstance(self.oa, arrays.DotArray):
-            rtn[4] = (VisualFeatures.ITEM_DIAMETER, self.mean_item_diameter)
+            rtn[4] = (VisualFeature.ITEM_DIAMETER.label(), self.mean_item_diameter)
         elif isinstance(self.oa, arrays.RectangleArray):
-            rtn[4] = (VisualFeatures.RECT_SIZE, self.mean_rectangle_size)
+            rtn[4] = (VisualFeature.RECT_SIZE.label(), self.mean_rectangle_size)
         return OrderedDict(rtn)
 
     def __str__(self):
@@ -215,8 +239,8 @@ class VisualFeatures(object):
                 int(self.mean_item_surface_area),
                 int(self.field_area),
                 self.sparsity,
-                self.logSize,
-                self.logSpacing,
+                self.log_size,
+                self.log_spacing,
                 self.converage)
         return rtn
 

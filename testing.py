@@ -1,6 +1,6 @@
-from pynsn import factory, ImageColours, distr, RectangleArray, Rectangle, Coordinate2D
+from pynsn import factory, ImageColours, distr, RectangleArray, Rectangle, Coordinate2D, VisualFeature, Dot
 from pynsn.image import pil, pyplot, svg
-import numpy as np
+
 
 a = distr.Normal(min_max=(10, 100), mu=55, sigma=20)
 
@@ -21,11 +21,18 @@ my_colours = ImageColours(target_area="#EEEEEE", background="gray",
                           )  # show named colours see Colour.NAMED_COLOURS
 
 
-ra = RectangleArray(target_array_radius = 200,
-                          minimum_gap = 0)
-# generate on array with 100 dots
 stimulus = factory.random_array(da_specification2, n_objects=15,
                                 attributes=["blue", "green"])
+
+print(stimulus.features.mean_item_diameter)
+print(stimulus.features.mean_item_diameter)
+
+d = stimulus.random_free_position(dot_diameter= 39)
+stimulus.add(Dot(xy=d, diameter=39))
+
+print(stimulus.features.numerosity)
+print(stimulus.features.mean_item_diameter)
+print(stimulus.features.mean_item_diameter)
 
 # print(stimulus.split_array_by_attributes())
 # print(stimulus._features.get_features_text())
@@ -37,4 +44,4 @@ s.save()
 f, a = pyplot.create(stimulus, my_colours)
 
 from matplotlib import pyplot as plt
-plt.show()
+#plt.show()

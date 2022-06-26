@@ -8,7 +8,7 @@ import numpy as _np
 
 from .._lib import misc as _misc
 from .._lib.arrays import DotArray as _DotArray
-from .._lib.visual_features import VisualFeatures as _Feat
+from .._lib.visual_features import VisualFeature as _Feat
 from .. import factory
 from .. import match
 
@@ -262,7 +262,7 @@ def check_feature_list(feature_list):
         feature_list = [feature_list]
 
     for x in feature_list:
-        if x not in _Feat.ALL_FEATURES:
+        if x not in _Feat:
             raise ValueError("Parameter is not a continuous feature or a " + \
                             "list of continuous properties")
             # continious property or visual feature

@@ -11,7 +11,7 @@ from random import random
 import numpy as np
 from scipy import spatial
 from .. import misc, geometry
-from ..visual_features import VisualFeatures
+from ..visual_features import ArrayFeatures
 
 
 class ObjectCloud(object):
@@ -26,7 +26,7 @@ class ObjectCloud(object):
 
         self._xy = np.array([])
         self._attributes = np.array([])
-        self._features = VisualFeatures(self)
+        self._features = ArrayFeatures(self)
 
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)

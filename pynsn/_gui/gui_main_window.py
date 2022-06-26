@@ -12,7 +12,7 @@ from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import factory,  match
 from .._lib import distributions as distr
-from .._lib.visual_features import VisualFeatures
+from .._lib.visual_features import VisualFeature
 from ..image import _colour
 from ..image import pil
 from .._sequence import dot_array_sequence
@@ -208,7 +208,7 @@ class GUIMainWindow(QMainWindow):
                                     field_area_outer=colour_convex_hull_dots,
                                     center_of_mass=None,
                                     center_of_outer_positions=None,
-                                    item_colour=self.settings.default_dot_colour,
+                                    item_colour=self.settings.default_item_colour,
                                     background=colour_background)
 
     def pixmap(self):
@@ -286,7 +286,7 @@ class GUIMainWindow(QMainWindow):
         if feature is not None:
             self.dot_array = match.visual_feature(self.dot_array,
                                                    feature, value=value)
-            if feature in VisualFeatures.SIZE_FEATURES:
+            if feature in [x for x in VisualFeature if x.is_size_feature()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)
@@ -305,9 +305,9 @@ class GUIMainWindow(QMainWindow):
         """
         try:
             colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
-            self.settings.default_dot_colour = colour_dot
+            self.settings.default_item_colour = colour_dot
         except TypeError:
-            colour_dot = self.settings.default_dot_colour
+            colour_dot = self.settings.default_item_colour
             self.main_widget.dot_colour.text = colour_dot.colour
 
         self.dot_array.set_attributes(colour_dot.colour)
