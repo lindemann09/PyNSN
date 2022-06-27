@@ -36,8 +36,16 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
         except:
             aaf = 1
 
+    # prepare the pil image, make target area if required
     image_size = int(_np.ceil(object_array.target_array_radius) * 2) * aaf
-    img = _prepare_image(image_size=image_size, colours=colours)
+    img = _Image.new("RGBA", (image_size, image_size),
+                     color=colours.background.colour)
+
+    if colours.target_area.colour is not None:
+        obj = _shape.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
+                         diameter=image_size,
+                         attribute=colours.target_area.colour)
+        _draw_shape(img, obj)
 
     if object_array.features.numerosity > 0:
         image_coord = _c2i_coord(object_array.xy * aaf, image_size)
@@ -95,24 +103,6 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
             img = img.filter(_gabor_filter)
         except:
             raise RuntimeError("Can't apply gabor_filter {}".format(_gabor_filter))
-
-    return img
-
-
-def _prepare_image(image_size, colours):
-    """prepare the pil image, make target area if required"""
-
-    if not isinstance(colours, _colour.ImageColours):
-        raise TypeError("Colours must be a ImageColours instance")
-
-    img = _Image.new("RGBA", (image_size, image_size),
-                     color=colours.background.colour)
-
-    if colours.target_area.colour is not None:
-        obj = _shape.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
-                         diameter=image_size,
-                         attribute=colours.target_area.colour)
-        _draw_shape(img, obj)
 
     return img
 

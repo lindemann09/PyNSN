@@ -16,12 +16,13 @@ da_specification = factory.RectangleArraySpecs(
     width_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     height_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     minimum_gap=2)
-my_colours = ImageColours(target_area="#EEEEEE", background="gray",
+my_colours = ImageColours(target_area="#EEEEEE",
+                          background=None,
                           item_colour="darkmagenta",
                           field_area_position="magenta",
                           field_area_outer = "blue",
-                          center_of_mass="red",
-                          center_of_outer_positions ="yellow",
+                          #center_of_mass="red",
+                          #center_of_outer_positions ="yellow",
                           )
 
 

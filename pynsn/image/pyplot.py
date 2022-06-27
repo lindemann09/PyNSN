@@ -6,7 +6,8 @@ from . import _colour
 from .._lib import arrays as _arrays
 from .._lib import shape as _shape
 
-def create(object_array, colours, dpi=100, alpha_objects = 0.8, alpha_convex_hull=0.5):
+def create(object_array, colours, dpi=100, alpha_objects = 0.8,
+           alpha_convex_hull=0.5):
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
@@ -15,13 +16,15 @@ def create(object_array, colours, dpi=100, alpha_objects = 0.8, alpha_convex_hul
 
     figure = _plt.figure(figsize=_np.array([r, r]) * 2 / dpi,
                          dpi=dpi)
-    figure.patch.set_facecolor(colours.background.colour)
+    if colours.background.colour is None:
+        figure.patch.set_facecolor((0,0,0, 0))
+    else:
+        figure.patch.set_facecolor(colours.background.colour)
     axes = _plt.Axes(figure, [0., 0., 1, 1])
     axes.set_aspect('equal') # squared
     axes.set_axis_off()
     axes.set(xlim=[-1*r, r], ylim=[-1*r, r])
     figure.add_axes(axes)
-
 
     if colours.target_area.colour is not None:
         obj = _shape.Dot(xy=(0, 0), diameter=object_array.target_array_radius*2,
@@ -36,8 +39,8 @@ def create(object_array, colours, dpi=100, alpha_objects = 0.8, alpha_convex_hul
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.make_colour(att,
-                                                    colours.default_item_colour)
-                _draw_shape(axes, obj)
+                                        colours.default_item_colour)
+                _draw_shape(axes, obj, alpha=alpha_objects)
 
         elif isinstance(object_array, _arrays.RectangleArray):
             # draw rectangle
@@ -47,7 +50,7 @@ def create(object_array, colours, dpi=100, alpha_objects = 0.8, alpha_convex_hul
                 obj = _shape.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.make_colour(att,
                                                     colours.default_item_colour)
-                _draw_shape(axes, obj)
+                _draw_shape(axes, obj, alpha=alpha_objects)
 
     # draw convex hulls
     if colours.field_area_position.colour is not None:
