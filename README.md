@@ -15,10 +15,10 @@ Project homepage: https://github.com/lindemann09/PyNSN
 
 ## Dependencies
 
-* Python 3 (>=3.5)
+* Python 3 (>=3.6)
 * numpy (>=1.6)
 * scipy (>=1.0)
-* Pillow ()>=5.0)
+* Pillow (>=5.0)
 * svgwrite (>=1.4)
 
 ### Optional requirements
@@ -43,7 +43,7 @@ python3 -m pip install pynsn
 By default, PyNSN is able to write [SVG](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics) 
 or [Pillow](https://pillow.readthedocs.io/en/stable/) images. 
 To generate [Pygame](https://www.pygame.org/news) or
-[PyPlot](https://matplotlib.org/stable/index.html) images or stimuli 
+[Matplotlib](https://matplotlib.org/stable/index.html) images or stimuli 
 for [Expyriment](http://expyriment.org), please install the respective
 packages.
 

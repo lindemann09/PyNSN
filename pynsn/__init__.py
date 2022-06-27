@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.10.3'
+__version__ = '0.10.4'
 
 from sys import version_info as _python_version_info
 if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
@@ -13,7 +13,7 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                       "is not compatible with Python {0}.{1}. ".format(
                                                     _python_version_info[0],
                                                     _python_version_info[1]) +
-                      "Please use Python 3.6+.")
+                      "Please use Python 3.6 or later.")
 
 from .image._colour import Colour, ImageColours
 from . import factory, match
