@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
     QTextBrowser, QScrollBar, QPushButton
 
+from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
 from ..factory import DotArraySpecs
@@ -13,6 +14,7 @@ from .._lib import distributions as distr
 class MainWidget(QWidget):
 
     def __init__(self, parent, settings, number, da_specs):
+        assert isinstance(settings, SettingsDialog)
         super(MainWidget, self).__init__(parent)
         self.settings = settings
 

@@ -28,11 +28,11 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["_nsn","image", "_lib", "gui", "database", "_sequence"]:
+for subp in ["_gui", "_lib", "_lib.arrays", "_sequence", "database", "image"]:
     packages.append("{}.{}".format(package_name, subp))
 
-if _vi.major < 1 and _vi.minor < 5:
-    raise RuntimeError("{0} requires Python 3.5 or larger.".format(package_name))
+if _vi.major < 1 and _vi.minor < 6:
+    raise RuntimeError("{0} requires Python 3.6 or larger.".format(package_name))
 
 def readme():
     directory = os.path.dirname(os.path.join(
@@ -83,9 +83,3 @@ if __name__ == '__main__':
         long_description=readme(),
         long_description_content_type='text/markdown'
     )
-
-    try:
-        import PyQt5
-    except:
-        print("Please note:\n"
-          "Running the PyNSN GUI requires the installation 'PyQt5' ")

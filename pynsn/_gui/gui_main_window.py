@@ -208,7 +208,7 @@ class GUIMainWindow(QMainWindow):
                                     field_area_outer=colour_convex_hull_dots,
                                     center_of_mass=None,
                                     center_of_outer_positions=None,
-                                    default_object_colour=self.settings.default_item_colour,
+                                    default_object_colour=self.settings.default_object_colour,
                                     background=colour_background)
 
     def pixmap(self):
@@ -305,9 +305,9 @@ class GUIMainWindow(QMainWindow):
         """
         try:
             colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
-            self.settings.default_item_colour = colour_dot
+            self.settings.default_object_colour = colour_dot
         except TypeError:
-            colour_dot = self.settings.default_item_colour
+            colour_dot = self.settings.default_object_colour
             self.main_widget.dot_colour.text = colour_dot.colour
 
         self.dot_array.set_attributes(colour_dot.colour)
