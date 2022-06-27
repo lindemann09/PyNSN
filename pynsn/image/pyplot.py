@@ -6,8 +6,7 @@ from . import _colour
 from .._lib import arrays as _arrays
 from .._lib import shape as _shape
 
-def create(object_array, colours, dpi=100, alpha_objects = 0.8,
-           alpha_convex_hull=0.5):
+def create(object_array, colours, dpi=100):
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
@@ -39,8 +38,8 @@ def create(object_array, colours, dpi=100, alpha_objects = 0.8,
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.make_colour(att,
-                                        colours.default_item_colour)
-                _draw_shape(axes, obj, alpha=alpha_objects)
+                                                    colours.default_object_colour)
+                _draw_shape(axes, obj, opacity=colours.object_opacity)
 
         elif isinstance(object_array, _arrays.RectangleArray):
             # draw rectangle
@@ -49,36 +48,36 @@ def create(object_array, colours, dpi=100, alpha_objects = 0.8,
                                      object_array.attributes):
                 obj = _shape.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.make_colour(att,
-                                                    colours.default_item_colour)
-                _draw_shape(axes, obj, alpha=alpha_objects)
+                                                    colours.default_object_colour)
+                _draw_shape(axes, obj, opacity=colours.object_opacity)
 
     # draw convex hulls
     if colours.field_area_position.colour is not None:
         _draw_convex_hull(axes=axes,
                           points= object_array.features.convex_hull.position_xy,
                           convex_hull_colour=colours.field_area_position.colour,
-                          alpha=alpha_convex_hull)
+                          opacity=colours.info_shapes_opacity)
     if colours.field_area_outer.colour is not None:
         _draw_convex_hull(axes=axes,
                           points=object_array.features.convex_hull.outer_xy,
                           convex_hull_colour=colours.field_area_outer.colour,
-                          alpha=alpha_convex_hull)
+                          opacity=colours.info_shapes_opacity)
     #  and center of mass
     if colours.center_of_mass.colour is not None:
         obj = _shape.Dot(xy=object_array.center_of_mass(),
                          diameter=10,
                          attribute=colours.center_of_mass.colour)
-        _draw_shape(axes, obj)
+        _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)
     if colours.center_of_outer_positions.colour is not None:
         obj = _shape.Dot(xy=object_array.center_of_outer_positions,
                          diameter=10,
                          attribute=colours.center_of_outer_positions.colour)
-        _draw_shape(axes, obj)
+        _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)
 
     return figure
 
 
-def _draw_shape(axes, shape, alpha=1.0):
+def _draw_shape(axes, shape, opacity=1.0):
     assert isinstance(shape, (_shape.Dot, _shape.Rectangle))
 
     colour = _colour.Colour(shape.attribute)
@@ -96,16 +95,16 @@ def _draw_shape(axes, shape, alpha=1.0):
     else:
         raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
-    plt_shape.set_alpha(alpha)
+    plt_shape.set_alpha(opacity)
     axes.add_artist(plt_shape)
 
-def _draw_convex_hull(axes, points, convex_hull_colour, alpha):
+def _draw_convex_hull(axes, points, convex_hull_colour, opacity):
     # plot convey hull
     hull = _np.append(points, [points[0]], axis=0)
     for i in range(1, hull.shape[0]):
         line = _plt.Line2D(xdata=hull[i-1:i+1, 0],
                            ydata=hull[i-1:i+1, 1],
                            linewidth = 1, color = convex_hull_colour)
-        line.set_alpha(alpha)
+        line.set_alpha(opacity)
         axes.add_artist(line)
 

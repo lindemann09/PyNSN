@@ -252,7 +252,9 @@ class ImageColours(object):
                  center_of_mass=None,
                  center_of_outer_positions=None,
                  background=None,
-                 item_colour=DEFAULT_ITEM_COLOUR,
+                 default_object_colour=DEFAULT_ITEM_COLOUR,
+                 object_opacity=1,
+                 info_shapes_opacity=0.5
                  ):
 
         self.target_area = Colour(target_area)
@@ -261,16 +263,26 @@ class ImageColours(object):
         self.center_of_mass = Colour(center_of_mass)
         self.center_of_outer_positions = Colour(center_of_outer_positions)
         self.background = Colour(background)
-        self.default_item_colour = Colour(item_colour)
+        self.default_object_colour = Colour(default_object_colour)
+
+        if object_opacity < 0 or object_opacity > 1:
+            raise ValueError(f"object_opacity ({object_opacity}) has to be between 0 and 1")
+        if info_shapes_opacity < 0 or info_shapes_opacity > 1:
+            raise ValueError(f"info_shapes_opacity ({info_shapes_opacity}) has to be between 0 and 1")
+        self.object_opacity = object_opacity
+        self.info_shapes_opacity = info_shapes_opacity
 
     def as_dict(self):
         return {"colour_total_area": self.target_area.colour,
-                "colour_field_area": self.field_area.colour,
+                "field_area_position": self.field_area_position.colour,
                 "colour_field_area_outer": self.field_area_outer.colour,
                 "colour_center_of_mass": self.center_of_mass.colour,
                 "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
                 "colour_background": self.background.colour,
-                "dot_colour": self.default_item_colour.colour}
+                "default_object_colour": self.default_object_colour.colour,
+                "object_opacity": self.object_opacity,
+                "info_shapes_opacity": self.info_shapes_opacity
+                }
 
 
 def make_colour(value, default_colour):

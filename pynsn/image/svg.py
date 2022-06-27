@@ -2,14 +2,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 import svgwrite as _svg
-from svgwrite.solidcolor import SolidColor as _SolidColor
 from . import _colour
 from .._lib  import arrays as _arrays
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .._lib import shape as _shape
 
-def create(object_array, colours, filename="noname.svg", alpha_objects = 0.8,
-           alpha_convex_hull=0.5):
+def create(object_array, colours, filename="noname.svg"):
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray)) # FIXME implement for rect array
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
@@ -32,8 +30,8 @@ def create(object_array, colours, filename="noname.svg", alpha_objects = 0.8,
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.make_colour(att,
-                            colours.default_item_colour)
-                _draw_shape(svgdraw, obj)
+                                                    colours.default_object_colour)
+                _draw_shape(svgdraw, obj, opacity=colours.object_opacity)
 
         elif isinstance(object_array, _arrays.RectangleArray):
             # draw rectangle
@@ -42,37 +40,39 @@ def create(object_array, colours, filename="noname.svg", alpha_objects = 0.8,
                                      object_array.attributes):
                 obj = _shape.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.make_colour(att,
-                        colours.default_item_colour)
-                _draw_shape(svgdraw, obj)
+                                            colours.default_object_colour)
+                _draw_shape(svgdraw, obj, opacity=colours.object_opacity)
 
         # draw convex hulls
         if colours.field_area_position.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
-                              points=_c2i_coord(
-                                  object_array.features.convex_hull.position_xy, image_size),
-                              convex_hull_colour=colours.field_area_position.colour)
+                      points=_c2i_coord(
+                          object_array.features.convex_hull.position_xy, image_size),
+                      convex_hull_colour=colours.field_area_position.colour,
+                      opacity=colours.info_shapes_opacity)
         if colours.field_area_outer.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
-                              points=_c2i_coord(
-                                  object_array.features.convex_hull.outer_xy,
-                                  image_size),
-                              convex_hull_colour=colours.field_area_outer.colour)
+                      points=_c2i_coord(
+                          object_array.features.convex_hull.outer_xy,
+                          image_size),
+                      convex_hull_colour=colours.field_area_outer.colour,
+                      opacity=colours.info_shapes_opacity)
         #  and center of mass
         if colours.center_of_mass.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
                              diameter=10,
                              attribute=colours.center_of_mass.colour)
-            _draw_shape(svgdraw, obj)
+            _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)
         if colours.center_of_outer_positions.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions, image_size),
                              diameter=10,
                              attribute=colours.center_of_outer_positions.colour)
-            _draw_shape(svgdraw, obj)
+            _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)
 
     return svgdraw
 
 
-def _draw_shape(svgdraw, shape, alpha=1):
+def _draw_shape(svgdraw, shape, opacity=1):
     # draw object
     assert isinstance(shape, (_shape.Dot, _shape.Rectangle))
 
@@ -84,24 +84,25 @@ def _draw_shape(svgdraw, shape, alpha=1):
                                    r=shape.diameter/2,
                                    # stroke_width="0", stroke="black",
                                    fill=colour.colour,
-                                   opacity=alpha) )
+                                   opacity=opacity))
 
     elif isinstance(shape, _shape.Rectangle):
         svgdraw.add(svgdraw.rect(insert=(shape.left, shape.bottom),
                                  size=shape.size,
                                  fill=colour.colour,
-                                 opacity=alpha))
+                                 opacity=opacity))
     else:
         raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
-def _draw_convex_hull(svgdraw, points, convex_hull_colour):
+
+def _draw_convex_hull(svgdraw, points, convex_hull_colour, opacity):
     # plot convey hull
 
     last = None
     for p in _np.append(points, [points[0]], axis=0):
         if last is not None:
             l = svgdraw.line(start=last, end=p).stroke(
-                width=1, color=convex_hull_colour)
+                width=1, color=convex_hull_colour, opacity=opacity)
             svgdraw.add(l)
         last = p
 

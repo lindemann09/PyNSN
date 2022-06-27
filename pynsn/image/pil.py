@@ -55,7 +55,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.make_colour(att,
-                                                    colours.default_item_colour)
+                                                    colours.default_object_colour)
                 _draw_shape(img, obj)
 
         elif isinstance(object_array, _arrays.RectangleArray):
@@ -65,7 +65,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                                      object_array.attributes):
                 obj = _shape.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.make_colour(att,
-                                                    colours.default_item_colour)
+                                                    colours.default_object_colour)
                 _draw_shape(img, obj)
 
         # draw convex hulls

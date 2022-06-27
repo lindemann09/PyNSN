@@ -26,7 +26,7 @@ DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
                                       field_area_outer=None,
                                       center_of_mass=None,
                                       center_of_outer_positions=None,
-                                      item_colour="green",
+                                      default_object_colour="green",
                                       background="gray"))
 
 ICON = (11, factory.DotArraySpecs(target_area_radius=200,
@@ -38,7 +38,7 @@ ICON = (11, factory.DotArraySpecs(target_area_radius=200,
                              field_area_outer="expyriment_orange",
                              center_of_mass=None,
                              center_of_outer_positions=None,
-                             item_colour="lime",
+                             default_object_colour="lime",
                              background=None))
 
 
@@ -155,7 +155,7 @@ class GUIMainWindow(QMainWindow):
                 field_area_outer=para.field_area_outer,
                 center_of_mass=para.center_of_mass,
                 center_of_outer_positions=para.center_of_outer_positions,
-                item_colour=para.default_item_colour,
+                default_object_colour=para.default_object_colour,
                 background=para.background)
 
             self._image = pil.create(object_array=self.dot_array,
@@ -208,7 +208,7 @@ class GUIMainWindow(QMainWindow):
                                     field_area_outer=colour_convex_hull_dots,
                                     center_of_mass=None,
                                     center_of_outer_positions=None,
-                                    item_colour=self.settings.default_item_colour,
+                                    default_object_colour=self.settings.default_item_colour,
                                     background=colour_background)
 
     def pixmap(self):
