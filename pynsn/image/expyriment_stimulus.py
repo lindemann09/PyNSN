@@ -10,6 +10,8 @@ from . import _colour
 from . import pil_image as _pil_image
 from .._lib.arrays import GenericObjectArray as _GenericObjectArray
 
+from ._colour import ImageColours # make available
+
 class ExprimentDotArray(_Canvas):
 
     def __init__(self, object_array,

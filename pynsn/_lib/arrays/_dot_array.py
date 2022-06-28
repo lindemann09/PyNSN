@@ -8,7 +8,7 @@ import random
 import numpy as np
 from scipy import spatial
 
-from .object_array import GenericObjectArray
+from ._object_array import GenericObjectArray
 from .. import misc, geometry
 from ..shapes import Dot
 

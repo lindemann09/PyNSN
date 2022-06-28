@@ -6,6 +6,8 @@ from . import _colour
 from . import pil_image as _pil_image
 from .._lib.arrays import GenericObjectArray as _GenericObjectArray
 
+from ._colour import ImageColours # make available
+
 def create(object_array,
            colours,
            antialiasing=True):

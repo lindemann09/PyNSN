@@ -1,11 +1,11 @@
 # FIXME not yet used implemented for Rectangles
 import random as _random
 import numpy as _np
-from ._lib import misc as _misc
-from ._lib import geometry as _geometry
-from ._lib.arrays import DotArray as _DotArray
-from ._lib.arrays import RectangleArray as _RectangleArray
-from ._lib.visual_features import VisualFeature as _VF
+from . import misc as _misc
+from . import geometry as _geometry
+from .arrays import DotArray as _DotArray
+from .arrays import RectangleArray as _RectangleArray
+from .visual_features import VisualFeature as _VF
 
 ITERATIVE_CONVEX_HULL_MODIFICATION = False
 TAKE_RANDOM_DOT_FROM_CONVEXHULL = True  # TODO maybe method for modification, set via GUI

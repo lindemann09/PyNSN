@@ -15,13 +15,11 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                                                     _python_version_info[1]) +
                       "Please use Python 3.6 or later.")
 
-from .image._colour import Colour, ImageColours
-from . import match
-from ._lib.coordinate2D import Coordinate2D
-from ._lib.random_array import random_array
-from ._lib.shapes import Dot, Rectangle
-from ._lib.arrays import DotArray, RectangleArray, GenericObjectArray
-from ._lib.visual_features import VisualFeature
+from ._lib import match
+from ._lib import shapes
+from ._lib import arrays
+from ._lib import random_array
 from ._lib import distributions as distr
+from ._lib.visual_features import VisualFeature
 
 

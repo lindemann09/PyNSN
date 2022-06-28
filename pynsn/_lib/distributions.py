@@ -1,16 +1,15 @@
-import random
-import numpy as np
-from collections import OrderedDict
-from .misc import numpy_round2, dict_to_text
+import random as _random
+import numpy as _np
+from .misc import numpy_round2 as _numpy_round2
 
-random.seed()
+_random.seed()
 
 
 def _round_samples(samples, round_to_decimals):
     if round_to_decimals is not None:
-        return numpy_round2(samples, decimals=round_to_decimals)
+        return _numpy_round2(samples, decimals=round_to_decimals)
     else:
-        return np.array(samples)
+        return _np.array(samples)
 
 
 class PyNSNDistribution(object):
@@ -29,9 +28,9 @@ class PyNSNDistribution(object):
     def _cutoff_outside_range(self, np_vector):
         # helper function that cuts off values outside min_max range
         if self.min_max[0] is not None:
-            np_vector = np.delete(np_vector, np_vector < self.min_max[0])
+            np_vector = _np.delete(np_vector, np_vector < self.min_max[0])
         if self.min_max[1] is not None:
-            np_vector = np.delete(np_vector, np_vector > self.min_max[1])
+            np_vector = _np.delete(np_vector, np_vector > self.min_max[1])
         return np_vector
 
     def sample(self, n, round_to_decimals=False):
@@ -62,7 +61,7 @@ class Uniform(PyNSNDistribution):
         super().__init__(min_max)
 
     def sample(self, n, round_to_decimals=None):
-        dist = np.array([random.random() for _ in range(n)])
+        dist = _np.array([_random.random() for _ in range(n)])
         rtn = self.min_max[0] + dist * float(self.min_max[1] - self.min_max[0])
         return _round_samples(rtn, round_to_decimals)
 
@@ -84,7 +83,7 @@ class Discrete(PyNSNDistribution):
 
     def sample(self, n, round_to_decimals=None):
 
-        dist = random.choices(population=self.population, weights=self.weights, k=n)
+        dist = _random.choices(population=self.population, weights=self.weights, k=n)
         return _round_samples(dist, round_to_decimals)
 
     def as_dict(self):
@@ -108,7 +107,7 @@ class Triangle(PyNSNDistribution):
 
     def sample(self, n, round_to_decimals=None):
 
-        dist = [random.triangular(low=self.min_max[0], high=self.min_max[1],
+        dist = [_random.triangular(low=self.min_max[0], high=self.min_max[1],
                                  mode=self.mode) for _ in range(n)]
         return _round_samples(dist, round_to_decimals)
 
@@ -157,12 +156,12 @@ class Normal(_PyNSNDistributionMuSigma):
         super().__init__(mu, sigma, min_max)
 
     def sample(self, n, round_to_decimals=None):
-        rtn = np.array([])
+        rtn = _np.array([])
         required = n
         while required>0:
-            draw = np.array([random.normalvariate(self.mu, self.sigma) \
+            draw = _np.array([_random.normalvariate(self.mu, self.sigma) \
                              for _ in range(required)])
-            rtn = self._cutoff_outside_range(np.append(rtn, draw))
+            rtn = self._cutoff_outside_range(_np.append(rtn, draw))
             required = n - len(rtn)
         return _round_samples(rtn, round_to_decimals)
 
@@ -200,12 +199,12 @@ class Beta(_PyNSNDistributionMuSigma):
 
     def sample(self, n, round_to_decimals=None):
         if self.sigma is None or self.sigma == 0:
-            return np.array([self.mu] * n)
+            return _np.array([self.mu] * n)
 
         alpha, beta = self.shape_parameter
-        dist = np.array([random.betavariate(alpha=alpha, beta=beta) \
+        dist = _np.array([_random.betavariate(alpha=alpha, beta=beta) \
                          for _ in range(n)])
-        dist = (dist - np.mean(dist)) / np.std(dist) # z values
+        dist = (dist - _np.mean(dist)) / _np.std(dist) # z values
         rtn = dist * self.sigma + self.mu
         return _round_samples(rtn, round_to_decimals)
 
@@ -244,49 +243,5 @@ class Beta(_PyNSNDistributionMuSigma):
         mu =  e * r + min_max[0]
 
         v = (a*b) / ((a+b)**2 * (a+b+1))
-        sigma = np.sqrt(v) * r
+        sigma = _np.sqrt(v) * r
         return mu, sigma
-
-class SizeDistribution(object):
-
-    def __init__(self, diameter=None, width=None, height=None):
-
-         is_rect = width is not None or height is not None
-         is_dot = diameter is not None
-         if is_dot and is_rect:
-             raise TypeError("Please define either diameter or width and height, not both.")
-         elif is_rect and (width is None or height is None):
-             raise TypeError("Please define width and height for rectangles.")
-         elif not is_dot and not is_rect:
-             raise TypeError("No size distribution define. Please define either diameter or width and height.")
-
-         if diameter is not None and not isinstance(diameter, PyNSNDistribution):
-            raise TypeError("diameter has to be a PyNSNDistribution")
-         if width is not None and not isinstance(width, PyNSNDistribution):
-            raise TypeError("width has to be a PyNSNDistribution")
-         if height is not None and not isinstance(height, PyNSNDistribution):
-            raise TypeError("height has to be a PyNSNDistribution")
-
-
-         self.diameter = diameter
-         self.width = width
-         self.height = height
-
-    def as_dict(self):
-        try:
-            d = self.diameter.as_dict()
-        except:
-            d = None
-        try:
-            w = self.width.as_dict()
-        except:
-            w = None
-        try:
-            h = self.height.as_dict()
-        except:
-            h = None
-        return OrderedDict({
-            "diameter": d, "width": w, "height": h})
-
-    def __str__(self):
-        return dict_to_text(self.as_dict(), col_a=12, col_b=7)

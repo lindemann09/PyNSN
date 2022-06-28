@@ -8,6 +8,8 @@ from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .._lib import shapes as _shape
 from .._lib  import arrays as _arrays
 
+from ._colour import ImageColours # make available
+
 #TODO pillow supports no alpha
 
 def create(object_array, colours, antialiasing=True, _gabor_filter=None):

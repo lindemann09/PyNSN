@@ -11,7 +11,7 @@ from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import match
-from .._lib.random_array import random_array
+from .._lib import random_array
 from .._lib import distributions as distr
 from .._lib import arrays
 from .._lib.visual_features import VisualFeature
@@ -22,7 +22,7 @@ from .._sequence import dot_array_sequence
 DEFAULT_ARRAY = {"num": 40,
         "ref": arrays.GenericObjectArray(target_area_radius=200,
                                 min_dist_between=2),
-        "sdr": distr.SizeDistribution(
+        "sdr": random_array.SizeDistribution(
                     diameter=distr.Beta(mu=15,sigma=8, min_max=(5,40))),
         "col": _colour.ImageColours(target_area="#303030",
                                       field_area_positions=None,
@@ -34,7 +34,7 @@ DEFAULT_ARRAY = {"num": 40,
 
 ICON = {"num": 11,
         "ref": arrays.GenericObjectArray(target_area_radius=200),
-        "sdr": distr.SizeDistribution(
+        "sdr": random_array.SizeDistribution(
                 diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
                              field_area_positions=None,
@@ -120,9 +120,9 @@ class GUIMainWindow(QMainWindow):
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
-        oa = random_array(reference_array=ICON["ref"],
-                            size_distribution=ICON["sdr"],
-                            n_objects=ICON["num"])
+        oa = random_array.create(reference_array=ICON["ref"],
+                                 size_distribution=ICON["sdr"],
+                                 n_objects=ICON["num"])
         self._image = pil_image.create( object_array=oa,
                         colours=ICON["col"], antialiasing=True)
 
@@ -133,18 +133,18 @@ class GUIMainWindow(QMainWindow):
     def make_new_array(self):
         ref_ar, sdr = self.get_specs()
         try:
-            self.dot_array = random_array(n_objects=self.get_number(),
-                                        reference_array=ref_ar,
-                                        size_distribution=sdr)
+            self.dot_array = random_array.create(n_objects=self.get_number(),
+                                                 reference_array=ref_ar,
+                                                 size_distribution=sdr)
         except StopIteration as error:
             self.main_widget.text_error_feedback(error)
             raise error
 
         if self.settings.bicoloured.isChecked():
-            data_array2 = random_array(n_objects=self.main_widget.number2.value,
-                                           reference_array=ref_ar,
-                                           size_distribution=sdr,
-                                           occupied_space=self.dot_array)
+            data_array2 = random_array.create(n_objects=self.main_widget.number2.value,
+                                              reference_array=ref_ar,
+                                              size_distribution=sdr,
+                                              occupied_space=self.dot_array)
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
@@ -176,12 +176,12 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_specs(self):
-        size_dist = distr.SizeDistribution(diameter=
+        size_dist = random_array.SizeDistribution(diameter=
                         distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                        sigma=self.main_widget.item_diameter_std.value,
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
-                                           )
+                                                  )
         ref_array = arrays.GenericObjectArray(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_dist_between=self.main_widget.min_dist_between.value)

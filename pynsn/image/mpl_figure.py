@@ -6,6 +6,8 @@ from . import _colour
 from .._lib import arrays as _arrays
 from .._lib import shapes as _shape
 
+from ._colour import ImageColours # make available
+
 def create(object_array, colours, dpi=100):
     """create a matplotlib figure"""
 

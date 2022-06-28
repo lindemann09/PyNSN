@@ -11,7 +11,7 @@ import numpy as _np
 from .._lib import misc as _misc
 from .._lib.arrays import DotArray as _DotArray
 from .._lib.visual_features import VisualFeature as _Feat
-from .._lib.random_array import random_array
+from .._lib import random_array
 from .._lib import arrays
 from .. import match
 
@@ -167,8 +167,8 @@ def create(specs,
     # make source image
     if source_number is None:
         source_number = min_ + int((max_ - min_)/2)
-    source_da = random_array(n_objects=source_number,
-                                     specs=specs)
+    source_da = random_array.create(n_objects=source_number,
+                                    specs=specs)
     source_da = match.visual_feature(source_da, feature=match_feature, value=match_value)
     source_da.center_array()
     source_da.round(round_decimals)

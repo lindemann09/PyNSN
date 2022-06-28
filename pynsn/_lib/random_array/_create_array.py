@@ -2,16 +2,17 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy
 from random import shuffle
-from .distributions import SizeDistribution
-from . import shapes
-from . import arrays
 
-def random_array(reference_array,
-                 size_distribution,
-                 n_objects,
-                 attributes = None,
-                 allow_overlapping = False,
-                 occupied_space = None):
+from .. import shapes
+from .. import arrays
+from ._size_distribution import SizeDistribution
+
+def create(reference_array,
+           size_distribution,
+           n_objects,
+           attributes = None,
+           allow_overlapping = False,
+           occupied_space = None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     attribute is an array, arrays are assigned randomly.

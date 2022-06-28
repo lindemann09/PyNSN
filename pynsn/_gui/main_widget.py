@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from .._lib import arrays
+from .._lib import arrays, random_array
 from .._lib import distributions as distr
 
 
@@ -25,7 +25,7 @@ class MainWidget(QWidget):
         assert isinstance(ref_array, arrays.GenericObjectArray)
         assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
 
-        sdr = distr.SizeDistribution(diameter=dot_size_distribution)
+        sdr = random_array.SizeDistribution(diameter=dot_size_distribution)
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)

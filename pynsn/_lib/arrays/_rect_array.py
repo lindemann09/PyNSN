@@ -8,10 +8,9 @@ import random
 import numpy as np
 from scipy import spatial
 
-from .object_array import GenericObjectArray
+from ._object_array import GenericObjectArray
 from .. import misc
-from ..shapes import Rectangle
-from ..coordinate2D import Coordinate2D
+from ..shapes import Rectangle, Point
 
 class RectangleArray(GenericObjectArray):
     """
@@ -193,7 +192,7 @@ class RectangleArray(GenericObjectArray):
 
         if edge is not None:
             return rtn
-        elif isinstance(edge, Coordinate2D):
+        elif isinstance(edge, Point):
             new_rtn = []
             for i, rect in zip(rtn, self.get(indices=rtn)):
                 if edge in list(rect.edges()):

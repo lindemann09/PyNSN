@@ -7,6 +7,8 @@ from .._lib  import arrays as _arrays
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .._lib import shapes as _shape
 
+from ._colour import ImageColours # make available
+
 def create(object_array, colours, filename="noname.svg"):
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray)) # FIXME implement for rect array
     if not isinstance(colours, _colour.ImageColours):
