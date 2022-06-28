@@ -46,10 +46,10 @@ def change_settings(iterative_convex_hull_modification=None,
         DEFAULT_MATCH_FA2TA_RATIO = default_match_fa2ta_ratio
 
 
-def item_diameter(dot_array, value):
+def average_diameter(dot_array, value):
     # changes diameter
     assert isinstance(dot_array, _DotArray)
-    scale = value / dot_array.features.mean_item_diameter
+    scale = value / dot_array.features.average_dot_diameter
     dot_array._diameters = dot_array.diameters * scale
     dot_array.features.reset()
     return dot_array
@@ -131,7 +131,7 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
     """
     assert isinstance(object_array, _DotArray)
     # centered points
-    old_center = object_array.center_of_outer_positions
+    old_center = object_array.center_of_mass()
     object_array._xy = object_array._xy - old_center
 
     removed_dots = []
@@ -139,7 +139,7 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
     if iterative_convex_hull_modification:
         while object_array.features.field_area > max_field_area:
             # remove one random outer dot and remember it
-            indices = object_array.features.convex_hull.convex_hull_position.vertices # FIXME works for dot
+            indices = object_array.features.convex_hull._convex_hull_position.vertices # FIXME works for dot
             #FIXME for rectagles find rect which have edges of the convexhull
             if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                 # most outer dot from convex hull
@@ -179,13 +179,13 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
         object_array.delete(idx)
 
         # add inside the circle
-        min_dist = object_array.target_array_radius - max_radius + 1
+        min_dist = object_array.target_area_radius - max_radius + 1
         for d in removed_dots:
             try:
                 d._xy = object_array.random_free_position(d.diameter,
                                                           prefer_inside_field_area=False,
                                                           allow_overlapping=False,
-                                                          min_distance_area_boarder=min_dist)
+                                                          min_dist_area_boarder=min_dist)
             except StopIteration as e:
                 raise StopIteration(
                     "Can't find a free position while decreasing field area.\n" + \
@@ -219,7 +219,7 @@ def _scale_field_area(object_array, value, precision):
         step *= -1
 
     # centered points
-    old_center = object_array.center_of_outer_positions
+    old_center = object_array.center_of_mass()
     object_array._xy = object_array.xy - old_center
     centered_polar = _geometry.cartesian2polar(object_array.xy)
 
@@ -274,15 +274,15 @@ def coverage(object_array, value,
     field_area(object_array.features.total_surface_area / value,
                precision=precision)
 
-def item_perimeter(object_array, value):
-    return item_diameter(object_array, value / _np.pi)
+def average_perimeter(object_array, value):
+    return average_diameter(object_array, value / _np.pi)
 
 def total_perimeter(object_array, value):
     assert isinstance(object_array, _DotArray)
     tmp = value / (object_array.features.numerosity * _np.pi)
-    return item_diameter(object_array, tmp)
+    return average_diameter(object_array, tmp)
 
-def item_surface_area(object_array, value):
+def average_surface_area(object_array, value):
     assert isinstance(object_array, _DotArray)
     ta = object_array.features.numerosity * value
     return total_surface_area(object_array, ta)
@@ -322,16 +322,16 @@ def visual_feature(object_array, feature, value):
 
     # Adapt
     if feature == _VF.ITEM_DIAMETER:
-        return item_diameter(object_array, value=value)
+        return average_diameter(object_array, value=value)
 
-    elif feature == _VF.ITEM_PERIMETER:
-        return item_perimeter(object_array, value=value)
+    elif feature == _VF.AV_PERIMETER:
+        return average_perimeter(object_array, value=value)
 
     elif feature == _VF.TOTAL_PERIMETER:
         return total_perimeter(object_array, value=value)
 
     elif feature == _VF.ITEM_SURFACE_AREA:
-        return item_surface_area(object_array, value=value)
+        return average_surface_area(object_array, value=value)
 
     elif feature == _VF.TOTAL_SURFACE_AREA:
         return total_surface_area(object_array, value=value)

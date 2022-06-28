@@ -49,7 +49,9 @@ venv/
 .bak
 .Rproj.user
 
-.ipynb*/
+#examples
+*/.ipynb_checkpoints/
+examples/pynsn
 
 test-*
 *.json

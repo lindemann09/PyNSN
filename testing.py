@@ -1,41 +1,47 @@
-from pynsn import factory, ImageColours, distr, RectangleArray, Colour, Rectangle, Coordinate2D, VisualFeature, Dot
-from pynsn.image import pil, pyplot, svg
+from pynsn import ImageColours, distr, RectangleArray, DotArray, \
+    Colour, Rectangle, VisualFeature, RectangleArray,\
+    GenericObjectArray, random_array
+
+from pynsn.image import pil_image, mpl_figure, svg_file
 import numpy as np
 
 
 # define the visual features of the  dot array
-da_specification2 = factory.DotArraySpecs(
-    target_area_radius=200,
-    diameter_distribution=distr.Beta(min_max=(10, 30), mu=15, sigma=2),
-    minimum_gap=2)
-da_specification = factory.RectangleArraySpecs(
-    target_area_radius=200,
-    width_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-    height_distribution=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-    minimum_gap=2)
+ref = GenericObjectArray(target_area_radius=200)
+
+size_dist = distr.SizeDistribution(
+    diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
+)
+size_dist2 = distr.SizeDistribution(
+    width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    height=distr.Normal(min_max=(10, 40), mu=20, sigma=10)
+)
 
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,
                           object_opacity=0.9,
                           default_object_colour="darkmagenta",
-                          field_area_position="magenta",
-                          field_area_outer = "blue",
-                          center_of_mass="red",
-                          center_of_outer_positions ="yellow",
-                          info_shapes_opacity=0.2
+                          field_area_positions="magenta",
+                          field_area="blue",
+                          center_of_positions="red",
+                          center_of_mass="yellow",
+                          info_shapes_opacity=0.5/3
                           )
 
 
-stimulus = factory.random_array(da_specification, n_objects=15,
+
+stimulus = random_array(reference_array=ref,
+                                size_distribution=size_dist2,
+                                n_objects=15,
                                 attributes=["blue", "green"])
 
-p = pil.create(stimulus, my_colours, antialiasing=True)
+p = pil_image.create(stimulus, my_colours, antialiasing=True)
 p.save("demo.png")
 
-svg = svg.create(stimulus, my_colours, filename="demo.svg")
+svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
 from matplotlib import pyplot as plt
-f = pyplot.create(stimulus, my_colours)
+f = mpl_figure.create(stimulus, my_colours)
 plt.savefig("demo_pyplot.png", format="png")
 #plt.show()

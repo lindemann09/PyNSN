@@ -5,7 +5,7 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib import shape as _shape
+from .._lib import shapes as _shape
 from .._lib  import arrays as _arrays
 
 #TODO pillow supports no alpha
@@ -37,7 +37,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
             aaf = 1
 
     # prepare the pil image, make target area if required
-    image_size = int(_np.ceil(object_array.target_array_radius) * 2) * aaf
+    image_size = int(_np.ceil(object_array.target_area_radius) * 2) * aaf
     img = _Image.new("RGBA", (image_size, image_size),
                      color=colours.background.colour)
 
@@ -69,27 +69,27 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                 _draw_shape(img, obj)
 
         # draw convex hulls
-        if colours.field_area_position.colour is not None:
+        if colours.field_area_positions.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.features.convex_hull.position_xy * aaf, image_size),
-                              convex_hull_colour=colours.field_area_position.colour)
-        if colours.field_area_outer.colour is not None:
+                              convex_hull_colour=colours.field_area_positions.colour)
+        if colours.field_area.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.features.convex_hull.outer_xy * aaf,
                                   image_size),
-                              convex_hull_colour=colours.field_area_outer.colour)
+                              convex_hull_colour=colours.field_area.colour)
         #  and center of mass
-        if colours.center_of_mass.colour is not None:
+        if colours.center_of_positions.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
                              diameter=10 * aaf,
-                             attribute=colours.center_of_mass.colour)
+                             attribute=colours.center_of_positions.colour)
             _draw_shape(img, obj)
-        if colours.center_of_outer_positions.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_outer_positions * aaf, image_size),
+        if colours.center_of_mass.colour is not None:
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_positions() * aaf, image_size),
                              diameter=10 * aaf,
-                             attribute=colours.center_of_outer_positions.colour)
+                             attribute=colours.center_of_mass.colour)
             _draw_shape(img, obj)
 
     # rescale for antialising

@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import pygame as _pygame
 
 from . import _colour
-from . import pil as _pil_image
+from . import pil_image as _pil_image
 from .._lib.arrays import GenericObjectArray as _GenericObjectArray
 
 def create(object_array,

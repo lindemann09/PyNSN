@@ -13,4 +13,4 @@ publish:
 clean:
 		@rm -rf build \
 			dist \
-			pynsn.egg-info \
+			pynsn.egg-info 

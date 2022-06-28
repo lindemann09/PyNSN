@@ -10,15 +10,20 @@ from scipy import spatial
 
 from .object_array import GenericObjectArray
 from .. import misc
-from ..shape import Rectangle
+from ..shapes import Rectangle
 from ..coordinate2D import Coordinate2D
 
 class RectangleArray(GenericObjectArray):
     """
     """
 
-    def __init__(self, target_array_radius, minimum_gap,
-                 xy=None, sizes=None, attributes=None):
+    def __init__(self,
+                 target_area_radius,
+                 min_dist_between,
+                 min_dist_area_boarder,
+                 xy=None,
+                 sizes=None,
+                 attributes=None):
         """Rectangular array is restricted to a certain area, it has a target area
         and a minimum gap.
 
@@ -27,8 +32,9 @@ class RectangleArray(GenericObjectArray):
 
         """
         super().__init__(xy=xy, attributes=attributes,
-                         target_array_radius=target_array_radius,
-                         minimum_gap=minimum_gap)
+                         target_area_radius=target_area_radius,
+                         min_dist_between=min_dist_between,
+                         min_dist_area_boarder=min_dist_area_boarder)
         self._sizes = np.array([])
         if sizes is not None:
             self._append_sizes(sizes)
@@ -84,16 +90,16 @@ class RectangleArray(GenericObjectArray):
         """
         d = super().as_dict()
         d.update({"sizes": self._sizes.tolist(),
-                  "minimum_gap": self.minimum_gap,
-                  "target_array_radius": self.target_array_radius})
+                  "min_dist_between": self.min_dist_between,
+                  "target_area_radius": self.target_area_radius})
         return d
 
     def read_from_dict(self, the_dict):
         """read rectangle array from dict"""
         super().read_from_dict(the_dict)
         self._sizes = np.array(the_dict["sizes"])
-        self.minimum_gap = the_dict["minimum_gap"]
-        self.target_array_radius = the_dict["target_array_radius"]
+        self.min_dist_between = the_dict["min_dist_between"]
+        self.target_area_radius = the_dict["target_area_radius"]
 
     def clear(self):
         super().clear()
@@ -112,14 +118,14 @@ class RectangleArray(GenericObjectArray):
 
         if self._features.numerosity == 0:
             return RectangleArray(
-                target_array_radius=self.target_array_radius,
-                minimum_gap=self.minimum_gap)
+                target_area_radius=self.target_area_radius,
+                min_dist_between=self.min_dist_between)
         else:
             if indices is None:
                 indices = list(range(self._features.numerosity))
             return RectangleArray(
-                        target_array_radius=self.target_array_radius,
-                        minimum_gap=self.minimum_gap,
+                        target_area_radius=self.target_area_radius,
+                        min_dist_between=self.min_dist_between,
                         xy=self._xy[indices, :].copy(),
                         sizes=self._sizes[indices].copy(),
                         attributes=self._attributes[indices].copy())
@@ -243,8 +249,8 @@ class RectangleArray(GenericObjectArray):
                              allow_overlapping=False,
                              prefer_inside_field_area=False,
                              squared_array = False,
-                             min_distance_area_boarder = 0,
-                             occupied_space=None):
+                             occupied_space=None,
+                             min_dist_area_boarder=None):
         """returns a available random xy position
 
         raise exception if not found
@@ -259,7 +265,11 @@ class RectangleArray(GenericObjectArray):
             delaunay = None
         cnt = 0
 
-        target_radius = self.target_array_radius - min_distance_area_boarder - \
+        if min_dist_area_boarder is None:
+            min_dist = self.min_dist_area_boarder
+        else:
+            min_dist = min_dist_area_boarder
+        target_radius = self.target_area_radius - self.min_dist_area_boarder - \
                         min(rectangle_size)
         proposal_rect = Rectangle(xy=(0,0), size=rectangle_size)
         while True:
@@ -290,7 +300,7 @@ class RectangleArray(GenericObjectArray):
                 dist = self.distances(proposal_rect)
                 if occupied_space:
                     dist = np.append(dist, occupied_space.distances(proposal_rect))
-                idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
+                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
                 bad_position = len(idx) > 0
 
             if not bad_position:
@@ -304,8 +314,7 @@ class RectangleArray(GenericObjectArray):
     def realign(self):
         raise NotImplementedError()
 
-    def shuffle_all_positions(self, allow_overlapping=False,
-                              min_distance_area_boarder=0):
+    def shuffle_all_positions(self, allow_overlapping=False):
         raise NotImplementedError()
 
     def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
@@ -320,8 +329,8 @@ class RectangleArray(GenericObjectArray):
         rtn = []
         for c in np.unique(att):
             if c is not None:
-                da = RectangleArray(target_array_radius=self.target_array_radius,
-                              minimum_gap=self.minimum_gap)
+                da = RectangleArray(target_area_radius=self.target_area_radius,
+                              min_dist_between=self.min_dist_between)
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn

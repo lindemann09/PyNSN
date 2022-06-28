@@ -7,14 +7,14 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QSlider
 
-from ..image import pil
+from ..image import pil_image
 from . import misc
 
 
 def _map_make_image(x):
     da, colours, aa = x
-    return pil.create(object_array=da, colours=colours,
-                      antialiasing=aa)
+    return pil_image.create(object_array=da, colours=colours,
+                            antialiasing=aa)
 
 
 class SequenceDisplay(QDialog):
@@ -25,7 +25,7 @@ class SequenceDisplay(QDialog):
 
         self.setWindowTitle("Dot Array Sequence")
         self.da_sequence = da_sequence
-        self.pixmap_width = da_sequence.dot_arrays[0].target_array_radius * 2
+        self.pixmap_width = da_sequence.dot_arrays[0].target_area_radius * 2
 
         self.picture_field = QLabel(self)
         self.picture_field.setFixedSize(self.pixmap_width, self.pixmap_width)

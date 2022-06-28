@@ -10,7 +10,7 @@ from scipy import spatial
 
 from .object_array import GenericObjectArray
 from .. import misc, geometry
-from ..shape import Dot
+from ..shapes import Dot
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -25,8 +25,9 @@ class DotArray(GenericObjectArray):
     """
 
     def __init__(self,
-                 target_array_radius,
-                 minimum_gap,
+                 target_area_radius,
+                 min_dist_between = 2,
+                 min_dist_area_boarder = 1,
                  xy = None,
                  diameters = None,
                  attributes = None):
@@ -37,8 +38,9 @@ class DotArray(GenericObjectArray):
         features.
         """
         super().__init__(xy=xy, attributes=attributes,
-                         target_array_radius=target_array_radius,
-                         minimum_gap=minimum_gap)
+                         target_area_radius=target_area_radius,
+                         min_dist_between=min_dist_between,
+                         min_dist_area_boarder=min_dist_area_boarder)
         if diameters is None:
             self._diameters = np.array([])
         else:
@@ -84,16 +86,16 @@ class DotArray(GenericObjectArray):
         """
         d = super().as_dict()
         d.update({"diameters": self._diameters.tolist(),
-                  "minimum_gap": self.minimum_gap,
-                  "target_array_radius": self.target_array_radius})
+                  "min_dist_between": self.min_dist_between,
+                  "target_area_radius": self.target_area_radius})
         return d
 
     def read_from_dict(self, the_dict):
         """read Dot collection from dict"""
         super().read_from_dict(the_dict)
         self._diameters = np.array(the_dict["diameters"])
-        self.minimum_gap = the_dict["minimum_gap"]
-        self.target_array_radius = the_dict["target_array_radius"]
+        self.min_dist_between = the_dict["min_dist_between"]
+        self.target_area_radius = the_dict["target_area_radius"]
 
     def clear(self):
         super().clear()
@@ -113,8 +115,8 @@ class DotArray(GenericObjectArray):
         if indices is None:
             indices = list(range(self._features.numerosity))
 
-        return DotArray(target_array_radius=self.target_array_radius,
-                        minimum_gap=self.minimum_gap,
+        return DotArray(target_area_radius=self.target_area_radius,
+                        min_dist_between=self.min_dist_between,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
                         attributes=self._attributes[indices].copy())
@@ -212,8 +214,8 @@ class DotArray(GenericObjectArray):
                              allow_overlapping = False,
                              prefer_inside_field_area = False,
                              squared_array = False,
-                             min_distance_area_boarder = 0,
-                             occupied_space: GenericObjectArray = None):
+                             occupied_space = None,
+                             min_dist_area_boarder=None):
         """returns a available random xy position
 
         raise exception if not found
@@ -228,7 +230,11 @@ class DotArray(GenericObjectArray):
             delaunay = None
         cnt = 0
 
-        target_radius = self.target_array_radius - min_distance_area_boarder - \
+        if min_dist_area_boarder is None:
+            min_dist = self.min_dist_area_boarder
+        else:
+            min_dist = min_dist_area_boarder
+        target_radius = self.target_area_radius - min_dist - \
                         (dot_diameter / 2.0)
         proposal_dot = Dot(xy=(0, 0), diameter=dot_diameter)
         while True:
@@ -257,7 +263,7 @@ class DotArray(GenericObjectArray):
                 dist = self.distances(proposal_dot)
                 if occupied_space:
                     dist = np.append(dist, occupied_space.distances(proposal_dot))
-                idx = np.where(dist < self.minimum_gap)[0]  # overlapping dot ids
+                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
                 bad_position = len(idx) > 0
 
             if not bad_position:
@@ -272,11 +278,11 @@ class DotArray(GenericObjectArray):
         for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
             dist = self.distances(Dot(xy=self._xy[i, :],
                                       diameter=self._diameters[i]))
-            idx_overlaps = np.where(dist < self.minimum_gap)[0].tolist()  # overlapping dot ids
+            idx_overlaps = np.where(dist < self.min_dist_between)[0].tolist()  # overlapping dot ids
             if len(idx_overlaps) > 1:
                 shift_required = True
                 idx_overlaps.remove(i)  # don't move yourself
-                replace_size =self.minimum_gap - dist[idx_overlaps]  # dist is mostly negative, because of overlap
+                replace_size =self.min_dist_between - dist[idx_overlaps]  # dist is mostly negative, because of overlap
                 self._radial_replacement_from_reference_dots(ref_pos_id=i,
                                                              neighbour_ids=idx_overlaps,
                                                              replacement_size=replace_size)
@@ -291,7 +297,7 @@ class DotArray(GenericObjectArray):
 
         If two dots overlap, the dots that is further apart from the array
         center will be moved opposite to the direction of the other dot until
-        there is no overlap (note: minimum_gap parameter). If two dots have
+        there is no overlap (note: min_dist_between parameter). If two dots have
         exactly the same position the same position one is minimally shifted
         in a random direction.
 
@@ -308,12 +314,12 @@ class DotArray(GenericObjectArray):
         cnt = 0
         while True:
             radii = geometry.cartesian2polar(self._xy, radii_only=True)
-            too_far = np.where((radii + self._diameters / 2) > self.target_array_radius)[0]  # find outlier
+            too_far = np.where((radii + self._diameters / 2) > self.target_area_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
                 polar = geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
-                polar[0] = self.target_array_radius - self._diameters[
+                polar[0] = self.target_area_radius - self._diameters[
                     too_far[0]] / 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = geometry.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy
@@ -343,8 +349,7 @@ class DotArray(GenericObjectArray):
         else:
             return self.realign()  # recursion
 
-    def shuffle_all_positions(self, allow_overlapping=False,
-                              min_distance_area_boarder=0):
+    def shuffle_all_positions(self, allow_overlapping=False):
         """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
@@ -353,8 +358,7 @@ class DotArray(GenericObjectArray):
         for d in self.diameters:
             try:
                 xy = self.random_free_position(d,
-                                               allow_overlapping=allow_overlapping,
-                                               min_distance_area_boarder=min_distance_area_boarder)
+                                               allow_overlapping=allow_overlapping)
             except StopIteration as e:
                 raise StopIteration("Can't shuffle dot array. No free positions found.")
 
@@ -414,8 +418,8 @@ class DotArray(GenericObjectArray):
         rtn = []
         for c in np.unique(att):
             if c is not None:
-                da = DotArray(target_array_radius=self.target_array_radius,
-                              minimum_gap=self.minimum_gap)
+                da = DotArray(target_area_radius=self.target_area_radius,
+                              min_dist_between=self.min_dist_between)
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn

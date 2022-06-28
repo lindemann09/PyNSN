@@ -12,12 +12,13 @@ from . import arrays
 
 class VisualFeature(IntFlag):
 
+    AV_DOT_DIAMETER = auto()
+    AV_SURFACE_AREA = auto()
+    AV_PERIMETER = auto()
+    AV_RECT_SIZE = auto()
+
     TOTAL_SURFACE_AREA = auto()
-    ITEM_DIAMETER = auto()
-    ITEM_SURFACE_AREA = auto()
-    ITEM_PERIMETER = auto()
     TOTAL_PERIMETER = auto()
-    RECT_SIZE = auto()
     SPARSITY = auto()
     FIELD_AREA = auto()
     COVERAGE = auto()
@@ -33,9 +34,9 @@ class VisualFeature(IntFlag):
     def is_size_feature(self):
         return self in (VisualFeature.LOG_SIZE,
                         VisualFeature.TOTAL_SURFACE_AREA,
-                        VisualFeature.ITEM_DIAMETER,
-                        VisualFeature.ITEM_SURFACE_AREA,
-                        VisualFeature.ITEM_PERIMETER,
+                        VisualFeature.AV_DOT_DIAMETER,
+                        VisualFeature.AV_SURFACE_AREA,
+                        VisualFeature.AV_PERIMETER,
                         VisualFeature.TOTAL_PERIMETER)
 
     def is_space_feature(self):
@@ -47,11 +48,11 @@ class VisualFeature(IntFlag):
         labels = {
             VisualFeature.LOG_SIZE: "Log Size",
             VisualFeature.TOTAL_SURFACE_AREA: "Total surface area",
-            VisualFeature.ITEM_DIAMETER: "Mean item diameter",
-            VisualFeature.ITEM_SURFACE_AREA: "Mean item surface area",
-            VisualFeature.ITEM_PERIMETER: "Total perimeter",
-            VisualFeature.TOTAL_PERIMETER: "Mean item perimeter",
-            VisualFeature.RECT_SIZE: "Mean Rectangle Size",
+            VisualFeature.AV_DOT_DIAMETER: "Average dot diameter",
+            VisualFeature.AV_SURFACE_AREA: "Average surface area",
+            VisualFeature.AV_PERIMETER: "Average perimeter",
+            VisualFeature.TOTAL_PERIMETER: "Total perimeter",
+            VisualFeature.AV_RECT_SIZE: "Average Rectangle Size",
             VisualFeature.LOG_SPACING: "Log Spacing",
             VisualFeature.SPARSITY: "Sparsity",
             VisualFeature.FIELD_AREA: "Field area",
@@ -63,7 +64,7 @@ class ArrayFeatures(object):
 
     def __init__(self, object_array):
         # _lib or dot_cloud
-        assert isinstance(object_array, (arrays.RectangleArray, arrays.DotArray))
+        assert isinstance(object_array, arrays.GenericObjectArray)
         self.oa = object_array
         self._convex_hull = None
 
@@ -78,24 +79,31 @@ class ArrayFeatures(object):
         return self._convex_hull
 
     @property
-    def mean_item_diameter(self):
+    def average_dot_diameter(self):
         if not isinstance(self.oa, arrays.DotArray):
             return None
-        return np.mean(self.oa.diameters)
+        elif self.numerosity == 0:
+            return np.nan
+        else:
+            return np.mean(self.oa.diameters)
 
     @property
-    def mean_rectangle_size(self):
+    def average_rectangle_size(self):
         if not isinstance(self.oa, arrays.RectangleArray):
             return None
-        return np.mean(self.oa.sizes, axis=0)
-
+        elif self.numerosity == 0:
+            return np.array([np.nan, np.nan])
+        else:
+            return np.mean(self.oa.sizes, axis=0)
 
     @property
     def total_surface_area(self):
         return np.sum(self.oa.surface_areas)
 
     @property
-    def mean_item_surface_area(self):
+    def average_surface_area(self):
+        if self.numerosity == 0:
+            return np.nan
         return np.mean(self.oa.surface_areas)
 
     @property
@@ -103,12 +111,14 @@ class ArrayFeatures(object):
         return np.sum(self.oa.perimeter)
 
     @property
-    def mean_item_perimeter(self):
+    def average_perimeter(self):
+        if self.numerosity == 0:
+            return np.nan
         return np.mean(self.oa.perimeter)
 
     @property
     def field_area(self):
-        return self.convex_hull.convex_hull_position.volume
+        return self.convex_hull.position_field_area
 
     @property
     def numerosity(self):
@@ -116,32 +126,40 @@ class ArrayFeatures(object):
 
     @property
     def converage(self):
-        """ percent coverage in the field area. It takes thus the item size
+        """ percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
-
         """
-
         try:
             return self.total_surface_area / self.field_area
-        except:
-            return None
+        except ZeroDivisionError:
+            return np.nan
 
     @property
     def log_size(self):
-        return misc.log2(self.total_surface_area) + misc.log2(
-            self.mean_item_surface_area)
+        try:
+            return misc.log2(self.total_surface_area) + misc.log2(
+                    self.average_surface_area)
+        except ValueError:
+            return np.nan
+
 
     @property
     def log_spacing(self):
-        return misc.log2(self.field_area) + misc.log2(self.sparsity)
+        try:
+            return misc.log2(self.field_area) + misc.log2(self.sparsity)
+        except ValueError:
+            return np.nan
 
     @property
     def sparsity(self):
-        return self.field_area / self.numerosity
+        try:
+            return self.field_area / self.numerosity
+        except ZeroDivisionError:
+            return np.nan
 
     @property
-    def field_area_full(self):  # TODO not tested
+    def field_area_full(self):
         return self.convex_hull.outer_field_area
 
     def get(self, feature):
@@ -150,17 +168,17 @@ class ArrayFeatures(object):
         assert isinstance(feature, VisualFeature)
 
        # Adapt
-        if feature == VisualFeature.ITEM_DIAMETER:
-            return self.mean_item_diameter
+        if feature == VisualFeature.AV_DOT_DIAMETER:
+            return self.average_dot_diameter
 
-        elif feature == VisualFeature.ITEM_PERIMETER:
-            return self.mean_item_perimeter
+        elif feature == VisualFeature.AV_PERIMETER:
+            return self.average_perimeter
 
         elif feature == VisualFeature.TOTAL_PERIMETER:
             return self.total_perimeter
 
-        elif feature == VisualFeature.ITEM_SURFACE_AREA:
-            return self.mean_item_surface_area
+        elif feature == VisualFeature.AV_SURFACE_AREA:
+            return self.average_surface_area
 
         elif feature == VisualFeature.TOTAL_SURFACE_AREA:
             return self.total_surface_area
@@ -187,11 +205,11 @@ class ArrayFeatures(object):
         """ordered dictionary with the most important feature"""
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
-               (VisualFeature.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
-               (VisualFeature.ITEM_SURFACE_AREA.label(), self.mean_item_surface_area),
                ("?", None),  # placeholder
-               (VisualFeature.ITEM_PERIMETER.label(), self.mean_item_perimeter),
+               (VisualFeature.AV_PERIMETER.label(), self.average_perimeter),
+               (VisualFeature.AV_SURFACE_AREA.label(), self.average_surface_area),
                (VisualFeature.TOTAL_PERIMETER.label(), self.total_perimeter),
+               (VisualFeature.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
                (VisualFeature.FIELD_AREA.label(), self.field_area),
                (VisualFeature.SPARSITY.label(), self.sparsity),
                (VisualFeature.COVERAGE.label(), self.converage),
@@ -199,9 +217,11 @@ class ArrayFeatures(object):
                (VisualFeature.LOG_SPACING.label(), self.log_spacing)]
 
         if isinstance(self.oa, arrays.DotArray):
-            rtn[4] = (VisualFeature.ITEM_DIAMETER.label(), self.mean_item_diameter)
+            rtn[2] = (VisualFeature.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
         elif isinstance(self.oa, arrays.RectangleArray):
-            rtn[4] = (VisualFeature.RECT_SIZE.label(), self.mean_rectangle_size)
+            rtn[2] = (VisualFeature.AV_RECT_SIZE.label(), self.average_rectangle_size)
+        else:
+            rtn.pop(2)
         return OrderedDict(rtn)
 
     def __str__(self):
@@ -236,13 +256,13 @@ class ArrayFeatures(object):
                    "{:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
                 self.numerosity,
                 int(self.total_surface_area),
-                int(self.mean_item_surface_area),
+                int(self.average_surface_area),
                 int(self.field_area),
                 self.sparsity,
                 self.log_size,
                 self.log_spacing,
                 self.converage)
-        return rtn
+        return rtn.rstrip()
 
 
 class ConvexHull(object):
@@ -250,7 +270,7 @@ class ConvexHull(object):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, (arrays.RectangleArray, arrays.DotArray))
+        assert isinstance(object_array, arrays.GenericObjectArray)
 
         self._xy = object_array.xy
 
@@ -270,23 +290,44 @@ class ConvexHull(object):
             for rect in object_array.get():
                 edges.extend([e.xy for e in rect.edges()])
             self._outer_xy = np.array(edges)
+        else: # Generic object array
+            self._outer_xy = self._xy
 
-        self.convex_hull_position = spatial.ConvexHull(self._xy)
-        self.convex_hull_outer = spatial.ConvexHull(self._outer_xy)
+        try:
+            self._convex_hull_position = spatial.ConvexHull(self._xy)
+        except IndexError:
+            self._convex_hull_position = None
+        try:
+            self._convex_hull_outer = spatial.ConvexHull(self._outer_xy)
+        except IndexError:
+            self._convex_hull_outer = None
+
 
     @property
     def position_xy(self):
-        return self._xy[self.convex_hull_position.vertices, :]
+        if self._convex_hull_position is None:
+            return np.array([])
+        else:
+            return self._xy[self._convex_hull_position.vertices, :]
 
     @property
     def outer_xy(self):
-        return self._outer_xy[self.convex_hull_outer.vertices, :]
+        if self._convex_hull_outer is None:
+            return np.array([])
+        else:
+            return self._outer_xy[self._convex_hull_outer.vertices, :]
 
     @property
     def outer_field_area(self):
-        return self.convex_hull_outer.volume
+        if self._convex_hull_outer is None:
+            return np.nan
+        else:
+            return self._convex_hull_outer.volume
 
     @property
     def position_field_area(self):
-        return self.convex_hull_position.volume
+        if self._convex_hull_position is None:
+            return np.nan
+        else:
+            return self._convex_hull_position.volume
 

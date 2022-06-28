@@ -70,7 +70,7 @@ class DotArraySQLDB(object):
                           da.hash,
                           da._features.numerosity,
                           da._features.total_surface_area,
-                          da._features.mean_item_surface_area,
+                          da._features.average_surface_area,
                           da._features.field_area,
                           da._features.sparsity,
                           da._features.log_size,

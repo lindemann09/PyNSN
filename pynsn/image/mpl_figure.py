@@ -4,14 +4,16 @@ import numpy as _np
 from matplotlib import pyplot as _plt
 from . import _colour
 from .._lib import arrays as _arrays
-from .._lib import shape as _shape
+from .._lib import shapes as _shape
 
 def create(object_array, colours, dpi=100):
+    """create a matplotlib figure"""
+
     assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
 
-    r = _np.ceil(object_array.target_array_radius)
+    r = _np.ceil(object_array.target_area_radius)
 
     figure = _plt.figure(figsize=_np.array([r, r]) * 2 / dpi,
                          dpi=dpi)
@@ -26,7 +28,7 @@ def create(object_array, colours, dpi=100):
     figure.add_axes(axes)
 
     if colours.target_area.colour is not None:
-        obj = _shape.Dot(xy=(0, 0), diameter=object_array.target_array_radius*2,
+        obj = _shape.Dot(xy=(0, 0), diameter=object_array.target_area_radius*2,
                   attribute=colours.target_area.colour)
         _draw_shape(axes, obj)
 
@@ -52,26 +54,26 @@ def create(object_array, colours, dpi=100):
                 _draw_shape(axes, obj, opacity=colours.object_opacity)
 
     # draw convex hulls
-    if colours.field_area_position.colour is not None:
+    if colours.field_area_positions.colour is not None:
         _draw_convex_hull(axes=axes,
                           points= object_array.features.convex_hull.position_xy,
-                          convex_hull_colour=colours.field_area_position.colour,
+                          convex_hull_colour=colours.field_area_positions.colour,
                           opacity=colours.info_shapes_opacity)
-    if colours.field_area_outer.colour is not None:
+    if colours.field_area.colour is not None:
         _draw_convex_hull(axes=axes,
                           points=object_array.features.convex_hull.outer_xy,
-                          convex_hull_colour=colours.field_area_outer.colour,
+                          convex_hull_colour=colours.field_area.colour,
                           opacity=colours.info_shapes_opacity)
     #  and center of mass
-    if colours.center_of_mass.colour is not None:
+    if colours.center_of_positions.colour is not None:
         obj = _shape.Dot(xy=object_array.center_of_mass(),
                          diameter=10,
-                         attribute=colours.center_of_mass.colour)
+                         attribute=colours.center_of_positions.colour)
         _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)
-    if colours.center_of_outer_positions.colour is not None:
-        obj = _shape.Dot(xy=object_array.center_of_outer_positions,
+    if colours.center_of_mass.colour is not None:
+        obj = _shape.Dot(xy=object_array.center_of_positions(),
                          diameter=10,
-                         attribute=colours.center_of_outer_positions.colour)
+                         attribute=colours.center_of_mass.colour)
         _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)
 
     return figure

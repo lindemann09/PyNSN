@@ -2,7 +2,9 @@
 The named colour are the 140 HTML colour names:
    see https://www.w3schools.com/colors/colors_names.asp
 """
+from collections import OrderedDict
 from functools import total_ordering
+from .._lib import misc
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
@@ -242,15 +244,14 @@ class Colour(object):
         'expyriment_purple': '#A046FA'
     }
 
-
 class ImageColours(object):
 
     def __init__(self,
                  target_area=None,
-                 field_area_position=None,
-                 field_area_outer=None,
+                 field_area_positions=None,
+                 field_area=None,
+                 center_of_positions=None,
                  center_of_mass=None,
-                 center_of_outer_positions=None,
                  background=None,
                  default_object_colour=DEFAULT_ITEM_COLOUR,
                  object_opacity=1,
@@ -258,10 +259,10 @@ class ImageColours(object):
                  ):
 
         self.target_area = Colour(target_area)
-        self.field_area_position = Colour(field_area_position)
-        self.field_area_outer = Colour(field_area_outer)
+        self.field_area_positions = Colour(field_area_positions)
+        self.field_area = Colour(field_area)
+        self.center_of_positions = Colour(center_of_positions)
         self.center_of_mass = Colour(center_of_mass)
-        self.center_of_outer_positions = Colour(center_of_outer_positions)
         self.background = Colour(background)
         self.default_object_colour = Colour(default_object_colour)
 
@@ -273,20 +274,24 @@ class ImageColours(object):
         self.info_shapes_opacity = info_shapes_opacity
 
     def as_dict(self):
-        return {"colour_total_area": self.target_area.colour,
-                "field_area_position": self.field_area_position.colour,
-                "colour_field_area_outer": self.field_area_outer.colour,
-                "colour_center_of_mass": self.center_of_mass.colour,
-                "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
-                "colour_background": self.background.colour,
-                "default_object_colour": self.default_object_colour.colour,
+        return OrderedDict(
+                {"total_area": self.target_area.colour,
+                "field_area_positions": self.field_area_positions.colour,
+                "field_area": self.field_area.colour,
+                "center_of_positions": self.center_of_positions.colour,
+                "center_of_mass": self.center_of_mass.colour,
+                "background": self.background.colour,
+                "default_object": self.default_object_colour.colour,
                 "object_opacity": self.object_opacity,
                 "info_shapes_opacity": self.info_shapes_opacity
-                }
+                })
+
+    def __str__(self):
+        return misc.dict_to_text(self.as_dict(), col_a=24, col_b=10)
 
 
 def make_colour(value, default_colour):
-    """helper function: returns colour if attribute is a known colour (but not
+    """helper function: returns colour if value is a known colour (but not
     None), otherwise default colour is returned"""
 
     if value is None:

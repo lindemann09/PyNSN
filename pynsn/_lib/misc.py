@@ -91,3 +91,22 @@ def is_all_smaller(vector, standard=0):
 def is_all_equal(vector):
     # returns true if all elements are equal
     return sum(map(lambda x: x==vector[0], vector))==len(vector)
+
+def dict_to_text(the_dict, col_a = 22, col_b = 14,
+                 spacing_char="."):
+    rtn = None
+    for k, v in the_dict.items():
+        if rtn is None:
+            key_str = "- " + k
+            rtn = ""
+        else:
+            key_str = "  " + k
+
+        value = "{}\n".format(v)
+        len_col_b = col_b - len(value)
+        if len_col_b<2:
+            len_col_b = 2
+        rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
+                         (" " * len_col_b) + value
+    return rtn.rstrip()
+

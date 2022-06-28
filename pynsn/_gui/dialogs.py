@@ -24,7 +24,7 @@ class MatchPropertyDialog(QDialog):
         self.comboBox.activated[str].connect(self.choice)
 
         self._num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(VisualFeature.ITEM_DIAMETER)
+        self.choice(VisualFeature.AV_DOT_DIAMETER)
 
 
 
@@ -87,10 +87,10 @@ class SettingsDialog(QDialog):
                                                    text=image_colours.background.colour,
                                                    case_sensitive=False)
         self.colour_convex_hull_positions = misc.LabeledInput("Colour field position",
-                                                              text=image_colours.field_area_position.colour,
+                                                              text=image_colours.field_area_positions.colour,
                                                               case_sensitive=False)
         self.colour_convex_hull_dots = misc.LabeledInput("Colour field area",
-                                                         text=image_colours.field_area_outer.colour,
+                                                         text=image_colours.field_area.colour,
                                                          case_sensitive=False)
         self.antialiasing = QCheckBox("Antialiasing")
         self.antialiasing.setChecked(True)
@@ -138,9 +138,9 @@ class SequenceDialog(QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.match_diameter = QCheckBox(VisualFeature.ITEM_DIAMETER.label())
-        self.match_item_perimeter= QCheckBox(VisualFeature.ITEM_PERIMETER.label())
-        self.match_item_area = QCheckBox(VisualFeature.ITEM_SURFACE_AREA.label())
+        self.match_diameter = QCheckBox(VisualFeature.AV_DOT_DIAMETER.label())
+        self.match_av_perimeter= QCheckBox(VisualFeature.AV_PERIMETER.label())
+        self.match_av_area = QCheckBox(VisualFeature.AV_SURFACE_AREA.label())
         self.match_area = QCheckBox(VisualFeature.TOTAL_SURFACE_AREA.label())
         self.match_total_perimeter = QCheckBox(VisualFeature.TOTAL_PERIMETER.label())
         self.match_coverage = QCheckBox(VisualFeature.COVERAGE.label())
@@ -165,8 +165,8 @@ class SequenceDialog(QDialog):
         self.match_area.toggled.connect(self.ui_update)
         self.match_convex_hull.toggled.connect(self.ui_update)
         self.match_diameter.toggled.connect(self.ui_update)
-        self.match_item_area.toggled.connect(self.ui_update)
-        self.match_item_perimeter.toggled.connect(self.ui_update)
+        self.match_av_area.toggled.connect(self.ui_update)
+        self.match_av_perimeter.toggled.connect(self.ui_update)
         self.match_total_perimeter.toggled.connect(self.ui_update)
         self.match_size.toggled.connect(self.ui_update)
         self.match_spacing.toggled.connect(self.ui_update)
@@ -185,8 +185,8 @@ class SequenceDialog(QDialog):
         vlayout = QVBoxLayout()
         vlayout.addWidget(misc.heading("Matching"))
         vlayout.addWidget(self.match_diameter)
-        vlayout.addWidget(self.match_item_perimeter)
-        vlayout.addWidget(self.match_item_area)
+        vlayout.addWidget(self.match_av_perimeter)
+        vlayout.addWidget(self.match_av_area)
         vlayout.addWidget(self.match_area)
         vlayout.addWidget(self.match_total_perimeter)
         vlayout.addWidget(self.match_convex_hull)
@@ -211,16 +211,16 @@ class SequenceDialog(QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [VisualFeature.ITEM_DIAMETER]
+        all = [VisualFeature.AV_DOT_DIAMETER]
         if self.match_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.ITEM_SURFACE_AREA)
-        if self.match_item_area.isChecked():
+        all.append(VisualFeature.AV_SURFACE_AREA)
+        if self.match_av_area.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.ITEM_PERIMETER)
-        if self.match_item_perimeter.isChecked():
+        all.append(VisualFeature.AV_PERIMETER)
+        if self.match_av_perimeter.isChecked():
             selected.append(all[-1])
 
         all.append(VisualFeature.TOTAL_PERIMETER)
@@ -252,8 +252,8 @@ class SequenceDialog(QDialog):
             selected.append(all[-1])
 
         self.match_diameter.setEnabled(True)
-        self.match_item_perimeter.setEnabled(True)
-        self.match_item_area.setEnabled(True)
+        self.match_av_perimeter.setEnabled(True)
+        self.match_av_area.setEnabled(True)
         self.match_area.setEnabled(True)
         self.match_total_perimeter.setEnabled(True)
         self.match_coverage.setEnabled(True)
@@ -267,15 +267,15 @@ class SequenceDialog(QDialog):
                 # test dependency of non-selected item, x, from any selected
                 check = [s.is_dependent_from(x) for s in selected]
                 if sum(check) > 0:  # any dependency
-                    if x == VisualFeature.ITEM_DIAMETER:
+                    if x == VisualFeature.AV_DOT_DIAMETER:
                         self.match_diameter.setEnabled(False)
                         self.match_diameter.setChecked(False)
-                    elif x == VisualFeature.ITEM_PERIMETER:
-                        self.match_item_perimeter.setEnabled(False)
-                        self.match_item_perimeter.setChecked(False)
-                    elif x == VisualFeature.ITEM_SURFACE_AREA:
-                        self.match_item_area.setEnabled(False)
-                        self.match_item_area.setChecked(False)
+                    elif x == VisualFeature.AV_PERIMETER:
+                        self.match_av_perimeter.setEnabled(False)
+                        self.match_av_perimeter.setChecked(False)
+                    elif x == VisualFeature.AV_SURFACE_AREA:
+                        self.match_av_area.setEnabled(False)
+                        self.match_av_area.setChecked(False)
                     elif x == VisualFeature.TOTAL_SURFACE_AREA:
                         self.match_area.setEnabled(False)
                         self.match_area.setChecked(False)

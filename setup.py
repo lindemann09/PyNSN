@@ -23,8 +23,6 @@ extras_require = {
     'matplotlib':         ["matplotlib>=3.2"]
 }
 
-# FIXME Docu extra requirements, make some packages suggested
-
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]

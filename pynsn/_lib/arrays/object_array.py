@@ -14,15 +14,20 @@ from .. import misc, geometry
 from ..visual_features import ArrayFeatures
 
 
-class ObjectCloud(object):
-    """Numpy Position lists with attributes for optimized for numpy calculations
+class GenericObjectArray(object):
 
-    Abstract class for implementation of dot and rect
-    """
-
-    def __init__(self,
-                 xy  = None,
+    def __init__(self, target_area_radius,
+                 min_dist_between = 2,
+                 min_dist_area_boarder = 1,
+                 xy=None,
                  attributes=None):
+        """Numpy Position lists with attributes for optimized for numpy calculations
+
+        Abstract class for implementation of dot and rect
+        """
+        self.target_area_radius = target_area_radius
+        self.min_dist_between = min_dist_between
+        self.min_dist_area_boarder = min_dist_area_boarder
 
         self._xy = np.array([])
         self._attributes = np.array([])
@@ -30,6 +35,7 @@ class ObjectCloud(object):
 
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)
+
 
     def __str__(self):
         return self._features.as_text(extended_format=True)
@@ -87,8 +93,7 @@ class ObjectCloud(object):
         else:
             self._attributes = np.array([attributes] * self._features.numerosity)
 
-    @property
-    def center_of_outer_positions(self): #FIXME it is the center of positions
+    def center_of_positions(self):
         minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
         return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
 
@@ -158,7 +163,7 @@ class ObjectCloud(object):
         self.read_from_dict(dict)
 
     def center_array(self):
-        self._xy = self._xy - self.center_of_outer_positions
+        self._xy = self._xy - self.center_of_positions()
         self._features.reset()
 
     def clear(self):
@@ -201,20 +206,13 @@ class ObjectCloud(object):
                                                self._xy[neighbour_ids, 1] + xy[:, 1]]).T
 
 
-class GenericObjectArray(ObjectCloud):
+    def specifications_dict(self):
+        return {"target_area_radius": self.target_area_radius,
+                "min_dist_between": self.min_dist_between,
+                "min_dist_area_boarder": self.min_dist_area_boarder}
 
-    def __init__(self, target_array_radius, minimum_gap,
-                 xy=None, attributes=None):
-        """Just a Cloud with additional variables target_array_radius, minimum_gap
-         used as parent for Object Arrays"""
-        super().__init__(xy=xy, attributes=attributes)
-
-        self.target_array_radius = target_array_radius
-        self.minimum_gap = minimum_gap
-
-    @property
-    def perimeter(self):
-        raise NotImplementedError()
+    def get(self):
+        return NotImplemented
 
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
@@ -222,7 +220,7 @@ class GenericObjectArray(ObjectCloud):
 
     def distances(self, object):
         # override ist method
-        raise NotImplementedError()
+        return NotImplemented
 
     def distance_matrix(self, between_positions=False, overlap_is_zero=False):
         """between position ignores the dot size"""
@@ -232,6 +230,4 @@ class GenericObjectArray(ObjectCloud):
         dist = np.array([self.distances(d) for d in self.get()])
         if overlap_is_zero:
             dist[dist<0] = 0
-        print(dist)
-        exit()
         return dist

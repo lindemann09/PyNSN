@@ -7,35 +7,37 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from ..factory import DotArraySpecs
+from .._lib import arrays
 from .._lib import distributions as distr
 
 
 class MainWidget(QWidget):
 
-    def __init__(self, parent, settings, number, da_specs):
+    def __init__(self, parent, settings, number, ref_array,
+                 size_distribution):
         assert isinstance(settings, SettingsDialog)
         super(MainWidget, self).__init__(parent)
         self.settings = settings
 
-        self.initUI(number, da_specs)
+        self.initUI(number, ref_array, size_distribution.diameter)
 
-    def initUI(self, number, da_specs):
-        assert isinstance(da_specs, DotArraySpecs)
-        assert isinstance(da_specs.diameter_distr, (distr.Beta, distr.Normal))
+    def initUI(self, number, ref_array, dot_size_distribution):
+        assert isinstance(ref_array, arrays.GenericObjectArray)
+        assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
 
+        sdr = distr.SizeDistribution(diameter=dot_size_distribution)
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
-        self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.diameter_distr.mu)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.diameter_distr.sigma)
+        self.target_area_radius = LabeledNumberInput("Max radius", ref_array.target_area_radius)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.diameter.mu)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr.diameter.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=da_specs.diameter_distr.min_max[0],
-                                                               value2=da_specs.diameter_distr.min_max[1])
+                                                               value1=sdr.diameter.min_max[0],
+                                                               value2=sdr.diameter.min_max[1])
 
-        self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
+        self.min_dist_between = LabeledNumberInput("Minimum gap", ref_array.min_dist_between)
 
         self.dot_colour = LabeledInput("Colour", text=self.settings.default_object_colour,
                                        case_sensitive=False)
@@ -55,8 +57,8 @@ class MainWidget(QWidget):
         ctrl.addLayout(self.dot_colour2.layout())
 
         ctrl.addWidget(heading("Array"))
-        ctrl.addLayout(self.target_array_radius.layout())
-        ctrl.addLayout(self.minimum_gap.layout())
+        ctrl.addLayout(self.target_area_radius.layout())
+        ctrl.addLayout(self.min_dist_between.layout())
         ctrl.addStretch(1)
 
         # Add text field
