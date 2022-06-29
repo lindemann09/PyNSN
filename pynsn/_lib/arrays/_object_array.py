@@ -116,10 +116,6 @@ class GenericObjectArray(object):
         m.update(self.perimeter.tobytes())
         return m.hexdigest()
 #
-    def distance_matrix(self):
-        """distances between positions"""
-        return spatial.distance.cdist(self._xy, self._xy)
-
     def as_dict(self):
         """
         """
@@ -205,7 +201,6 @@ class GenericObjectArray(object):
         self._xy[neighbour_ids, :] = np.array([self._xy[neighbour_ids, 0] + xy[:, 0],
                                                self._xy[neighbour_ids, 1] + xy[:, 1]]).T
 
-
     def specifications_dict(self):
         return {"target_area_radius": self.target_area_radius,
                 "min_dist_between": self.min_dist_between,
@@ -225,9 +220,10 @@ class GenericObjectArray(object):
     def distance_matrix(self, between_positions=False, overlap_is_zero=False):
         """between position ignores the dot size"""
         if between_positions:
-            return super().distance_matrix()
+            return spatial.distance.cdist(self._xy, self._xy)
         # matrix with all distance between all points
         dist = np.array([self.distances(d) for d in self.get()])
         if overlap_is_zero:
             dist[dist<0] = 0
         return dist
+

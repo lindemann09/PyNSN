@@ -74,12 +74,12 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
         if colours.field_area_positions.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
-                                  object_array.features.convex_hull.position_xy * aaf, image_size),
+                                  object_array.features.convex_hull_positions.xy * aaf, image_size),
                               convex_hull_colour=colours.field_area_positions.colour)
         if colours.field_area.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
-                                  object_array.features.convex_hull.outer_xy * aaf,
+                                  object_array.features.convex_hull.xy * aaf,
                                   image_size),
                               convex_hull_colour=colours.field_area.colour)
         #  and center of mass

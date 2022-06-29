@@ -225,7 +225,7 @@ class DotArray(GenericObjectArray):
         try_out_inside_convex_hull = 1000
 
         if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self._features.convex_hull._xy)
+            delaunay = spatial.Delaunay(self._features.convex_hull.xy)
         else:
             delaunay = None
         cnt = 0

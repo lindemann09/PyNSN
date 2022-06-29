@@ -58,12 +58,12 @@ def create(object_array, colours, dpi=100):
     # draw convex hulls
     if colours.field_area_positions.colour is not None:
         _draw_convex_hull(axes=axes,
-                          points= object_array.features.convex_hull.position_xy,
+                          points= object_array.features.convex_hull_positions.xy,
                           convex_hull_colour=colours.field_area_positions.colour,
                           opacity=colours.info_shapes_opacity)
     if colours.field_area.colour is not None:
         _draw_convex_hull(axes=axes,
-                          points=object_array.features.convex_hull.outer_xy,
+                          points=object_array.features.convex_hull.xy,
                           convex_hull_colour=colours.field_area.colour,
                           opacity=colours.info_shapes_opacity)
     #  and center of mass

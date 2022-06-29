@@ -2,7 +2,6 @@ from pynsn import arrays, distr, random_array
 from pynsn.image import pil_image, mpl_figure, svg_file, ImageColours
 import numpy as np
 
-
 # define the visual features of the  dot array
 ref = arrays.GenericObjectArray(target_area_radius=200)
 
@@ -26,9 +25,8 @@ my_colours = ImageColours(target_area="#EEEEEE",
                           )
 
 
-
 stimulus = random_array.create(reference_array=ref,
-                               size_distribution=size_dist2,
+                               size_distribution=size_dist,
                                n_objects=15,
                                attributes=["blue", "green"])
 

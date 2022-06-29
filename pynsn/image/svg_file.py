@@ -49,13 +49,13 @@ def create(object_array, colours, filename="noname.svg"):
         if colours.field_area_positions.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
-                          object_array.features.convex_hull.position_xy, image_size),
+                          object_array.features.convex_hull_positions.xy, image_size),
                               convex_hull_colour=colours.field_area_positions.colour,
                               opacity=colours.info_shapes_opacity)
         if colours.field_area.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
-                          object_array.features.convex_hull.outer_xy,
+                          object_array.features.convex_hull.xy,
                           image_size),
                               convex_hull_colour=colours.field_area.colour,
                               opacity=colours.info_shapes_opacity)

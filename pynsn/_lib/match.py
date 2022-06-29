@@ -139,7 +139,7 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
     if iterative_convex_hull_modification:
         while object_array.features.field_area > max_field_area:
             # remove one random outer dot and remember it
-            indices = object_array.features.convex_hull._convex_hull_position.vertices # FIXME works for dot
+            indices = object_array.features.convex_hull.indices # FIXME works for dot
             #FIXME for rectagles find rect which have edges of the convexhull
             if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                 # most outer dot from convex hull
@@ -317,11 +317,11 @@ def visual_feature(object_array, feature, value):
     """
 
     # type check
-    if feature not in _VF.ALL_FEATURES:
+    if not isinstance(feature, _VF):
         raise ValueError("{} is not a visual feature.".format(feature))
 
     # Adapt
-    if feature == _VF.ITEM_DIAMETER:
+    if feature == _VF.AV_DOT_DIAMETER:
         return average_diameter(object_array, value=value)
 
     elif feature == _VF.AV_PERIMETER:
@@ -330,7 +330,7 @@ def visual_feature(object_array, feature, value):
     elif feature == _VF.TOTAL_PERIMETER:
         return total_perimeter(object_array, value=value)
 
-    elif feature == _VF.ITEM_SURFACE_AREA:
+    elif feature == _VF.AV_SURFACE_AREA:
         return average_surface_area(object_array, value=value)
 
     elif feature == _VF.TOTAL_SURFACE_AREA:

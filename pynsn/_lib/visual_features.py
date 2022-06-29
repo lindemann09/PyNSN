@@ -4,11 +4,9 @@ from collections import OrderedDict
 from enum import IntFlag, auto
 
 import numpy as np
-from scipy import spatial
 from . import misc
-from .geometry import cartesian2polar, polar2cartesian
 from . import arrays
-
+from .convex_hull import ConvexHull, ConvexHullPositions
 
 class VisualFeature(IntFlag):
 
@@ -21,6 +19,7 @@ class VisualFeature(IntFlag):
     TOTAL_PERIMETER = auto()
     SPARSITY = auto()
     FIELD_AREA = auto()
+    FIELD_AREA_POSITIONS = auto()
     COVERAGE = auto()
 
     LOG_SPACING = auto()
@@ -67,16 +66,24 @@ class ArrayFeatures(object):
         assert isinstance(object_array, arrays.GenericObjectArray)
         self.oa = object_array
         self._convex_hull = None
+        self._convex_hull_positions = None
 
     def reset(self):
         """reset to enforce recalculation of certain parameter """
         self._convex_hull = None
+        self._convex_hull_positions = None
 
     @property
     def convex_hull(self):
         if self._convex_hull is None:
             self._convex_hull = ConvexHull(self.oa)
         return self._convex_hull
+
+    @property
+    def convex_hull_positions(self):
+        if self._convex_hull_positions is None:
+            self._convex_hull_positions = ConvexHullPositions(self.oa)
+        return self._convex_hull_positions
 
     @property
     def average_dot_diameter(self):
@@ -117,8 +124,8 @@ class ArrayFeatures(object):
         return np.mean(self.oa.perimeter)
 
     @property
-    def field_area(self):
-        return self.convex_hull.position_field_area
+    def field_area_positions(self):
+        return self.convex_hull_positions.field_area
 
     @property
     def numerosity(self):
@@ -159,8 +166,8 @@ class ArrayFeatures(object):
             return np.nan
 
     @property
-    def field_area_full(self):
-        return self.convex_hull.outer_field_area
+    def field_area(self):
+        return self.convex_hull.field_area
 
     def get(self, feature):
         """returns a feature"""
@@ -194,6 +201,9 @@ class ArrayFeatures(object):
 
         elif feature == VisualFeature.FIELD_AREA:
             return self.field_area
+
+        elif feature == VisualFeature.FIELD_AREA_POSITIONS:
+            return self.field_area_positions
 
         elif feature == VisualFeature.COVERAGE:
             return self.converage
@@ -263,71 +273,3 @@ class ArrayFeatures(object):
                 self.log_spacing,
                 self.converage)
         return rtn.rstrip()
-
-
-class ConvexHull(object):
-    """convenient wrapper class for calculation of convex hulls
-    """
-
-    def __init__(self, object_array):
-        assert isinstance(object_array, arrays.GenericObjectArray)
-
-        self._xy = object_array.xy
-
-        if isinstance(object_array, arrays.DotArray):
-            # centered polar coordinates
-            minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
-            center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)  # center outer positions
-            xy_centered = self._xy - center
-            # outer positions
-            polar_centered = cartesian2polar(xy_centered)
-            polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameters / 2)
-            self._outer_xy = polar2cartesian(polar_centered) + center
-
-        elif isinstance(object_array, arrays.RectangleArray):
-            # get all edges
-            edges = []
-            for rect in object_array.get():
-                edges.extend([e.xy for e in rect.edges()])
-            self._outer_xy = np.array(edges)
-        else: # Generic object array
-            self._outer_xy = self._xy
-
-        try:
-            self._convex_hull_position = spatial.ConvexHull(self._xy)
-        except IndexError:
-            self._convex_hull_position = None
-        try:
-            self._convex_hull_outer = spatial.ConvexHull(self._outer_xy)
-        except IndexError:
-            self._convex_hull_outer = None
-
-
-    @property
-    def position_xy(self):
-        if self._convex_hull_position is None:
-            return np.array([])
-        else:
-            return self._xy[self._convex_hull_position.vertices, :]
-
-    @property
-    def outer_xy(self):
-        if self._convex_hull_outer is None:
-            return np.array([])
-        else:
-            return self._outer_xy[self._convex_hull_outer.vertices, :]
-
-    @property
-    def outer_field_area(self):
-        if self._convex_hull_outer is None:
-            return np.nan
-        else:
-            return self._convex_hull_outer.volume
-
-    @property
-    def position_field_area(self):
-        if self._convex_hull_position is None:
-            return np.nan
-        else:
-            return self._convex_hull_position.volume
-
