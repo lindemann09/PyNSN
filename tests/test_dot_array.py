@@ -1,5 +1,5 @@
 import unittest
-from pynsn import arrays, distr, random_array, match, VisualFeature
+from pynsn import arrays, distr, random_array, adapt, VisualFeature
 
 
 class DotsSmall(unittest.TestCase):
@@ -23,12 +23,12 @@ class DotsSmall(unittest.TestCase):
         #  changes two time feature (e.g. first decrease and then increase)
         #first
         new_value = self.stimulus.features.get(feature) * first
-        stim_first = match.visual_feature(self.stimulus, feature, new_value)
+        stim_first = adapt.visual_feature(self.stimulus, feature, new_value)
         self.assertAlmostEqual(stim_first.features.get(feature), new_value,
                                places=places)
         #second
         new_value = stim_first.features.get(feature) * second
-        stim_second = match.visual_feature(stim_first, feature, new_value)
+        stim_second = adapt.visual_feature(stim_first, feature, new_value)
         self.assertAlmostEqual(stim_second.features.get(feature), new_value,
                                places=places)
 

@@ -15,10 +15,10 @@ DEFAULT_MATCH_FA2TA_RATIO = 0.5
 def change_settings(iterative_convex_hull_modification=None,
                     take_random_dot_from_convexhull=None,
                     default_spacing_precision=None,
-                    default_match_fa2ta_ratio=None):
-    """Changing class settings of feature matcher.
+                    default_adapt_fa2ta_ratio=None):
+    """Changing class settings of feature adapter.
 
-    This changes the settings of all feature matcher.
+    This changes the settings of all feature adapter.
 
 
     Parameters
@@ -26,7 +26,7 @@ def change_settings(iterative_convex_hull_modification=None,
     iterative_convex_hull_modification
     take_random_dot_from_convexhull
     default_spacing_precision
-    default_match_fa2ta_ratio
+    default_adapt_fa2ta_ratio
 
     Returns
     -------
@@ -42,17 +42,36 @@ def change_settings(iterative_convex_hull_modification=None,
         TAKE_RANDOM_DOT_FROM_CONVEXHULL = take_random_dot_from_convexhull
     if isinstance(default_spacing_precision, float):
         DEFAULT_SPACING_PRECISION = default_spacing_precision
-    if isinstance(default_match_fa2ta_ratio, float):
-        DEFAULT_MATCH_FA2TA_RATIO = default_match_fa2ta_ratio
+    if isinstance(default_adapt_fa2ta_ratio, float):
+        DEFAULT_MATCH_FA2TA_RATIO = default_adapt_fa2ta_ratio
 
 
 def average_diameter(dot_array, value):
     # changes diameter
-    assert isinstance(dot_array, _DotArray)
+    if not isinstance(dot_array, _DotArray):
+        raise TypeError("Matching diameter is not possible for {}.".format(
+            type(dot_array).__name__))
     scale = value / dot_array.features.average_dot_diameter
     dot_array._diameters = dot_array.diameters * scale
     dot_array.features.reset()
     return dot_array
+
+def average_rect_size(rect_array, value):
+    # changes diameter
+    if not isinstance(rect_array, _RectangleArray):
+        raise TypeError("Matching rectangle size is not possible for {}.".format(
+            type(rect_array).__name__))
+    try:
+        width, height = value
+    except TypeError:
+        raise TypeError("Value ({}) has to tuple of 2 numerical (width, height).".format(
+            value))
+
+    scale = _np.array([width / rect_array.features.average_rectangle_size[0],
+                       height / rect_array.features.average_rectangle_size[1]])
+    rect_array._sizes = rect_array._sizes * scale
+    rect_array.features.reset()
+    return rect_array
 
 def total_surface_area(object_array, value):
     # changes diameter
@@ -85,7 +104,7 @@ def field_area(object_array, value, precision=None, use_scaling_only=False):
     #   a) iterative convex hull modification
     #      1. iteratively replacing outer dots to the side (random  pos.)
     #         (resulting FA is likely to small)
-    #      2. increase FA by scaling to match precisely
+    #      2. increase FA by scaling to adapt precisely
     #         inside the field area
     #      - this methods results in very angular dot arrays, because it
     #           prefers a solution with a small number of convex hull
@@ -94,7 +113,7 @@ def field_area(object_array, value, precision=None, use_scaling_only=False):
     #      1. determining circle with the required field area
     #      2. replacing all dots outside this circle to the inside
     #         (random pos.) (resulting FA is likely to small)
-    #      3. increase FA by scaling to match precisely
+    #      3. increase FA by scaling to adapt precisely
     #      - this method will result is rather circular areas
 
     assert isinstance(object_array, _DotArray)
@@ -126,7 +145,7 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
 
     return False if not possible else True
 
-    Note: see doc string `_match_field_area`
+    Note: see doc string `_adapt_field_area`
 
     """
     assert isinstance(object_array, _DotArray)
@@ -205,7 +224,7 @@ def _scale_field_area(object_array, value, precision):
 
     iterative method can takes some time.
 
-    Note: see doc string `_match_field_area`
+    Note: see doc string `_adapt_field_area`
     """
     assert isinstance(object_array, _DotArray)
     current = object_array.features.field_area
@@ -242,9 +261,9 @@ def _scale_field_area(object_array, value, precision):
 
 def coverage(object_array, value,
              precision=None,
-             match_FA2TA_ratio=None):
+             adapt_FA2TA_ratio=None):
 
-    # FIXME check drifting outwards if extra space is small and match_FA2TA_ratio=1
+    # FIXME check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
     # FIXME when to realign, realignment changes field_area!
     """this function changes the area and remixes to get a desired density
     precision in percent between 1 < 0
@@ -255,18 +274,18 @@ def coverage(object_array, value,
     """
     assert isinstance(object_array, _DotArray)
 
-    print("WARNING: _match_coverage is a experimental ")
+    print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
-    if match_FA2TA_ratio is None:
-        match_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
-    elif match_FA2TA_ratio < 0 or match_FA2TA_ratio > 1:
-        match_FA2TA_ratio = 0.5
+    if adapt_FA2TA_ratio is None:
+        adapt_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
+    elif adapt_FA2TA_ratio < 0 or adapt_FA2TA_ratio > 1:
+        adapt_FA2TA_ratio = 0.5
     if precision is None:
         precision = DEFAULT_SPACING_PRECISION
 
     total_area_change100 = (value * object_array.features.field_area) - \
                            object_array.features.total_surface_area
-    d_change_total_area = total_area_change100 * (1 - match_FA2TA_ratio)
+    d_change_total_area = total_area_change100 * (1 - adapt_FA2TA_ratio)
     if abs(d_change_total_area) > 0:
         total_surface_area(object_array.features.total_surface_area + \
                            d_change_total_area)
@@ -275,12 +294,20 @@ def coverage(object_array, value,
                precision=precision)
 
 def average_perimeter(object_array, value):
-    return average_diameter(object_array, value / _np.pi)
+    total_peri = value * object_array.features.numerosity
+    return total_perimeter(object_array, total_peri)
 
 def total_perimeter(object_array, value):
-    assert isinstance(object_array, _DotArray)
-    tmp = value / (object_array.features.numerosity * _np.pi)
-    return average_diameter(object_array, tmp)
+    if isinstance(object_array, _DotArray):
+        tmp = value / (object_array.features.numerosity * _np.pi)
+        return average_diameter(object_array, tmp)
+    elif isinstance(object_array, _RectangleArray):
+        scale = value / object_array.features.total_perimeter
+        new_size = object_array.features.average_rectangle_size * scale
+        return average_rect_size(object_array, new_size)
+    else:
+        raise NotImplementedError("Not implemented for {}".format(
+            type(object_array).__name__))
 
 def average_surface_area(object_array, value):
     assert isinstance(object_array, _DotArray)
@@ -305,13 +332,13 @@ def sparcity(object_array, value, precision=None):
 
 def visual_feature(object_array, feature, value):
     """
-    match_properties: continuous property or list of continuous properties
-    several properties to be matched
-    if match dot array is specified, array will be match to match_dot_array, otherwise
-    the values defined in match_features is used.
-    some matching requires realignement to avoid overlaps. However,
+    adapt_properties: continuous property or list of continuous properties
+    several properties to be adapted
+    if adapt dot array is specified, array will be adapt to adapt_dot_array, otherwise
+    the values defined in adapt_features is used.
+    some adapting requires realignement to avoid overlaps. However,
     realigment might result in a different field area. Thus, realign after
-    matching for  Size parameter and realign before matching space
+    adapting for  Size parameter and realign before adapting space
     parameter.
 
     """

@@ -1,5 +1,5 @@
 import unittest
-from pynsn import arrays, distr, random_array, match, VisualFeature
+from pynsn import arrays, distr, random_array, adapt, VisualFeature
 from test_dot_array import DotsSmall
 
 

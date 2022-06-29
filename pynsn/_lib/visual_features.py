@@ -256,7 +256,10 @@ class ArrayFeatures(object):
                     except:
                         value = "{}\n".format(v)
 
-                    rtn += name + (spacing_char * (22 - len(name))) + (" " * (14 - len(value))) + value
+                    n_space = 14 - len(value)
+                    if n_space < 2:
+                        n_space = 2
+                    rtn += name + (spacing_char * (24 - len(name))) + (" " * n_space) + value
         else:
             if with_hash:
                 rtn = "ID: {} ".format(self.oa.hash)

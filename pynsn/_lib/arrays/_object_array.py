@@ -87,7 +87,7 @@ class GenericObjectArray(object):
 
         if isinstance(attributes, (list, tuple)):
             if len(attributes) != self._features.numerosity:
-                raise ValueError("Length of attribute list does not match the " +\
+                raise ValueError("Length of attribute list does not adapt the " +\
                                  "size of the dot array.")
             self._attributes = np.array(attributes)
         else:

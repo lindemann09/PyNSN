@@ -34,7 +34,7 @@ class DotArray(GenericObjectArray):
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
 
-        This features allows shuffling free position and matching
+        This features allows shuffling free position and adapting
         features.
         """
         super().__init__(xy=xy, attributes=attributes,

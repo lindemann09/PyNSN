@@ -10,7 +10,7 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import match
+from .. import adapt
 from .._lib import random_array
 from .._lib import distributions as distr
 from .._lib import arrays
@@ -80,8 +80,8 @@ class GUIMainWindow(QMainWindow):
         printparaAction = QAction('&Print parameter', self)
         printparaAction.triggered.connect(self.action_print_para)
 
-        matchAction = QAction('&Match property', self)
-        matchAction.triggered.connect(self.action_match)
+        adaptAction = QAction('&Match property', self)
+        adaptAction.triggered.connect(self.action_adapt)
 
         sequenceAction = QAction('&Make _sequence', self)
         sequenceAction.triggered.connect(self.action_make_sequence)
@@ -99,7 +99,7 @@ class GUIMainWindow(QMainWindow):
 
         toolMenu = menubar.addMenu('&Tools')
         toolMenu.addAction(sequenceAction)
-        toolMenu.addAction(matchAction)
+        toolMenu.addAction(adaptAction)
         toolMenu.addSeparator()
         toolMenu.addAction(printparaAction)
         toolMenu.addAction(printxyAction)
@@ -291,14 +291,14 @@ class GUIMainWindow(QMainWindow):
             elif ext == ".png" or ext == ".bmp":
                 self.image().save(filename)
 
-    def action_match(self):
+    def action_adapt(self):
         """"""
         prop = self.dot_array._features.as_dict()
         feature, value = dialogs.MatchPropertyDialog.get_response(self,
                                                                   prop)  #
         if feature is not None:
-            self.dot_array = match.visual_feature(self.dot_array,
-                                                   feature, value=value)
+            self.dot_array = adapt.visual_feature(self.dot_array,
+                                                  feature, value=value)
             if feature in [x for x in VisualFeature if x.is_size_feature()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
@@ -327,25 +327,25 @@ class GUIMainWindow(QMainWindow):
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):
-        match_methods, match_range, extra_space = \
+        adapt_methods, adapt_range, extra_space = \
                                     dialogs.SequenceDialog.get_response(self)
-        match_methods = match_methods[0] #FIXME just match the first
+        adapt_methods = adapt_methods[0] #FIXME just adapt the first
 
-        d = {"match range": match_range,
+        d = {"adapt range": adapt_range,
              "extra_space": extra_space}
-        d["match_methods"] = match_methods
+        d["adapt_methods"] = adapt_methods
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
         ref_array, sdr = self.get_specs()
         ref_array.min_dist_area_boarder = extra_space/2
         ref_array.target_area_radius += ref_array.min_dist_area_boarder
 
-        if match_methods is not None:
+        if adapt_methods is not None:
             sequence = dot_array_sequence.create(
                               specs=specs,
-                              match_feature=match_methods,
-                              match_value=self.dot_array._features.get(match_methods),
-                              min_max_numerosity=match_range)
+                              adapt_feature=adapt_methods,
+                              adapt_value=self.dot_array._features.get(adapt_methods),
+                              min_max_numerosity=adapt_range)
             SequenceDisplay(self, da_sequence=sequence,
                             start_numerosity=self.dot_array._features.numerosity,
                             image_colours=self.get_image_colours(),

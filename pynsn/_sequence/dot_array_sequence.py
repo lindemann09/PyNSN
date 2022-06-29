@@ -13,7 +13,7 @@ from .._lib.arrays import DotArray as _DotArray
 from .._lib.visual_features import VisualFeature as _Feat
 from .._lib import random_array
 from .._lib import arrays
-from .. import match
+from .. import adapt
 
 class DASequence(object):
 
@@ -122,16 +122,16 @@ class DASequence(object):
 
 
 def create(specs,
-           match_feature,
-           match_value,
+           adapt_feature,
+           adapt_value,
            min_max_numerosity,
            round_decimals = None,
            source_number = None):  # todo could be an iterator
     """factory function
 
     Methods takes take , you might use make Process
-        match_properties:
-                continuous property or list of continuous properties to be match
+        adapt_properties:
+                continuous property or list of continuous properties to be adapt
                 or None
      returns False is error occured (see self.error)
     """
@@ -145,21 +145,21 @@ def create(specs,
     min_, max_ = sorted(min_max_numerosity)
 
     if source_number is None:
-        if match_feature in [_Feat.SPARSITY]:
+        if adapt_feature in [_Feat.SPARSITY]:
             source_number = min_
-        elif match_feature in [_Feat.FIELD_AREA, _Feat.COVERAGE] :
+        elif adapt_feature in [_Feat.FIELD_AREA, _Feat.COVERAGE] :
             source_number = max_
         else:
             source_number = min_ + ((max_ - min_)//2)
 
-    check_feature_list(match_feature)
+    check_feature_list(adapt_feature)
 
     if not isinstance(specs, arrays.DotArraySpecs):
         raise TypeError("Specs has to be of type DotArraySpecs, but not {}".format(
             type(specs).__name__))
 
     # keep field area
-    if match_feature in list(_Feat.SPACE_FEATURES) + [_Feat.COVERAGE]:
+    if adapt_feature in list(_Feat.SPACE_FEATURES) + [_Feat.COVERAGE]:
         prefer_keeping_field_area = True
     else:
         prefer_keeping_field_area = False
@@ -169,19 +169,19 @@ def create(specs,
         source_number = min_ + int((max_ - min_)/2)
     source_da = random_array.create(n_objects=source_number,
                                     specs=specs)
-    source_da = match.visual_feature(source_da, feature=match_feature, value=match_value)
+    source_da = adapt.visual_feature(source_da, feature=adapt_feature, value=adapt_value)
     source_da.center_array()
     source_da.round(round_decimals)
 
-    # matched deviants
+    # adapted deviants
     rtn = DASequence()
-    rtn.method = match_feature
+    rtn.method = adapt_feature
 
     # decreasing
     if min_ < source_number:
-        tmp, error = _make_matched_deviants(
+        tmp, error = _make_adapted_deviants(
             reference_da=source_da,
-            match_feature=match_feature,
+            adapt_feature=adapt_feature,
             target_numerosity=min_,
             round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
@@ -193,9 +193,9 @@ def create(specs,
     rtn.append_dot_arrays(source_da)
     # increasing
     if max_ > source_number:
-        tmp, error = _make_matched_deviants(
+        tmp, error = _make_adapted_deviants(
             reference_da=source_da,
-            match_feature=match_feature,
+            adapt_feature=adapt_feature,
             target_numerosity=max_,
             round_decimals=round_decimals,
             prefer_keeping_field_area=prefer_keeping_field_area)
@@ -205,7 +205,7 @@ def create(specs,
 
     return rtn
 
-def _make_matched_deviants(reference_da, match_feature, target_numerosity,
+def _make_adapted_deviants(reference_da, adapt_feature, target_numerosity,
                            round_decimals, prefer_keeping_field_area):
     """helper function. Do not use this method. Please use make"""
 
@@ -222,16 +222,16 @@ def _make_matched_deviants(reference_da, match_feature, target_numerosity,
     da_sequence = []
 
     error = None
-    #print(match_props, target_numerosity)
+    #print(adapt_props, target_numerosity)
     while True:
         try:
             da = da.number_deviant(change_numerosity=change,
                                    prefer_keeping_field_area=prefer_keeping_field_area)
         except:
-            return [], "ERROR: Can't find the a make matched deviants"
+            return [], "ERROR: Can't find the a make adapted deviants"
 
-        da = match.visual_feature(da, feature=match_feature,
-                                value=reference_da.features.get(match_feature))
+        da = adapt.visual_feature(da, feature=adapt_feature,
+                                  value=reference_da.features.get(adapt_feature))
         cnt = 0
         while True:
             cnt += 1
@@ -259,7 +259,7 @@ def check_feature_list(feature_list):
 
     size_occured = ""
     space_occured = ""
-    error = "Incompatible properties to match: {} & {}"
+    error = "Incompatible properties to adapt: {} & {}"
 
     if not isinstance(feature_list, (tuple, list)):
         feature_list = [feature_list]
