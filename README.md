@@ -47,6 +47,10 @@ To generate [Pygame](https://www.pygame.org/news) or
 for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
+## Examples
+
+* [creating random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html)
+
 
 RUN GUI tool
 -------------
