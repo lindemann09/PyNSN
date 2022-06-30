@@ -1,5 +1,5 @@
 import unittest
-from pynsn import arrays, distr, random_array, adapt, VisualFeature
+from pynsn import arrays, distr, random_array, adapt, scale
 from test_dot_array import DotsSmall
 
 
@@ -10,19 +10,51 @@ class RectanglesSmall(DotsSmall):
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
 
-# class RectanglesMedium(DotsMedium):
-#     def settings(self):
-#         super().settings()
-#         self.size_dist = random_array.SizeDistribution(
-#             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-#             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
-#
-# class RectanglesLarge(DotsLarge):
-#     def settings(self):
-#         super().settings()
-#         self.size_dist = random_array.SizeDistribution(
-#             width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
-#             height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
+    def test_match_av_size(self):
+        first=0.8
+        second=1.15
+        scale_factor = 1.1
+        places = 7
+        # check scale
+        stim = self.stimulus.copy()
+        new_value = stim.features.average_rectangle_size * scale_factor
+        scale.average_rectangle_size(stim, scale_factor)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+                               new_value[0], places=places)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+                               new_value[1], places=places)
+
+        #  changes two time feature (e.g. first decrease and then increase)
+        # first
+        new_value = stim.features.average_rectangle_size * first
+        adapt.average_rectangle_size(stim, new_value)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+                               new_value[0], places=places)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+                               new_value[1], places=places)
+        #second
+        new_value = stim.features.average_rectangle_size * second
+        adapt.average_rectangle_size(stim, new_value)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+                               new_value[0], places=places)
+        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+                               new_value[1], places=places)
+
+class RectanglesMedium(RectanglesSmall):
+    def settings(self):
+        super().settings()
+        self.size_dist = random_array.SizeDistribution(
+            width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+            height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
+        self.n_dots = 25
+
+class RectanglesLarge(RectanglesSmall):
+    def settings(self):
+        super().settings()
+        self.size_dist = random_array.SizeDistribution(
+            width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
+            height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
+        self.n_dots = 75
 
 
 if __name__ == "__main__":

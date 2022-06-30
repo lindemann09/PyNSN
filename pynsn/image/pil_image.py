@@ -24,7 +24,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
     default_dot_colour: if colour is undefined in _lib
     """
 
-    assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
+    _arrays._check_object_array(object_array)
     assert isinstance(colours, _colour.ImageColours)
 
     if isinstance(antialiasing, bool):

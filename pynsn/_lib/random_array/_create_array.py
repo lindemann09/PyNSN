@@ -19,7 +19,7 @@ def create(reference_array,
 
     """
     if not isinstance(reference_array, arrays.GenericObjectArray):
-        raise RuntimeError("Reference array has to be of type DotArray, RectangleArray or GenericObjectArray, but not {}".format(
+        raise TypeError("Reference array has to be of type DotArray, RectangleArray or GenericObjectArray, but not {}".format(
                         type(reference_array).__name__))
     if not isinstance(size_distribution, SizeDistribution):
         raise RuntimeError("Size distribution has to be of type SizeDistribution, but not {}".format(

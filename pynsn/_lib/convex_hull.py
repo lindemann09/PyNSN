@@ -40,7 +40,7 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, arrays.GenericObjectArray)
+        arrays._check_generic_array(object_array)
         self._initialize(object_array.xy)
 
 
@@ -51,7 +51,7 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, arrays.GenericObjectArray)
+        arrays._check_generic_array(object_array)
 
         if isinstance(object_array, arrays.DotArray):
             # centered polar coordinates

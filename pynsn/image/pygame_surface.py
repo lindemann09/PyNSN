@@ -4,15 +4,14 @@ import pygame as _pygame
 
 from . import _colour
 from . import pil_image as _pil_image
-from .._lib.arrays import GenericObjectArray as _GenericObjectArray
+from .._lib.arrays import _check_object_array
 
 from ._colour import ImageColours # make available
 
 def create(object_array,
            colours,
            antialiasing=True):
-
-    assert isinstance(object_array, _GenericObjectArray)
+    _check_object_array(object_array)
 
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be a ImageColours instance.")

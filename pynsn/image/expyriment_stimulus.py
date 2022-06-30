@@ -8,7 +8,7 @@ from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 from . import _colour
 from . import pil_image as _pil_image
-from .._lib.arrays import GenericObjectArray as _GenericObjectArray
+from .._lib.arrays import _check_generic_array
 
 from ._colour import ImageColours # make available
 
@@ -19,7 +19,7 @@ class ExprimentDotArray(_Canvas):
                  position=(0, 0),
                  antialiasing=True):
 
-        assert isinstance(object_array, _GenericObjectArray)
+        _check_generic_array(object_array)
 
         if not isinstance(colours, _colour.ImageColours):
             raise TypeError("Colours must be a ImageColours instance")

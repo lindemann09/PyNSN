@@ -63,7 +63,7 @@ class ArrayFeatures(object):
 
     def __init__(self, object_array):
         # _lib or dot_cloud
-        assert isinstance(object_array, arrays.GenericObjectArray)
+        arrays._check_generic_array(object_array)
         self.oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None
@@ -177,6 +177,9 @@ class ArrayFeatures(object):
        # Adapt
         if feature == VisualFeature.AV_DOT_DIAMETER:
             return self.average_dot_diameter
+
+        elif feature == VisualFeature.AV_RECT_SIZE:
+            return self.average_rectangle_size
 
         elif feature == VisualFeature.AV_PERIMETER:
             return self.average_perimeter

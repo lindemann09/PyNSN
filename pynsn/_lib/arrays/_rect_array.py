@@ -122,9 +122,11 @@ class RectangleArray(GenericObjectArray):
         else:
             if indices is None:
                 indices = list(range(self._features.numerosity))
+
             return RectangleArray(
                         target_area_radius=self.target_area_radius,
                         min_dist_between=self.min_dist_between,
+                        min_dist_area_boarder = self.min_dist_area_boarder,
                         xy=self._xy[indices, :].copy(),
                         sizes=self._sizes[indices].copy(),
                         attributes=self._attributes[indices].copy())

@@ -10,7 +10,7 @@ from .._lib import shapes as _shape
 from ._colour import ImageColours # make available
 
 def create(object_array, colours, filename="noname.svg"):
-    assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray)) # FIXME implement for rect array
+    _arrays._check_object_array(object_array)
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
 

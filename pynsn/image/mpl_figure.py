@@ -11,7 +11,7 @@ from ._colour import ImageColours # make available
 def create(object_array, colours, dpi=100):
     """create a matplotlib figure"""
 
-    assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray))
+    _arrays._check_generic_array(object_array)
     if not isinstance(colours, _colour.ImageColours):
         raise TypeError("Colours must be of type pynsn.ImageColours")
 

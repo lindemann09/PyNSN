@@ -1,6 +1,7 @@
 import unittest
 from pynsn import arrays, distr, random_array, adapt, VisualFeature, scale
 
+# FIXME testing adapt setting and iterative_convex_hull_modification method
 
 class DotsSmall(unittest.TestCase):
 
