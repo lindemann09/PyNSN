@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._object_array import GenericObjectArray
+from ._generic_object_array import GenericObjectArray
 from .. import misc
 from ..shapes import Rectangle, Point
 from . import _manipulate
@@ -132,7 +132,7 @@ class RectangleArray(GenericObjectArray):
 
     def _xy_distances(self, rect):
         """return distances on both axes between rectangles and reference rec.
-         0 indicates overlap off edges along that dimension.
+         negative number indicates overlap edges along that dimension.
         """
         if len(self._xy) == 0:
             return np.array([])
@@ -140,7 +140,6 @@ class RectangleArray(GenericObjectArray):
             pos_dist = np.abs(self._xy - rect.xy)
             max_overlap_dist = (self.sizes + rect.size)/2
             dist = pos_dist - max_overlap_dist
-            dist[dist <  0] = 0
             return dist
 
     def distances(self, rect):
@@ -156,7 +155,9 @@ class RectangleArray(GenericObjectArray):
             return np.array([])
         else:
             d_xy = self._xy_distances(rect)
-            return np.hypot(d_xy[:,0], d_xy[:,1])
+            # distances with a two one negative xy_distance --> overlap
+            overlap = np.array(np.sum(d_xy<0, axis=1) == 2, dtype=int)
+            return np.hypot(d_xy[:,0], d_xy[:,1])   * (overlap * -2 + 1) # overlap [0, 1, 0] -> [1,-1, 1]
 
     def get(self, indices=None):
         """returns all rectangles

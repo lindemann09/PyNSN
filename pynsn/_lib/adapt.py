@@ -213,7 +213,6 @@ def total_perimeter(object_array, value):
     else:
         _arrays._check_object_array(object_array)
 
-
 def average_surface_area(object_array, value):
     _arrays._check_object_array(object_array)
     ta = object_array.features.numerosity * value

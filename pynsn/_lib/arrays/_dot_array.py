@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._object_array import GenericObjectArray
+from ._generic_object_array import GenericObjectArray
 from .. import misc, geometry
 from ..shapes import Dot
 from . import _manipulate
@@ -243,19 +243,19 @@ class DotArray(GenericObjectArray):
         shift_required = False
         # from inner to outer remove overlaps
         for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
-            dist = self.distances(Dot(xy=self._xy[i, :],
-                                      diameter=self._diameters[i]))
+            dist_mtx = self.distances_matrix(between_positions=False,
+                                             overlap_is_zero=False)
+
             idx_overlaps = np.where(dist < self.min_dist_between)[0].tolist()  # overlapping dot ids
             if len(idx_overlaps) > 1:
                 shift_required = True
                 idx_overlaps.remove(i)  # don't move yourself
                 replace_size =self.min_dist_between - dist[idx_overlaps]  # dist is mostly negative, because of overlap
-                self._radial_replacement_from_reference_dots(ref_pos_id=i,
-                                                             neighbour_ids=idx_overlaps,
-                                                             replacement_size=replace_size)
-
-        if shift_required:
-            self._features.reset()
+                self._xy = _manipulate.radial_replacement_from_reference_dots(
+                                             xy=self._xy,
+                                             ref_pos_id=i,
+                                             neighbour_ids=idx_overlaps,
+                                             replacement_size=replace_size)
         return shift_required
 
     def realign_old(self):  # TODO update realignment

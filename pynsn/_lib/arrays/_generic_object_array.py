@@ -209,11 +209,11 @@ class GenericObjectArray(object):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
-    def distances(self, object):
-        # override ist method
+    def distances(self, ref_object):
+        # override this method
         raise NotImplementedError()
 
-    def distance_matrix(self, between_positions=False, overlap_is_zero=False):
+    def distances_matrix(self, between_positions=False, overlap_is_zero=False):
         """between position ignores the dot size"""
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)

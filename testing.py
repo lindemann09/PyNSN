@@ -1,4 +1,4 @@
-from pynsn import arrays, distr, random_array, adapt, scale, VisualFeatureTypes
+from pynsn import arrays, distr, random_array, adapt, scale, VisualFeatureTypes, shapes
 from pynsn.image import svg_file, ImageColours
 
 # define the visual features of the  dot array
@@ -23,10 +23,18 @@ my_colours = ImageColours(target_area="#EEEEEE",
                           )
 
 stimulus = random_array.create(reference_array=ref,
-                               size_distribution=size_dist_dot,
-                               n_objects=15,
+                               size_distribution=size_dist_rect,
+                               n_objects=5,
                                attributes=["blue", "green"])
+scale.log_size(stimulus, 1.3)
+svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
+svg.save()
 
+
+dist = stimulus.distances_matrix(between_positions=False,
+                                 overlap_is_zero=False)
+print(dist<=0)
+exit()
 
 feat = VisualFeatureTypes.LOG_SIZE
 stim_scaled = stimulus.copy()
