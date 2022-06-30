@@ -4,13 +4,12 @@ Dot Array
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import random
 import numpy as np
-from scipy import spatial
 
 from ._object_array import GenericObjectArray
 from .. import misc, geometry
 from ..shapes import Dot
+from . import _manipulate
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -150,7 +149,7 @@ class DotArray(GenericObjectArray):
                                             self._attributes)]
         try:
             indices = list(indices)  # check if iterable
-        except:
+        except TypeError:
             indices = [indices]
 
         return [Dot(xy=xy, diameter=dia, attribute=att) \
@@ -210,67 +209,34 @@ class DotArray(GenericObjectArray):
         assert isinstance(dot_array, DotArray)
         self.add(dot_array.get())
 
-    def random_free_position(self,
-                             dot_diameter,
-                             allow_overlapping = False,
-                             prefer_inside_field_area = False,
-                             squared_array = False,
-                             occupied_space = None,
-                             min_dist_area_boarder=None):
+    def get_random_free_position(self,
+                                 dot_diameter,
+                                 allow_overlapping = False,
+                                 inside_convex_hull = False,
+                                 occupied_space = None):
         """returns a available random xy position
 
         raise exception if not found
         occupied space: see generator generate
         """
 
-        try_out_inside_convex_hull = 1000
-
-        if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self._features.convex_hull.xy)
+        if isinstance(occupied_space, GenericObjectArray):
+            os_distance_fnc = occupied_space.distances
         else:
-            delaunay = None
-        cnt = 0
-
-        if min_dist_area_boarder is None:
-            min_dist = self.min_dist_area_boarder
+            os_distance_fnc = None
+        if inside_convex_hull:
+            convex_hull_xy = self.features.convex_hull_positions.xy
         else:
-            min_dist = min_dist_area_boarder
-        target_radius = self.target_area_radius - min_dist - \
-                        (dot_diameter / 2.0)
-        proposal_dot = Dot(xy=(0, 0), diameter=dot_diameter)
-        while True:
-            cnt += 1
-            ##  polar method seems to produce central clustering
-            #  proposal_polar =  np.array([random.random(), random.random()]) *
-            #                      (target_radius, TWO_PI)
-            # proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-            # Note! np.random generates identical numbers under multiprocessing
-
-            proposal_dot.xy = np.array([random.random(), random.random()]) \
-                              * 2 * target_radius - target_radius
-
-            if not squared_array:
-                bad_position = target_radius <= proposal_dot.polar_radius
-            else:
-                bad_position = False
-
-            if not bad_position and prefer_inside_field_area and \
-                    cnt < try_out_inside_convex_hull:
-                bad_position = delaunay.find_simplex(
-                    np.array(proposal_dot.xy)) < 0  # TODO check correctness, does it take into account size?
-
-            if not bad_position and not allow_overlapping:
-                # find bad_positions
-                dist = self.distances(proposal_dot)
-                if occupied_space:
-                    dist = np.append(dist, occupied_space.distances(proposal_dot))
-                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
-                bad_position = len(idx) > 0
-
-            if not bad_position:
-                return proposal_dot.xy
-            elif cnt > 3000:
-                raise StopIteration(u"Can't find a free position")
+            convex_hull_xy = None
+        return _manipulate.get_random_free_position(
+            the_object=Dot(xy=(0, 0), diameter=dot_diameter),
+            target_area_radius=self.target_area_radius,
+            allow_overlapping=allow_overlapping,
+            distances_function=self.distances,
+            min_dist_between=self.min_dist_between,
+            min_dist_area_boarder=self.min_dist_area_boarder,
+            occupied_space_distances_function=os_distance_fnc,
+            convex_hull_xy=convex_hull_xy)
 
     def _remove_overlap_from_inner_to_outer(self):
 
@@ -292,8 +258,8 @@ class DotArray(GenericObjectArray):
             self._features.reset()
         return shift_required
 
-    def realign(self):  # TODO update realignment
-        """Realigns the dots in order to remove all dots overlaps and dots
+    def realign_old(self):  # TODO update realignment
+        """Realigns the obejcts in order to remove all dots overlaps and dots
         outside the target area.
 
         If two dots overlap, the dots that is further apart from the array
@@ -349,6 +315,26 @@ class DotArray(GenericObjectArray):
             return True, ""
         else:
             return self.realign()  # recursion
+    
+    def realign(self):
+        error = False
+        realign_required = False
+        cnt = 0
+        while True:
+            cnt += 1
+            if cnt > 20:
+                error = True
+                break
+
+        if error:
+            raise RuntimeError("Can't find solution when removing outlier (n=" + \
+                   str(self._features.numerosity) + ")")
+
+        self._features.reset()
+        if not realign_required:
+            return True, ""
+        else:
+            return self.realign()  # recursion
 
     def shuffle_all_positions(self, allow_overlapping=False):
         """might raise an exception"""
@@ -358,8 +344,8 @@ class DotArray(GenericObjectArray):
         new_xy = None
         for d in self.diameters:
             try:
-                xy = self.random_free_position(d,
-                                               allow_overlapping=allow_overlapping)
+                xy = self.get_random_free_position(d,
+                                                   allow_overlapping=allow_overlapping)
             except StopIteration as e:
                 raise StopIteration("Can't shuffle dot array. No free positions found.")
 
@@ -371,46 +357,8 @@ class DotArray(GenericObjectArray):
         self._xy = new_xy
         self._features.reset()
 
-    def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
-        """number deviant
-        """
 
-        TRY_OUT = 100
-        # make a copy for the deviant
-        deviant = self.copy()
-        if self._features.numerosity + change_numerosity <= 0:
-            deviant.clear()
-        else:
-            # add or remove random dots
-            rnd = None
-            for _ in range(abs(change_numerosity)):
-                if prefer_keeping_field_area:
-                    ch = deviant._features.convex_hull.indices
-                else:
-                    ch = []
-                for x in range(TRY_OUT):  ##
-                    rnd = random.randint(0, deviant._features.numerosity - 1)  # do not use np.random
-                    if rnd not in ch or change_numerosity > 0:
-                        break
-
-                if change_numerosity < 0:
-                    # remove dots
-                    deviant.delete(rnd)
-                else:
-                    # copy a random dot
-                    rnd_object = self.get([rnd])[0]
-                    try:
-                        rnd_object.xy = deviant.random_free_position(
-                            dot_diameter=rnd_object.diameter,
-                            prefer_inside_field_area=prefer_keeping_field_area)
-                    except:
-                        # no free position
-                        raise StopIteration("Can't make the deviant. No free position found.")
-                    deviant.add(rnd_object)
-
-        return deviant
-
-    def split_array_by_attributes(self):
+    def get_split_arrays(self):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
@@ -420,7 +368,8 @@ class DotArray(GenericObjectArray):
         for c in np.unique(att):
             if c is not None:
                 da = DotArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between)
+                              min_dist_between=self.min_dist_between,
+                              min_dist_area_boarder=self.min_dist_area_boarder)
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn

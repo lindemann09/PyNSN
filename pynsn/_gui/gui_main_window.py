@@ -14,7 +14,7 @@ from .. import adapt
 from .._lib import random_array
 from .._lib import distributions as distr
 from .._lib import arrays
-from .._lib.visual_features import VisualFeature
+from .._lib.visual_features import VisualFeatureTypes
 from ..image import _colour
 from ..image import pil_image
 from .._sequence import dot_array_sequence
@@ -246,7 +246,7 @@ class GUIMainWindow(QMainWindow):
         txt = self.dot_array._features.as_text(extended_format=True,
                                                with_hash=True)
         if self.settings.bicoloured.isChecked():
-            for da in self.dot_array.split_array_by_attributes():
+            for da in self.dot_array.get_split_arrays():
                 txt += "Attribute {}\n".format(da._attributes[0])
                 txt += da._features.as_text(extended_format=True,
                                             with_hash=False)
@@ -299,7 +299,7 @@ class GUIMainWindow(QMainWindow):
         if feature is not None:
             self.dot_array = adapt.visual_feature(self.dot_array,
                                                   feature, value=value)
-            if feature in [x for x in VisualFeature if x.is_size_feature()]:
+            if feature in [x for x in VisualFeatureTypes if x.is_size_feature()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)

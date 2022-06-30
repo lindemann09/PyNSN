@@ -6,13 +6,13 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
 import json
-from random import random
 
 import numpy as np
 from scipy import spatial
 from .. import misc, geometry
 from ..visual_features import ArrayFeatures
-
+from .. import adapt
+from . import _manipulate
 
 class GenericObjectArray(object):
 
@@ -115,7 +115,16 @@ class GenericObjectArray(object):
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.perimeter.tobytes())
         return m.hexdigest()
-#
+
+    def get_number_deviant(self, change_numerosity,
+                           keeping_field_area=False):
+        """number deviant
+        """
+        object_array = self.copy()
+        new_num = self.features.numerosity + change_numerosity
+        adapt.numerosity(object_array, value=new_num, keeping_field_area=False)
+        return object_array
+
     def as_dict(self):
         """
         """
@@ -172,42 +181,29 @@ class GenericObjectArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._features.reset()
 
-    def __jitter_identical_positions(self, jitter_size=0.1):
-        """jitters points with identical position"""
-
-        for idx, ref_object in enumerate(self._xy):
-            identical = np.where(np.all(np.equal(self._xy, ref_object), axis=1))[0]  # find identical positions
-            if len(identical) > 1:
-                for x in identical:  # jitter all identical positions
-                    if x != idx:
-                        self._xy[x, :] = self._xy[x, :] - geometry.polar2cartesian(
-                            [[jitter_size, random() * 2 * np.pi]])[0]
-
-    def _radial_replacement_from_reference_dots(self, ref_pos_id,
-                                                neighbour_ids, replacement_size):
-        """remove neighbouring position radially from reference position
-        helper function, typically used for realign
-        """
-
-        # check if there is an identical position and jitter to avoid fully overlapping positions
-        if np.sum(np.all(self._xy[neighbour_ids,] == self._xy[ref_pos_id, :],
-                       axis=1)) > 0:
-            self.__jitter_identical_positions()
-
-        # relative polar positions to reference_dot
-        tmp_polar = geometry.cartesian2polar(self._xy[neighbour_ids, :] - self._xy[ref_pos_id, :])
-        tmp_polar[:, 0] = 0.000000001 + replacement_size # determine movement size
-        xy = geometry.polar2cartesian(tmp_polar)
-        self._xy[neighbour_ids, :] = np.array([self._xy[neighbour_ids, 0] + xy[:, 0],
-                                               self._xy[neighbour_ids, 1] + xy[:, 1]]).T
-
     def specifications_dict(self):
         return {"target_area_radius": self.target_area_radius,
                 "min_dist_between": self.min_dist_between,
                 "min_dist_area_boarder": self.min_dist_area_boarder}
 
+    def copy(self, indices=None):
+        """returns a (deep) copy of the dot array.
+
+        It allows to copy a subset of dot only.
+
+        """
+
+        if indices is None:
+            indices = list(range(self._features.numerosity))
+
+        return GenericObjectArray(target_area_radius=self.target_area_radius,
+                        min_dist_between=self.min_dist_between,
+                        min_dist_area_boarder = self.min_dist_area_boarder,
+                        xy=self._xy[indices, :].copy(),
+                        attributes=self._attributes[indices].copy())
+
     def get(self):
-        return NotImplemented
+        raise NotImplementedError()
 
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
@@ -215,7 +211,7 @@ class GenericObjectArray(object):
 
     def distances(self, object):
         # override ist method
-        return NotImplemented
+        raise NotImplementedError()
 
     def distance_matrix(self, between_positions=False, overlap_is_zero=False):
         """between position ignores the dot size"""

@@ -4,13 +4,12 @@ Rectangle Array
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import random
 import numpy as np
-from scipy import spatial
 
 from ._object_array import GenericObjectArray
 from .. import misc
 from ..shapes import Rectangle, Point
+from . import _manipulate
 
 class RectangleArray(GenericObjectArray):
     """
@@ -242,72 +241,38 @@ class RectangleArray(GenericObjectArray):
         return rtn
 
     def join(self, rect_array):
-        """add another dot arrays"""
+        """add another rect arrays"""
         assert isinstance(rect_array, RectangleArray)
         self.add(rect_array.get())
 
-    def random_free_position(self, rectangle_size,
-                             allow_overlapping=False,
-                             prefer_inside_field_area=False,
-                             squared_array = False,
-                             occupied_space=None,
-                             min_dist_area_boarder=None):
+    def get_random_free_position(self,
+                                 rectangle_size,
+                                 allow_overlapping = False,
+                                 inside_convex_hull = False,
+                                 occupied_space = None):
         """returns a available random xy position
 
         raise exception if not found
         occupied space: see generator generate
         """
 
-        try_out_inside_convex_hull = 1000
-
-        if prefer_inside_field_area:
-            delaunay = spatial.Delaunay(self._features.convex_hull.xy)
+        if isinstance(occupied_space, GenericObjectArray):
+            os_distance_fnc = occupied_space.distances
         else:
-            delaunay = None
-        cnt = 0
-
-        if min_dist_area_boarder is None:
-            min_dist = self.min_dist_area_boarder
+            os_distance_fnc = None
+        if inside_convex_hull:
+            convex_hull_xy = self.features.convex_hull_positions.xy
         else:
-            min_dist = min_dist_area_boarder
-        target_radius = self.target_area_radius - self.min_dist_area_boarder - \
-                        min(rectangle_size)
-        proposal_rect = Rectangle(xy=(0,0), size=rectangle_size)
-        while True:
-            cnt += 1
-            ##  polar method seems to produce central clustering
-            #  proposal_polar =  np.array([random.random(), random.random()]) *
-            #                      (target_radius, TWO_PI)
-            #proposal_xy = misc.polar2cartesian([proposal_polar])[0]
-            #Note! np.random generates identical numbers under multiprocessing
-
-            proposal_rect.xy = np.array([random.random(), random.random()]) \
-                          * 2 * target_radius - target_radius
-
-            bad_position = False
-            if not squared_array:
-                # check if one edge is outside
-                for e in proposal_rect.edges():
-                    if e.polar_radius >= target_radius:
-                        bad_position = True
-                        break
-
-            if not bad_position and prefer_inside_field_area and \
-                    cnt < try_out_inside_convex_hull:
-                bad_position = delaunay.find_simplex(np.array(proposal_rect.xy)) < 0 # TODO check correctness, does it take into account size?
-
-            if not bad_position and not allow_overlapping:
-                # find bad_positions
-                dist = self.distances(proposal_rect)
-                if occupied_space:
-                    dist = np.append(dist, occupied_space.distances(proposal_rect))
-                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
-                bad_position = len(idx) > 0
-
-            if not bad_position:
-                return proposal_rect.xy
-            elif cnt > 3000:
-                raise StopIteration(u"Can't find a free position") # TODO
+            convex_hull_xy = None
+        return _manipulate.get_random_free_position(
+            the_object=Rectangle(xy=(0, 0), size=rectangle_size),
+            target_area_radius = self.target_area_radius,
+            allow_overlapping=allow_overlapping,
+            distances_function=self.distances,
+            min_dist_between=self.min_dist_between,
+            min_dist_area_boarder=self.min_dist_area_boarder,
+            occupied_space_distances_function=os_distance_fnc,
+            convex_hull_xy=convex_hull_xy)
 
     def _remove_overlap_from_inner_to_outer(self):
         raise NotImplementedError()
@@ -318,10 +283,7 @@ class RectangleArray(GenericObjectArray):
     def shuffle_all_positions(self, allow_overlapping=False):
         raise NotImplementedError()
 
-    def number_deviant(self, change_numerosity, prefer_keeping_field_area=False):
-        raise NotImplementedError()
-
-    def split_array_by_attributes(self):
+    def get_split_arrays(self):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
@@ -331,7 +293,8 @@ class RectangleArray(GenericObjectArray):
         for c in np.unique(att):
             if c is not None:
                 da = RectangleArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between)
+                              min_dist_between=self.min_dist_between,
+                              min_dist_area_boarder=self.min_dist_area_boarder)
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn

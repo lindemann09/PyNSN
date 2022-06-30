@@ -1,5 +1,5 @@
 import unittest
-from pynsn import arrays, distr, random_array, adapt, VisualFeature, scale
+from pynsn import arrays, distr, random_array, adapt, VisualFeatureTypes, scale
 
 # FIXME testing adapt setting and iterative_convex_hull_modification method
 
@@ -45,41 +45,41 @@ class DotsSmall(unittest.TestCase):
 
     def test_match_av_surface_area(self):
         # decrease
-        self.change_feature(feature=VisualFeature.AV_SURFACE_AREA)
+        self.change_feature(feature=VisualFeatureTypes.AV_SURFACE_AREA)
 
     def test_match_av_size(self):
         # decrease
-        self.change_feature(feature=VisualFeature.AV_DOT_DIAMETER)
+        self.change_feature(feature=VisualFeatureTypes.AV_DOT_DIAMETER)
 
     def test_match_av_perimeter(self):
         # decrease
-        self.change_feature(feature=VisualFeature.AV_PERIMETER)
+        self.change_feature(feature=VisualFeatureTypes.AV_PERIMETER)
 
     def test_match_total_surface_area(self):
         # decrease
-        self.change_feature(feature=VisualFeature.TOTAL_SURFACE_AREA)
+        self.change_feature(feature=VisualFeatureTypes.TOTAL_SURFACE_AREA)
 
     def test_match_total_perimeter(self):
         # decrease
-        self.change_feature(feature=VisualFeature.TOTAL_PERIMETER)
+        self.change_feature(feature=VisualFeatureTypes.TOTAL_PERIMETER)
 
     def test_match_field_area(self):
         # decrease
-        self.change_feature(feature=VisualFeature.SPARSITY, first=1.2,
+        self.change_feature(feature=VisualFeatureTypes.SPARSITY, first=1.2,
                             second=0.85, places=4)
 
     def test_match_sparcity(self):
         # decrease
-        self.change_feature(feature=VisualFeature.SPARSITY, first=1.2,
+        self.change_feature(feature=VisualFeatureTypes.SPARSITY, first=1.2,
                             second=0.85, places=4)
 
     def test_match_log_size(self):
         # decrease
-        self.change_feature(feature=VisualFeature.LOG_SIZE)
+        self.change_feature(feature=VisualFeatureTypes.LOG_SIZE)
 
     def test_match_log_spacing(self):
         # decrease
-        self.change_feature(feature=VisualFeature.LOG_SPACING, first=1.2,
+        self.change_feature(feature=VisualFeatureTypes.LOG_SPACING, first=1.2,
                             second=0.85)
 
 

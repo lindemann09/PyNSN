@@ -36,9 +36,9 @@ def create(reference_array,
 
         for dia in size_distribution.diameter.sample(n=n_objects):
             try:
-                xy = rtn.random_free_position(dot_diameter=dia,
-                          occupied_space=occupied_space,
-                          allow_overlapping=allow_overlapping)
+                xy = rtn.get_random_free_position(dot_diameter=dia,
+                                                  occupied_space=occupied_space,
+                                                  allow_overlapping=allow_overlapping)
             except StopIteration as e:
                 raise StopIteration("Can't find a solution for {} items in this array".format(n_objects))
             rtn.add([shapes.Dot(xy=xy, diameter=dia)])
@@ -58,9 +58,9 @@ def create(reference_array,
 
         for s in sizes:
             try:
-                xy = rtn.random_free_position(rectangle_size=s,
-                          occupied_space=occupied_space,
-                          allow_overlapping=allow_overlapping)
+                xy = rtn.get_random_free_position(rectangle_size=s,
+                                                  occupied_space=occupied_space,
+                                                  allow_overlapping=allow_overlapping)
             except StopIteration as e:
                 raise StopIteration("Can't find a solution for {} items in this array".format(n_objects))
 

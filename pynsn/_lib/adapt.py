@@ -2,21 +2,69 @@ import random as _random
 import numpy as _np
 from . import misc as _misc
 from . import geometry as _geometry
-from .arrays import DotArray as _DotArray
-from .arrays import RectangleArray as _RectangleArray
-from .arrays import _check_object_array
-from .visual_features import VisualFeature as _VF
+from . import arrays as _arrays
+from .visual_features import VisualFeatureTypes as _VF
 from . import adapt_settings as _settings
-
+from .arrays import _manipulate
 from .adapt_settings import change_adapt_settings # make available
 
 
 #FIXME coverage for all
 ##FIXME FIELD_AREA_POSITIONS
 
+
+def numerosity(object_array, value, keeping_field_area=False):
+    TRY_OUT = 300
+    _arrays._check_object_array(object_array)
+    # make a copy for the deviant
+    if value <= 0:
+        object_array.clear()
+    else:
+        # add or remove random dots
+        change_numerosity = value - object_array._features.numerosity
+        rnd = None
+        for _ in range(abs(change_numerosity)):
+            if keeping_field_area:
+                ch = object_array._features.convex_hull.indices
+            else:
+                ch = []
+            for _ in range(TRY_OUT):
+                rnd = _random.randint(0, object_array._features.numerosity - 1)  # do not use np.random
+                if rnd not in ch or change_numerosity > 0:
+                    break
+
+            if change_numerosity < 0:
+                # remove dots
+                object_array.delete(rnd)
+            else:
+                # add dot
+                # copy a random dot
+                rnd_object = object_array.get([rnd])[0]
+                if keeping_field_area:
+                    convex_hull_xy = object_array.features.convex_hull_positions.xy
+                else:
+                    convex_hull_xy = None
+                try:
+                    rnd_object.xy = _manipulate.get_random_free_position(
+                        the_object=rnd_object,
+                        target_area_radius=object_array.target_area_radius,
+                        distances_function=object_array.distances,
+                        min_dist_between=object_array.min_dist_between,
+                        min_dist_area_boarder=object_array.min_dist_area_boarder,
+                        allow_overlapping=False,
+                        occupied_space_distances_function=None,
+                        convex_hull_xy=convex_hull_xy)
+                except StopIteration:
+                    # no free position
+                    raise StopIteration("Can't make the deviant. No free position found.")
+                object_array.add(rnd_object)
+
+    return object_array
+
+
 def average_diameter(dot_array, value):
     # changes diameter
-    if not isinstance(dot_array, _DotArray):
+    if not isinstance(dot_array, _arrays.DotArray):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.features.average_dot_diameter
@@ -26,7 +74,7 @@ def average_diameter(dot_array, value):
 
 def average_rectangle_size(rect_array, value):
     # changes diameter
-    if not isinstance(rect_array, _RectangleArray):
+    if not isinstance(rect_array, _arrays.RectangleArray):
         raise TypeError("Adapting rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
     try:
@@ -43,9 +91,9 @@ def average_rectangle_size(rect_array, value):
 
 def total_surface_area(object_array, value):
     # changes diameter
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     a_scale = value / object_array.features.total_surface_area
-    if isinstance(object_array, _DotArray):
+    if isinstance(object_array, _arrays.DotArray):
         object_array._diameters = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
                     _np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
@@ -64,7 +112,7 @@ def field_area(object_array, value, precision=None):
     iterative method can takes some time.
     """
 
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     if precision is None:
         precision = _settings.DEFAULT_SPACING_PRECISION
 
@@ -82,7 +130,7 @@ def _scale_field_area(object_array, value, precision):
 
     Note: see doc string `_adapt_field_area`
     """
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     current = object_array.features.field_area
 
     if current is None:
@@ -128,7 +176,7 @@ def coverage(object_array, value,
         ratio of adaptation via area or via convex_hull (between 0 and 1)
 
     """
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
 
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
@@ -150,40 +198,40 @@ def coverage(object_array, value,
                precision=precision)
 
 def average_perimeter(object_array, value):
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     total_peri = value * object_array.features.numerosity
     return total_perimeter(object_array, total_peri)
 
 def total_perimeter(object_array, value):
-    if isinstance(object_array, _DotArray):
+    if isinstance(object_array, _arrays.DotArray):
         tmp = value / (object_array.features.numerosity * _np.pi)
         return average_diameter(object_array, tmp)
-    elif isinstance(object_array, _RectangleArray):
+    elif isinstance(object_array, _arrays.RectangleArray):
         scale = value / object_array.features.total_perimeter
         new_size = object_array.features.average_rectangle_size * scale
         return average_rectangle_size(object_array, new_size)
     else:
-        _check_object_array(object_array)
+        _arrays._check_object_array(object_array)
 
 
 def average_surface_area(object_array, value):
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     ta = object_array.features.numerosity * value
     return total_surface_area(object_array, ta)
 
 def log_spacing(object_array, value, precision=None):
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     logfa = 0.5 * value + 0.5 * _misc.log2(
         object_array.features.numerosity)
     return field_area(object_array, value=2 ** logfa, precision=precision)
 
 def log_size(object_array, value):
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     logtsa = 0.5 * value + 0.5 * _misc.log2(object_array.features.numerosity)
     return total_surface_area(object_array, 2 ** logtsa)
 
 def sparcity(object_array, value, precision=None):
-    _check_object_array(object_array)
+    _arrays._check_object_array(object_array)
     return field_area(object_array, value=value * object_array.features.numerosity,
                       precision=precision)
 
@@ -208,8 +256,8 @@ def visual_feature(object_array, feature, value):
     if feature == _VF.AV_DOT_DIAMETER:
         return average_diameter(object_array, value=value)
 
-    elif feature == _VF.AV_RECT_SIZE:
-        return average_rectangle_size(object_array, value=value)
+    elif feature == _VF.NUMEROSITY:
+        return numerosity(object_array, value=value)
 
     elif feature == _VF.AV_PERIMETER:
         return average_perimeter(object_array, value=value)

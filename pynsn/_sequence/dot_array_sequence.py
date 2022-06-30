@@ -10,7 +10,7 @@ import numpy as _np
 
 from .._lib import misc as _misc
 from .._lib.arrays import DotArray as _DotArray
-from .._lib.visual_features import VisualFeature as _Feat
+from .._lib.visual_features import VisualFeatureTypes as _Feat
 from .._lib import random_array
 from .._lib import arrays
 from .. import adapt
@@ -225,8 +225,8 @@ def _make_adapted_deviants(reference_da, adapt_feature, target_numerosity,
     #print(adapt_props, target_numerosity)
     while True:
         try:
-            da = da.number_deviant(change_numerosity=change,
-                                   prefer_keeping_field_area=prefer_keeping_field_area)
+            da = da.get_number_deviant(change_numerosity=change,
+                                       keeping_field_area=prefer_keeping_field_area)
         except:
             return [], "ERROR: Can't find the a make adapted deviants"
 

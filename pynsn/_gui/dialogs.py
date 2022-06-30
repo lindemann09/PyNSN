@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
-from .._lib.visual_features import VisualFeature
+from .._lib.visual_features import VisualFeatureTypes
 from .._lib import adapt_settings
 
 
@@ -18,13 +18,13 @@ class AdaptPropertyDialog(QDialog):
         self.features = properties
         self._selection = None
         self.comboBox = QComboBox(self)
-        for feat in VisualFeature:
+        for feat in VisualFeatureTypes:
             self.comboBox.addItem(feat.label())
 
         self.comboBox.activated[str].connect(self.choice)
 
         self._num_input = misc.NumberInput(width_edit=150, value=0)
-        self.choice(VisualFeature.AV_DOT_DIAMETER)
+        self.choice(VisualFeatureTypes.AV_DOT_DIAMETER)
 
 
 
@@ -46,7 +46,7 @@ class AdaptPropertyDialog(QDialog):
 
     def choice(self, selection):
 
-        for feat in VisualFeature:
+        for feat in VisualFeatureTypes:
             if selection == feat:
                 self._num_input.value = self.features[feat]
                 self._selection = feat
@@ -138,17 +138,17 @@ class SequenceDialog(QDialog):
 
         self.setWindowTitle("Sequence Dialog")
 
-        self.adapt_diameter = QCheckBox(VisualFeature.AV_DOT_DIAMETER.label())
-        self.adapt_av_perimeter= QCheckBox(VisualFeature.AV_PERIMETER.label())
-        self.adapt_av_area = QCheckBox(VisualFeature.AV_SURFACE_AREA.label())
-        self.adapt_area = QCheckBox(VisualFeature.TOTAL_SURFACE_AREA.label())
-        self.adapt_total_perimeter = QCheckBox(VisualFeature.TOTAL_PERIMETER.label())
-        self.adapt_coverage = QCheckBox(VisualFeature.COVERAGE.label())
-        self.adapt_sparsity = QCheckBox(VisualFeature.SPARSITY.label())
+        self.adapt_diameter = QCheckBox(VisualFeatureTypes.AV_DOT_DIAMETER.label())
+        self.adapt_av_perimeter= QCheckBox(VisualFeatureTypes.AV_PERIMETER.label())
+        self.adapt_av_area = QCheckBox(VisualFeatureTypes.AV_SURFACE_AREA.label())
+        self.adapt_area = QCheckBox(VisualFeatureTypes.TOTAL_SURFACE_AREA.label())
+        self.adapt_total_perimeter = QCheckBox(VisualFeatureTypes.TOTAL_PERIMETER.label())
+        self.adapt_coverage = QCheckBox(VisualFeatureTypes.COVERAGE.label())
+        self.adapt_sparsity = QCheckBox(VisualFeatureTypes.SPARSITY.label())
 
-        self.adapt_convex_hull = QCheckBox(VisualFeature.FIELD_AREA.label())
-        self.adapt_size = QCheckBox(VisualFeature.LOG_SIZE.label())
-        self.adapt_spacing = QCheckBox(VisualFeature.LOG_SPACING.label())
+        self.adapt_convex_hull = QCheckBox(VisualFeatureTypes.FIELD_AREA.label())
+        self.adapt_size = QCheckBox(VisualFeatureTypes.LOG_SIZE.label())
+        self.adapt_spacing = QCheckBox(VisualFeatureTypes.LOG_SPACING.label())
         self.adapt_spacing_presision = misc.LabeledNumberInput("Convex_hull presision",
                                                                value=SequenceDialog.spacing_precision,
                                                                integer_only=False)
@@ -211,43 +211,43 @@ class SequenceDialog(QDialog):
     def ui_update(self):
         # get methods
         selected = []
-        all = [VisualFeature.AV_DOT_DIAMETER]
+        all = [VisualFeatureTypes.AV_DOT_DIAMETER]
         if self.adapt_diameter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.AV_SURFACE_AREA)
+        all.append(VisualFeatureTypes.AV_SURFACE_AREA)
         if self.adapt_av_area.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.AV_PERIMETER)
+        all.append(VisualFeatureTypes.AV_PERIMETER)
         if self.adapt_av_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.TOTAL_PERIMETER)
+        all.append(VisualFeatureTypes.TOTAL_PERIMETER)
         if self.adapt_total_perimeter.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.TOTAL_SURFACE_AREA)
+        all.append(VisualFeatureTypes.TOTAL_SURFACE_AREA)
         if self.adapt_area.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.FIELD_AREA)
+        all.append(VisualFeatureTypes.FIELD_AREA)
         if self.adapt_convex_hull.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.COVERAGE)
+        all.append(VisualFeatureTypes.COVERAGE)
         if self.adapt_coverage.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.SPARSITY)
+        all.append(VisualFeatureTypes.SPARSITY)
         if self.adapt_sparsity.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.LOG_SIZE)
+        all.append(VisualFeatureTypes.LOG_SIZE)
         if self.adapt_size.isChecked():
             selected.append(all[-1])
 
-        all.append(VisualFeature.LOG_SPACING)
+        all.append(VisualFeatureTypes.LOG_SPACING)
         if self.adapt_spacing.isChecked():
             selected.append(all[-1])
 
@@ -267,34 +267,34 @@ class SequenceDialog(QDialog):
                 # test dependency of non-selected item, x, from any selected
                 check = [s.is_dependent_from(x) for s in selected]
                 if sum(check) > 0:  # any dependency
-                    if x == VisualFeature.AV_DOT_DIAMETER:
+                    if x == VisualFeatureTypes.AV_DOT_DIAMETER:
                         self.adapt_diameter.setEnabled(False)
                         self.adapt_diameter.setChecked(False)
-                    elif x == VisualFeature.AV_PERIMETER:
+                    elif x == VisualFeatureTypes.AV_PERIMETER:
                         self.adapt_av_perimeter.setEnabled(False)
                         self.adapt_av_perimeter.setChecked(False)
-                    elif x == VisualFeature.AV_SURFACE_AREA:
+                    elif x == VisualFeatureTypes.AV_SURFACE_AREA:
                         self.adapt_av_area.setEnabled(False)
                         self.adapt_av_area.setChecked(False)
-                    elif x == VisualFeature.TOTAL_SURFACE_AREA:
+                    elif x == VisualFeatureTypes.TOTAL_SURFACE_AREA:
                         self.adapt_area.setEnabled(False)
                         self.adapt_area.setChecked(False)
-                    elif x == VisualFeature.TOTAL_PERIMETER:
+                    elif x == VisualFeatureTypes.TOTAL_PERIMETER:
                         self.adapt_total_perimeter.setEnabled(False)
                         self.adapt_total_perimeter.setChecked(False)
-                    elif x == VisualFeature.FIELD_AREA:
+                    elif x == VisualFeatureTypes.FIELD_AREA:
                         self.adapt_convex_hull.setEnabled(False)
                         self.adapt_convex_hull.setChecked(False)
-                    elif x == VisualFeature.COVERAGE:
+                    elif x == VisualFeatureTypes.COVERAGE:
                         self.adapt_coverage.setEnabled(False)
                         self.adapt_coverage.setChecked(False)
-                    elif x == VisualFeature.SPARSITY:
+                    elif x == VisualFeatureTypes.SPARSITY:
                         self.adapt_sparsity.setEnabled(False)
                         self.adapt_sparsity.setChecked(False)
-                    elif x == VisualFeature.LOG_SIZE:
+                    elif x == VisualFeatureTypes.LOG_SIZE:
                         self.adapt_size.setEnabled(False)
                         self.adapt_size.setChecked(False)
-                    elif x == VisualFeature.LOG_SPACING:
+                    elif x == VisualFeatureTypes.LOG_SPACING:
                         self.adapt_spacing.setEnabled(False)
                         self.adapt_spacing.setChecked(False)
 

@@ -8,7 +8,7 @@ from . import misc
 from . import arrays
 from .convex_hull import ConvexHull, ConvexHullPositions
 
-class VisualFeature(IntFlag):
+class VisualFeatureTypes(IntFlag):
 
     AV_DOT_DIAMETER = auto()
     AV_SURFACE_AREA = auto()
@@ -25,37 +25,40 @@ class VisualFeature(IntFlag):
     LOG_SPACING = auto()
     LOG_SIZE = auto()
 
+    NUMEROSITY = auto()
+
     def is_dependent_from(self, featureB):
         """returns true if both features are not independent"""
         return (self.is_size_feature() and featureB.is_size_feature()) or \
                (self.is_space_feature() and featureB.is_space_feature())
 
     def is_size_feature(self):
-        return self in (VisualFeature.LOG_SIZE,
-                        VisualFeature.TOTAL_SURFACE_AREA,
-                        VisualFeature.AV_DOT_DIAMETER,
-                        VisualFeature.AV_SURFACE_AREA,
-                        VisualFeature.AV_PERIMETER,
-                        VisualFeature.TOTAL_PERIMETER)
+        return self in (VisualFeatureTypes.LOG_SIZE,
+                        VisualFeatureTypes.TOTAL_SURFACE_AREA,
+                        VisualFeatureTypes.AV_DOT_DIAMETER,
+                        VisualFeatureTypes.AV_SURFACE_AREA,
+                        VisualFeatureTypes.AV_PERIMETER,
+                        VisualFeatureTypes.TOTAL_PERIMETER)
 
     def is_space_feature(self):
-        return self in (VisualFeature.LOG_SPACING,
-                        VisualFeature.SPARSITY,
-                        VisualFeature.FIELD_AREA)
+        return self in (VisualFeatureTypes.LOG_SPACING,
+                        VisualFeatureTypes.SPARSITY,
+                        VisualFeatureTypes.FIELD_AREA)
 
     def label(self):
         labels = {
-            VisualFeature.LOG_SIZE: "Log Size",
-            VisualFeature.TOTAL_SURFACE_AREA: "Total surface area",
-            VisualFeature.AV_DOT_DIAMETER: "Average dot diameter",
-            VisualFeature.AV_SURFACE_AREA: "Average surface area",
-            VisualFeature.AV_PERIMETER: "Average perimeter",
-            VisualFeature.TOTAL_PERIMETER: "Total perimeter",
-            VisualFeature.AV_RECT_SIZE: "Average Rectangle Size",
-            VisualFeature.LOG_SPACING: "Log Spacing",
-            VisualFeature.SPARSITY: "Sparsity",
-            VisualFeature.FIELD_AREA: "Field area",
-            VisualFeature.COVERAGE: "Coverage"}
+            VisualFeatureTypes.NUMEROSITY: "Numerosity",
+            VisualFeatureTypes.LOG_SIZE: "Log Size",
+            VisualFeatureTypes.TOTAL_SURFACE_AREA: "Total surface area",
+            VisualFeatureTypes.AV_DOT_DIAMETER: "Average dot diameter",
+            VisualFeatureTypes.AV_SURFACE_AREA: "Average surface area",
+            VisualFeatureTypes.AV_PERIMETER: "Average perimeter",
+            VisualFeatureTypes.TOTAL_PERIMETER: "Total perimeter",
+            VisualFeatureTypes.AV_RECT_SIZE: "Average Rectangle Size",
+            VisualFeatureTypes.LOG_SPACING: "Log Spacing",
+            VisualFeatureTypes.SPARSITY: "Sparsity",
+            VisualFeatureTypes.FIELD_AREA: "Field area",
+            VisualFeatureTypes.COVERAGE: "Coverage"}
         return labels[self]
 
 
@@ -172,43 +175,43 @@ class ArrayFeatures(object):
     def get(self, feature):
         """returns a feature"""
 
-        assert isinstance(feature, VisualFeature)
+        assert isinstance(feature, VisualFeatureTypes)
 
        # Adapt
-        if feature == VisualFeature.AV_DOT_DIAMETER:
+        if feature == VisualFeatureTypes.AV_DOT_DIAMETER:
             return self.average_dot_diameter
 
-        elif feature == VisualFeature.AV_RECT_SIZE:
+        elif feature == VisualFeatureTypes.AV_RECT_SIZE:
             return self.average_rectangle_size
 
-        elif feature == VisualFeature.AV_PERIMETER:
+        elif feature == VisualFeatureTypes.AV_PERIMETER:
             return self.average_perimeter
 
-        elif feature == VisualFeature.TOTAL_PERIMETER:
+        elif feature == VisualFeatureTypes.TOTAL_PERIMETER:
             return self.total_perimeter
 
-        elif feature == VisualFeature.AV_SURFACE_AREA:
+        elif feature == VisualFeatureTypes.AV_SURFACE_AREA:
             return self.average_surface_area
 
-        elif feature == VisualFeature.TOTAL_SURFACE_AREA:
+        elif feature == VisualFeatureTypes.TOTAL_SURFACE_AREA:
             return self.total_surface_area
 
-        elif feature == VisualFeature.LOG_SIZE:
+        elif feature == VisualFeatureTypes.LOG_SIZE:
             return self.log_size
 
-        elif feature == VisualFeature.LOG_SPACING:
+        elif feature == VisualFeatureTypes.LOG_SPACING:
             return self.log_spacing
 
-        elif feature == VisualFeature.SPARSITY:
+        elif feature == VisualFeatureTypes.SPARSITY:
             return self.sparsity
 
-        elif feature == VisualFeature.FIELD_AREA:
+        elif feature == VisualFeatureTypes.FIELD_AREA:
             return self.field_area
 
-        elif feature == VisualFeature.FIELD_AREA_POSITIONS:
+        elif feature == VisualFeatureTypes.FIELD_AREA_POSITIONS:
             return self.field_area_positions
 
-        elif feature == VisualFeature.COVERAGE:
+        elif feature == VisualFeatureTypes.COVERAGE:
             return self.converage
 
         else:
@@ -219,20 +222,20 @@ class ArrayFeatures(object):
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
-               (VisualFeature.AV_PERIMETER.label(), self.average_perimeter),
-               (VisualFeature.AV_SURFACE_AREA.label(), self.average_surface_area),
-               (VisualFeature.TOTAL_PERIMETER.label(), self.total_perimeter),
-               (VisualFeature.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
-               (VisualFeature.FIELD_AREA.label(), self.field_area),
-               (VisualFeature.SPARSITY.label(), self.sparsity),
-               (VisualFeature.COVERAGE.label(), self.converage),
-               (VisualFeature.LOG_SIZE.label(), self.log_size),
-               (VisualFeature.LOG_SPACING.label(), self.log_spacing)]
+               (VisualFeatureTypes.AV_PERIMETER.label(), self.average_perimeter),
+               (VisualFeatureTypes.AV_SURFACE_AREA.label(), self.average_surface_area),
+               (VisualFeatureTypes.TOTAL_PERIMETER.label(), self.total_perimeter),
+               (VisualFeatureTypes.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
+               (VisualFeatureTypes.FIELD_AREA.label(), self.field_area),
+               (VisualFeatureTypes.SPARSITY.label(), self.sparsity),
+               (VisualFeatureTypes.COVERAGE.label(), self.converage),
+               (VisualFeatureTypes.LOG_SIZE.label(), self.log_size),
+               (VisualFeatureTypes.LOG_SPACING.label(), self.log_spacing)]
 
         if isinstance(self.oa, arrays.DotArray):
-            rtn[2] = (VisualFeature.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
+            rtn[2] = (VisualFeatureTypes.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
         elif isinstance(self.oa, arrays.RectangleArray):
-            rtn[2] = (VisualFeature.AV_RECT_SIZE.label(), self.average_rectangle_size)
+            rtn[2] = (VisualFeatureTypes.AV_RECT_SIZE.label(), self.average_rectangle_size)
         else:
             rtn.pop(2)
         return OrderedDict(rtn)
