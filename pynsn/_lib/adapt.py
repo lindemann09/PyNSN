@@ -6,50 +6,14 @@ from . import geometry as _geometry
 from .arrays import DotArray as _DotArray
 from .arrays import RectangleArray as _RectangleArray
 from .visual_features import VisualFeature as _VF
+from . import adapt_settings as _settings
 
-ITERATIVE_CONVEX_HULL_MODIFICATION = False
-TAKE_RANDOM_DOT_FROM_CONVEXHULL = True  # TODO maybe method for modification, set via GUI
-DEFAULT_SPACING_PRECISION = 0.0001
-DEFAULT_MATCH_FA2TA_RATIO = 0.5
-
-def change_settings(iterative_convex_hull_modification=None,
-                    take_random_dot_from_convexhull=None,
-                    default_spacing_precision=None,
-                    default_adapt_fa2ta_ratio=None):
-    """Changing class settings of feature adapter.
-
-    This changes the settings of all feature adapter.
-
-
-    Parameters
-    ----------
-    iterative_convex_hull_modification
-    take_random_dot_from_convexhull
-    default_spacing_precision
-    default_adapt_fa2ta_ratio
-
-    Returns
-    -------
-
-    """
-    global ITERATIVE_CONVEX_HULL_MODIFICATION
-    global TAKE_RANDOM_DOT_FROM_CONVEXHULL
-    global DEFAULT_MATCH_FA2TA_RATIO
-    global DEFAULT_SPACING_PRECISION
-    if isinstance(iterative_convex_hull_modification, bool):
-        ITERATIVE_CONVEX_HULL_MODIFICATION = iterative_convex_hull_modification
-    if isinstance(take_random_dot_from_convexhull, bool):
-        TAKE_RANDOM_DOT_FROM_CONVEXHULL = take_random_dot_from_convexhull
-    if isinstance(default_spacing_precision, float):
-        DEFAULT_SPACING_PRECISION = default_spacing_precision
-    if isinstance(default_adapt_fa2ta_ratio, float):
-        DEFAULT_MATCH_FA2TA_RATIO = default_adapt_fa2ta_ratio
-
+from .adapt_settings import change_adapt_settings # make available
 
 def average_diameter(dot_array, value):
     # changes diameter
     if not isinstance(dot_array, _DotArray):
-        raise TypeError("Matching diameter is not possible for {}.".format(
+        raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.features.average_dot_diameter
     dot_array._diameters = dot_array.diameters * scale
@@ -59,7 +23,7 @@ def average_diameter(dot_array, value):
 def average_rect_size(rect_array, value):
     # changes diameter
     if not isinstance(rect_array, _RectangleArray):
-        raise TypeError("Matching rectangle size is not possible for {}.".format(
+        raise TypeError("Adapting rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
     try:
         width, height = value
@@ -118,7 +82,7 @@ def field_area(object_array, value, precision=None, use_scaling_only=False):
 
     assert isinstance(object_array, _DotArray)
     if precision is None:
-        precision = DEFAULT_SPACING_PRECISION
+        precision = _settings.DEFAULT_SPACING_PRECISION
 
     if object_array.features.field_area is None:
         return  object_array # not defined
@@ -129,9 +93,9 @@ def field_area(object_array, value, precision=None, use_scaling_only=False):
     elif value < object_array.features.field_area:
         # field area is too large
         _decrease_field_area_by_replacement(object_array,
-                                            max_field_area=value,
-                                            iterative_convex_hull_modification=
-            ITERATIVE_CONVEX_HULL_MODIFICATION)
+                                    max_field_area=value,
+                                    iterative_convex_hull_modification=
+                                _settings.ITERATIVE_CONVEX_HULL_MODIFICATION)
         # ..and rescaling to avoid to compensate for possible too
         # strong decrease
         return _scale_field_area(object_array, value=value, precision=precision)
@@ -160,7 +124,7 @@ def _decrease_field_area_by_replacement(object_array, max_field_area,
             # remove one random outer dot and remember it
             indices = object_array.features.convex_hull.indices # FIXME works for dot
             #FIXME for rectagles find rect which have edges of the convexhull
-            if not TAKE_RANDOM_DOT_FROM_CONVEXHULL:
+            if not _settings.TAKE_RANDOM_DOT_FROM_CONVEXHULL:
                 # most outer dot from convex hull
                 radii_outer_dots = _geometry.cartesian2polar(
                                 object_array.xy[indices],
@@ -261,7 +225,7 @@ def _scale_field_area(object_array, value, precision):
 
 def coverage(object_array, value,
              precision=None,
-             adapt_FA2TA_ratio=None):
+             FA2TA_ratio=None):
 
     # FIXME check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
     # FIXME when to realign, realignment changes field_area!
@@ -276,24 +240,26 @@ def coverage(object_array, value,
 
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
-    if adapt_FA2TA_ratio is None:
-        adapt_FA2TA_ratio = DEFAULT_MATCH_FA2TA_RATIO
-    elif adapt_FA2TA_ratio < 0 or adapt_FA2TA_ratio > 1:
-        adapt_FA2TA_ratio = 0.5
+    if FA2TA_ratio is None:
+        FA2TA_ratio = _settings.DEFAULT_ADAPT_FA2TA_RATIO
+    elif FA2TA_ratio < 0 or FA2TA_ratio > 1:
+        FA2TA_ratio = 0.5
     if precision is None:
-        precision = DEFAULT_SPACING_PRECISION
+        precision = _settings.DEFAULT_SPACING_PRECISION
 
     total_area_change100 = (value * object_array.features.field_area) - \
                            object_array.features.total_surface_area
-    d_change_total_area = total_area_change100 * (1 - adapt_FA2TA_ratio)
+    d_change_total_area = total_area_change100 * (1 - FA2TA_ratio)
     if abs(d_change_total_area) > 0:
         total_surface_area(object_array.features.total_surface_area + \
                            d_change_total_area)
 
-    field_area(object_array.features.total_surface_area / value,
+    return field_area(object_array.features.total_surface_area / value,
                precision=precision)
 
 def average_perimeter(object_array, value):
+    assert isinstance(object_array, (_DotArray, _RectangleArray))
+
     total_peri = value * object_array.features.numerosity
     return total_perimeter(object_array, total_peri)
 

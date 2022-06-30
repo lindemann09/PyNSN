@@ -15,9 +15,10 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                                                     _python_version_info[1]) +
                       "Please use Python 3.6 or later.")
 
-from ._lib import adapt
-from ._lib import shapes
 from ._lib import arrays
+from ._lib import adapt
+from ._lib import scale
+from ._lib import shapes
 from ._lib import random_array
 from ._lib import distributions as distr
 from ._lib.visual_features import VisualFeature

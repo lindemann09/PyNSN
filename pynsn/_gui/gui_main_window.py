@@ -80,7 +80,7 @@ class GUIMainWindow(QMainWindow):
         printparaAction = QAction('&Print parameter', self)
         printparaAction.triggered.connect(self.action_print_para)
 
-        adaptAction = QAction('&Match property', self)
+        adaptAction = QAction('&Adapt property', self)
         adaptAction.triggered.connect(self.action_adapt)
 
         sequenceAction = QAction('&Make _sequence', self)
@@ -294,7 +294,7 @@ class GUIMainWindow(QMainWindow):
     def action_adapt(self):
         """"""
         prop = self.dot_array._features.as_dict()
-        feature, value = dialogs.MatchPropertyDialog.get_response(self,
+        feature, value = dialogs.AdaptPropertyDialog.get_response(self,
                                                                   prop)  #
         if feature is not None:
             self.dot_array = adapt.visual_feature(self.dot_array,

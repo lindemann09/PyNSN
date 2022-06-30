@@ -1,5 +1,5 @@
 import unittest
-from pynsn import arrays, distr, random_array, adapt, VisualFeature
+from pynsn import arrays, distr, random_array, adapt, VisualFeature, scale
 
 
 class DotsSmall(unittest.TestCase):
@@ -19,18 +19,28 @@ class DotsSmall(unittest.TestCase):
     def test_numerosity(self):
         self.assertEqual(self.stimulus.features.numerosity, self.n_dots)
 
-    def change_feature(self, feature, first=0.8, second=1.15, places=7):
+    def change_feature(self, feature, first=0.8, second=1.15,
+                       scale_factor = 1.1, places=7):
+
+        # check scale
+        stim = self.stimulus.copy()
+        new_value = stim.features.get(feature) * scale_factor
+        scale.visual_feature(stim, feature, scale_factor)
+        self.assertAlmostEqual(stim.features.get(feature),
+                               new_value, places=places)
+
         #  changes two time feature (e.g. first decrease and then increase)
-        #first
-        new_value = self.stimulus.features.get(feature) * first
-        stim_first = adapt.visual_feature(self.stimulus, feature, new_value)
-        self.assertAlmostEqual(stim_first.features.get(feature), new_value,
-                               places=places)
+        # first
+        new_value = stim.features.get(feature) * first
+        adapt.visual_feature(stim, feature, new_value)
+        self.assertAlmostEqual(stim.features.get(feature),
+                               new_value, places=places)
         #second
-        new_value = stim_first.features.get(feature) * second
-        stim_second = adapt.visual_feature(stim_first, feature, new_value)
-        self.assertAlmostEqual(stim_second.features.get(feature), new_value,
+        new_value = stim.features.get(feature) * second
+        adapt.visual_feature(stim, feature, new_value)
+        self.assertAlmostEqual(stim.features.get(feature), new_value,
                                places=places)
+
 
     def test_match_av_surface_area(self):
         # decrease

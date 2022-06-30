@@ -301,7 +301,7 @@ class DotArray(GenericObjectArray):
         exactly the same position the same position one is minimally shifted
         in a random direction.
 
-        Note: Realigning might change the field area! Match Space parameter after
+        Note: Realigning might change the field area! Adapt Space parameter after
         realignment.
 
         """

@@ -6,15 +6,15 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
 
 from . import misc
 from .._lib.visual_features import VisualFeature
-from .. import adapt
+from .._lib import adapt_settings
 
 
-class MatchPropertyDialog(QDialog):
+class AdaptPropertyDialog(QDialog):
 
     def __init__(self, parent, properties):
-        super(MatchPropertyDialog, self).__init__(parent)
+        super(AdaptPropertyDialog, self).__init__(parent)
 
-        self.setWindowTitle("Match Dot Array Property")
+        self.setWindowTitle("Adapt Dot Array Property")
         self.features = properties
         self._selection = None
         self.comboBox = QComboBox(self)
@@ -59,7 +59,7 @@ class MatchPropertyDialog(QDialog):
     def get_response(parent, prop):
         """return the feature to be adapted"""
 
-        dialog = MatchPropertyDialog(parent, prop)
+        dialog = AdaptPropertyDialog(parent, prop)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             return dialog.current_state()
@@ -126,8 +126,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = adapt.DEFAULT_SPACING_PRECISION
-    adapt_FA2TA_ratio = adapt.DEFAULT_MATCH_FA2TA_RATIO
+    spacing_precision = adapt_settings.DEFAULT_SPACING_PRECISION
+    adapt_FA2TA_ratio = adapt_settings.DEFAULT_ADAPT_FA2TA_RATIO
 
 
     def __init__(self, parent):
@@ -183,7 +183,7 @@ class SequenceDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         vlayout = QVBoxLayout()
-        vlayout.addWidget(misc.heading("Matching"))
+        vlayout.addWidget(misc.heading("Adapting"))
         vlayout.addWidget(self.adapt_diameter)
         vlayout.addWidget(self.adapt_av_perimeter)
         vlayout.addWidget(self.adapt_av_area)
@@ -196,7 +196,7 @@ class SequenceDialog(QDialog):
         vlayout.addWidget(self.adapt_size)
         vlayout.addWidget(self.adapt_spacing)
         vlayout.addSpacing(10)
-        vlayout.addWidget(misc.heading("Matching parameter"))
+        vlayout.addWidget(misc.heading("Adapting parameter"))
         vlayout.addLayout(self.adapt_spacing_presision.layout())
         vlayout.addLayout(self.adapt_fa2ta.layout())
         vlayout.addLayout(self.adapt_range.layout())

@@ -1,4 +1,4 @@
-from pynsn import arrays, distr, random_array, adapt
+from pynsn import arrays, distr, random_array, adapt, scale, VisualFeature
 from pynsn.image import svg_file, ImageColours
 
 # define the visual features of the  dot array
@@ -24,13 +24,16 @@ my_colours = ImageColours(target_area="#EEEEEE",
 
 
 stimulus = random_array.create(reference_array=ref,
-                               size_distribution=size_dist_rect,
+                               size_distribution=size_dist,
                                n_objects=15,
                                attributes=["blue", "green"])
 
-print(stimulus)
-stim_matched = adapt.average_perimeter(stimulus, 95)
-print(stimulus)
+print(stimulus.features.log_size)
+print(stimulus.features.log_size*1.2)
+
+scale.visual_feature(stimulus, feature=VisualFeature.LOG_SIZE,
+                                    factor=1.2)
+print(stim_scaled.features.get(feature))
 
 
 svg = svg_file.create(stim_matched, my_colours, filename="demo.svg")
