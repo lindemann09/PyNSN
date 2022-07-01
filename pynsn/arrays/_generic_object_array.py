@@ -175,7 +175,7 @@ class GenericObjectArray(object):
         self._properties.reset()
 
     def clear(self):
-        self._xy = np.array([[]])
+        self._xy = np.array([])
         self._attributes = np.array([])
         self._properties.reset()
 
@@ -189,23 +189,42 @@ class GenericObjectArray(object):
                 "min_dist_between": self.min_dist_between,
                 "min_dist_area_boarder": self.min_dist_area_boarder}
 
-    def copy(self, indices=None):
+    def copy(self, indices=None, deepcopy = True):
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
 
         """
 
-        if indices is None:
-            indices = list(range(self._properties.numerosity))
+        if len(self._xy) == 0:
+            return GenericObjectArray(target_area_radius=self.target_area_radius,
+                            min_dist_between=self.min_dist_between,
+                            min_dist_area_boarder=self.min_dist_area_boarder)
 
-        return GenericObjectArray(target_area_radius=self.target_area_radius,
+        if indices is None:
+            indices = list(range(len(self._xy)))
+
+        if deepcopy:
+            return GenericObjectArray(target_area_radius=self.target_area_radius,
                         min_dist_between=self.min_dist_between,
                         min_dist_area_boarder = self.min_dist_area_boarder,
                         xy=self._xy[indices, :].copy(),
                         attributes=self._attributes[indices].copy())
+        else:
+            return GenericObjectArray(target_area_radius=self.target_area_radius,
+                        min_dist_between=self.min_dist_between,
+                        min_dist_area_boarder = self.min_dist_area_boarder,
+                        xy=self._xy[indices, :],
+                        attributes=self._attributes[indices])
+
 
     def get(self):
+        raise NotImplementedError()
+
+    def add(self, something):
+        raise NotImplementedError()
+
+    def find(self, attribute):
         raise NotImplementedError()
 
     def center_of_mass(self):
@@ -297,5 +316,39 @@ class GenericObjectArray(object):
                 return rtn_object
             elif cnt > N_ATTEMPTS:
                 raise StopIteration(u"Can't find a free position")
+
+    def shuffle_all_positions(self, allow_overlapping=False):
+        """might raise an exception"""
+        # find new position for each dot
+        # mixes always all position (ignores dot limitation)
+
+        all_objects = self.get()
+        self.clear()
+        for obj in all_objects:
+            try:
+                new = self.get_random_free_position(obj,
+                                allow_overlapping=allow_overlapping)
+            except StopIteration as e:
+                raise StopIteration("Can't shuffle dot array. No free positions found.")
+            self.add([new])
+
+    def realign(self):
+        raise NotImplementedError()
+
+    def get_split_arrays(self):
+        """returns a list of arrays
+        each array contains all dots of with particular colour"""
+        att = self._attributes
+        att[np.where(att == None)] = "None"  # TODO check "is none"
+
+        rtn = []
+        for c in np.unique(att):
+            if c is not None:
+                da = self.copy(indices=0, deepcopy=False) # fast. shallow copy with just one object
+                da.clear()
+                da.add(self.find(attribute=c))
+                rtn.append(da)
+        return rtn
+
 
 # TODO  everywhere: file header doc and author information

@@ -59,6 +59,7 @@ class RectangleArray(GenericObjectArray):
             assert isinstance(r, Rectangle)
             self._append_xy_attribute(xy=r.xy, attributes=r.attribute)
             self._append_sizes((r.width, r.height))
+        self.properties.reset()
 
     @property
     def sizes(self):
@@ -107,29 +108,38 @@ class RectangleArray(GenericObjectArray):
         super().delete(index)
         self._sizes = np.delete(self._sizes, index)
 
-    def copy(self, indices=None):
+    def copy(self, indices=None, deepcopy=True):
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
 
         """
 
-        if self._properties.numerosity == 0:
+        if len(self._xy) == 0:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
                 min_dist_area_boarder=self.min_dist_area_boarder,
                 min_dist_between=self.min_dist_between)
-        else:
-            if indices is None:
-                indices = list(range(self._properties.numerosity))
+        if indices is None:
+            indices = list(range(len(self._xy)))
 
+        if deepcopy:
             return RectangleArray(
-                        target_area_radius=self.target_area_radius,
-                        min_dist_between=self.min_dist_between,
-                        min_dist_area_boarder = self.min_dist_area_boarder,
-                        xy=self._xy[indices, :].copy(),
-                        sizes=self._sizes[indices].copy(),
-                        attributes=self._attributes[indices].copy())
+                    target_area_radius=self.target_area_radius,
+                    min_dist_between=self.min_dist_between,
+                    min_dist_area_boarder = self.min_dist_area_boarder,
+                    xy=self._xy[indices, :].copy(),
+                    sizes=self._sizes[indices].copy(),
+                    attributes=self._attributes[indices].copy())
+        else:
+            return RectangleArray(
+                    target_area_radius=self.target_area_radius,
+                    min_dist_between=self.min_dist_between,
+                    min_dist_area_boarder = self.min_dist_area_boarder,
+                    xy=self._xy[indices, :],
+                    sizes=self._sizes[indices],
+                    attributes=self._attributes[indices])
+
 
     def _xy_distances(self, rect):
         """return distances on both axes between rectangles and reference rec.
@@ -245,15 +255,6 @@ class RectangleArray(GenericObjectArray):
         """add another rect arrays"""
         assert isinstance(rect_array, RectangleArray)
         self.add(rect_array.get())
-
-    def _remove_overlap_from_inner_to_outer(self):
-        raise NotImplementedError()
-
-    def realign(self):
-        raise NotImplementedError()
-
-    def shuffle_all_positions(self, allow_overlapping=False):
-        raise NotImplementedError()
 
     def get_split_arrays(self):
         """returns a list of arrays

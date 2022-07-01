@@ -56,6 +56,7 @@ class DotArray(GenericObjectArray):
             assert isinstance(d, Dot)
             self._append_xy_attribute(xy=d.xy, attributes=d.attribute)
             self._diameters = np.append(self._diameters, d.diameter)
+        self.properties.reset()
 
     @property
     def diameters(self):
@@ -104,22 +105,35 @@ class DotArray(GenericObjectArray):
         super().delete(index)
         self._diameters = np.delete(self._diameters, index)
 
-    def copy(self, indices=None):
+    def copy(self, indices=None, deepcopy=True):
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
 
         """
 
-        if indices is None:
-            indices = list(range(self._properties.numerosity))
+        if len(self._xy) == 0:
+            return DotArray(target_area_radius=self.target_area_radius,
+                            min_dist_between=self.min_dist_between,
+                            min_dist_area_boarder=self.min_dist_area_boarder)
 
-        return DotArray(target_area_radius=self.target_area_radius,
+        if indices is None:
+            indices = list(range(len(self._xy) ))
+
+        if deepcopy:
+            return DotArray(target_area_radius=self.target_area_radius,
                         min_dist_between=self.min_dist_between,
                         min_dist_area_boarder = self.min_dist_area_boarder,
                         xy=self._xy[indices, :].copy(),
                         diameters=self._diameters[indices].copy(),
                         attributes=self._attributes[indices].copy())
+        else:
+            return DotArray(target_area_radius=self.target_area_radius,
+                        min_dist_between=self.min_dist_between,
+                        min_dist_area_boarder = self.min_dist_area_boarder,
+                        xy=self._xy[indices, :],
+                        diameters=self._diameters[indices],
+                        attributes=self._attributes[indices])
 
     def distances(self, dot):
         """Distances toward a single dot
@@ -307,41 +321,3 @@ class DotArray(GenericObjectArray):
             return True, ""
         else:
             return self.realign()  # recursion
-
-    def shuffle_all_positions(self, allow_overlapping=False):
-        """might raise an exception"""
-        # find new position for each dot
-        # mixes always all position (ignores dot limitation)
-
-        new_xy = None
-        for d in self.diameters:
-            try:
-                dot = self.get_random_free_position(Dot(xy=(0,0), diameter=d),
-                                                   allow_overlapping=allow_overlapping)
-            except StopIteration as e:
-                raise StopIteration("Can't shuffle dot array. No free positions found.")
-
-            if new_xy is None:
-                new_xy = np.array([dot.xy])
-            else:
-                new_xy = np.append(new_xy, [dot.xy], axis=0)
-
-        self._xy = new_xy
-        self._properties.reset()
-
-
-    def get_split_arrays(self):
-        """returns a list of arrays
-        each array contains all dots of with particular colour"""
-        att = self._attributes
-        att[np.where(att == None)] = "None"  # TODO check "is none"
-
-        rtn = []
-        for c in np.unique(att):
-            if c is not None:
-                da = DotArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between,
-                              min_dist_area_boarder=self.min_dist_area_boarder)
-                da.add(self.find(attribute=c))
-                rtn.append(da)
-        return rtn
