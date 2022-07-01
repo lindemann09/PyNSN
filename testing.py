@@ -1,6 +1,8 @@
 from pynsn import arrays, random_array
 from pynsn import distributions as distr
 from pynsn.image import svg_file, ImageColours
+from pynsn import shapes
+
 
 from pynsn import visual_properties as props
 import numpy as np
@@ -9,13 +11,15 @@ import numpy as np
 ref = arrays.GenericObjectArray(target_area_radius=200)
 
 size_dist_dot = random_array.SizeDistribution(
-    diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
+    dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
 )
 size_dist_rect = random_array.SizeDistribution(
-    width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-    height=distr.Normal(min_max=(10, 40), mu=20, sigma=10)
+    rectangle_width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    #rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    rectangle_proportion=distr.Discrete([1, 2])
 )
 
+print(size_dist_rect)
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,
                           object_opacity=0.9,

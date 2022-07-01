@@ -93,7 +93,7 @@ def is_all_equal(vector):
     return sum(map(lambda x: x==vector[0], vector))==len(vector)
 
 def dict_to_text(the_dict, col_a = 22, col_b = 14,
-                 spacing_char="."):
+                 spacing_char=" "):
     rtn = None
     for k, v in the_dict.items():
         if rtn is None:

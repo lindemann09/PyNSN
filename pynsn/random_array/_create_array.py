@@ -27,16 +27,14 @@ def create(reference_array,
 
 
     if size_distribution.diameter is not None:
-        if size_distribution.diameter is None:
-            raise ValueError("Diameter distribution for random dot array is not defined.")
         # DotArray
         rtn = arrays.DotArray(target_area_radius=reference_array.target_area_radius,
                        min_dist_between=reference_array.min_dist_between,
                        min_dist_area_boarder=reference_array.min_dist_area_boarder)
 
-        for dia in size_distribution.diameter.sample(n=n_objects):
+        for dot in size_distribution.sample(n=n_objects):
             try:
-                dot = rtn.get_random_free_position(ref_object=shapes.Dot(xy=(0, 0), diameter=dia),
+                dot = rtn.get_random_free_position(ref_object=dot,
                                                    occupied_space=occupied_space,
                                                    allow_overlapping=allow_overlapping)
             except StopIteration as e:
@@ -44,24 +42,17 @@ def create(reference_array,
             rtn.add([dot])
 
     else:
-        # rectangle
-        if size_distribution.width is None or size_distribution.height is None:
-            raise ValueError("Please define width and height distribution for random rectangle arrays.")
-
         # RectArray
         rtn = arrays.RectangleArray(target_area_radius=reference_array.target_area_radius,
                              min_dist_between=reference_array.min_dist_between,
                              min_dist_area_boarder=reference_array.min_dist_area_boarder)
 
-        sizes = zip(size_distribution.width.sample(n=n_objects),
-                    size_distribution.height.sample(n=n_objects))
-
-        for s in sizes:
+        for rect in size_distribution.sample(n=n_objects):
             try:
-                rect = rtn.get_random_free_position(ref_object=shapes.Rectangle(xy=(0, 0), size=s),
+                rect = rtn.get_random_free_position(ref_object=rect,
                                                     occupied_space=occupied_space,
                                                     allow_overlapping=allow_overlapping)
-            except StopIteration as e:
+            except StopIteration:
                 raise StopIteration("Can't find a solution for {} items in this array".format(n_objects))
 
             rtn.add([rect])

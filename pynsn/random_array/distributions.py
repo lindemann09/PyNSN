@@ -22,7 +22,7 @@ class PyNSNDistribution(object):
         self.min_max = min_max
 
     def as_dict(self):
-        return {"type": type(self).__name__,
+        return {"distribution": type(self).__name__,
                 "min_max": self.min_max}
 
     def _cutoff_outside_range(self, np_vector):
@@ -34,16 +34,34 @@ class PyNSNDistribution(object):
         return np_vector
 
     def sample(self, n, round_to_decimals=False):
-        return _round_samples([0]*n, round_to_decimals)
+        return NotImplementedError()
 
     def pyplot_samples(self, n=100000):
-
         try:
             from matplotlib.pyplot import hist
         except:
             raise ImportError("To use pyplot, please install matplotlib.")
 
         return hist(self.sample(n=n), bins=100)[2]
+
+
+class Constant(PyNSNDistribution):
+
+    def __init__(self, constant):
+        """Constant distribution, that is distribution with no variance, that is,
+        sampling produces always the same number.
+
+        Useful is a random variable should be constant, for instance for size distributions
+
+        Parameter:
+        ----------
+        constant : numeric
+        """
+
+        super().__init__(min_max=[constant, constant])
+
+    def sample(self, n, round_to_decimals=None):
+        return _round_samples([self.min_max[0]] * n, round_to_decimals)
 
 
 class Uniform(PyNSNDistribution):

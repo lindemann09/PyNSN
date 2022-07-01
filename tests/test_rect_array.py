@@ -9,8 +9,8 @@ class RectanglesSmall(DotsSmall):
     def settings(self):
         super().settings()
         self.size_dist = random_array.SizeDistribution(
-            width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-            height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
+            rectangle_width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+            rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
 
     def test_match_av_size(self):
         first=0.8
@@ -46,16 +46,16 @@ class RectanglesMedium(RectanglesSmall):
     def settings(self):
         super().settings()
         self.size_dist = random_array.SizeDistribution(
-            width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-            height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
+            rectangle_width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+            rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
         self.n_dots = 25
 
 class RectanglesLarge(RectanglesSmall):
     def settings(self):
         super().settings()
         self.size_dist = random_array.SizeDistribution(
-            width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
-            height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
+            rectangle_width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
+            rectangle_height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
         self.n_dots = 75
 
 

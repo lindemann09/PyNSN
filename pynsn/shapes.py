@@ -225,6 +225,11 @@ class Rectangle(Point):
         return not(d[0]>0 or d[1]>0)
 
     @property
+    def proportion(self):
+        """Proportion of the rectangle (width/height)"""
+        return self.width/self.height
+
+    @property
     def area(self):
         return self.width * self.height
 
