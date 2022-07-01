@@ -31,15 +31,15 @@ class SizeDistribution(object):
     def as_dict(self):
         try:
             d = self.diameter.as_dict()
-        except:
+        except AttributeError:
             d = None
         try:
             w = self.width.as_dict()
-        except:
+        except AttributeError:
             w = None
         try:
             h = self.height.as_dict()
-        except:
+        except AttributeError:
             h = None
         return OrderedDict({
             "diameter": d, "width": w, "height": h})
