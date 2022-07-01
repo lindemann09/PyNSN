@@ -60,13 +60,13 @@ def create(object_array, colours, filename="noname.svg"):
                               convex_hull_colour=colours.field_area.colour,
                               opacity=colours.info_shapes_opacity)
         #  and center of mass
-        if colours.center_of_positions.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
+        if colours.center_of_field_area.colour is not None:
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
                              diameter=10,
-                             attribute=colours.center_of_positions.colour)
+                             attribute=colours.center_of_field_area.colour)
             _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)
         if colours.center_of_mass.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_positions(), image_size),
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
                              diameter=10,
                              attribute=colours.center_of_mass.colour)
             _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)

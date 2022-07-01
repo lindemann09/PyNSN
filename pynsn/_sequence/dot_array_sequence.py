@@ -225,7 +225,7 @@ def _make_adapted_deviants(reference_da, adapt_property, target_numerosity,
     while True:
         try:
             da = da.get_number_deviant(change_numerosity=change,
-                                       preserve_convex_hull=prefer_preserve_field_area)
+                                       preserve_field_area=prefer_preserve_field_area)
         except:
             return [], "ERROR: Can't find the a make adapted deviants"
 

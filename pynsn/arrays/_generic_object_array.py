@@ -11,7 +11,7 @@ import random
 
 import numpy as np
 from scipy import spatial
-from .._lib import misc
+from .._lib import misc, geometry
 from ..visual_properties._props import ArrayProperties
 from ..visual_properties import fit
 from .. import shapes
@@ -97,8 +97,17 @@ class GenericObjectArray(object):
             self._attributes = np.array([attributes] * self._properties.numerosity)
 
     def center_of_positions(self):
-        minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
-        return np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
+        """Center of all object positions
+        Notes
+        -----
+        if you want centre that takes into account the object size, use
+        center_of_field_area
+        """
+        return geometry.center_of_positions(self._xy)
+
+    def center_of_field_area(self):
+        return geometry.center_of_positions(
+                        self.properties.convex_hull.xy)
 
     @property
     def surface_areas(self):
@@ -119,14 +128,13 @@ class GenericObjectArray(object):
         m.update(self.perimeter.tobytes())
         return m.hexdigest()
 
-    def get_number_deviant(self, change_numerosity,
-                           preserve_convex_hull=False):
+    def get_number_deviant(self, change_numerosity, preserve_field_area=False):
         """number deviant
         """
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
         fit.numerosity(object_array, value=new_num,
-                       preserve_convex_hull=preserve_convex_hull)
+                       center_of_field_area=preserve_field_area)
         return object_array
 
     def as_dict(self):
@@ -172,7 +180,7 @@ class GenericObjectArray(object):
         self.read_from_dict(dict)
 
     def center_array(self):
-        self._xy = self._xy - self.center_of_positions()
+        self._xy = self._xy - self.center_of_field_area()
         self._properties.reset()
 
     def clear(self):
@@ -333,13 +341,13 @@ class GenericObjectArray(object):
             self.add([new])
 
 
-    def replace_overlapping_objects(self, preserve_convex_hull=False,
+    def replace_overlapping_objects(self, center_of_field_area=False,
                                     lenient=True):
         """
         Returns
         Parameters
         ----------
-        preserve_convex_hull
+        center_of_field_area
         lenient
 
         Returns
@@ -347,13 +355,13 @@ class GenericObjectArray(object):
         convex_hull_had_changed
         """
 
-        warning_info = "Convex hull had to change, because two overlapping " + \
+        warning_info = "Field area had to change, because two overlapping " + \
                        "objects on convex hull"
         convex_hull_had_changed = False
 
         overlaps = self.overlaps()
         while len(overlaps):
-            if preserve_convex_hull:
+            if center_of_field_area:
                 # check if overlaps are on convex hull
                 # do not replace convexhull objects and try to
                 # take that one not on convex hull or raise error/warning
@@ -375,7 +383,7 @@ class GenericObjectArray(object):
             obj = self.get(idx)[0]
             self.delete(idx)
             obj = self.get_random_free_position(ref_object=obj,
-                                                inside_convex_hull=preserve_convex_hull)
+                                                inside_convex_hull=center_of_field_area)
             self.add([obj])
             overlaps = self.overlaps()
 

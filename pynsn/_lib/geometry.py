@@ -97,3 +97,7 @@ def point_faces_edge(edge, point):
     if ang1>math.pi/2 or ang2>math.pi/2:
         return False
     return True
+
+def center_of_positions(xy):
+    min_max = np.array((np.min(xy, axis=0), np.max(xy, axis=0)))
+    return np.reshape(min_max[1, :] - np.diff(min_max, axis=0) / 2, 2)

@@ -26,22 +26,22 @@ my_colours = ImageColours(target_area="#EEEEEE",
                           default_object_colour="darkmagenta",
                           field_area_positions="magenta",
                           field_area="blue",
-                          #center_of_positions="red",
-                          #center_of_mass="yellow"
+                          center_of_field_area="red",
+                          #center_of_mass="green"
                           )
 
 stimulus = random_array.create(reference_array=ref,
                                size_distribution=size_dist_dot,
                                n_objects=25,
                                attributes=["blue", "green"])
-props.scale.log_size(stimulus, 1.25)
+props.scale.log_size(stimulus, 1.3)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
 
 ####
 stim_scaled = stimulus.copy()
-stim_scaled.replace_overlapping_objects(preserve_convex_hull=True)
+stim_scaled.center_array()
 
 print(stim_scaled.properties.convex_hull == stimulus.properties.convex_hull)
 print(stimulus.properties.convex_hull.field_area)

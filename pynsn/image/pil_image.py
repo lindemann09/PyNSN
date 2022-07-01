@@ -83,13 +83,13 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                                   image_size),
                               convex_hull_colour=colours.field_area.colour)
         #  and center of mass
-        if colours.center_of_positions.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
+        if colours.center_of_field_area.colour is not None:
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_field_area() * aaf, image_size),
                              diameter=10 * aaf,
-                             attribute=colours.center_of_positions.colour)
+                             attribute=colours.center_of_field_area.colour)
             _draw_shape(img, obj)
         if colours.center_of_mass.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_positions() * aaf, image_size),
+            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
                              diameter=10 * aaf,
                              attribute=colours.center_of_mass.colour)
             _draw_shape(img, obj)

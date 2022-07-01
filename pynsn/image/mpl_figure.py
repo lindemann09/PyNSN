@@ -67,13 +67,13 @@ def create(object_array, colours, dpi=100):
                           convex_hull_colour=colours.field_area.colour,
                           opacity=colours.info_shapes_opacity)
     #  and center of mass
-    if colours.center_of_positions.colour is not None:
-        obj = _shape.Dot(xy=object_array.center_of_mass(),
+    if colours.center_of_field_area.colour is not None:
+        obj = _shape.Dot(xy=object_array.center_of_field_area(),
                          diameter=10,
-                         attribute=colours.center_of_positions.colour)
+                         attribute=colours.center_of_field_area.colour)
         _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)
     if colours.center_of_mass.colour is not None:
-        obj = _shape.Dot(xy=object_array.center_of_positions(),
+        obj = _shape.Dot(xy=object_array.center_of_mass(),
                          diameter=10,
                          attribute=colours.center_of_mass.colour)
         _draw_shape(axes, obj, opacity=colours.info_shapes_opacity)

@@ -25,24 +25,24 @@ DEFAULT_ARRAY = {"num": 40,
         "sdr": random_array.SizeDistribution(
                     dot_diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
         "col": _colour.ImageColours(target_area="#303030",
-                                      field_area_positions=None,
-                                      field_area=None,
-                                      center_of_positions=None,
-                                      center_of_mass=None,
-                                      default_object_colour="green",
-                                      background="gray")}
+                                    field_area_positions=None,
+                                    field_area=None,
+                                    center_of_field_area=None,
+                                    center_of_mass=None,
+                                    default_object_colour="green",
+                                    background="gray")}
 
 ICON = {"num": 11,
         "ref": arrays.GenericObjectArray(target_area_radius=200),
         "sdr": random_array.SizeDistribution(
                 dot_diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
-                             field_area_positions=None,
-                             field_area="expyriment_orange",
-                             center_of_positions=None,
-                             center_of_mass=None,
-                             default_object_colour="lime",
-                             background=None)}
+                                    field_area_positions=None,
+                                    field_area="expyriment_orange",
+                                    center_of_field_area=None,
+                                    center_of_mass=None,
+                                    default_object_colour="lime",
+                                    background=None)}
 
 
 class GUIMainWindow(QMainWindow):
@@ -160,7 +160,7 @@ class GUIMainWindow(QMainWindow):
                 target_area=para.target_area,
                 field_area_positions=para.field_area_positions,
                 field_area=para.field_area,
-                center_of_positions=para.center_of_positions,
+                center_of_field_area=para.center_of_field_area,
                 center_of_mass=para.center_of_mass,
                 default_object_colour=para.default_object_colour,
                 background=para.background)
@@ -216,7 +216,7 @@ class GUIMainWindow(QMainWindow):
         return _colour.ImageColours(target_area=colour_area,
                                     field_area_positions=colour_convex_hull_positions,
                                     field_area=colour_convex_hull_dots,
-                                    center_of_positions=None,
+                                    center_of_field_area=None,
                                     center_of_mass=None,
                                     default_object_colour=self.settings.default_object_colour,
                                     background=colour_background)
