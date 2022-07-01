@@ -238,25 +238,6 @@ class DotArray(GenericObjectArray):
             occupied_space_distances_function=os_distance_fnc,
             convex_hull_xy=convex_hull_xy)
 
-    def _remove_overlap_from_inner_to_outer(self):
-
-        shift_required = False
-        # from inner to outer remove overlaps
-        for i in np.argsort(geometry.cartesian2polar(self._xy, radii_only=True)):
-            dist_mtx = self.distances_matrix(between_positions=False,
-                                             overlap_is_zero=False)
-
-            idx_overlaps = np.where(dist < self.min_dist_between)[0].tolist()  # overlapping dot ids
-            if len(idx_overlaps) > 1:
-                shift_required = True
-                idx_overlaps.remove(i)  # don't move yourself
-                replace_size =self.min_dist_between - dist[idx_overlaps]  # dist is mostly negative, because of overlap
-                self._xy = _manipulate.radial_replacement_from_reference_dots(
-                                             xy=self._xy,
-                                             ref_pos_id=i,
-                                             neighbour_ids=idx_overlaps,
-                                             replacement_size=replace_size)
-        return shift_required
 
     def realign_old(self):  # TODO update realignment
         """Realigns the obejcts in order to remove all dots overlaps and dots
@@ -275,7 +256,9 @@ class DotArray(GenericObjectArray):
 
         error = False
 
-        shift_required = self._remove_overlap_from_inner_to_outer()
+        xy, shift_required = _manipulate.remove_overlap_from_inner_to_outer(
+            xy=self.xy, min_dist_between=self.min_dist_between,
+            distance_matrix_function=self.distances_matrix)
 
         # sqeeze in points that pop out of the image area radius
         cnt = 0

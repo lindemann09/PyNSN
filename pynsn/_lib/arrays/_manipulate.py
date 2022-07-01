@@ -39,6 +39,28 @@ def radial_replacement_from_reference_dots(xy, ref_pos_id,
                                            xy[neighbour_ids, 1] + tmp_xy[:, 1]]).T
     return xy
 
+def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_function):
+    """returns xy and boolean, if replacements were required"""
+    assert callable(distance_matrix_function)
+
+    replacement_required = False
+    # from inner to outer remove overlaps
+    for i in np.argsort(geometry.cartesian2polar(xy, radii_only=True)):
+        dist_mtx = distance_matrix_function(between_positions=False,
+                                         overlap_is_zero=False)
+        dist = dist_mtx[i,:]
+        idx_overlaps = np.where(dist < min_dist_between)[0].tolist()  # overlapping dot ids
+        if len(idx_overlaps) > 1:
+            replacement_required = True
+            idx_overlaps.remove(i)  # don't move yourself
+            replace_size =min_dist_between - dist[idx_overlaps]  # dist is mostly negative, because of overlap
+            xy = radial_replacement_from_reference_dots(
+                                         xy=xy,
+                                         ref_pos_id=i,
+                                         neighbour_ids=idx_overlaps,
+                                         replacement_size=replace_size)
+    return replacement_required
+
 
 def get_random_free_position(the_object,
                              target_area_radius,
