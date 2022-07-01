@@ -1,10 +1,7 @@
 import random
-from copy import deepcopy
 import numpy as np
-from scipy import spatial
 
 from .._lib import  geometry
-from .. import shapes
 
 
 def _jitter_identical_positions(xy, jitter_size=0.1):
@@ -46,8 +43,7 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
     replacement_required = False
     # from inner to outer remove overlaps
     for i in np.argsort(geometry.cartesian2polar(xy, radii_only=True)):
-        dist_mtx = distance_matrix_function(between_positions=False,
-                                         overlap_is_zero=False)
+        dist_mtx = distance_matrix_function(between_positions=False)
         dist = dist_mtx[i,:]
         idx_overlaps = np.where(dist < min_dist_between)[0].tolist()  # overlapping dot ids
         if len(idx_overlaps) > 1:
@@ -60,70 +56,3 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
                                          neighbour_ids=idx_overlaps,
                                          replacement_size=replace_size)
     return replacement_required
-
-
-def get_random_free_position(the_object,
-                             target_area_radius,
-                             allow_overlapping,
-                             distances_function,
-                             min_dist_between,
-                             min_dist_area_boarder,
-                             occupied_space_distances_function,
-                             convex_hull_xy):
-    """returns a available random xy position
-
-    raise exception if not found
-    occupied space: see generator generate
-    """
-
-    N_ATTEMPTS = 3000
-    assert callable(distances_function)
-    if isinstance(the_object, shapes.Dot):
-        object_size = the_object.diameter / 2.0
-    elif isinstance(the_object, shapes.Rectangle):
-        object_size = max(the_object.size)
-    else:
-        raise NotImplementedError()
-    inside_convex_hull = convex_hull_xy is not None
-    if inside_convex_hull:
-        delaunay = spatial.Delaunay(convex_hull_xy)
-    else:
-        delaunay = None
-
-    area_rad = target_area_radius - min_dist_area_boarder - object_size
-    proposal_obj = deepcopy(the_object)
-    cnt = 0
-    while True:
-        cnt += 1
-        ##  polar method seems to produce central clustering
-        #  proposal_polar =  np.array([random.random(), random.random()]) *
-        #                      (target_radius, TWO_PI)
-        proposal_obj.xy = np.array([random.random(), random.random()]) \
-                           * 2 * area_rad - area_rad
-
-        # is outside area
-        if isinstance(the_object, shapes.Dot):
-            bad_position = area_rad <= proposal_obj.polar_radius
-        else:
-            # Rect: check if one edge is outside
-            bad_position = False
-            for e in proposal_obj.edges():
-                if e.polar_radius >= area_rad:
-                    bad_position = True
-                    break
-
-        if not bad_position and inside_convex_hull:
-            bad_position = delaunay.find_simplex(np.array(proposal_obj.xy)) < 0
-
-        if not bad_position and not allow_overlapping:
-            # find bad_positions
-            dist = distances_function(proposal_obj)
-            if callable(occupied_space_distances_function):
-                dist = np.append(dist, occupied_space_distances_function(proposal_obj))
-            idx = np.where(dist < min_dist_between)[0]  # overlapping dot ids
-            bad_position = len(idx) > 0
-
-        if not bad_position:
-            return proposal_obj.xy
-        elif cnt > N_ATTEMPTS:
-            raise StopIteration(u"Can't find a free position")

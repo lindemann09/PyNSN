@@ -6,12 +6,16 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from hashlib import md5
 import json
+from copy import deepcopy
+import random
 
 import numpy as np
 from scipy import spatial
 from .._lib import misc
 from ..visual_properties._props import ArrayProperties
 from ..visual_properties import fit
+from .. import shapes
+from . import _tools
 
 class GenericObjectArray(object):
 
@@ -212,13 +216,86 @@ class GenericObjectArray(object):
         # override this method
         raise NotImplementedError()
 
-    def distances_matrix(self, between_positions=False, overlap_is_zero=False):
+    def distances_matrix(self, between_positions=False):
         """between position ignores the dot size"""
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)
         # matrix with all distance between all points
         dist = np.array([self.distances(d) for d in self.get()])
-        if overlap_is_zero:
-            dist[dist<0] = 0
         return dist
 
+    def overlaps(self):
+        """return pairs of indices of overlapping of objects
+        numpy.array
+        """
+        dist = self.distances_matrix(between_positions=False)
+        overlap = np.where(np.triu(dist, k=1) < 0)
+        return np.array(overlap).T
+
+    def get_random_free_position(self, ref_object,
+                                 allow_overlapping = False,
+                                 inside_convex_hull=False,
+                                 occupied_space=None):
+        """returns the copy of object of at a random free position
+
+        raise exception if not found
+        occupied space: see generator generate
+        """
+
+        N_ATTEMPTS = 3000
+
+        if isinstance(ref_object, shapes.Dot):
+            object_size = ref_object.diameter / 2.0
+        elif isinstance(ref_object, shapes.Rectangle):
+            object_size = max(ref_object.size)
+        else:
+            raise NotImplementedError()
+        if occupied_space is not None and \
+                not isinstance(occupied_space, GenericObjectArray):
+            raise TypeError("Occupied_space has to be a Dot or Rectangle Array or None.")
+
+        delaunay = None
+        if inside_convex_hull:
+            convex_hull_xy = self.properties.convex_hull_positions.xy
+            if len(convex_hull_xy)>0:
+                delaunay = spatial.Delaunay(convex_hull_xy)
+
+        area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size
+        rtn_object = deepcopy(ref_object) # tested deepcopy required
+        cnt = 0
+        while True:
+            cnt += 1
+            ##  polar method seems to produce central clustering
+            #  proposal_polar =  np.array([random.random(), random.random()]) *
+            #                      (target_radius, TWO_PI)
+            rtn_object.xy = np.array([random.random(), random.random()]) \
+                               * 2 * area_rad - area_rad
+
+            # is outside area
+            if isinstance(ref_object, shapes.Dot):
+                bad_position = area_rad <= rtn_object.polar_radius
+            else:
+                # Rect: check if one edge is outside
+                bad_position = False
+                for e in rtn_object.edges():
+                    if e.polar_radius >= area_rad:
+                        bad_position = True
+                        break
+
+            if not bad_position and delaunay is not None: # inside convex hull only
+                bad_position = delaunay.find_simplex(np.array(rtn_object.xy)) < 0
+
+            if not bad_position and not allow_overlapping:
+                # find bad_positions
+                dist = self.distances(rtn_object)
+                if isinstance(occupied_space, GenericObjectArray):
+                    dist = np.append(dist, occupied_space.distances(rtn_object))
+                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
+                bad_position = len(idx) > 0
+
+            if not bad_position:
+                return rtn_object
+            elif cnt > N_ATTEMPTS:
+                raise StopIteration(u"Can't find a free position")
+
+# TODO  everywhere: file header doc and author information

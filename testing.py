@@ -3,7 +3,7 @@ from pynsn import distributions as distr
 from pynsn.image import svg_file, ImageColours
 
 from pynsn import visual_properties as props
-
+import numpy as np
 
 # define the visual features of the  dot array
 ref = arrays.GenericObjectArray(target_area_radius=200)
@@ -28,18 +28,22 @@ my_colours = ImageColours(target_area="#EEEEEE",
 
 stimulus = random_array.create(reference_array=ref,
                                size_distribution=size_dist_dot,
-                               n_objects=15,
+                               n_objects=25,
                                attributes=["blue", "green"])
-props.scale.log_size(stimulus, 1.3)
+#props.scale.log_size(stimulus, 1.3)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
-dist = stimulus.distances_matrix(between_positions=False,
-                                 overlap_is_zero=False)
 
-
-
+####
 stim_scaled = stimulus.copy()
+stim_scaled.replace_overlapping_objects()
+
+stim_scaled.shuffle_all_positions(allow_overlapping=False)
+print(stimulus.overlaps())
+print(stim_scaled.overlaps())
+
+#stim_scaled.realign()
 #props.scale.visual_property(stim_scaled, feature=feat, factor=1)
 svg = svg_file.create(stim_scaled, my_colours, filename="demo_scaled.svg")
 svg.save()

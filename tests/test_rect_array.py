@@ -1,5 +1,6 @@
 import unittest
-from pynsn import distr, random_array
+from pynsn import  random_array
+from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale
 from test_dot_array import DotsSmall
 

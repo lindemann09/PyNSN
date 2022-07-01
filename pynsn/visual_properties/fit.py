@@ -42,6 +42,7 @@ def change_adapt_settings(default_spacing_precision=None,
 def numerosity(object_array, value, keeping_field_area=False):
     TRY_OUT = 300
     _arrays._check_object_array(object_array)
+
     # make a copy for the deviant
     if value <= 0:
         object_array.clear()
@@ -65,25 +66,16 @@ def numerosity(object_array, value, keeping_field_area=False):
             else:
                 # add dot
                 # copy a random dot
-                rnd_object = object_array.get([rnd])[0]
-                if keeping_field_area:
-                    convex_hull_xy = object_array.properties.convex_hull_positions.xy
-                else:
-                    convex_hull_xy = None
+                rnd_object = object_array.get(rnd)[0]
                 try:
-                    rnd_object.xy = _tools.get_random_free_position(
-                        the_object=rnd_object,
-                        target_area_radius=object_array.target_area_radius,
-                        distances_function=object_array.distances,
-                        min_dist_between=object_array.min_dist_between,
-                        min_dist_area_boarder=object_array.min_dist_area_boarder,
-                        allow_overlapping=False,
-                        occupied_space_distances_function=None,
-                        convex_hull_xy=convex_hull_xy)
+                    rnd_object = object_array.get_random_free_position(
+                        ref_object=rnd_object, allow_overlapping=False,
+                        inside_convex_hull=keeping_field_area
+                    )
                 except StopIteration:
                     # no free position
                     raise StopIteration("Can't make the deviant. No free position found.")
-                object_array.add(rnd_object)
+                object_array.add([rnd_object])
 
     return object_array
 

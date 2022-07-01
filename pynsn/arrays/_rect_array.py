@@ -117,6 +117,7 @@ class RectangleArray(GenericObjectArray):
         if self._properties.numerosity == 0:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
+                min_dist_area_boarder=self.min_dist_area_boarder,
                 min_dist_between=self.min_dist_between)
         else:
             if indices is None:
@@ -155,7 +156,7 @@ class RectangleArray(GenericObjectArray):
             return np.array([])
         else:
             d_xy = self._xy_distances(rect)
-            # distances with a two one negative xy_distance --> overlap
+            # distances with a two one negative xy_distances --> overlap
             overlap = np.array(np.sum(d_xy<0, axis=1) == 2, dtype=int)
             return np.hypot(d_xy[:,0], d_xy[:,1])   * (overlap * -2 + 1) # overlap [0, 1, 0] -> [1,-1, 1]
 
@@ -172,9 +173,8 @@ class RectangleArray(GenericObjectArray):
                                           self._attributes)]
         try:
             indices = list(indices)  # check if iterable
-        except:
+        except TypeError:
             indices = [indices]
-
         return [Rectangle(xy=xy, size=s, attribute=att) \
                     for xy, s, att in zip(self._xy[indices, :],
                                         self._sizes[indices],
@@ -245,35 +245,6 @@ class RectangleArray(GenericObjectArray):
         """add another rect arrays"""
         assert isinstance(rect_array, RectangleArray)
         self.add(rect_array.get())
-
-    def get_random_free_position(self,
-                                 rectangle_size,
-                                 allow_overlapping = False,
-                                 inside_convex_hull = False,
-                                 occupied_space = None):
-        """returns a available random xy position
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-
-        if isinstance(occupied_space, GenericObjectArray):
-            os_distance_fnc = occupied_space.distances
-        else:
-            os_distance_fnc = None
-        if inside_convex_hull:
-            convex_hull_xy = self.properties.convex_hull_positions.xy
-        else:
-            convex_hull_xy = None
-        return _tools.get_random_free_position(
-            the_object=Rectangle(xy=(0, 0), size=rectangle_size),
-            target_area_radius = self.target_area_radius,
-            allow_overlapping=allow_overlapping,
-            distances_function=self.distances,
-            min_dist_between=self.min_dist_between,
-            min_dist_area_boarder=self.min_dist_area_boarder,
-            occupied_space_distances_function=os_distance_fnc,
-            convex_hull_xy=convex_hull_xy)
 
     def _remove_overlap_from_inner_to_outer(self):
         raise NotImplementedError()

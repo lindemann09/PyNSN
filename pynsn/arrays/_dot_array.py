@@ -151,7 +151,6 @@ class DotArray(GenericObjectArray):
             indices = list(indices)  # check if iterable
         except TypeError:
             indices = [indices]
-
         return [Dot(xy=xy, diameter=dia, attribute=att) \
                 for xy, dia, att in zip(self._xy[indices, :],
                                         self._diameters[indices],
@@ -209,37 +208,7 @@ class DotArray(GenericObjectArray):
         assert isinstance(dot_array, DotArray)
         self.add(dot_array.get())
 
-    def get_random_free_position(self,
-                                 dot_diameter,
-                                 allow_overlapping = False,
-                                 inside_convex_hull = False,
-                                 occupied_space = None):
-        """returns a available random xy position
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-
-        if isinstance(occupied_space, GenericObjectArray):
-            os_distance_fnc = occupied_space.distances
-        else:
-            os_distance_fnc = None
-        if inside_convex_hull:
-            convex_hull_xy = self.properties.convex_hull_positions.xy
-        else:
-            convex_hull_xy = None
-        return _tools.get_random_free_position(
-            the_object=Dot(xy=(0, 0), diameter=dot_diameter),
-            target_area_radius=self.target_area_radius,
-            allow_overlapping=allow_overlapping,
-            distances_function=self.distances,
-            min_dist_between=self.min_dist_between,
-            min_dist_area_boarder=self.min_dist_area_boarder,
-            occupied_space_distances_function=os_distance_fnc,
-            convex_hull_xy=convex_hull_xy)
-
-
-    def realign_old(self):  # TODO update realignment
+    def __realign_old(self):
         """Realigns the obejcts in order to remove all dots overlaps and dots
         outside the target area.
 
@@ -298,10 +267,30 @@ class DotArray(GenericObjectArray):
             return True, ""
         else:
             return self.realign()  # recursion
-    
+
+    def replace_overlapping_objects(self):
+
+        TRY = 300
+        replacement_required = False
+        overlaps = self.overlaps()
+
+        while len(overlaps) > 0:
+            idx = overlaps[0,:]
+            obj = self.get(idx[0])
+            self.delete(idx[0])
+            #_tools.get_random_free_position()
+            cnt = 0
+
+            overlaps = self.overlaps()
+            break
+
+        return replacement_required
+
     def realign(self):
         error = False
         realign_required = False
+
+        self.center_array()
         cnt = 0
         while True:
             cnt += 1
@@ -327,15 +316,15 @@ class DotArray(GenericObjectArray):
         new_xy = None
         for d in self.diameters:
             try:
-                xy = self.get_random_free_position(d,
+                dot = self.get_random_free_position(Dot(xy=(0,0), diameter=d),
                                                    allow_overlapping=allow_overlapping)
             except StopIteration as e:
                 raise StopIteration("Can't shuffle dot array. No free positions found.")
 
             if new_xy is None:
-                new_xy = np.array([xy])
+                new_xy = np.array([dot.xy])
             else:
-                new_xy = np.append(new_xy, [xy], axis=0)
+                new_xy = np.append(new_xy, [dot.xy], axis=0)
 
         self._xy = new_xy
         self._properties.reset()
