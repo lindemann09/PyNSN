@@ -1,4 +1,3 @@
-import numpy as np
 from .._lib.misc import dict_to_text
 from .. import shapes
 

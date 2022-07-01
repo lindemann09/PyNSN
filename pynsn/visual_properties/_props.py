@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from enum import IntFlag, auto
+from math import log2
 
 import numpy as np
 from .._lib import misc
@@ -149,8 +150,8 @@ class ArrayProperties(object):
     @property
     def log_size(self):
         try:
-            return misc.log2(self.total_surface_area) + misc.log2(
-                    self.average_surface_area)
+            return log2(self.total_surface_area) + \
+                   log2(self.average_surface_area)
         except ValueError:
             return np.nan
 
@@ -158,7 +159,7 @@ class ArrayProperties(object):
     @property
     def log_spacing(self):
         try:
-            return misc.log2(self.field_area) + misc.log2(self.sparsity)
+            return log2(self.field_area) + log2(self.sparsity)
         except ValueError:
             return np.nan
 

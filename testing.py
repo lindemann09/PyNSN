@@ -34,15 +34,14 @@ stimulus = random_array.create(reference_array=ref,
                                size_distribution=size_dist_rect,
                                n_objects=15,
                                attributes=["blue", "green"])
-#props.scale.log_size(stimulus, 1.3)
+props.scale.log_size(stimulus, 1.12)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
 
 ####
 stim_scaled = stimulus.copy()
-#stim_scaled.replace_overlapping_objects()
-stim_scaled.shuffle_all_positions(allow_overlapping=False)
+stim_scaled.replace_overlapping_objects()
 
 print(stimulus.overlaps())
 print(stim_scaled.overlaps())

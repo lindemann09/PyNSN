@@ -1,10 +1,9 @@
 import random as _random
 import numpy as _np
-from .._lib import misc as _misc
+from math import log2 as _log2
 from .._lib import geometry as _geometry
 from .. import arrays as _arrays
 from ._props import VisualPropertyFlag as _flags
-from ..arrays import _tools
 
 DEFAULT_SPACING_PRECISION = 0.0001
 DEFAULT_ADAPT_FA2TA_RATIO = 0.5
@@ -238,13 +237,13 @@ def average_surface_area(object_array, value):
 
 def log_spacing(object_array, value, precision=None):
     _arrays._check_object_array(object_array)
-    logfa = 0.5 * value + 0.5 * _misc.log2(
+    logfa = 0.5 * value + 0.5 * _log2(
         object_array.properties.numerosity)
     return field_area(object_array, value=2 ** logfa, precision=precision)
 
 def log_size(object_array, value):
     _arrays._check_object_array(object_array)
-    logtsa = 0.5 * value + 0.5 * _misc.log2(object_array.properties.numerosity)
+    logtsa = 0.5 * value + 0.5 * _log2(object_array.properties.numerosity)
     return total_surface_area(object_array, 2 ** logtsa)
 
 def sparcity(object_array, value, precision=None):

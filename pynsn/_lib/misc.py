@@ -7,13 +7,6 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from collections import OrderedDict
 import numpy as np
 
-try:
-    from math import log2
-except:
-    from math import log
-
-    log2 = lambda x: log(x, 2)
-
 
 def is_base_string(s):
     return isinstance(s, (str, bytes))
@@ -80,7 +73,6 @@ def numpy_round2(array, decimals, int_type=np.int32):
         return array.astype(int_type)
     else:
         return array
-
 
 def is_all_larger(vector, standard=0):
     return sum(map(lambda x: x > standard, vector))==len(vector)
