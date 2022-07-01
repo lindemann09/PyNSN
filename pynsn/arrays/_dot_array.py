@@ -282,24 +282,6 @@ class DotArray(GenericObjectArray):
         else:
             return self.realign()  # recursion
 
-    def replace_overlapping_objects(self):
-
-        TRY = 300
-        replacement_required = False
-        overlaps = self.overlaps()
-
-        while len(overlaps) > 0:
-            idx = overlaps[0,:]
-            obj = self.get(idx[0])
-            self.delete(idx[0])
-            #_tools.get_random_free_position()
-            cnt = 0
-
-            overlaps = self.overlaps()
-            break
-
-        return replacement_required
-
     def realign(self):
         error = False
         realign_required = False

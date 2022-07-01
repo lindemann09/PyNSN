@@ -120,12 +120,13 @@ class GenericObjectArray(object):
         return m.hexdigest()
 
     def get_number_deviant(self, change_numerosity,
-                           keeping_field_area=False):
+                           preserve_convex_hull=False):
         """number deviant
         """
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
-        fit.numerosity(object_array, value=new_num, keeping_field_area=False)
+        fit.numerosity(object_array, value=new_num,
+                       preserve_convex_hull=preserve_convex_hull)
         return object_array
 
     def as_dict(self):
@@ -218,7 +219,7 @@ class GenericObjectArray(object):
                         attributes=self._attributes[indices])
 
 
-    def get(self):
+    def get(self, indices):
         raise NotImplementedError()
 
     def add(self, something):
@@ -268,19 +269,15 @@ class GenericObjectArray(object):
         elif isinstance(ref_object, shapes.Rectangle):
             object_size = max(ref_object.size)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("Not implemented for {}".format(
+                type(ref_object).__name__))
         if occupied_space is not None and \
                 not isinstance(occupied_space, GenericObjectArray):
             raise TypeError("Occupied_space has to be a Dot or Rectangle Array or None.")
 
-        delaunay = None
-        if inside_convex_hull:
-            convex_hull_xy = self.properties.convex_hull_positions.xy
-            if len(convex_hull_xy)>0:
-                delaunay = spatial.Delaunay(convex_hull_xy)
-
         area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size
         rtn_object = deepcopy(ref_object) # tested deepcopy required
+
         cnt = 0
         while True:
             cnt += 1
@@ -301,16 +298,19 @@ class GenericObjectArray(object):
                         bad_position = True
                         break
 
-            if not bad_position and delaunay is not None: # inside convex hull only
-                bad_position = delaunay.find_simplex(np.array(rtn_object.xy)) < 0
-
             if not bad_position and not allow_overlapping:
                 # find bad_positions
                 dist = self.distances(rtn_object)
                 if isinstance(occupied_space, GenericObjectArray):
                     dist = np.append(dist, occupied_space.distances(rtn_object))
-                idx = np.where(dist < self.min_dist_between)[0]  # overlapping dot ids
-                bad_position = len(idx) > 0
+                bad_position = sum(dist < self.min_dist_between) > 0 # at least one is overlapping
+
+            if not bad_position and inside_convex_hull:
+                # use only those that do not change the convex hull
+                tmp_array = self.copy(deepcopy=True)
+                tmp_array.add([rtn_object])
+                bad_position = tmp_array.properties.convex_hull != \
+                               self.properties.convex_hull
 
             if not bad_position:
                 return rtn_object
@@ -331,6 +331,59 @@ class GenericObjectArray(object):
             except StopIteration as e:
                 raise StopIteration("Can't shuffle dot array. No free positions found.")
             self.add([new])
+
+
+    def replace_overlapping_objects(self, preserve_convex_hull=False,
+                                    lenient=True):
+        """
+        Returns
+        Parameters
+        ----------
+        preserve_convex_hull
+        lenient
+
+        Returns
+        -------
+        convex_hull_had_changed
+        """
+
+        warning_info = "Convex hull had to change, because two overlapping " + \
+                       "objects on convex hull"
+        convex_hull_had_changed = False
+
+        overlaps = self.overlaps()
+        while len(overlaps):
+            if preserve_convex_hull:
+                # check if overlaps are on convex hull
+                # do not replace convexhull objects and try to
+                # take that one not on convex hull or raise error/warning
+                ch_idx = self.properties.convex_hull.indices
+                if overlaps[0,0] not in ch_idx:
+                    idx = overlaps[0,0]
+                elif overlaps[0,1] not in ch_idx:
+                    idx = overlaps[0,1]
+                elif lenient:
+                    # warning
+                    convex_hull_had_changed = True
+                    idx = overlaps[0,0]
+                else:
+                    raise StopIteration("Can't replace overlap and keep convex hull unchanged. " +
+                                    warning_info)
+            else:
+                idx = overlaps[0,0]
+
+            obj = self.get(idx)[0]
+            self.delete(idx)
+            obj = self.get_random_free_position(ref_object=obj,
+                                                inside_convex_hull=preserve_convex_hull)
+            self.add([obj])
+            overlaps = self.overlaps()
+
+        if convex_hull_had_changed:
+            print("Warning: " + warning_info)
+
+
+        return convex_hull_had_changed
 
     def realign(self):
         raise NotImplementedError()

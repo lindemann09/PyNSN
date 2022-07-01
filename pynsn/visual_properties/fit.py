@@ -38,7 +38,7 @@ def change_adapt_settings(default_spacing_precision=None,
 ##FIXME FIELD_AREA_POSITIONS
 
 
-def numerosity(object_array, value, keeping_field_area=False):
+def numerosity(object_array, value, preserve_convex_hull=False):
     TRY_OUT = 300
     _arrays._check_object_array(object_array)
 
@@ -50,7 +50,7 @@ def numerosity(object_array, value, keeping_field_area=False):
         change_numerosity = value - object_array._properties.numerosity
         rnd = None
         for _ in range(abs(change_numerosity)):
-            if keeping_field_area:
+            if preserve_convex_hull:
                 ch = object_array._properties.convex_hull.indices
             else:
                 ch = []
@@ -69,7 +69,7 @@ def numerosity(object_array, value, keeping_field_area=False):
                 try:
                     rnd_object = object_array.get_random_free_position(
                         ref_object=rnd_object, allow_overlapping=False,
-                        inside_convex_hull=keeping_field_area
+                        inside_convex_hull=preserve_convex_hull
                     )
                 except StopIteration:
                     # no free position

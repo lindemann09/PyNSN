@@ -32,6 +32,11 @@ class ConvexHullBaseClass(object):
     def indices(self):
         return self._convex_hull.vertices
 
+    def __eq__(self, other):
+        """convex hulls are assumed to be identical if same field area is
+        identical and convex comprises the same amount of points"""
+        return len(self.xy) == len(other.xy) and \
+               self.field_area == other.field_area
 
 class ConvexHullPositions(ConvexHullBaseClass):
     """convenient wrapper class for calculation of convex hulls

@@ -183,7 +183,7 @@ def create(specs,
             adapt_property=adapt_property,
             target_numerosity=min_,
             round_decimals=round_decimals,
-            prefer_keeping_field_area=prefer_keeping_field_area)
+            prefer_preserve_field_area=prefer_keeping_field_area)
 
         rtn.append_dot_arrays(list(reversed(tmp)))
         if error is not None:
@@ -197,7 +197,7 @@ def create(specs,
             adapt_property=adapt_property,
             target_numerosity=max_,
             round_decimals=round_decimals,
-            prefer_keeping_field_area=prefer_keeping_field_area)
+            prefer_preserve_field_area=prefer_keeping_field_area)
         rtn.append_dot_arrays(tmp)
         if error is not None:
             rtn.error = error
@@ -205,7 +205,7 @@ def create(specs,
     return rtn
 
 def _make_adapted_deviants(reference_da, adapt_property, target_numerosity,
-                           round_decimals, prefer_keeping_field_area):
+                           round_decimals, prefer_preserve_field_area):
     """helper function. Do not use this method. Please use make"""
 
 
@@ -225,7 +225,7 @@ def _make_adapted_deviants(reference_da, adapt_property, target_numerosity,
     while True:
         try:
             da = da.get_number_deviant(change_numerosity=change,
-                                       keeping_field_area=prefer_keeping_field_area)
+                                       preserve_convex_hull=prefer_preserve_field_area)
         except:
             return [], "ERROR: Can't find the a make adapted deviants"
 
