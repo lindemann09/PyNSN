@@ -43,8 +43,8 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
         rtn += ",".join(d.keys()) + "\n"
 
     if dict_of_lists:
-        feat_np = np.array(list(d.values())).T  # list is requires in PY3
-        for x in feat_np:
+        prop_np = np.array(list(d.values())).T  # list is requires in PY3
+        for x in prop_np:
             rtn += ", ".join(map(lambda s: str(s), x)) + "\n"
     else:
         rtn += ",".join(map(lambda s: str(s), d.values())) + "\n"

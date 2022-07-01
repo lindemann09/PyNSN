@@ -3,8 +3,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as _np
 from matplotlib import pyplot as _plt
 from . import _colour
-from .._lib import arrays as _arrays
-from .._lib import shapes as _shape
+from .. import arrays as _arrays
+from .. import shapes as _shape
 
 from ._colour import ImageColours # make available
 
@@ -34,7 +34,7 @@ def create(object_array, colours, dpi=100):
                   attribute=colours.target_area.colour)
         _draw_shape(axes, obj)
 
-    if object_array.features.numerosity > 0:
+    if object_array.properties.numerosity > 0:
         if isinstance(object_array, _arrays.DotArray):
             # draw dots
             for xy, d, att in zip(object_array.xy,
@@ -58,12 +58,12 @@ def create(object_array, colours, dpi=100):
     # draw convex hulls
     if colours.field_area_positions.colour is not None:
         _draw_convex_hull(axes=axes,
-                          points= object_array.features.convex_hull_positions.xy,
+                          points= object_array.properties.convex_hull_positions.xy,
                           convex_hull_colour=colours.field_area_positions.colour,
                           opacity=colours.info_shapes_opacity)
     if colours.field_area.colour is not None:
         _draw_convex_hull(axes=axes,
-                          points=object_array.features.convex_hull.xy,
+                          points=object_array.properties.convex_hull.xy,
                           convex_hull_colour=colours.field_area.colour,
                           opacity=colours.info_shapes_opacity)
     #  and center of mass

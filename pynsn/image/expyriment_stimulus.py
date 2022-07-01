@@ -8,7 +8,7 @@ from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 from . import _colour
 from . import pil_image as _pil_image
-from .._lib.arrays import _check_generic_array
+from ..arrays import _check_generic_array
 
 from ._colour import ImageColours # make available
 

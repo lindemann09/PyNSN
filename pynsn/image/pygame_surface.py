@@ -4,7 +4,7 @@ import pygame as _pygame
 
 from . import _colour
 from . import pil_image as _pil_image
-from .._lib.arrays import _check_object_array
+from ..arrays import _check_object_array
 
 from ._colour import ImageColours # make available
 

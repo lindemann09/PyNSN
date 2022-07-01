@@ -1,5 +1,6 @@
 import unittest
-from pynsn import arrays, distr, random_array, adapt, VisualFeatureTypes, scale
+from pynsn import arrays, distr, random_array
+from pynsn.visual_properties import fit, scale, flags
 
 # FIXME testing adapt setting and iterative_convex_hull_modification method
 
@@ -18,69 +19,69 @@ class DotsSmall(unittest.TestCase):
                                        n_objects=self.n_dots)
 
     def test_numerosity(self):
-        self.assertEqual(self.stimulus.features.numerosity, self.n_dots)
+        self.assertEqual(self.stimulus.properties.numerosity, self.n_dots)
 
-    def change_feature(self, feature, first=0.8, second=1.15,
-                       scale_factor = 1.1, places=7):
+    def change_prop(self, prop, first=0.8, second=1.15,
+                    scale_factor = 1.1, places=7):
 
         # check scale
         stim = self.stimulus.copy()
-        new_value = stim.features.get(feature) * scale_factor
-        scale.visual_feature(stim, feature, scale_factor)
-        self.assertAlmostEqual(stim.features.get(feature),
+        new_value = stim.properties.get(prop) * scale_factor
+        scale.visual_property(stim, prop, scale_factor)
+        self.assertAlmostEqual(stim.properties.get(prop),
                                new_value, places=places)
 
         #  changes two time feature (e.g. first decrease and then increase)
         # first
-        new_value = stim.features.get(feature) * first
-        adapt.visual_feature(stim, feature, new_value)
-        self.assertAlmostEqual(stim.features.get(feature),
+        new_value = stim.properties.get(prop) * first
+        fit.visual_property(stim, prop, new_value)
+        self.assertAlmostEqual(stim.properties.get(prop),
                                new_value, places=places)
         #second
-        new_value = stim.features.get(feature) * second
-        adapt.visual_feature(stim, feature, new_value)
-        self.assertAlmostEqual(stim.features.get(feature), new_value,
+        new_value = stim.properties.get(prop) * second
+        fit.visual_property(stim, prop, new_value)
+        self.assertAlmostEqual(stim.properties.get(prop), new_value,
                                places=places)
 
 
     def test_match_av_surface_area(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.AV_SURFACE_AREA)
+        self.change_prop(prop=flags.AV_SURFACE_AREA)
 
     def test_match_av_size(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.AV_DOT_DIAMETER)
+        self.change_prop(prop=flags.AV_DOT_DIAMETER)
 
     def test_match_av_perimeter(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.AV_PERIMETER)
+        self.change_prop(prop=flags.AV_PERIMETER)
 
     def test_match_total_surface_area(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.TOTAL_SURFACE_AREA)
+        self.change_prop(prop=flags.TOTAL_SURFACE_AREA)
 
     def test_match_total_perimeter(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.TOTAL_PERIMETER)
+        self.change_prop(prop=flags.TOTAL_PERIMETER)
 
     def test_match_field_area(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.SPARSITY, first=1.2,
-                            second=0.85, places=4)
+        self.change_prop(prop=flags.SPARSITY, first=1.2,
+                         second=0.85, places=4)
 
     def test_match_sparcity(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.SPARSITY, first=1.2,
-                            second=0.85, places=4)
+        self.change_prop(prop=flags.SPARSITY, first=1.2,
+                         second=0.85, places=4)
 
     def test_match_log_size(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.LOG_SIZE)
+        self.change_prop(prop=flags.LOG_SIZE)
 
     def test_match_log_spacing(self):
         # decrease
-        self.change_feature(feature=VisualFeatureTypes.LOG_SPACING, first=1.2,
-                            second=0.85)
+        self.change_prop(prop=flags.LOG_SPACING, first=1.2,
+                         second=0.85)
 
 
 class DotsMedium(DotsSmall):

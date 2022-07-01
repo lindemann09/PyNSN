@@ -7,9 +7,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from ._generic_object_array import GenericObjectArray
-from .. import misc
+from .._lib import misc
 from ..shapes import Rectangle, Point
-from . import _manipulate
+from . import _tools
 
 class RectangleArray(GenericObjectArray):
     """
@@ -25,8 +25,8 @@ class RectangleArray(GenericObjectArray):
         """Rectangular array is restricted to a certain area, it has a target area
         and a minimum gap.
 
-        This features allows shuffling free position and adapting
-        features.
+        This properties allows shuffling free position and adapting
+        properties.
 
         """
         super().__init__(xy=xy, attributes=attributes,
@@ -114,13 +114,13 @@ class RectangleArray(GenericObjectArray):
 
         """
 
-        if self._features.numerosity == 0:
+        if self._properties.numerosity == 0:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
                 min_dist_between=self.min_dist_between)
         else:
             if indices is None:
-                indices = list(range(self._features.numerosity))
+                indices = list(range(self._properties.numerosity))
 
             return RectangleArray(
                         target_area_radius=self.target_area_radius,
@@ -231,7 +231,7 @@ class RectangleArray(GenericObjectArray):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
-                rtn += "{},".format(self._features.numerosity)
+                rtn += "{},".format(self._properties.numerosity)
             rtn += "{},{},{},{}".format(self._xy[cnt, 0],
                                      self._xy[cnt, 1],
                                      self._sizes[cnt, 0],
@@ -262,10 +262,10 @@ class RectangleArray(GenericObjectArray):
         else:
             os_distance_fnc = None
         if inside_convex_hull:
-            convex_hull_xy = self.features.convex_hull_positions.xy
+            convex_hull_xy = self.properties.convex_hull_positions.xy
         else:
             convex_hull_xy = None
-        return _manipulate.get_random_free_position(
+        return _tools.get_random_free_position(
             the_object=Rectangle(xy=(0, 0), size=rectangle_size),
             target_area_radius = self.target_area_radius,
             allow_overlapping=allow_overlapping,

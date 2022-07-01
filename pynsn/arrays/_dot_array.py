@@ -7,9 +7,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from ._generic_object_array import GenericObjectArray
-from .. import misc, geometry
+from .._lib import misc, geometry
 from ..shapes import Dot
-from . import _manipulate
+from . import _tools
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -33,8 +33,8 @@ class DotArray(GenericObjectArray):
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
 
-        This features allows shuffling free position and adapting
-        features.
+        This properties allows shuffling free position and adapting
+        properties.
         """
         super().__init__(xy=xy, attributes=attributes,
                          target_area_radius=target_area_radius,
@@ -112,7 +112,7 @@ class DotArray(GenericObjectArray):
         """
 
         if indices is None:
-            indices = list(range(self._features.numerosity))
+            indices = list(range(self._properties.numerosity))
 
         return DotArray(target_area_radius=self.target_area_radius,
                         min_dist_between=self.min_dist_between,
@@ -170,7 +170,7 @@ class DotArray(GenericObjectArray):
 
     def csv(self, variable_names=True,
             hash_column=True, num_idx_column=True,
-            attribute_column=False):  # todo print features
+            attribute_column=False):  # todo print properties
         """Return the dot array as csv text
 
         Parameter
@@ -196,7 +196,7 @@ class DotArray(GenericObjectArray):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
             if num_idx_column:
-                rtn += "{},".format(self._features.numerosity)
+                rtn += "{},".format(self._properties.numerosity)
             rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
                                      self._diameters[cnt])
             if attribute_column:
@@ -225,10 +225,10 @@ class DotArray(GenericObjectArray):
         else:
             os_distance_fnc = None
         if inside_convex_hull:
-            convex_hull_xy = self.features.convex_hull_positions.xy
+            convex_hull_xy = self.properties.convex_hull_positions.xy
         else:
             convex_hull_xy = None
-        return _manipulate.get_random_free_position(
+        return _tools.get_random_free_position(
             the_object=Dot(xy=(0, 0), diameter=dot_diameter),
             target_area_radius=self.target_area_radius,
             allow_overlapping=allow_overlapping,
@@ -256,7 +256,7 @@ class DotArray(GenericObjectArray):
 
         error = False
 
-        xy, shift_required = _manipulate.remove_overlap_from_inner_to_outer(
+        xy, shift_required = _tools.remove_overlap_from_inner_to_outer(
             xy=self.xy, min_dist_between=self.min_dist_between,
             distance_matrix_function=self.distances_matrix)
 
@@ -291,9 +291,9 @@ class DotArray(GenericObjectArray):
 
         if error:
             return False, u"Can't find solution when removing outlier (n=" + \
-                   str(self._features.numerosity) + ")"
+                   str(self._properties.numerosity) + ")"
 
-        self._features.reset()
+        self._properties.reset()
         if not shift_required:
             return True, ""
         else:
@@ -311,9 +311,9 @@ class DotArray(GenericObjectArray):
 
         if error:
             raise RuntimeError("Can't find solution when removing outlier (n=" + \
-                   str(self._features.numerosity) + ")")
+                   str(self._properties.numerosity) + ")")
 
-        self._features.reset()
+        self._properties.reset()
         if not realign_required:
             return True, ""
         else:
@@ -338,7 +338,7 @@ class DotArray(GenericObjectArray):
                 new_xy = np.append(new_xy, [xy], axis=0)
 
         self._xy = new_xy
-        self._features.reset()
+        self._properties.reset()
 
 
     def get_split_arrays(self):

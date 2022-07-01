@@ -5,8 +5,8 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib import shapes as _shape
-from .._lib  import arrays as _arrays
+from .. import shapes as _shape
+from .. import arrays as _arrays
 
 from ._colour import ImageColours # make available
 
@@ -49,7 +49,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                          attribute=colours.target_area.colour)
         _draw_shape(img, obj)
 
-    if object_array.features.numerosity > 0:
+    if object_array.properties.numerosity > 0:
         image_coord = _c2i_coord(object_array.xy * aaf, image_size)
         if isinstance(object_array, _arrays.DotArray):
             # draw dots
@@ -74,12 +74,12 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
         if colours.field_area_positions.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
-                                  object_array.features.convex_hull_positions.xy * aaf, image_size),
+                                  object_array.properties.convex_hull_positions.xy * aaf, image_size),
                               convex_hull_colour=colours.field_area_positions.colour)
         if colours.field_area.colour is not None:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
-                                  object_array.features.convex_hull.xy * aaf,
+                                  object_array.properties.convex_hull.xy * aaf,
                                   image_size),
                               convex_hull_colour=colours.field_area.colour)
         #  and center of mass

@@ -1,7 +1,7 @@
 from collections import OrderedDict
-from ..misc import dict_to_text
+from .._lib.misc import dict_to_text
 
-from ..distributions import PyNSNDistribution
+from ..random_array.distributions import PyNSNDistribution
 
 class SizeDistribution(object):
 

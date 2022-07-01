@@ -1,12 +1,38 @@
 import random as _random
 import numpy as _np
-from . import misc as _misc
-from . import geometry as _geometry
-from . import arrays as _arrays
-from .visual_features import VisualFeatureTypes as _VF
-from . import adapt_settings as _settings
-from .arrays import _manipulate
-from .adapt_settings import change_adapt_settings # make available
+from .._lib import misc as _misc
+from .._lib import geometry as _geometry
+from .. import arrays as _arrays
+from ._props import VisualPropertyFlag as _flags
+from ..arrays import _tools
+
+DEFAULT_SPACING_PRECISION = 0.0001
+DEFAULT_ADAPT_FA2TA_RATIO = 0.5
+
+def change_adapt_settings(default_spacing_precision=None,
+                          default_adapt_fa2ta_ratio=None):
+    """Changing class settings of property fitting.
+
+    This changes the settings of the property fitting.
+
+
+    Parameters
+    ----------
+    default_spacing_precision
+    default_adapt_fa2ta_ratio
+
+    Returns
+    -------
+
+    """
+    global DEFAULT_ADAPT_FA2TA_RATIO
+    global DEFAULT_SPACING_PRECISION
+    if isinstance(default_spacing_precision, float):
+        DEFAULT_SPACING_PRECISION = default_spacing_precision
+    if isinstance(default_adapt_fa2ta_ratio, float):
+        DEFAULT_ADAPT_FA2TA_RATIO = default_adapt_fa2ta_ratio
+
+
 
 
 #FIXME coverage for all
@@ -21,15 +47,15 @@ def numerosity(object_array, value, keeping_field_area=False):
         object_array.clear()
     else:
         # add or remove random dots
-        change_numerosity = value - object_array._features.numerosity
+        change_numerosity = value - object_array._properties.numerosity
         rnd = None
         for _ in range(abs(change_numerosity)):
             if keeping_field_area:
-                ch = object_array._features.convex_hull.indices
+                ch = object_array._properties.convex_hull.indices
             else:
                 ch = []
             for _ in range(TRY_OUT):
-                rnd = _random.randint(0, object_array._features.numerosity - 1)  # do not use np.random
+                rnd = _random.randint(0, object_array._properties.numerosity - 1)  # do not use np.random
                 if rnd not in ch or change_numerosity > 0:
                     break
 
@@ -41,11 +67,11 @@ def numerosity(object_array, value, keeping_field_area=False):
                 # copy a random dot
                 rnd_object = object_array.get([rnd])[0]
                 if keeping_field_area:
-                    convex_hull_xy = object_array.features.convex_hull_positions.xy
+                    convex_hull_xy = object_array.properties.convex_hull_positions.xy
                 else:
                     convex_hull_xy = None
                 try:
-                    rnd_object.xy = _manipulate.get_random_free_position(
+                    rnd_object.xy = _tools.get_random_free_position(
                         the_object=rnd_object,
                         target_area_radius=object_array.target_area_radius,
                         distances_function=object_array.distances,
@@ -67,9 +93,9 @@ def average_diameter(dot_array, value):
     if not isinstance(dot_array, _arrays.DotArray):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
-    scale = value / dot_array.features.average_dot_diameter
+    scale = value / dot_array.properties.average_dot_diameter
     dot_array._diameters = dot_array.diameters * scale
-    dot_array.features.reset()
+    dot_array.properties.reset()
     return dot_array
 
 def average_rectangle_size(rect_array, value):
@@ -83,16 +109,16 @@ def average_rectangle_size(rect_array, value):
         raise TypeError("Value ({}) has to tuple of 2 numerical (width, height).".format(
             value))
 
-    scale = _np.array([width / rect_array.features.average_rectangle_size[0],
-                       height / rect_array.features.average_rectangle_size[1]])
+    scale = _np.array([width / rect_array.properties.average_rectangle_size[0],
+                       height / rect_array.properties.average_rectangle_size[1]])
     rect_array._sizes = rect_array._sizes * scale
-    rect_array.features.reset()
+    rect_array.properties.reset()
     return rect_array
 
 def total_surface_area(object_array, value):
     # changes diameter
     _arrays._check_object_array(object_array)
-    a_scale = value / object_array.features.total_surface_area
+    a_scale = value / object_array.properties.total_surface_area
     if isinstance(object_array, _arrays.DotArray):
         object_array._diameters = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
@@ -100,7 +126,7 @@ def total_surface_area(object_array, value):
     else: # rect
         object_array._sizes = object_array._sizes * _np.sqrt(a_scale)
 
-    object_array.features.reset()
+    object_array.properties.reset()
     return object_array
 
 def field_area(object_array, value, precision=None):
@@ -114,9 +140,9 @@ def field_area(object_array, value, precision=None):
 
     _arrays._check_object_array(object_array)
     if precision is None:
-        precision = _settings.DEFAULT_SPACING_PRECISION
+        precision = DEFAULT_SPACING_PRECISION
 
-    if object_array.features.field_area is _np.nan:
+    if object_array.properties.field_area is _np.nan:
         return  object_array # not defined
     else:
         return _scale_field_area(object_array, value=value,
@@ -131,7 +157,7 @@ def _scale_field_area(object_array, value, precision):
     Note: see doc string `_adapt_field_area`
     """
     _arrays._check_object_array(object_array)
-    current = object_array.features.field_area
+    current = object_array.properties.field_area
 
     if current is None:
         return  # not defined
@@ -152,15 +178,15 @@ def _scale_field_area(object_array, value, precision):
         scale += step
 
         object_array._xy = _geometry.polar2cartesian(centered_polar * [scale, 1])
-        object_array.features.reset()  # required at this point to recalc convex hull
-        current = object_array.features.field_area
+        object_array.properties.reset()  # required at this point to recalc convex hull
+        current = object_array.properties.field_area
 
         if (current < value and step < 0) or \
                 (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
     object_array._xy = object_array.xy + old_center
-    object_array.features.reset()
+    object_array.properties.reset()
     return object_array
 
 def coverage(object_array, value,
@@ -181,65 +207,65 @@ def coverage(object_array, value,
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
     if FA2TA_ratio is None:
-        FA2TA_ratio = _settings.DEFAULT_ADAPT_FA2TA_RATIO
+        FA2TA_ratio = DEFAULT_ADAPT_FA2TA_RATIO
     elif FA2TA_ratio < 0 or FA2TA_ratio > 1:
         FA2TA_ratio = 0.5
     if precision is None:
-        precision = _settings.DEFAULT_SPACING_PRECISION
+        precision = DEFAULT_SPACING_PRECISION
 
-    total_area_change100 = (value * object_array.features.field_area) - \
-                           object_array.features.total_surface_area
+    total_area_change100 = (value * object_array.properties.field_area) - \
+                           object_array.properties.total_surface_area
     d_change_total_area = total_area_change100 * (1 - FA2TA_ratio)
     if abs(d_change_total_area) > 0:
-        total_surface_area(object_array.features.total_surface_area + \
+        total_surface_area(object_array.properties.total_surface_area + \
                            d_change_total_area)
 
-    return field_area(object_array.features.total_surface_area / value,
+    return field_area(object_array.properties.total_surface_area / value,
                precision=precision)
 
 def average_perimeter(object_array, value):
     _arrays._check_object_array(object_array)
-    total_peri = value * object_array.features.numerosity
+    total_peri = value * object_array.properties.numerosity
     return total_perimeter(object_array, total_peri)
 
 def total_perimeter(object_array, value):
     if isinstance(object_array, _arrays.DotArray):
-        tmp = value / (object_array.features.numerosity * _np.pi)
+        tmp = value / (object_array.properties.numerosity * _np.pi)
         return average_diameter(object_array, tmp)
     elif isinstance(object_array, _arrays.RectangleArray):
-        scale = value / object_array.features.total_perimeter
-        new_size = object_array.features.average_rectangle_size * scale
+        scale = value / object_array.properties.total_perimeter
+        new_size = object_array.properties.average_rectangle_size * scale
         return average_rectangle_size(object_array, new_size)
     else:
         _arrays._check_object_array(object_array)
 
 def average_surface_area(object_array, value):
     _arrays._check_object_array(object_array)
-    ta = object_array.features.numerosity * value
+    ta = object_array.properties.numerosity * value
     return total_surface_area(object_array, ta)
 
 def log_spacing(object_array, value, precision=None):
     _arrays._check_object_array(object_array)
     logfa = 0.5 * value + 0.5 * _misc.log2(
-        object_array.features.numerosity)
+        object_array.properties.numerosity)
     return field_area(object_array, value=2 ** logfa, precision=precision)
 
 def log_size(object_array, value):
     _arrays._check_object_array(object_array)
-    logtsa = 0.5 * value + 0.5 * _misc.log2(object_array.features.numerosity)
+    logtsa = 0.5 * value + 0.5 * _misc.log2(object_array.properties.numerosity)
     return total_surface_area(object_array, 2 ** logtsa)
 
 def sparcity(object_array, value, precision=None):
     _arrays._check_object_array(object_array)
-    return field_area(object_array, value=value * object_array.features.numerosity,
+    return field_area(object_array, value=value * object_array.properties.numerosity,
                       precision=precision)
 
-def visual_feature(object_array, feature, value):
+def visual_property(object_array, property_flag, value):
     """
     adapt_properties: continuous property or list of continuous properties
     several properties to be adapted
     if adapt dot array is specified, array will be adapt to adapt_dot_array, otherwise
-    the values defined in adapt_features is used.
+    the values defined in adapt_properties is used.
     some adapting requires realignement to avoid overlaps. However,
     realigment might result in a different field area. Thus, realign after
     adapting for  Size parameter and realign before adapting space
@@ -248,43 +274,43 @@ def visual_feature(object_array, feature, value):
     """
 
     # type check
-    if not isinstance(feature, _VF):
-        raise ValueError("{} is not a visual feature.".format(feature))
+    if not isinstance(property_flag, _flags):
+        raise ValueError("{} is not a visual feature.".format(property_flag))
 
     # Adapt
-    if feature == _VF.AV_DOT_DIAMETER:
+    if property_flag == _flags.AV_DOT_DIAMETER:
         return average_diameter(object_array, value=value)
 
-    elif feature == _VF.NUMEROSITY:
+    elif property_flag == _flags.NUMEROSITY:
         return numerosity(object_array, value=value)
 
-    elif feature == _VF.AV_PERIMETER:
+    elif property_flag == _flags.AV_PERIMETER:
         return average_perimeter(object_array, value=value)
 
-    elif feature == _VF.TOTAL_PERIMETER:
+    elif property_flag == _flags.TOTAL_PERIMETER:
         return total_perimeter(object_array, value=value)
 
-    elif feature == _VF.AV_SURFACE_AREA:
+    elif property_flag == _flags.AV_SURFACE_AREA:
         return average_surface_area(object_array, value=value)
 
-    elif feature == _VF.TOTAL_SURFACE_AREA:
+    elif property_flag == _flags.TOTAL_SURFACE_AREA:
         return total_surface_area(object_array, value=value)
 
-    elif feature == _VF.LOG_SIZE:
+    elif property_flag == _flags.LOG_SIZE:
         return log_size(object_array, value=value)
 
-    elif feature == _VF.LOG_SPACING:
+    elif property_flag == _flags.LOG_SPACING:
         return log_spacing(object_array, value=value)
 
-    elif feature == _VF.SPARSITY:
+    elif property_flag == _flags.SPARSITY:
         return sparcity(object_array, value=value)
 
-    elif feature == _VF.FIELD_AREA:
+    elif property_flag == _flags.FIELD_AREA:
         return field_area(object_array, value=value)
 
-    elif feature == _VF.COVERAGE:
+    elif property_flag == _flags.COVERAGE:
         return coverage(object_array, value=value)
 
     else:
         raise NotImplementedError("Not implemented for {}".format(
-            feature.label()))
+            property_flag.label()))

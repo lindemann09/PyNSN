@@ -1,5 +1,6 @@
 import unittest
-from pynsn import arrays, distr, random_array, adapt, scale
+from pynsn import distr, random_array
+from pynsn.visual_properties import fit, scale
 from test_dot_array import DotsSmall
 
 
@@ -17,27 +18,27 @@ class RectanglesSmall(DotsSmall):
         places = 7
         # check scale
         stim = self.stimulus.copy()
-        new_value = stim.features.average_rectangle_size * scale_factor
+        new_value = stim.properties.average_rectangle_size * scale_factor
         scale.average_rectangle_size(stim, scale_factor)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
                                new_value[1], places=places)
 
         #  changes two time feature (e.g. first decrease and then increase)
         # first
-        new_value = stim.features.average_rectangle_size * first
-        adapt.average_rectangle_size(stim, new_value)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+        new_value = stim.properties.average_rectangle_size * first
+        fit.average_rectangle_size(stim, new_value)
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
                                new_value[1], places=places)
         #second
-        new_value = stim.features.average_rectangle_size * second
-        adapt.average_rectangle_size(stim, new_value)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[0],
+        new_value = stim.properties.average_rectangle_size * second
+        fit.average_rectangle_size(stim, new_value)
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
-        self.assertAlmostEqual(stim.features.average_rectangle_size[1],
+        self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
                                new_value[1], places=places)
 
 class RectanglesMedium(RectanglesSmall):

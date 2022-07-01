@@ -68,14 +68,14 @@ class DotArraySQLDB(object):
                   ") \n VALUES\n" + \
                   "('{}',{},{},{},{},{},{},{},{},'{}');".format(
                           da.hash,
-                          da._features.numerosity,
-                          da._features.total_surface_area,
-                          da._features.average_surface_area,
-                          da._features.field_area,
-                          da._features.sparsity,
-                          da._features.log_size,
-                          da._features.log_spacing,
-                          da._features.converage,
+                          da._properties.numerosity,
+                          da._properties.total_surface_area,
+                          da._properties.average_surface_area,
+                          da._properties.field_area,
+                          da._properties.sparsity,
+                          da._properties.log_size,
+                          da._properties.log_spacing,
+                          da._properties.converage,
                           colour.colour)
             cur.execute(sql)
 

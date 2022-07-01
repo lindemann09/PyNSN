@@ -3,9 +3,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as _np
 import svgwrite as _svg
 from . import _colour
-from .._lib  import arrays as _arrays
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib import shapes as _shape
+from ..  import arrays as _arrays
+from .. import shapes as _shape
 
 from ._colour import ImageColours # make available
 
@@ -24,7 +24,7 @@ def create(object_array, colours, filename="noname.svg"):
                                    # stroke_width="0", stroke="black",
                                    fill=colours.target_area.colour))
 
-    if object_array.features.numerosity > 0:
+    if object_array.properties.numerosity > 0:
         image_coord = _c2i_coord(object_array.xy, image_size)
         if isinstance(object_array, _arrays.DotArray):
             # draw dots
@@ -49,13 +49,13 @@ def create(object_array, colours, filename="noname.svg"):
         if colours.field_area_positions.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
-                          object_array.features.convex_hull_positions.xy, image_size),
+                          object_array.properties.convex_hull_positions.xy, image_size),
                               convex_hull_colour=colours.field_area_positions.colour,
                               opacity=colours.info_shapes_opacity)
         if colours.field_area.colour is not None:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
-                          object_array.features.convex_hull.xy,
+                          object_array.properties.convex_hull.xy,
                           image_size),
                               convex_hull_colour=colours.field_area.colour,
                               opacity=colours.info_shapes_opacity)

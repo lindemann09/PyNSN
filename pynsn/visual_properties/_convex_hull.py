@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import spatial
-from .geometry import cartesian2polar, polar2cartesian
-from . import arrays
+from .._lib.geometry import cartesian2polar, polar2cartesian
+from .. import arrays
 
 class ConvexHullBaseClass(object):
     """convenient wrapper class for calculation of convex hulls

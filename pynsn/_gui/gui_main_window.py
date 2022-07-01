@@ -10,11 +10,11 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import adapt
-from .._lib import random_array
-from .._lib import distributions as distr
-from .._lib import arrays
-from .._lib.visual_features import VisualFeatureTypes
+from .. import random_array
+from .. import arrays
+from ..random_array import distributions as distr
+from .. import visual_properties as props
+
 from ..image import _colour
 from ..image import pil_image
 from .._sequence import dot_array_sequence
@@ -243,12 +243,12 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.dot_array._features.as_text(extended_format=True,
+        txt = self.dot_array._properties.as_text(extended_format=True,
                                                with_hash=True)
         if self.settings.bicoloured.isChecked():
             for da in self.dot_array.get_split_arrays():
                 txt += "Attribute {}\n".format(da._attributes[0])
-                txt += da._features.as_text(extended_format=True,
+                txt += da._properties.as_text(extended_format=True,
                                             with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
@@ -293,13 +293,12 @@ class GUIMainWindow(QMainWindow):
 
     def action_adapt(self):
         """"""
-        prop = self.dot_array._features.as_dict()
-        feature, value = dialogs.AdaptPropertyDialog.get_response(self,
-                                                                  prop)  #
-        if feature is not None:
-            self.dot_array = adapt.visual_feature(self.dot_array,
-                                                  feature, value=value)
-            if feature in [x for x in VisualFeatureTypes if x.is_size_feature()]:
+        prop = self.dot_array._properties.as_dict()
+        prop, value = dialogs.AdaptPropertyDialog.get_response(self, prop)
+        if prop is not None:
+            self.dot_array = props.fit.visual_property(self.dot_array,
+                                                prop, value=value)
+            if prop in [x for x in props.flags if x.is_size_property()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)
@@ -343,11 +342,11 @@ class GUIMainWindow(QMainWindow):
         if adapt_methods is not None:
             sequence = dot_array_sequence.create(
                               specs=specs,
-                              adapt_feature=adapt_methods,
-                              adapt_value=self.dot_array._features.get(adapt_methods),
+                              adapt_property=adapt_methods,
+                              adapt_value=self.dot_array._properties.get(adapt_methods),
                               min_max_numerosity=adapt_range)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.dot_array._features.numerosity,
+                            start_numerosity=self.dot_array._properties.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
 

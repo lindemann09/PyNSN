@@ -7,8 +7,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from .._lib import arrays, random_array
-from .._lib import distributions as distr
+from .. import arrays, random_array
+from ..random_array import distributions as distr
 
 
 class MainWidget(QWidget):

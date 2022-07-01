@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 from scipy import spatial
 
-from .. import  geometry
+from .._lib import  geometry
 from .. import shapes
 
 

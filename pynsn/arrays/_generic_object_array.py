@@ -9,10 +9,9 @@ import json
 
 import numpy as np
 from scipy import spatial
-from .. import misc, geometry
-from ..visual_features import ArrayFeatures
-from .. import adapt
-from . import _manipulate
+from .._lib import misc
+from ..visual_properties._props import ArrayProperties
+from ..visual_properties import fit
 
 class GenericObjectArray(object):
 
@@ -31,14 +30,14 @@ class GenericObjectArray(object):
 
         self._xy = np.array([])
         self._attributes = np.array([])
-        self._features = ArrayFeatures(self)
+        self._properties = ArrayProperties(self)
 
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)
 
 
     def __str__(self):
-        return self._features.as_text(extended_format=True)
+        return self._properties.as_text(extended_format=True)
 
     @property
     def xy(self):
@@ -54,8 +53,8 @@ class GenericObjectArray(object):
         return self._attributes
 
     @property
-    def features(self):
-        return self._features
+    def properties(self):
+        return self._properties
 
     def _append_xy_attribute(self, xy, attributes=None):
         """returns number of added rows"""
@@ -73,7 +72,7 @@ class GenericObjectArray(object):
             self._xy = np.append(empty, xy, axis=0)
         else:
             self._xy = np.append(self._xy, xy, axis=0)
-        self._features.reset()
+        self._properties.reset()
         return xy.shape[0]
 
     def set_attributes(self, attributes):
@@ -86,12 +85,12 @@ class GenericObjectArray(object):
         """
 
         if isinstance(attributes, (list, tuple)):
-            if len(attributes) != self._features.numerosity:
+            if len(attributes) != self._properties.numerosity:
                 raise ValueError("Length of attribute list does not adapt the " +\
                                  "size of the dot array.")
             self._attributes = np.array(attributes)
         else:
-            self._attributes = np.array([attributes] * self._features.numerosity)
+            self._attributes = np.array([attributes] * self._properties.numerosity)
 
     def center_of_positions(self):
         minmax = np.array((np.min(self._xy, axis=0), np.max(self._xy, axis=0)))
@@ -121,15 +120,15 @@ class GenericObjectArray(object):
         """number deviant
         """
         object_array = self.copy()
-        new_num = self.features.numerosity + change_numerosity
-        adapt.numerosity(object_array, value=new_num, keeping_field_area=False)
+        new_num = self.properties.numerosity + change_numerosity
+        fit.numerosity(object_array, value=new_num, keeping_field_area=False)
         return object_array
 
     def as_dict(self):
         """
         """
         d = {"xy": self._xy.tolist()}
-        if misc.is_all_equal(self._attributes):
+        if len(self._attributes) >0 and misc.is_all_equal(self._attributes):
             d.update({"attributes": self._attributes[0]})
         else:
             d.update({"attributes": self._attributes.tolist()})
@@ -139,11 +138,11 @@ class GenericObjectArray(object):
         """read dot array from dict"""
         self._xy = np.array(dict["xy"])
         if not isinstance(dict["attributes"], (list, tuple)):
-            att = [dict["attributes"]] * self._features.numerosity
+            att = [dict["attributes"]] * self._properties.numerosity
         else:
             att = dict["attributes"]
         self._attributes = np.array(att)
-        self._features.reset()
+        self._properties.reset()
 
     def json(self, indent=None, include_hash=False):
         """"""
@@ -169,17 +168,17 @@ class GenericObjectArray(object):
 
     def center_array(self):
         self._xy = self._xy - self.center_of_positions()
-        self._features.reset()
+        self._properties.reset()
 
     def clear(self):
         self._xy = np.array([[]])
         self._attributes = np.array([])
-        self._features.reset()
+        self._properties.reset()
 
     def delete(self, index):
         self._xy = np.delete(self._xy, index, axis=0)
         self._attributes = np.delete(self._attributes, index)
-        self._features.reset()
+        self._properties.reset()
 
     def specifications_dict(self):
         return {"target_area_radius": self.target_area_radius,
@@ -194,7 +193,7 @@ class GenericObjectArray(object):
         """
 
         if indices is None:
-            indices = list(range(self._features.numerosity))
+            indices = list(range(self._properties.numerosity))
 
         return GenericObjectArray(target_area_radius=self.target_area_radius,
                         min_dist_between=self.min_dist_between,
