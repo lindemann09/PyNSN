@@ -52,7 +52,7 @@ packages.
 * [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
 * matching visual features
 * data base, sequences
-* [Euro flag example](https://lindemann09.github.io/PyNSN/euroflag.html): using pictures as objects in array
+* [Euro flag example](https://lindemann09.github.io/PyNSN/euro_flag.html): using pictures as objects in array
 
 RUN GUI tool
 -------------
