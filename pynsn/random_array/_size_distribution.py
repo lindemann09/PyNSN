@@ -1,7 +1,7 @@
 from .._lib.misc import dict_to_text
 from .. import shapes
+from ..distributions import PyNSNDistribution, Constant, _round_samples
 
-from ..random_array.distributions import PyNSNDistribution, Constant, _round_samples
 
 class SizeDistribution(object):
 

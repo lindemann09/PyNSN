@@ -2,6 +2,7 @@ from pynsn import arrays, random_array
 from pynsn import distributions as distr
 from pynsn.image import svg_file, ImageColours, pil_image, defaults
 from pynsn import shapes, image
+from pynsn.distributions import Discrete
 
 # FIXME Own exception
 # FIXME __iter__ and iter_objects
@@ -11,17 +12,31 @@ import numpy as np
 
 # FIXME test Attribute Array (properties)
 
-pict_file = "eurostar.png"
-euro_array = arrays.RectangleArray(target_area_radius=150,
-                                   min_dist_between=3)
+euro_col = ImageColours(target_area="#003399", background="#003399")
+euro_array = arrays.RectangleArray(target_area_radius=200, min_dist_between=1)
+
+for x in np.linspace(start=0, stop=2*np.pi, num=12+1):
+    if x < 2*np.pi:
+        pos = np.sin(x)*140, np.cos(x)*140
+        pict = shapes.Rectangle(xy=pos, size=(40, 40), picture="eurostar.png")
+        euro_array.add(pict)
+
+img = pil_image.create(euro_array, euro_col)
+img.save("demo.png")
+
+
+euro_array.shuffle_all_positions()
+img = pil_image.create(euro_array, euro_col)
+#img.save("demo.png")
+
+exit()
+
 size_dist = random_array.SizeDistribution(width=distr.Discrete((10, 20, 30)),
                                           rectangle_proportion=1)
 euro_array = random_array.create(euro_array, size_dist, n_objects=27,
                                  attributes=shapes.picture_attr(pict_file))
 
-euro_col = ImageColours(target_area="#003399")
-img = pil_image.create(euro_array, euro_col)
-img.save("demo.png")
+
 
 s = (40, 40)
 objs =  [shapes.Rectangle(xy=(-65, 50), size=s, picture=pict_file),
