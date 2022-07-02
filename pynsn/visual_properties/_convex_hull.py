@@ -3,12 +3,12 @@ from scipy import spatial
 from .._lib.geometry import cartesian2polar, polar2cartesian
 from .. import arrays
 
+
 class ConvexHullBaseClass(object):
     """convenient wrapper class for calculation of convex hulls
     """
 
     def _initialize(self, xy):
-        self._xy = xy
         try:
             self._convex_hull = spatial.ConvexHull(xy)
         except IndexError:
@@ -19,7 +19,7 @@ class ConvexHullBaseClass(object):
         if self._convex_hull is None:
             return np.array([])
         else:
-            return self._xy[self._convex_hull.vertices, :]
+            return self._convex_hull.points[self._convex_hull.vertices, :]
 
     @property
     def field_area(self):
@@ -36,7 +36,8 @@ class ConvexHullBaseClass(object):
         """convex hulls are assumed to be identical if same field area is
         identical and convex comprises the same amount of points"""
         return len(self.xy) == len(other.xy) and \
-               self.field_area == other.field_area
+                self.field_area == other.field_area
+
 
 class ConvexHullPositions(ConvexHullBaseClass):
     """convenient wrapper class for calculation of convex hulls
@@ -72,11 +73,11 @@ class ConvexHull(ConvexHullBaseClass):
         elif isinstance(object_array, arrays.RectangleArray):
             # simple solution: get all edges
             edges = []
-            for rect in object_array.get():
-                edges.extend([e.xy for e in rect.edges()])
+            for rect in object_array.iter_objects():
+                edges.extend([e.xy for e in rect.iter_edges()])
             outer_xy = np.array(edges)
 
-        else: # Generic object array
+        else:  # Generic object array
             outer_xy = object_array.xy
 
         self._initialize(outer_xy)

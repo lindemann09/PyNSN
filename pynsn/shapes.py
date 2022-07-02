@@ -200,7 +200,7 @@ class Rectangle(Point):
     def bottom(self):
         return self.y - 0.5 * self.height
 
-    def edges(self):
+    def iter_edges(self):
         """iterator over Coordinate2D representing all four edges
         """
         yield Point(self.left, self.top)
@@ -214,7 +214,7 @@ class Rectangle(Point):
 
     @size.setter
     def size(self, size):
-        self.width, self.height  = size
+        self.width, self.height = size
 
     def is_point_inside_rect(self, xy):
         return (self.left <= xy[0] <= self.right and

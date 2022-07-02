@@ -11,7 +11,7 @@ from pynsn import visual_properties as props
 import numpy as np
 
 # define the visual features of the  dot array
-ref = arrays.GenericObjectArray(target_area_radius=200)
+ref = arrays.DotArray(target_area_radius=200)
 
 size_dist_dot = random_array.SizeDistribution(
     dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
@@ -22,7 +22,7 @@ size_dist_rect = random_array.SizeDistribution(
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
-print(size_dist_rect)
+
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,
                           object_opacity=0.9,
@@ -35,13 +35,17 @@ my_colours = ImageColours(target_area="#EEEEEE",
 
 stimulus = random_array.create(reference_array=ref,
                                size_distribution=size_dist_dot,
-                               n_objects=4,
+                               n_objects=7,
                                attributes=["blue", "green"])
-props.scale.log_size(stimulus, 1.6)
+props.scale.log_size(stimulus, 1.3)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
-print(stimulus.json(indent=1))
+
+
+a = stimulus.iter_objects()
+b = list(a)
+
 exit()
 
 ####

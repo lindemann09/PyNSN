@@ -147,24 +147,32 @@ class DotArray(GenericObjectArray):
                    ((self._diameters + dot.diameter) / 2.0)
             return rtn
 
-    def get(self, indices=None):
-        """returns all dots
+    def iter_objects(self, indices=None):
+        """iterate over all or a part of the objects
 
-        indices int or list of ints
+        Parameters
+        ----------
+        indices
+
+        Notes
+        -----
+        To iterate all object you might all use the class iterator __iter__:
+        >>> for obj in my_array:
+        >>>    print(obj)
         """
 
         if indices is None:
-            return [Dot(xy=xy, diameter=dia, attribute=att) \
-                    for xy, dia, att in zip(self._xy, self._diameters,
-                                            self._attributes)]
-        try:
-            indices = list(indices)  # check if iterable
-        except TypeError:
-            indices = [indices]
-        return [Dot(xy=xy, diameter=dia, attribute=att) \
-                for xy, dia, att in zip(self._xy[indices, :],
-                                        self._diameters[indices],
-                                        self._attributes[indices])]
+            data = zip(self._xy, self._diameters, self._attributes)
+        else:
+            try:
+                indices = list(indices)  # check if iterable
+            except TypeError:
+                indices = [indices]
+            data = zip(self._xy[indices, :], self._diameters[indices],
+                       self._attributes[indices])
+
+        for xy, dia, att in data:
+            yield Dot(xy=xy, diameter=dia, attribute=att)
 
     def find(self, diameter=None, attribute=None):
         """returns indices of found objects
@@ -178,8 +186,8 @@ class DotArray(GenericObjectArray):
         return rtn
 
     def csv(self, variable_names=True,
-            hash_column=True, num_idx_column=True,
-            attribute_column=False):  # todo print properties
+            hash_column=True,
+            attribute_column=False):
         """Return the dot array as csv text
 
         Parameter
@@ -193,8 +201,6 @@ class DotArray(GenericObjectArray):
         if variable_names:
             if hash_column:
                 rtn += u"hash,"
-            if num_idx_column:
-                rtn += u"num_id,"
             rtn += u"x,y,diameter"
             if attribute_column:
                 rtn += u",attribute"
@@ -204,8 +210,6 @@ class DotArray(GenericObjectArray):
         for cnt in range(len(self._xy)):
             if hash_column:
                 rtn += "{0}, ".format(obj_id)
-            if num_idx_column:
-                rtn += "{},".format(self._properties.numerosity)
             rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
                                      self._diameters[cnt])
             if attribute_column:

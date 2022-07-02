@@ -64,7 +64,7 @@ def numerosity(object_array, value, center_of_field_area=False):
             else:
                 # add dot
                 # copy a random dot
-                rnd_object = object_array.get(rnd)[0]
+                rnd_object = next(object_array.iter_objects(rnd))
                 try:
                     rnd_object = object_array.get_random_free_position(
                         ref_object=rnd_object, allow_overlapping=False,

@@ -179,7 +179,7 @@ class ArrayProperties(object):
 
         assert isinstance(property_flag, VisualPropertyFlag)
 
-       # Adapt
+        # Adapt
         if property_flag == VisualPropertyFlag.AV_DOT_DIAMETER:
             return self.average_dot_diameter
 

@@ -4,6 +4,7 @@ Object Cloud
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+
 from hashlib import md5
 import json
 from copy import deepcopy
@@ -15,7 +16,7 @@ from .._lib import misc, geometry
 from ..visual_properties._props import ArrayProperties
 from ..visual_properties import fit
 from .. import shapes
-from . import _tools
+
 
 class GenericObjectArray(object):
 
@@ -226,8 +227,7 @@ class GenericObjectArray(object):
                         xy=self._xy[indices, :],
                         attributes=self._attributes[indices])
 
-
-    def get(self, indices):
+    def iter_objects(self, indices=None):
         raise NotImplementedError()
 
     def add(self, something):
@@ -238,7 +238,7 @@ class GenericObjectArray(object):
 
     def join(self, object_array):
         """add another object arrays"""
-        self.add(object_array.get())
+        self.add(object_array.iter_objects())
 
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
@@ -253,7 +253,7 @@ class GenericObjectArray(object):
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)
         # matrix with all distance between all points
-        dist = np.array([self.distances(d) for d in self.get()])
+        dist = np.array([self.distances(d) for d in self.iter_objects()])
         return dist
 
     def check_overlaps(self):
@@ -305,7 +305,7 @@ class GenericObjectArray(object):
             else:
                 # Rect: check if one edge is outside
                 bad_position = False
-                for e in rtn_object.edges():
+                for e in rtn_object.iter_edges():
                     if e.polar_radius >= area_rad:
                         bad_position = True
                         break
@@ -334,7 +334,7 @@ class GenericObjectArray(object):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
-        all_objects = self.get()
+        all_objects = list(self.iter_objects())
         self.clear()
         for obj in all_objects:
             try:
@@ -343,7 +343,6 @@ class GenericObjectArray(object):
             except StopIteration as e:
                 raise StopIteration("Can't shuffle dot array. No free positions found.")
             self.add([new])
-
 
     def replace_overlapping_objects(self, center_of_field_area=False,
                                     lenient=True):
@@ -384,7 +383,7 @@ class GenericObjectArray(object):
             else:
                 idx = overlaps[0,0]
 
-            obj = self.get(idx)[0]
+            obj = next(self.iter_objects(idx))
             self.delete(idx)
             obj = self.get_random_free_position(ref_object=obj,
                                                 inside_convex_hull=center_of_field_area)
@@ -406,7 +405,6 @@ class GenericObjectArray(object):
         """places array in target area as central and possible and tries to
         remove any stand_outs"""
         raise NotImplementedError()
-
 
     def realign(self):
         raise NotImplementedError()
