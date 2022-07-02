@@ -45,14 +45,17 @@ def create(object_array, colours, filename="noname.svg"):
                                             colours.default_object_colour)
                 _draw_shape(svgdraw, obj, opacity=colours.object_opacity)
 
+
         # draw convex hulls
-        if colours.field_area_positions.colour is not None:
+        if colours.field_area_positions.colour is not None and \
+                object_array.properties.field_area_positions > 0:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
                           object_array.properties.convex_hull_positions.xy, image_size),
                               convex_hull_colour=colours.field_area_positions.colour,
                               opacity=colours.info_shapes_opacity)
-        if colours.field_area.colour is not None:
+        if colours.field_area.colour is not None and \
+                object_array.properties.field_area > 0:
             _draw_convex_hull(svgdraw=svgdraw,
                               points=_c2i_coord(
                           object_array.properties.convex_hull.xy,

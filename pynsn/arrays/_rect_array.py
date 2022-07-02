@@ -53,8 +53,11 @@ class RectangleArray(ABCObjectArray):
 
     def add(self, rectangles):
         """append one dot or list of dots"""
-        if not isinstance(rectangles, (list, tuple)):
+        try:
+            rectangles = list(rectangles)
+        except TypeError:
             rectangles = [rectangles]
+
         for r in rectangles:
             assert isinstance(r, Rectangle)
             self._append_xy_attribute(xy=r.xy, attributes=r.attribute)

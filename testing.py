@@ -6,7 +6,6 @@ from pynsn import shapes
 # FIXME Own exception
 # FIXME __iter__ and iter_objects
 
-
 from pynsn import visual_properties as props
 import numpy as np
 
@@ -17,10 +16,10 @@ import numpy as np
 ref = arrays.BaseArray(target_area_radius=200)
 
 size_dist_dot = random_array.SizeDistribution(
-    dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
+    diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
 )
 size_dist_rect = random_array.SizeDistribution(
-    rectangle_width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     #rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     rectangle_proportion=distr.Discrete([1, 2])
 )
@@ -36,20 +35,27 @@ my_colours = ImageColours(target_area="#EEEEEE",
                           #center_of_mass="green"
                           )
 
-stimulus = random_array.create(reference_array=ref,
+stimulus = random_array.create(n_objects=7,
+                               reference_array=ref,
                                size_distribution=size_dist_rect,
-                               n_objects=7,
                                attributes=["blue", "green"])
-props.scale.log_size(stimulus, 1.3)
-svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
-svg.save()
 
+props.scale.log_size(stimulus, 1.15)
+#svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
+#svg.save()
 
+incr = random_array.create_incremental(n_objects=10,
+                                              reference_array=ref,
+                                              size_distribution=size_dist_rect,
+                                              attributes=["blue", "green"])
 
-a = stimulus.iter_objects()
-b = list(a)
-
+for c, arr in enumerate(incr):
+    svg = svg_file.create(arr, my_colours, filename="demo{}.svg".format(c))
+    svg.save()
 exit()
+
+print(stimulus.properties.convex_hull._convex_hull.simplices)
+print(stimulus.properties.convex_hull._convex_hull.vertices)
 
 ####
 stim_scaled = stimulus.copy()

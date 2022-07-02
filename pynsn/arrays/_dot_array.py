@@ -50,7 +50,9 @@ class DotArray(ABCObjectArray):
 
     def add(self, dots):
         """append one dot or list of dots"""
-        if not isinstance(dots, (list, tuple)):
+        try:
+            dots = list(dots)
+        except TypeError:
             dots = [dots]
         for d in dots:
             assert isinstance(d, Dot)

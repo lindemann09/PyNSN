@@ -11,7 +11,7 @@ class ConvexHullBaseClass(object):
     def _initialize(self, xy):
         try:
             self._convex_hull = spatial.ConvexHull(xy)
-        except IndexError:
+        except spatial.QhullError:
             self._convex_hull = None
 
     @property

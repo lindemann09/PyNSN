@@ -24,7 +24,6 @@ def create(reference_array,
         raise RuntimeError("Size distribution has to be of type SizeDistribution, but not {}".format(
                         type(size_distribution).__name__))
 
-
     if size_distribution.diameter is not None:
         # DotArray
         rtn = arrays.DotArray(target_area_radius=reference_array.target_area_radius,
@@ -69,3 +68,26 @@ def create(reference_array,
         rtn.set_attributes(attributes)
 
     return rtn
+
+
+def create_incremental(reference_array,
+                       size_distribution,
+                       n_objects,
+                       attributes = None,
+                       allow_overlapping = False):
+
+    previous = None
+    for n in range(n_objects):
+        current = create(reference_array=reference_array,
+                     size_distribution=size_distribution,
+                     n_objects=1,
+                     attributes=attributes,
+                     allow_overlapping=allow_overlapping,
+                     occupied_space=previous)
+        if previous is not None:
+            current.join(previous)
+        previous = current
+        yield current
+
+
+

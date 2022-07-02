@@ -25,7 +25,7 @@ class MainWidget(QWidget):
         arrays._check_base_array(ref_array)
         assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
 
-        sdr = random_array.SizeDistribution(dot_diameter=dot_size_distribution)
+        sdr = random_array.SizeDistribution(diameter=dot_size_distribution)
         self.btn_generate = QPushButton("Generate new array")
 
         self.number = LabeledNumberInput("Number", number)

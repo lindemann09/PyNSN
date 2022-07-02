@@ -24,7 +24,7 @@ DEFAULT_ARRAY = {"num": 40,
         "ref": arrays.BaseArray(target_area_radius=200,
                                 min_dist_between=2),
         "sdr": random_array.SizeDistribution(
-                    dot_diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
+                    diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
         "col": _colour.ImageColours(target_area="#303030",
                                     field_area_positions=None,
                                     field_area=None,
@@ -36,7 +36,7 @@ DEFAULT_ARRAY = {"num": 40,
 ICON = {"num": 11,
         "ref": arrays.BaseArray(target_area_radius=200),
         "sdr": random_array.SizeDistribution(
-                dot_diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
+                diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
                                     field_area_positions=None,
                                     field_area="expyriment_orange",
@@ -177,7 +177,7 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_specs(self):
-        size_dist = random_array.SizeDistribution(dot_diameter=
+        size_dist = random_array.SizeDistribution(diameter=
                         distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                        sigma=self.main_widget.item_diameter_std.value,
                        min_max=[self.main_widget.item_diameter_range.value1,

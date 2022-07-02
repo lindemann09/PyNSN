@@ -71,12 +71,14 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                 _draw_shape(img, obj)
 
         # draw convex hulls
-        if colours.field_area_positions.colour is not None:
+        if colours.field_area_positions.colour is not None and \
+                object_array.properties.field_area_positions > 0:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.properties.convex_hull_positions.xy * aaf, image_size),
                               convex_hull_colour=colours.field_area_positions.colour)
-        if colours.field_area.colour is not None:
+        if colours.field_area.colour is not None and \
+                object_array.properties.field_area > 0:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.properties.convex_hull.xy * aaf,

@@ -5,15 +5,15 @@ from ..random_array.distributions import PyNSNDistribution, Constant, _round_sam
 
 class SizeDistribution(object):
 
-    def __init__(self, dot_diameter=None, rectangle_width=None,
-                        rectangle_height=None, rectangle_proportion=None):
+    def __init__(self, diameter=None, width=None,
+                 height=None, rectangle_proportion=None):
 
-        rect_parameter_set = [rectangle_width is not None,
-                              rectangle_height is not None,
+        rect_parameter_set = [width is not None,
+                              height is not None,
                               rectangle_proportion is not None]
 
         is_rect = sum(rect_parameter_set)>0
-        is_dot = dot_diameter is not None
+        is_dot = diameter is not None
         if is_dot and is_rect:
          raise TypeError("Please define either dot or rectangle parameter, not both.")
         elif not is_dot and not is_rect:
@@ -21,29 +21,29 @@ class SizeDistribution(object):
         elif is_rect and sum(rect_parameter_set) != 2:
             raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with either width or height.")
 
-        if isinstance(dot_diameter, (int, float)):
-            dot_diameter = Constant(dot_diameter)
-        if isinstance(rectangle_width, (int, float)):
-            rectangle_width = Constant(rectangle_width)
-        if isinstance(rectangle_height, (int, float)):
-            rectangle_height = Constant(rectangle_height)
+        if isinstance(diameter, (int, float)):
+            diameter = Constant(diameter)
+        if isinstance(width, (int, float)):
+            width = Constant(width)
+        if isinstance(height, (int, float)):
+            height = Constant(height)
         if isinstance(rectangle_proportion, (int, float)):
             rectangle_proportion = Constant(rectangle_proportion)
 
         err = "{} has to be a PyNSNDistribution or single number (constant)"
-        if dot_diameter is not None and not isinstance(dot_diameter, PyNSNDistribution):
+        if diameter is not None and not isinstance(diameter, PyNSNDistribution):
             raise TypeError(err.format("dot_diameter"))
-        if rectangle_width is not None and not isinstance(rectangle_width, PyNSNDistribution):
+        if width is not None and not isinstance(width, PyNSNDistribution):
             raise TypeError(err.format("rectangle_width"))
-        if rectangle_height is not None and not isinstance(rectangle_height, PyNSNDistribution):
+        if height is not None and not isinstance(height, PyNSNDistribution):
             raise TypeError(err.format("rectangle_height"))
         if rectangle_proportion is not None and \
                 not isinstance(rectangle_proportion, PyNSNDistribution):
             raise TypeError(err.format("rectangle_proportion"))
 
-        self.diameter = dot_diameter
-        self.width = rectangle_width
-        self.height = rectangle_height
+        self.diameter = diameter
+        self.width = width
+        self.height = height
         self.proportion = rectangle_proportion
 
     def sample(self, n, round_to_decimals=None):
