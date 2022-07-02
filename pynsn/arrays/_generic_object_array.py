@@ -39,9 +39,11 @@ class GenericObjectArray(object):
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)
 
-
     def __str__(self):
-        return self._properties.as_text(extended_format=True)
+        prop_text = self._properties.as_text(extended_format=True)
+        rtn = "- {}".format(type(self).__name__)
+        rtn += "\n " + prop_text[1:] # replace "-" with " "
+        return rtn
 
     @property
     def xy(self):
@@ -122,7 +124,6 @@ class GenericObjectArray(object):
     @property
     def hash(self):
         """md5_hash of positions and perimeter"""
-
         m = md5()
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.perimeter.tobytes())
@@ -141,7 +142,11 @@ class GenericObjectArray(object):
     def as_dict(self):
         """
         """
-        d = {"xy": self._xy.tolist()}
+        d = {"type": type(self).__name__,
+             "target_area_radius": self.target_area_radius,
+             "min_dist_between": self.min_dist_between,
+             "min_dist_area_boarder": self.min_dist_area_boarder}
+        d.update({"xy": self._xy.tolist()})
         if len(self._attributes) >0 and misc.is_all_equal(self._attributes):
             d.update({"attributes": self._attributes[0]})
         else:
@@ -150,6 +155,9 @@ class GenericObjectArray(object):
 
     def read_from_dict(self, dict):
         """read dot array from dict"""
+        self.target_area_radius = dict["target_area_radius"]
+        self.min_dist_between = dict["min_dist_between"]
+        self.min_dist_area_boarder = dict["min_dist_area_boarder"]
         self._xy = np.array(dict["xy"])
         if not isinstance(dict["attributes"], (list, tuple)):
             att = [dict["attributes"]] * self._properties.numerosity
@@ -190,11 +198,6 @@ class GenericObjectArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._properties.reset()
 
-    def specifications_dict(self):
-        return {"target_area_radius": self.target_area_radius,
-                "min_dist_between": self.min_dist_between,
-                "min_dist_area_boarder": self.min_dist_area_boarder}
-
     def copy(self, indices=None, deepcopy = True):
         """returns a (deep) copy of the dot array.
 
@@ -232,6 +235,10 @@ class GenericObjectArray(object):
 
     def find(self, attribute):
         raise NotImplementedError()
+
+    def join(self, object_array):
+        """add another object arrays"""
+        self.add(object_array.get())
 
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)

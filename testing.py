@@ -41,7 +41,7 @@ props.scale.log_size(stimulus, 1.6)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
-print(stimulus)
+print(stimulus.json(indent=1))
 exit()
 
 ####

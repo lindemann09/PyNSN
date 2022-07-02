@@ -85,17 +85,13 @@ class DotArray(GenericObjectArray):
         """
         """
         d = super().as_dict()
-        d.update({"diameters": self._diameters.tolist(),
-                  "min_dist_between": self.min_dist_between,
-                  "target_area_radius": self.target_area_radius})
+        d.update({"diameters": self._diameters.tolist()})
         return d
 
     def read_from_dict(self, the_dict):
         """read Dot collection from dict"""
         super().read_from_dict(the_dict)
         self._diameters = np.array(the_dict["diameters"])
-        self.min_dist_between = the_dict["min_dist_between"]
-        self.target_area_radius = the_dict["target_area_radius"]
 
     def clear(self):
         super().clear()
@@ -216,11 +212,6 @@ class DotArray(GenericObjectArray):
                 rtn += ", {}".format(self._attributes[cnt])
             rtn += "\n"
         return rtn
-
-    def join(self, dot_array):
-        """add another dot arrays"""
-        assert isinstance(dot_array, DotArray)
-        self.add(dot_array.get())
 
     def __realign_old(self):
         """Realigns the obejcts in order to remove all dots overlaps and dots

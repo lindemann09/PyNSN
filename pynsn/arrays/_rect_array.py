@@ -88,17 +88,13 @@ class RectangleArray(GenericObjectArray):
         """
         """
         d = super().as_dict()
-        d.update({"sizes": self._sizes.tolist(),
-                  "min_dist_between": self.min_dist_between,
-                  "target_area_radius": self.target_area_radius})
+        d.update({"sizes": self._sizes.tolist()})
         return d
 
     def read_from_dict(self, the_dict):
         """read rectangle array from dict"""
         super().read_from_dict(the_dict)
         self._sizes = np.array(the_dict["sizes"])
-        self.min_dist_between = the_dict["min_dist_between"]
-        self.target_area_radius = the_dict["target_area_radius"]
 
     def clear(self):
         super().clear()
@@ -250,11 +246,6 @@ class RectangleArray(GenericObjectArray):
                 rtn += ", {}".format(self._attributes[cnt])
             rtn += "\n"
         return rtn
-
-    def join(self, rect_array):
-        """add another rect arrays"""
-        assert isinstance(rect_array, RectangleArray)
-        self.add(rect_array.get())
 
     def get_split_arrays(self):
         """returns a list of arrays
