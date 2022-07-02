@@ -26,8 +26,8 @@ extras_require = {
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
 packages = [package_name]
-for subp in ["_gui", "_lib", "_lib.arrays", "_lib.random_array", "_sequence",
-             "database", "image"]:
+for subp in ['random_array', 'database', 'image', 'visual_properties',
+             'arrays', '_lib', '_gui', '_sequence']:
     packages.append("{}.{}".format(package_name, subp))
 
 if _vi.major < 1 and _vi.minor < 6:
