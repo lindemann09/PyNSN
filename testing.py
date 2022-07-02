@@ -1,6 +1,6 @@
 from pynsn import arrays, random_array
 from pynsn import distributions as distr
-from pynsn.image import svg_file, ImageColours
+from pynsn.image import svg_file, ImageColours, Colour
 from pynsn import shapes
 
 # FIXME Own exception
@@ -27,7 +27,7 @@ size_dist_rect = random_array.SizeDistribution(
 
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,
-                          object_opacity=0.9,
+                          opacity_object=0.9,
                           default_object_colour="darkmagenta",
                           field_area_positions="magenta",
                           field_area="blue",

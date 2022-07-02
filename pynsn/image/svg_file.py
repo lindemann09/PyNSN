@@ -9,10 +9,12 @@ from .. import shapes as _shape
 
 from ._colour import ImageColours # make available
 
-def create(object_array, colours, filename="noname.svg"):
+def create(object_array, colours=None, filename="noname.svg"):
     _arrays._check_object_array(object_array)
+    if colours is None:
+        colours = _colour.ImageColours()
     if not isinstance(colours, _colour.ImageColours):
-        raise TypeError("Colours must be of type pynsn.ImageColours")
+        raise TypeError("Colours must be of type image.ImageColours")
 
     image_size = _np.ceil(object_array.target_area_radius) * 2
     px = "{}px".format(image_size)
@@ -31,9 +33,9 @@ def create(object_array, colours, filename="noname.svg"):
             for xy, d, att in zip(image_coord, object_array.diameters,
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
-                obj.attribute = _colour.make_colour(att,
-                                                    colours.default_object_colour)
-                _draw_shape(svgdraw, obj, opacity=colours.object_opacity)
+                obj.attribute = _colour.Colour(att,
+                                            colours.default_object_colour)
+                _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
 
         elif isinstance(object_array, _arrays.RectangleArray):
             # draw rectangle
@@ -41,9 +43,9 @@ def create(object_array, colours, filename="noname.svg"):
                                      object_array.sizes,
                                      object_array.attributes):
                 obj = _shape.Rectangle(xy=xy, size=size)
-                obj.attribute = _colour.make_colour(att,
+                obj.attribute = _colour.Colour(att,
                                             colours.default_object_colour)
-                _draw_shape(svgdraw, obj, opacity=colours.object_opacity)
+                _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
 
 
         # draw convex hulls
@@ -53,7 +55,7 @@ def create(object_array, colours, filename="noname.svg"):
                               points=_c2i_coord(
                           object_array.properties.convex_hull_positions.xy, image_size),
                               convex_hull_colour=colours.field_area_positions.colour,
-                              opacity=colours.info_shapes_opacity)
+                              opacity=colours.opacity_guides)
         if colours.field_area.colour is not None and \
                 object_array.properties.field_area > 0:
             _draw_convex_hull(svgdraw=svgdraw,
@@ -61,18 +63,18 @@ def create(object_array, colours, filename="noname.svg"):
                           object_array.properties.convex_hull.xy,
                           image_size),
                               convex_hull_colour=colours.field_area.colour,
-                              opacity=colours.info_shapes_opacity)
+                              opacity=colours.opacity_guides)
         #  and center of mass
         if colours.center_of_field_area.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
                              diameter=10,
                              attribute=colours.center_of_field_area.colour)
-            _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)
+            _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
         if colours.center_of_mass.colour is not None:
             obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
                              diameter=10,
                              attribute=colours.center_of_mass.colour)
-            _draw_shape(svgdraw, obj, opacity=colours.info_shapes_opacity)
+            _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
 
     return svgdraw
 

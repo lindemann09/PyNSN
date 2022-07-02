@@ -15,14 +15,15 @@ from ._colour import ImageColours # make available
 class ExprimentDotArray(_Canvas):
 
     def __init__(self, object_array,
-                 colours,
+                 colours=None,
                  position=(0, 0),
                  antialiasing=True):
 
         _check_object_array(object_array)
-
+        if colours is None:
+            colours = _colour.ImageColours()
         if not isinstance(colours, _colour.ImageColours):
-            raise TypeError("Colours must be a ImageColours instance")
+            raise TypeError("Colours must be of type image.ImageColours")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = object_array

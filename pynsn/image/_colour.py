@@ -5,24 +5,33 @@ The named colour are the 140 HTML colour names:
 from collections import OrderedDict
 from functools import total_ordering
 from .._lib import misc
+from . import defaults
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
-DEFAULT_ITEM_COLOUR = "lime" # used if no color specified in dot array
 
 @total_ordering
 class Colour(object):
 
-    def __init__(self, colour):
-        self._colour = None
-        self.set(colour) # using setter
+    def __init__(self, colour, default=None):
+        """if colour is unknown or None, default colour is used
 
-    def __repr__(self):
-        return "Colour({})".format(self.colour)
+        Thus, `Colour(variable, default="red")` will result in red is variable
+        is None or Unknown. If default is not defined a `None colour` will be
+        returned.
+        """
+        if colour is None:
+            colour = default
+
+        self._colour = None
+        try:
+            self.set(colour)
+        except TypeError:  # colour is not a valid colour
+            self.set(default)
 
     def __str__(self):
-        return self._colour
+        return "Colour({})".format(self.colour)
 
     def __hash__(self):
         return hash(self._colour)
@@ -59,8 +68,8 @@ class Colour(object):
                         self._colour = Colour.rgb2hextriplet(value)
                     except:
                         raise TypeError("Incorrect colour " + \
-                                           "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
-                                               value))
+                                        "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
+                                            value))
 
     @property
     def rgb(self):
@@ -70,15 +79,15 @@ class Colour(object):
         """if alpha can be float <= 1.0 or an integer between [0, 255]"""
 
         if isinstance(alpha, float):
-            if alpha<0. or alpha>1.:
+            if alpha < 0. or alpha > 1.:
                 raise TypeError("If alpha is a float, it has to be between 0 and 1.")
             alpha = round(alpha * 255)
         elif isinstance(alpha, int):
-            if alpha<0 or alpha>255:
+            if alpha < 0 or alpha > 255:
                 raise TypeError("If alpha is an int, it has to be between 0 and 255.")
         else:
             raise TypeError("If alpha has to be a float or int and not {}.".format(
-                                    type(alpha)))
+                type(alpha)))
 
         a = Colour.hextriplet2rgb(self._colour)
         return Colour.hextriplet2rgb(self._colour) + (alpha,)
@@ -244,6 +253,7 @@ class Colour(object):
         'expyriment_purple': '#A046FA'
     }
 
+
 class ImageColours(object):
 
     def __init__(self,
@@ -253,52 +263,48 @@ class ImageColours(object):
                  center_of_field_area=None,
                  center_of_mass=None,
                  background=None,
-                 default_object_colour=DEFAULT_ITEM_COLOUR,
-                 object_opacity=1,
-                 info_shapes_opacity=0.5
+                 default_object_colour=None,
+                 opacity_object=None,
+                 opacity_guides=None
                  ):
 
-        self.target_area = Colour(target_area)
-        self.field_area_positions = Colour(field_area_positions)
-        self.field_area = Colour(field_area)
-        self.center_of_field_area = Colour(center_of_field_area)
-        self.center_of_mass = Colour(center_of_mass)
-        self.background = Colour(background)
-        self.default_object_colour = Colour(default_object_colour)
-
-        if object_opacity < 0 or object_opacity > 1:
-            raise ValueError(f"object_opacity ({object_opacity}) has to be between 0 and 1")
-        if info_shapes_opacity < 0 or info_shapes_opacity > 1:
-            raise ValueError(f"info_shapes_opacity ({info_shapes_opacity}) has to be between 0 and 1")
-        self.object_opacity = object_opacity
-        self.info_shapes_opacity = info_shapes_opacity
+        self.target_area = Colour(target_area,
+                                  default=defaults.COL_TARGET_AREA)
+        self.field_area_positions = Colour(field_area_positions,
+                                           default=defaults.COL_FIELD_AREA_POSITIONS)
+        self.field_area = Colour(field_area,
+                                 default=defaults.COL_FIELD_AREA)
+        self.center_of_field_area = Colour(center_of_field_area,
+                                   default=defaults.COL_CENTER_OF_FIELD_AREA)
+        self.center_of_mass = Colour(center_of_mass,
+                                           default=defaults.COL_CENTER_OF_MASS)
+        self.background = Colour(background,
+                                 default=defaults.COL_BACKGROUND)
+        self.default_object_colour = Colour(default_object_colour,
+                                           default=defaults.COL_DEFAULT_OBJECT)
+        if opacity_guides is None:
+            opacity_guides = defaults.OPACITY_GUIDES
+        if opacity_guides < 0 or opacity_guides > 1:
+            raise ValueError(f"opacity_guides ({opacity_guides}) has to be between 0 and 1")
+        if opacity_object is None:
+            opacity_object = defaults.OPACITY_OBJECT
+        if opacity_object < 0 or opacity_object > 1:
+            raise ValueError(f"opacity_object ({opacity_object}) has to be between 0 and 1")
+        self.opacity_object = opacity_object
+        self.opacity_guides = opacity_guides
 
     def as_dict(self):
         return OrderedDict(
-                {"total_area": self.target_area.colour,
-                "field_area_positions": self.field_area_positions.colour,
-                "field_area": self.field_area.colour,
-                "center_of_positions": self.center_of_field_area.colour,
-                "center_of_mass": self.center_of_mass.colour,
-                "background": self.background.colour,
-                "default_object": self.default_object_colour.colour,
-                "object_opacity": self.object_opacity,
-                "info_shapes_opacity": self.info_shapes_opacity
-                })
+            {"total_area": self.target_area.colour,
+             "field_area_positions": self.field_area_positions.colour,
+             "field_area": self.field_area.colour,
+             "center_of_positions": self.center_of_field_area.colour,
+             "center_of_mass": self.center_of_mass.colour,
+             "background": self.background.colour,
+             "default_object": self.default_object_colour.colour,
+             "object_opacity": self.opacity_object,
+             "info_shapes_opacity": self.opacity_guides
+             })
 
     def __str__(self):
         return misc.dict_to_text(self.as_dict(), col_a=24, col_b=10)
-
-
-def make_colour(value, default_colour):
-    """helper function: returns colour if value is a known colour (but not
-    None), otherwise default colour is returned"""
-
-    if value is None:
-        return default_colour
-    else:
-        try:
-            return Colour(value)
-        except TypeError:
-            return default_colour
-

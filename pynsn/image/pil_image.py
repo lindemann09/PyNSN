@@ -12,7 +12,7 @@ from ._colour import ImageColours # make available
 
 #TODO pillow supports no alpha
 
-def create(object_array, colours, antialiasing=True, _gabor_filter=None):
+def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
@@ -25,7 +25,10 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
     """
 
     _arrays._check_object_array(object_array)
-    assert isinstance(colours, _colour.ImageColours)
+    if colours is None:
+        colours = _colour.ImageColours()
+    if not isinstance(colours, _colour.ImageColours):
+        raise TypeError("Colours must be of type image.ImageColours")
 
     if isinstance(antialiasing, bool):
         if antialiasing:  # (not if 1)
@@ -56,7 +59,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
             for xy, d, att in zip(image_coord, object_array.diameters * aaf,
                                   object_array.attributes):
                 obj = _shape.Dot(xy=xy, diameter=d)
-                obj.attribute = _colour.make_colour(att,
+                obj.attribute = _colour.Colour(att,
                                                     colours.default_object_colour)
                 _draw_shape(img, obj)
 
@@ -66,7 +69,7 @@ def create(object_array, colours, antialiasing=True, _gabor_filter=None):
                                      object_array.sizes * aaf,
                                      object_array.attributes):
                 obj = _shape.Rectangle(xy=xy, size=size)
-                obj.attribute = _colour.make_colour(att,
+                obj.attribute = _colour.Colour(att,
                                                     colours.default_object_colour)
                 _draw_shape(img, obj)
 

@@ -9,12 +9,13 @@ from ..arrays import _check_object_array
 from ._colour import ImageColours # make available
 
 def create(object_array,
-           colours,
+           colours=None,
            antialiasing=True):
     _check_object_array(object_array)
-
+    if colours is None:
+        colours = _colour.ImageColours()
     if not isinstance(colours, _colour.ImageColours):
-        raise TypeError("Colours must be a ImageColours instance.")
+        raise TypeError("Colours must be of type image.ImageColours")
 
     img = _pil_image.create(object_array=object_array,
                             colours=colours,
