@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._generic_object_array import GenericObjectArray
+from ._base_array import ABCObjectArray
 from .._lib import misc, geometry
 from ..shapes import Dot
 from . import _tools
@@ -16,7 +16,7 @@ from . import _tools
 #  hash
 
 
-class DotArray(GenericObjectArray):
+class DotArray(ABCObjectArray):
     """Numpy Position list for optimized for numpy calculations
 
 
@@ -276,6 +276,17 @@ class DotArray(GenericObjectArray):
             return True, ""
         else:
             return self.realign()  # recursion
+
+    def check_stand_outs(self):  # FIXME ignores object size
+        """returns indices of object that stand out"""
+        ch_radii = geometry.cartesian2polar(self._xy, radii_only=True)
+        return np.where(ch_radii > self.target_area_radius -
+                        self.min_dist_area_boarder)[0]
+
+    def center_array(self):
+        """places array in target area as central and possible and tries to
+        remove any stand_outs"""
+        raise NotImplementedError()
 
     def realign(self):
         error = False

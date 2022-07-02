@@ -10,8 +10,11 @@ from pynsn import shapes
 from pynsn import visual_properties as props
 import numpy as np
 
+
+# FIXME test Attribute Array (properties)
+
 # define the visual features of the  dot array
-ref = arrays.DotArray(target_area_radius=200)
+ref = arrays.BaseArray(target_area_radius=200)
 
 size_dist_dot = random_array.SizeDistribution(
     dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
@@ -34,7 +37,7 @@ my_colours = ImageColours(target_area="#EEEEEE",
                           )
 
 stimulus = random_array.create(reference_array=ref,
-                               size_distribution=size_dist_dot,
+                               size_distribution=size_dist_rect,
                                n_objects=7,
                                attributes=["blue", "green"])
 props.scale.log_size(stimulus, 1.3)

@@ -21,7 +21,7 @@ from ..image import pil_image
 from .._sequence import dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-        "ref": arrays.GenericObjectArray(target_area_radius=200,
+        "ref": arrays.BaseArray(target_area_radius=200,
                                 min_dist_between=2),
         "sdr": random_array.SizeDistribution(
                     dot_diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
@@ -34,7 +34,7 @@ DEFAULT_ARRAY = {"num": 40,
                                     background="gray")}
 
 ICON = {"num": 11,
-        "ref": arrays.GenericObjectArray(target_area_radius=200),
+        "ref": arrays.BaseArray(target_area_radius=200),
         "sdr": random_array.SizeDistribution(
                 dot_diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
@@ -183,7 +183,7 @@ class GUIMainWindow(QMainWindow):
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
                                                   )
-        ref_array = arrays.GenericObjectArray(
+        ref_array = arrays.BaseArray(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_dist_between=self.main_widget.min_dist_between.value)
         return ref_array, size_dist

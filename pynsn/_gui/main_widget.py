@@ -22,7 +22,7 @@ class MainWidget(QWidget):
         self.initUI(number, ref_array, size_distribution.diameter)
 
     def initUI(self, number, ref_array, dot_size_distribution):
-        assert isinstance(ref_array, arrays.GenericObjectArray)
+        arrays._check_base_array(ref_array)
         assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
 
         sdr = random_array.SizeDistribution(dot_diameter=dot_size_distribution)

@@ -6,12 +6,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._generic_object_array import GenericObjectArray
+from ._base_array import ABCObjectArray
 from .._lib import misc
 from ..shapes import Rectangle, Point
 
 
-class RectangleArray(GenericObjectArray):
+class RectangleArray(ABCObjectArray):
     """
     """
 
@@ -263,3 +263,12 @@ class RectangleArray(GenericObjectArray):
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn
+
+    def center_array(self):
+        raise NotImplementedError()
+
+    def check_stand_outs(self):
+        raise NotImplementedError()
+
+    def realign(self):
+        raise NotImplementedError()

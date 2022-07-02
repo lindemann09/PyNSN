@@ -8,7 +8,7 @@ from pynsn.visual_properties import fit, scale, flags
 class DotsSmall(unittest.TestCase):
 
     def settings(self):
-        self.ref = arrays.GenericObjectArray(target_area_radius=200)
+        self.ref = arrays.BaseArray(target_area_radius=200)
         self.size_dist = random_array.SizeDistribution(
             dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
         self.n_dots = 5

@@ -68,7 +68,7 @@ class ArrayProperties(object):
 
     def __init__(self, object_array):
         # _lib or dot_cloud
-        arrays._check_generic_array(object_array)
+        arrays._check_base_array(object_array)
         self.oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None

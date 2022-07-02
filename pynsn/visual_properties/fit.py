@@ -33,11 +33,7 @@ def change_adapt_settings(default_spacing_precision=None,
     if isinstance(default_adapt_fa2ta_ratio, float):
         DEFAULT_ADAPT_FA2TA_RATIO = default_adapt_fa2ta_ratio
 
-
-
-
 #FIXME coverage for all
-
 
 def numerosity(object_array, value, center_of_field_area=False):
     TRY_OUT = 300

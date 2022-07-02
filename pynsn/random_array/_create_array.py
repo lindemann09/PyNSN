@@ -7,6 +7,7 @@ from .._lib.exceptions import NoSolutionError
 from .. import arrays
 from ._size_distribution import SizeDistribution
 
+
 def create(reference_array,
            size_distribution,
            n_objects,
@@ -18,9 +19,7 @@ def create(reference_array,
     attribute is an array, arrays are assigned randomly.
 
     """
-    if not isinstance(reference_array, arrays.GenericObjectArray):
-        raise TypeError("Reference array has to be of type DotArray, RectangleArray or GenericObjectArray, but not {}".format(
-                        type(reference_array).__name__))
+    arrays._check_base_array(reference_array)
     if not isinstance(size_distribution, SizeDistribution):
         raise RuntimeError("Size distribution has to be of type SizeDistribution, but not {}".format(
                         type(size_distribution).__name__))
