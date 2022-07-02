@@ -13,6 +13,7 @@ import random
 import numpy as np
 from scipy import spatial
 from .._lib import misc, geometry
+from .._lib.exceptions import NoSolutionError
 from ..visual_properties._props import ArrayProperties
 from ..visual_properties import fit
 from .. import shapes
@@ -327,7 +328,7 @@ class GenericObjectArray(object):
             if not bad_position:
                 return rtn_object
             elif cnt > N_ATTEMPTS:
-                raise StopIteration(u"Can't find a free position")
+                raise NoSolutionError(u"Can't find a free position")
 
     def shuffle_all_positions(self, allow_overlapping=False):
         """might raise an exception"""
@@ -340,8 +341,8 @@ class GenericObjectArray(object):
             try:
                 new = self.get_random_free_position(obj,
                                 allow_overlapping=allow_overlapping)
-            except StopIteration as e:
-                raise StopIteration("Can't shuffle dot array. No free positions found.")
+            except NoSolutionError as e:
+                raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
 
     def replace_overlapping_objects(self, center_of_field_area=False,
@@ -378,7 +379,7 @@ class GenericObjectArray(object):
                     convex_hull_had_changed = True
                     idx = overlaps[0,0]
                 else:
-                    raise StopIteration("Can't replace overlap and keep convex hull unchanged. " +
+                    raise NoSolutionError("Can't replace overlap and keep convex hull unchanged. " +
                                     warning_info)
             else:
                 idx = overlaps[0,0]

@@ -20,6 +20,5 @@ from . import arrays
 from . import visual_properties
 from . import random_array
 from .random_array import distributions
-
-
+from ._lib.exceptions import NoSolutionError
 

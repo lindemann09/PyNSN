@@ -5,9 +5,9 @@ from enum import IntFlag, auto
 from math import log2
 
 import numpy as np
-from .._lib import misc
 from .. import arrays
 from ._convex_hull import ConvexHull, ConvexHullPositions
+
 
 class VisualPropertyFlag(IntFlag):
 

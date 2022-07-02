@@ -2,11 +2,13 @@ import random as _random
 import numpy as _np
 from math import log2 as _log2
 from .._lib import geometry as _geometry
+from .._lib.exceptions import NoSolutionError
 from .. import arrays as _arrays
 from ._props import VisualPropertyFlag as _flags
 
 DEFAULT_SPACING_PRECISION = 0.0001
 DEFAULT_ADAPT_FA2TA_RATIO = 0.5
+
 
 def change_adapt_settings(default_spacing_precision=None,
                           default_adapt_fa2ta_ratio=None):
@@ -70,9 +72,9 @@ def numerosity(object_array, value, center_of_field_area=False):
                         ref_object=rnd_object, allow_overlapping=False,
                         inside_convex_hull=center_of_field_area
                     )
-                except StopIteration:
+                except NoSolutionError:
                     # no free position
-                    raise StopIteration("Can't make the deviant. No free position found.")
+                    raise NoSolutionError("Can't make the deviant. No free position found.")
                 object_array.add([rnd_object])
 
     return object_array

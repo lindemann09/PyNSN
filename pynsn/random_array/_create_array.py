@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import copy
 from random import shuffle
 
-from .. import shapes
+from .._lib.exceptions import NoSolutionError
 from .. import arrays
 from ._size_distribution import SizeDistribution
 
@@ -37,8 +37,8 @@ def create(reference_array,
                 dot = rtn.get_random_free_position(ref_object=dot,
                                                    occupied_space=occupied_space,
                                                    allow_overlapping=allow_overlapping)
-            except StopIteration as e:
-                raise StopIteration("Can't find a solution for {} items in this array".format(n_objects))
+            except NoSolutionError as e:
+                raise NoSolutionError("Can't find a solution for {} items in this array".format(n_objects))
             rtn.add([dot])
 
     else:
@@ -52,8 +52,8 @@ def create(reference_array,
                 rect = rtn.get_random_free_position(ref_object=rect,
                                                     occupied_space=occupied_space,
                                                     allow_overlapping=allow_overlapping)
-            except StopIteration:
-                raise StopIteration("Can't find a solution for {} items in this array".format(n_objects))
+            except NoSolutionError:
+                raise NoSolutionError("Can't find a solution for {} items in this array".format(n_objects))
 
             rtn.add([rect])
 
