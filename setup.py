@@ -3,18 +3,20 @@
 Installer
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import codecs
 import os
 from sys import version_info as _vi
 
 package_name = "pynsn"
 
-install_requires = ["numpy>=1.6",
-                    "scipy>=1.0",
-                    "Pillow>=5.0",
-                    "svgwrite>=1.4"
-                    ]
+if _vi.major < 3 and _vi.minor < 6:
+    raise RuntimeError("{0} requires Python 3.6 or larger.".format(package_name))
+
+install_requires = ["numpy>=1.21",
+                    "scipy>=1.7",
+                    "Pillow>=9.0",
+                    "svgwrite>=1.4"]
 
 extras_require = {
     'gui':                ["PyQt5>=5.14"],
@@ -25,13 +27,8 @@ extras_require = {
 
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
-packages = [package_name]
-for subp in ['random_array', 'database', 'image', 'visual_properties',
-             'arrays', '_lib', '_gui', '_sequence']:
-    packages.append("{}.{}".format(package_name, subp))
+packages = find_packages(".")
 
-if _vi.major < 1 and _vi.minor < 6:
-    raise RuntimeError("{0} requires Python 3.6 or larger.".format(package_name))
 
 def readme():
     directory = os.path.dirname(os.path.join(
@@ -43,6 +40,7 @@ def readme():
         errors="replace",
         ) as file:
         return file.read()
+
 
 def get_version(package):
     """Get version number"""
