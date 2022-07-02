@@ -3,6 +3,9 @@ from pynsn import distributions as distr
 from pynsn.image import svg_file, ImageColours
 from pynsn import shapes
 
+# FIXME Own exception
+# FIXME __iter__ and iter_objects
+
 
 from pynsn import visual_properties as props
 import numpy as np
@@ -32,20 +35,19 @@ my_colours = ImageColours(target_area="#EEEEEE",
 
 stimulus = random_array.create(reference_array=ref,
                                size_distribution=size_dist_dot,
-                               n_objects=25,
+                               n_objects=4,
                                attributes=["blue", "green"])
-props.scale.log_size(stimulus, 1.3)
+props.scale.log_size(stimulus, 1.6)
 svg = svg_file.create(stimulus, my_colours, filename="demo.svg")
 svg.save()
 
+print(stimulus)
+exit()
 
 ####
 stim_scaled = stimulus.copy()
-stim_scaled.center_array()
+#stim_scaled.center_array()
 
-print(stim_scaled.properties.convex_hull == stimulus.properties.convex_hull)
-print(stimulus.properties.convex_hull.field_area)
-print(stim_scaled.properties.convex_hull.field_area)
 
 #stim_scaled.realign()
 #props.scale.visual_property(stim_scaled, feature=feat, factor=1)

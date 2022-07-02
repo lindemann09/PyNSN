@@ -126,6 +126,7 @@ class GenericObjectArray(object):
         m = md5()
         m.update(self._xy.tobytes())  # to byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         m.update(self.perimeter.tobytes())
+        m.update(self._attributes.tobytes())
         return m.hexdigest()
 
     def get_number_deviant(self, change_numerosity, preserve_field_area=False):
@@ -178,10 +179,6 @@ class GenericObjectArray(object):
         with open(json_file_name, 'r') as fl:
             dict = json.load(fl)
         self.read_from_dict(dict)
-
-    def center_array(self):
-        self._xy = self._xy - self.center_of_field_area()
-        self._properties.reset()
 
     def clear(self):
         self._xy = np.array([])
@@ -252,7 +249,7 @@ class GenericObjectArray(object):
         dist = np.array([self.distances(d) for d in self.get()])
         return dist
 
-    def overlaps(self):
+    def check_overlaps(self):
         """return pairs of indices of overlapping of objects
         numpy.array
         """
@@ -359,7 +356,7 @@ class GenericObjectArray(object):
                        "objects on convex hull"
         convex_hull_had_changed = False
 
-        overlaps = self.overlaps()
+        overlaps = self.check_overlaps()
         while len(overlaps):
             if center_of_field_area:
                 # check if overlaps are on convex hull
@@ -385,13 +382,24 @@ class GenericObjectArray(object):
             obj = self.get_random_free_position(ref_object=obj,
                                                 inside_convex_hull=center_of_field_area)
             self.add([obj])
-            overlaps = self.overlaps()
+            overlaps = self.check_overlaps()
 
         if convex_hull_had_changed:
             print("Warning: " + warning_info)
 
-
         return convex_hull_had_changed
+
+    def check_stand_outs(self):
+        """returns indices of object that stand out"""
+        ch_radii = geometry.cartesian2polar(self._xy, radii_only=True)
+        return np.where(ch_radii > self.target_area_radius -
+                                     self.min_dist_area_boarder)[0]
+
+    def center_array(self):
+        """places array in target area as central and possible and tries to
+        remove any stand_outs"""
+        raise NotImplementedError()
+
 
     def realign(self):
         raise NotImplementedError()
