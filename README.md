@@ -48,9 +48,11 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-
-* [creating random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html)
-
+* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays.html): manually creating object arrays and exporting picture files
+* [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
+* matching visual features
+* data base, sequences
+* [Euro flag example](https://lindemann09.github.io/PyNSN/euroflag.html): using pictures as objects in array
 
 RUN GUI tool
 -------------
