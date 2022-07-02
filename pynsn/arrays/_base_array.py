@@ -235,11 +235,11 @@ class ABCObjectArray(BaseArray, metaclass=ABCMeta):
 
     @abstractmethod
     def as_dict(self):
-        pass
+        return super().as_dict()
 
     @abstractmethod
     def read_from_dict(self, dict):
-        pass
+        return super().read_from_dict()
 
     @abstractmethod
     def copy(self, indices=None, deepcopy=True):

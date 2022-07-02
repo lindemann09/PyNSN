@@ -89,5 +89,3 @@ def create_incremental(reference_array,
         previous = current
         yield current
 
-
-

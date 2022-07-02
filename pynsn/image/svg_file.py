@@ -5,9 +5,10 @@ import svgwrite as _svg
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from ..  import arrays as _arrays
-from .. import shapes as _shape
+from .. import shapes as _shapes
 
 from ._colour import ImageColours # make available
+# FIXME can't handle pictures, throw exception
 
 def create(object_array, colours=None, filename="noname.svg"):
     _arrays._check_object_array(object_array)
@@ -32,7 +33,7 @@ def create(object_array, colours=None, filename="noname.svg"):
             # draw dots
             for xy, d, att in zip(image_coord, object_array.diameters,
                                   object_array.attributes):
-                obj = _shape.Dot(xy=xy, diameter=d)
+                obj = _shapes.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.Colour(att,
                                             colours.default_object_colour)
                 _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
@@ -42,7 +43,7 @@ def create(object_array, colours=None, filename="noname.svg"):
             for xy, size, att in zip(image_coord,
                                      object_array.sizes,
                                      object_array.attributes):
-                obj = _shape.Rectangle(xy=xy, size=size)
+                obj = _shapes.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.Colour(att,
                                             colours.default_object_colour)
                 _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
@@ -66,14 +67,14 @@ def create(object_array, colours=None, filename="noname.svg"):
                               opacity=colours.opacity_guides)
         #  and center of mass
         if colours.center_of_field_area.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
-                             diameter=10,
-                             attribute=colours.center_of_field_area.colour)
+            obj = _shapes.Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
+                              diameter=10,
+                              attribute=colours.center_of_field_area.colour)
             _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
         if colours.center_of_mass.colour is not None:
-            obj = _shape.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
-                             diameter=10,
-                             attribute=colours.center_of_mass.colour)
+            obj = _shapes.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
+                              diameter=10,
+                              attribute=colours.center_of_mass.colour)
             _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
 
     return svgdraw
@@ -81,11 +82,11 @@ def create(object_array, colours=None, filename="noname.svg"):
 
 def _draw_shape(svgdraw, shape, opacity=1):
     # draw object
-    assert isinstance(shape, (_shape.Dot, _shape.Rectangle))
+    assert isinstance(shape, (_shapes.Dot, _shapes.Rectangle))
 
     colour = _colour.Colour(shape.attribute)
 
-    if isinstance(shape, _shape.Dot):
+    if isinstance(shape, _shapes.Dot):
         r = shape.diameter / 2
         svgdraw.add(svgdraw.circle(center=shape.xy,
                                    r=shape.diameter/2,
@@ -93,7 +94,7 @@ def _draw_shape(svgdraw, shape, opacity=1):
                                    fill=colour.colour,
                                    opacity=opacity))
 
-    elif isinstance(shape, _shape.Rectangle):
+    elif isinstance(shape, _shapes.Rectangle):
         svgdraw.add(svgdraw.rect(insert=(shape.left, shape.bottom),
                                  size=shape.size,
                                  fill=colour.colour,

@@ -17,8 +17,8 @@ class RectangleArray(ABCObjectArray):
 
     def __init__(self,
                  target_area_radius,
-                 min_dist_between,
-                 min_dist_area_boarder,
+                 min_dist_between=2,
+                 min_dist_area_boarder=1,
                  xy=None,
                  sizes=None,
                  attributes=None):
@@ -192,8 +192,8 @@ class RectangleArray(ABCObjectArray):
                        self._attributes[indices])
 
         for xy, s, att in data:
-            yield Rectangle(xy=xy, size=s, attribute=att)
-
+            rtn = Rectangle(xy=xy, size=s, attribute=att)
+            yield rtn
 
     def find(self, size=None, attribute=None, edge=None):
         """returns indices of found objects
@@ -216,7 +216,7 @@ class RectangleArray(ABCObjectArray):
                     new_rtn.append(i)
             return new_rtn
         else:
-            raise TypeError("edge has to be of type Coordinate2D")
+            raise TypeError("edge has to be of type Points")
 
     def csv(self, variable_names=True,
             hash_column=True,
@@ -275,3 +275,6 @@ class RectangleArray(ABCObjectArray):
 
     def realign(self):
         raise NotImplementedError()
+
+# FIXME overlapping does not work for rectangles
+# FIXME picture random size distribution

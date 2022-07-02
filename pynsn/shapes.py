@@ -1,7 +1,9 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+import os as _os
 import math as _math
+
 
 class Point(object):
 
@@ -10,7 +12,7 @@ class Point(object):
         self.y = y
 
     def __repr__(self):
-        return "Coordinate2D(xy={})".format(self.xy)
+        return "Point(xy={})".format(self.xy)
 
     def __add__(self, other):
         return Point(self.x + other.x, self.y + other.y)
@@ -158,12 +160,15 @@ class Dot(Point):
 
 
 class Rectangle(Point):
+    PICTURE_PREFIX = "p:"
 
-    def __init__(self, xy, size, attribute=None):
-        """Initialize a point
+    def __init__(self, xy, size, attribute=None, picture=None):
+        """Initialize a Rectangle
 
         Handles polar and cartesian representation (optimised processing, i.e.,
         conversions between coordinates systems will be done only once if needed)
+
+        Rectangle can also consist of a picture
 
         Parameters
         ----------
@@ -172,17 +177,32 @@ class Rectangle(Point):
         size : tuple
             tuple of two numeric (default=(0, 0))
         attribute : attribute (string)
+        picture: string
+            path to picture
         """
 
         Point.__init__(self, x=xy[0], y=xy[1])
         if attribute is not None and not isinstance(attribute, str):
             raise ValueError("attributes must be a string or None, not {}".format(type(attribute).__name__))
         self.attribute = attribute
-        self.width, self.height  = size
+        self.width, self.height = size
+        if picture is not None:
+            if attribute is not None:
+                raise TypeError("Set either attribute or picture, not both.")
+            self.set_picture(picture)
 
     def __repr__(self):
         return "Rectangle(xy={}, size={}, attribute={})".format(self.xy,
                                     self.size, repr(self.attribute))
+
+    def set_picture(self, filename):
+        self.attribute = picture_attr(filename)
+
+    def get_picture(self):
+        """returns filename if `attribute` represent a picture attribute
+        else returns None
+        """
+        return attr_to_picture(self.attribute)
 
     @property
     def left(self):
@@ -200,13 +220,21 @@ class Rectangle(Point):
     def bottom(self):
         return self.y - 0.5 * self.height
 
-    def iter_edges(self):
-        """iterator over Coordinate2D representing all four edges
+    def iter_edges(self, xy_tuple=False):
+        """iterator over all four edges
+
+        Returns
+        -------
+        iterator over Points or tuple (x,y)
         """
-        yield Point(self.left, self.top)
-        yield Point(self.right, self.top)
-        yield Point(self.right, self.bottom)
-        yield Point(self.left, self.bottom)
+        for x in [Point(self.left, self.top),
+                  Point(self.right, self.top),
+                  Point(self.right, self.bottom),
+                  Point(self.left, self.bottom)]:
+            if xy_tuple:
+                yield x.xy
+            else:
+                yield x
 
     @property
     def size(self):
@@ -277,3 +305,20 @@ class Rectangle(Point):
         dx, dy = self.xy_distances(other=other)
         return _math.hypot(dx, dy)
 
+
+def picture_attr(filename):
+    """return picture attribute used for attributes of rectangles"""
+    if not _os.path.isfile(filename):
+        raise RuntimeError("{} is not a file.".format(filename))
+    return "{}{}".format(Rectangle.PICTURE_PREFIX, filename)
+
+
+def attr_to_picture(attribute):
+    """returns filename if `attribute` represent a picture attribute
+    else returns None
+    """
+    if isinstance(attribute, str) and \
+            attribute.startswith(Rectangle.PICTURE_PREFIX):
+        return attribute[len(Rectangle.PICTURE_PREFIX):]
+    else:
+        return None

@@ -1,7 +1,7 @@
 from pynsn import arrays, random_array
 from pynsn import distributions as distr
-from pynsn.image import svg_file, ImageColours, Colour
-from pynsn import shapes
+from pynsn.image import svg_file, ImageColours, pil_image, defaults
+from pynsn import shapes, image
 
 # FIXME Own exception
 # FIXME __iter__ and iter_objects
@@ -9,21 +9,48 @@ from pynsn import shapes
 from pynsn import visual_properties as props
 import numpy as np
 
-
 # FIXME test Attribute Array (properties)
 
+pict_file = "eurostar.png"
+euro_array = arrays.RectangleArray(target_area_radius=150,
+                                   min_dist_between=3)
+size_dist = random_array.SizeDistribution(width=distr.Discrete((10, 20, 30)),
+                                          rectangle_proportion=1)
+euro_array = random_array.create(euro_array, size_dist, n_objects=27,
+                                 attributes=shapes.picture_attr(pict_file))
+
+euro_col = ImageColours(target_area="#003399")
+img = pil_image.create(euro_array, euro_col)
+img.save("demo.png")
+
+s = (40, 40)
+objs =  [shapes.Rectangle(xy=(-65, 50), size=s, picture=pict_file),
+                shapes.Rectangle(xy=(25, 45), size=s, attribute="black"),
+                shapes.Rectangle(xy=(60, -50), size=s, picture=pict_file),
+                shapes.Rectangle(xy=(-80, -20), size=s, picture=pict_file),
+                shapes.Rectangle(xy=(-0, 0), size=s, picture=pict_file)]
+# euro_array = arrays.RectangleArray(target_area_radius=150, min_dist_between=3)
+# euro_array.add(objs)
+# euro_col = ImageColours(target_area="#003399")
+# img = pil_image.create(euro_array, euro_col)
+# img.save("demo.png")
+
+exit()
+
 # define the visual features of the  dot array
-ref = arrays.BaseArray(target_area_radius=200)
+
 
 size_dist_dot = random_array.SizeDistribution(
     diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
 )
+
 size_dist_rect = random_array.SizeDistribution(
     width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     #rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
+ref = arrays.RectangleArray(target_area_radius=200)
 
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,
