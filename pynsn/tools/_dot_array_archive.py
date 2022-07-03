@@ -1,9 +1,11 @@
+#FIXME Depricated model currently BROKEN
+
 import os
 import json
 import gzip
 
-from .._lib.arrays import DotArray
-from pynsn._sequence.dot_array_sequence import DASequence
+from .._lib import DotArray
+from ._dot_array_sequence import DASequence
 
 def load(json_file_name, zipped=False):
 

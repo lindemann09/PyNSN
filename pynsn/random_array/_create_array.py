@@ -4,7 +4,7 @@ import copy
 from random import shuffle
 
 from .._lib.exceptions import NoSolutionError
-from .. import arrays
+from .._lib import DotArray, RectangleArray, _check_base_array
 from ._size_distribution import SizeDistribution
 
 
@@ -19,14 +19,14 @@ def create(reference_array,
     attribute is an array, arrays are assigned randomly.
 
     """
-    arrays._check_base_array(reference_array)
+    _check_base_array(reference_array)
     if not isinstance(size_distribution, SizeDistribution):
         raise RuntimeError("Size distribution has to be of type SizeDistribution, but not {}".format(
                         type(size_distribution).__name__))
 
     if size_distribution.diameter is not None:
         # DotArray
-        rtn = arrays.DotArray(target_area_radius=reference_array.target_area_radius,
+        rtn = DotArray(target_area_radius=reference_array.target_area_radius,
                        min_dist_between=reference_array.min_dist_between,
                        min_dist_area_boarder=reference_array.min_dist_area_boarder)
 
@@ -41,7 +41,7 @@ def create(reference_array,
 
     else:
         # RectArray
-        rtn = arrays.RectangleArray(target_area_radius=reference_array.target_area_radius,
+        rtn = RectangleArray(target_area_radius=reference_array.target_area_radius,
                              min_dist_between=reference_array.min_dist_between,
                              min_dist_area_boarder=reference_array.min_dist_area_boarder)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import spatial
 from .._lib.geometry import cartesian2polar, polar2cartesian
-from .. import arrays
+from .. import _lib
 
 
 class ConvexHullBaseClass(object):
@@ -46,7 +46,7 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        arrays._check_base_array(object_array)
+        _lib._check_base_array(object_array)
         self._initialize(object_array.xy)
 
 
@@ -57,9 +57,9 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        arrays._check_base_array(object_array)
+        _lib._check_base_array(object_array)
 
-        if isinstance(object_array, arrays.DotArray):
+        if isinstance(object_array, _lib.DotArray):
             # centered polar coordinates
             minmax = np.array((np.min(object_array.xy, axis=0),
                                np.max(object_array.xy, axis=0)))
@@ -70,7 +70,7 @@ class ConvexHull(ConvexHullBaseClass):
             polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameters / 2)
             outer_xy = polar2cartesian(polar_centered) + center
 
-        elif isinstance(object_array, arrays.RectangleArray):
+        elif isinstance(object_array, _lib.RectangleArray):
             # simple solution: get all edges
             edges = []
             for rect in object_array.iter_objects():

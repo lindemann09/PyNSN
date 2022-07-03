@@ -3,16 +3,17 @@ Dot Array Sequence
 """
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+#FIXME Depricated model currently BROKEN
 # FIXME BROKEN MODULE
 
 from hashlib import md5 as _md5
 import numpy as _np
 
 from .._lib import misc as _misc
-from ..arrays import DotArray as _DotArray
+from .._lib import DotArray
 from .. import random_array
-from .. import arrays
 from ..visual_properties import flags, fit
+
 
 class DASequence(object):
 
@@ -28,13 +29,13 @@ class DASequence(object):
         self.numerosity_idx = {}
 
     def append_dot_arrays(self, arr):
-        if isinstance(arr, _DotArray):
+        if isinstance(arr, DotArray):
             arr = [arr]
-        self.dot_arrays.extend(arr)
+        self.dotextend(arr)
         self.numerosity_idx = {da._properties.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def delete_dot_arrays(self, array_id):
-        self.dot_arrays.pop(array_id)
+        self.dotpop(array_id)
         self.numerosity_idx = {da._properties.numerosity: idx for idx, da in enumerate(self.dot_arrays)}
 
     def get_array(self, numerosity):
@@ -153,7 +154,7 @@ def create(specs,
 
     check_property_list(adapt_property)
 
-    if not isinstance(specs, arrays.DotArraySpecs):
+    if not isinstance(specs, DotArraySpecs):
         raise TypeError("Specs has to be of type DotArraySpecs, but not {}".format(
             type(specs).__name__))
 

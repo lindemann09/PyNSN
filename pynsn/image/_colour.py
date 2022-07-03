@@ -303,7 +303,7 @@ class ImageColours(object):
              "background": self.background.colour,
              "default_object": self.default_object_colour.colour,
              "object_opacity": self.opacity_object,
-             "info_shapes_opacity": self.opacity_guides
+             "info_opacity": self.opacity_guides
              })
 
     def __str__(self):

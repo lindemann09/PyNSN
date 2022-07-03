@@ -2,9 +2,8 @@ import random as _random
 import numpy as _np
 from math import log2 as _log2
 from .._lib import geometry as _geometry
-from .._lib.exceptions import NoSolutionError
-from .. import arrays as _arrays
-from ._props import VisualPropertyFlag as _flags
+from .. import _lib
+from ._properties import VisualPropertyFlag as _flags
 
 DEFAULT_SPACING_PRECISION = 0.0001
 DEFAULT_ADAPT_FA2TA_RATIO = 0.5
@@ -37,7 +36,7 @@ def change_adapt_settings(default_spacing_precision=None,
 
 def numerosity(object_array, value, center_of_field_area=False):
     TRY_OUT = 300
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
 
     # make a copy for the deviant
     if value <= 0:
@@ -68,9 +67,9 @@ def numerosity(object_array, value, center_of_field_area=False):
                         ref_object=rnd_object, allow_overlapping=False,
                         inside_convex_hull=center_of_field_area
                     )
-                except NoSolutionError:
+                except _lib.NoSolutionError:
                     # no free position
-                    raise NoSolutionError("Can't make the deviant. No free position found.")
+                    raise _lib.NoSolutionError("Can't make the deviant. No free position found.")
                 object_array.add([rnd_object])
 
     return object_array
@@ -78,7 +77,7 @@ def numerosity(object_array, value, center_of_field_area=False):
 
 def average_diameter(dot_array, value):
     # changes diameter
-    if not isinstance(dot_array, _arrays.DotArray):
+    if not isinstance(dot_array, _lib.DotArray):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.properties.average_dot_diameter
@@ -88,7 +87,7 @@ def average_diameter(dot_array, value):
 
 def average_rectangle_size(rect_array, value):
     # changes diameter
-    if not isinstance(rect_array, _arrays.RectangleArray):
+    if not isinstance(rect_array, _lib.RectangleArray):
         raise TypeError("Adapting rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
     try:
@@ -105,9 +104,9 @@ def average_rectangle_size(rect_array, value):
 
 def total_surface_area(object_array, value):
     # changes diameter
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
-    if isinstance(object_array, _arrays.DotArray):
+    if isinstance(object_array, _lib.DotArray):
         object_array._diameters = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
                     _np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
@@ -126,7 +125,7 @@ def field_area(object_array, value, precision=None):
     iterative method can takes some time.
     """
 
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     if precision is None:
         precision = DEFAULT_SPACING_PRECISION
 
@@ -144,7 +143,7 @@ def _scale_field_area(object_array, value, precision):
 
     Note: see doc string `_adapt_field_area`
     """
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     current = object_array.properties.field_area
 
     if current is None:
@@ -190,7 +189,7 @@ def coverage(object_array, value,
         ratio of adaptation via area or via convex_hull (between 0 and 1)
 
     """
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
 
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
@@ -212,39 +211,39 @@ def coverage(object_array, value,
                precision=precision)
 
 def average_perimeter(object_array, value):
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     total_peri = value * object_array.properties.numerosity
     return total_perimeter(object_array, total_peri)
 
 def total_perimeter(object_array, value):
-    if isinstance(object_array, _arrays.DotArray):
+    if isinstance(object_array, _lib.DotArray):
         tmp = value / (object_array.properties.numerosity * _np.pi)
         return average_diameter(object_array, tmp)
-    elif isinstance(object_array, _arrays.RectangleArray):
+    elif isinstance(object_array, _lib.RectangleArray):
         scale = value / object_array.properties.total_perimeter
         new_size = object_array.properties.average_rectangle_size * scale
         return average_rectangle_size(object_array, new_size)
     else:
-        _arrays._check_object_array(object_array)
+        _lib._check_object_array(object_array)
 
 def average_surface_area(object_array, value):
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     ta = object_array.properties.numerosity * value
     return total_surface_area(object_array, ta)
 
 def log_spacing(object_array, value, precision=None):
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     logfa = 0.5 * value + 0.5 * _log2(
         object_array.properties.numerosity)
     return field_area(object_array, value=2 ** logfa, precision=precision)
 
 def log_size(object_array, value):
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     logtsa = 0.5 * value + 0.5 * _log2(object_array.properties.numerosity)
     return total_surface_area(object_array, 2 ** logtsa)
 
 def sparcity(object_array, value, precision=None):
-    _arrays._check_object_array(object_array)
+    _lib._check_object_array(object_array)
     return field_area(object_array, value=value * object_array.properties.numerosity,
                       precision=precision)
 

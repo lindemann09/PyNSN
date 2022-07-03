@@ -1,5 +1,5 @@
 from .._lib.misc import dict_to_text
-from .. import shapes
+from .._lib import shapes
 from ..distributions import PyNSNDistribution, Constant, _round_samples
 
 

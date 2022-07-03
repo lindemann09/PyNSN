@@ -5,9 +5,7 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import shapes as _shapes
-from .. import arrays as _arrays
-from .._lib import misc as _misc
+from .._lib import DotArray, Rectangle, RectangleArray, Dot, _check_object_array
 
 
 from ._colour import ImageColours # make available
@@ -26,7 +24,7 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
     default_dot_colour: if colour is undefined in _lib
     """
 
-    _arrays._check_object_array(object_array)
+    _check_object_array(object_array)
     if colours is None:
         colours = _colour.ImageColours()
     if not isinstance(colours, _colour.ImageColours):
@@ -49,28 +47,28 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
                      color=colours.background.colour)
 
     if colours.target_area.colour is not None:
-        obj = _shapes.Dot(xy=_c2i_coord(_np.zeros(2), image_size),
+        obj = Dot(xy=_c2i_coord(_np.zeros(2), image_size),
                           diameter=image_size,
                           attribute=colours.target_area.colour)
         _draw_shape(img, obj)
 
     if object_array.properties.numerosity > 0:
         image_coord = _c2i_coord(object_array.xy * aaf, image_size)
-        if isinstance(object_array, _arrays.DotArray):
+        if isinstance(object_array, DotArray):
             # draw dots
             for xy, d, att in zip(image_coord, object_array.diameters * aaf,
                                   object_array.attributes):
-                obj = _shapes.Dot(xy=xy, diameter=d)
+                obj = Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.Colour(att,
                                                colours.default_object_colour)
                 _draw_shape(img, obj)
 
-        elif isinstance(object_array, _arrays.RectangleArray):
+        elif isinstance(object_array, RectangleArray):
             # draw rectangle
             for xy, size, att in zip(image_coord,
                                      object_array.sizes * aaf,
                                      object_array.attributes):
-                obj = _shapes.Rectangle(xy=xy, size=size,
+                obj = Rectangle(xy=xy, size=size,
                                         attribute=att)
                 if obj.get_picture() is None:
                     # rect
@@ -94,12 +92,12 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
                               convex_hull_colour=colours.field_area.colour)
         #  and center of mass
         if colours.center_of_field_area.colour is not None:
-            obj = _shapes.Dot(xy=_c2i_coord(object_array.center_of_field_area() * aaf, image_size),
+            obj = Dot(xy=_c2i_coord(object_array.center_of_field_area() * aaf, image_size),
                               diameter=10 * aaf,
                               attribute=colours.center_of_field_area.colour)
             _draw_shape(img, obj)
         if colours.center_of_mass.colour is not None:
-            obj = _shapes.Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
+            obj = Dot(xy=_c2i_coord(object_array.center_of_mass() * aaf, image_size),
                               diameter=10 * aaf,
                               attribute=colours.center_of_mass.colour)
             _draw_shape(img, obj)
@@ -122,12 +120,12 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
 def _draw_shape(img, shape):
     # draw object
     colour = _colour.Colour(shape.attribute)
-    if isinstance(shape, _shapes.Dot):
+    if isinstance(shape, Dot):
         r = shape.diameter / 2
         _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                       shape.x + r, shape.y + r),
                                      fill=colour.colour)
-    elif isinstance(shape, _shapes.Rectangle):
+    elif isinstance(shape, Rectangle):
         if shape.get_picture() is not None:
             # picture
             shape_size = (round(shape.width), round(shape.height))

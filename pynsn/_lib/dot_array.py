@@ -6,10 +6,10 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._base_array import ABCObjectArray
+from .object_array import ABCObjectArray
 from .._lib import misc, geometry
-from ..shapes import Dot
-from . import _tools
+from .shapes import Dot
+from . import array_tools
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -236,7 +236,7 @@ class DotArray(ABCObjectArray):
 
         error = False
 
-        xy, shift_required = _tools.remove_overlap_from_inner_to_outer(
+        xy, shift_required = array_tools.remove_overlap_from_inner_to_outer(
             xy=self.xy, min_dist_between=self.min_dist_between,
             distance_matrix_function=self.distances_matrix)
 

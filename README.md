@@ -48,7 +48,7 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays.html): manually creating object arrays and exporting picture files
+* [making arrays](https://lindemann09.github.io/PyNSN/make_objecthtml): manually creating object arrays and exporting picture files
 * [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
 * matching visual features
 * data base, sequences

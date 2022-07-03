@@ -11,17 +11,17 @@ from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import random_array
-from .. import arrays
+from .. import _lib
 from .._lib.exceptions import NoSolutionError
-from ..random_array import distributions as distr
+from .. import distributions as distr
 from .. import visual_properties as props
 
 from ..image import _colour
 from ..image import pil_image
-from .._sequence import dot_array_sequence
+from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-        "ref": arrays.BaseArray(target_area_radius=200,
+        "ref": _lib.BaseArray(target_area_radius=200,
                                 min_dist_between=2),
         "sdr": random_array.SizeDistribution(
                     diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
@@ -34,7 +34,7 @@ DEFAULT_ARRAY = {"num": 40,
                                     background="gray")}
 
 ICON = {"num": 11,
-        "ref": arrays.BaseArray(target_area_radius=200),
+        "ref": _lib.BaseArray(target_area_radius=200),
         "sdr": random_array.SizeDistribution(
                 diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
@@ -183,7 +183,7 @@ class GUIMainWindow(QMainWindow):
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
                                                   )
-        ref_array = arrays.BaseArray(
+        ref_array = _lib.BaseArray(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_dist_between=self.main_widget.min_dist_between.value)
         return ref_array, size_dist
@@ -341,7 +341,7 @@ class GUIMainWindow(QMainWindow):
         ref_array.target_area_radius += ref_array.min_dist_area_boarder
 
         if adapt_methods is not None:
-            sequence = dot_array_sequence.create(
+            sequence = _dot_array_sequence.create(
                               specs=specs,
                               adapt_property=adapt_methods,
                               adapt_value=self.dot_array._properties.get(adapt_methods),

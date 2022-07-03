@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.11.5-3'
+__version__ = '0.11.6'
 
 from sys import version_info as _python_version_info
 if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
@@ -15,10 +15,11 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                                                     _python_version_info[1]) +
                       "Please use Python 3.6 or later.")
 
-from . import shapes
-from . import arrays
+from ._lib import DotArray, RectangleArray, BaseArray, \
+                    Point, Dot, Rectangle
+from ._lib.exceptions import NoSolutionError
+
 from . import visual_properties
 from . import random_array
 from . import distributions
-from ._lib.exceptions import NoSolutionError
 

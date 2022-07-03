@@ -5,9 +5,8 @@ from enum import IntFlag, auto
 from math import log2
 
 import numpy as np
-from .. import arrays
+from .. import _lib
 from ._convex_hull import ConvexHull, ConvexHullPositions
-
 
 class VisualPropertyFlag(IntFlag):
 
@@ -68,7 +67,7 @@ class ArrayProperties(object):
 
     def __init__(self, object_array):
         # _lib or dot_cloud
-        arrays._check_base_array(object_array)
+        _lib._check_base_array(object_array)
         self.oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None
@@ -92,7 +91,7 @@ class ArrayProperties(object):
 
     @property
     def average_dot_diameter(self):
-        if not isinstance(self.oa, arrays.DotArray):
+        if not isinstance(self.oa, _lib.DotArray):
             return None
         elif self.numerosity == 0:
             return np.nan
@@ -101,7 +100,7 @@ class ArrayProperties(object):
 
     @property
     def average_rectangle_size(self):
-        if not isinstance(self.oa, arrays.RectangleArray):
+        if not isinstance(self.oa, _lib.RectangleArray):
             return None
         elif self.numerosity == 0:
             return np.array([np.nan, np.nan])
@@ -234,9 +233,9 @@ class ArrayProperties(object):
                (VisualPropertyFlag.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlag.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self.oa, arrays.DotArray):
+        if isinstance(self.oa, _lib.DotArray):
             rtn[2] = (VisualPropertyFlag.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
-        elif isinstance(self.oa, arrays.RectangleArray):
+        elif isinstance(self.oa, _lib.RectangleArray):
             rtn[2] = (VisualPropertyFlag.AV_RECT_SIZE.label(), self.average_rectangle_size)
         else:
             rtn.pop(2)

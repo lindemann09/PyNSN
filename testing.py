@@ -1,11 +1,10 @@
-from pynsn import arrays, random_array
+import pynsn as nsn
+from pynsn import random_array, RectangleArray, DotArray, Rectangle, Dot
 from pynsn import distributions as distr
 from pynsn.image import svg_file, ImageColours, pil_image, defaults
-from pynsn import shapes, image
+from pynsn.visual_properties import fit
 from pynsn.distributions import Discrete
-
-# FIXME Own exception
-# FIXME __iter__ and iter_objects
+from pynsn._lib.shapes import picture_attr
 
 from pynsn import visual_properties as props
 import numpy as np
@@ -13,12 +12,12 @@ import numpy as np
 # FIXME test Attribute Array (properties)
 
 euro_col = ImageColours(target_area="#003399", background="#003399")
-euro_array = arrays.RectangleArray(target_area_radius=200, min_dist_between=1)
+euro_array = RectangleArray(target_area_radius=200, min_dist_between=1)
 
 for x in np.linspace(start=0, stop=2*np.pi, num=12+1):
     if x < 2*np.pi:
         pos = np.sin(x)*140, np.cos(x)*140
-        pict = shapes.Rectangle(xy=pos, size=(40, 40), picture="eurostar.png")
+        pict = Rectangle(xy=pos, size=(40, 40), picture="eurostar.png")
         euro_array.add(pict)
 
 img = pil_image.create(euro_array, euro_col)
@@ -29,22 +28,22 @@ euro_array.shuffle_all_positions()
 img = pil_image.create(euro_array, euro_col)
 #img.save("demo.png")
 
-exit()
 
+pict_file= ""
 size_dist = random_array.SizeDistribution(width=distr.Discrete((10, 20, 30)),
                                           rectangle_proportion=1)
 euro_array = random_array.create(euro_array, size_dist, n_objects=27,
-                                 attributes=shapes.picture_attr(pict_file))
+                                 attributes=picture_attr(pict_file))
 
 
 
 s = (40, 40)
-objs =  [shapes.Rectangle(xy=(-65, 50), size=s, picture=pict_file),
-                shapes.Rectangle(xy=(25, 45), size=s, attribute="black"),
-                shapes.Rectangle(xy=(60, -50), size=s, picture=pict_file),
-                shapes.Rectangle(xy=(-80, -20), size=s, picture=pict_file),
-                shapes.Rectangle(xy=(-0, 0), size=s, picture=pict_file)]
-# euro_array = arrays.RectangleArray(target_area_radius=150, min_dist_between=3)
+objs =  [Rectangle(xy=(-65, 50), size=s, picture=pict_file),
+                Rectangle(xy=(25, 45), size=s, attribute="black"),
+                Rectangle(xy=(60, -50), size=s, picture=pict_file),
+                Rectangle(xy=(-80, -20), size=s, picture=pict_file),
+                Rectangle(xy=(-0, 0), size=s, picture=pict_file)]
+# euro_array = RectangleArray(target_area_radius=150, min_dist_between=3)
 # euro_array.add(objs)
 # euro_col = ImageColours(target_area="#003399")
 # img = pil_image.create(euro_array, euro_col)
@@ -65,7 +64,7 @@ size_dist_rect = random_array.SizeDistribution(
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
-ref = arrays.RectangleArray(target_area_radius=200)
+ref = RectangleArray(target_area_radius=200)
 
 my_colours = ImageColours(target_area="#EEEEEE",
                           background=None,

@@ -6,9 +6,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from ._base_array import ABCObjectArray
+from .object_array import ABCObjectArray
 from .._lib import misc
-from ..shapes import Rectangle, Point
+from .._lib.shapes import Rectangle, Point
 
 
 class RectangleArray(ABCObjectArray):

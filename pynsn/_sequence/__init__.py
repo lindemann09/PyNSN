@@ -1,1 +1,1 @@
-# deprecated sub-module (archive should sql database)
+# deprecated sub-module (archive should sql tools)
