@@ -7,6 +7,8 @@ from pynsn import visual_properties as props
 import numpy as np
 
 # FIXME overlapping rects
+# FIXME check not implemented
+
 euro_col = nsn.ImageColours(target_area="#003399", background="#003399")
 euro_array = nsn.RectangleArray(target_area_radius=200, min_dist_between=1)
 pict_file = nsn.PictureFile("eurostar.png")
@@ -37,7 +39,7 @@ size_dist_rect = nsn.SizeDistribution(
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
-factory = nsn.NSNFactory(target_area_radius=200,
+factory = nsn.NSNFactory(target_area_radius=150,
                          size_distribution=size_dist_rect)
 stimulus = factory.create_random_array(n_objects=7,
                                        attributes=["blue", "green"])
@@ -70,5 +72,5 @@ my_colours = nsn.ImageColours(target_area="#EEEEEE",
                           #center_of_mass="green"
                           )
 
-img = pil_image.create(stim_scaled, my_colours)
+img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")

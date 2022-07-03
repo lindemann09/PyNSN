@@ -17,4 +17,7 @@ unit_tests:
 clean:
 		@rm -rf build \
 			dist \
-			pynsn.egg-info 
+			pynsn.egg-info \
+			.pytest_cache
+
+
