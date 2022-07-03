@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.11.6'
+__version__ = '0.11.7'
 
 from sys import version_info as _python_version_info
 if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
@@ -16,7 +16,7 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                       "Please use Python 3.6 or later.")
 
 from ._lib import Point, Dot, Rectangle, \
-                AttributeArray, DotArray, RectangleArray, \
+                DotArray, RectangleArray, ArrayParameter, \
                 NoSolutionError, PictureFile
 
 from .image._colour import Colour, ImageColours

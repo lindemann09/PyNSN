@@ -71,7 +71,7 @@ my_colours = nsn.ImageColours(target_area="#EEEEEE",
                           )
 
 stimulus = random_array.create(n_objects=7,
-                               reference_array=ref,
+                               array_parameter=ref,
                                size_distribution=size_dist_dot,
                                attributes=["blue", "green"])
 

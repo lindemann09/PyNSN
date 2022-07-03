@@ -9,7 +9,7 @@ from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
 from .. import random_array
 from .. import distributions as distr
-from .._lib import _check_attribute_array
+from .._lib import _check_array_parameter
 
 
 class MainWidget(QWidget):
@@ -23,7 +23,7 @@ class MainWidget(QWidget):
         self.initUI(number, ref_array, size_distribution.diameter)
 
     def initUI(self, number, ref_array, dot_size_distribution):
-        _check_attribute_array(ref_array)
+        _check_array_parameter(ref_array)
         assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
 
         sdr = random_array.SizeDistribution(diameter=dot_size_distribution)

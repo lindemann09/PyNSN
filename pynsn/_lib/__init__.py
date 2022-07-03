@@ -1,4 +1,4 @@
-from .attribute_array import AttributeArray
+from .base_classes import ArrayParameter, AttributeArray
 from .dot_array import DotArray
 from .rect_array import RectangleArray
 from .shapes import Point, Dot, Rectangle
@@ -7,9 +7,9 @@ from .misc import NoSolutionError
 
 
 # helper for type checking and error raising error
-def _check_attribute_array(obj):
-    if not isinstance(obj, AttributeArray):
-        raise TypeError("DotArray, RectangleArray or AttributeArray expected, but not {}".format(
+def _check_array_parameter(obj):
+    if not isinstance(obj, ArrayParameter):
+        raise TypeError("DotArray, RectangleArray or ArrayParameter expected, but not {}".format(
             type(obj).__name__))
 
 

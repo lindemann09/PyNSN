@@ -8,16 +8,16 @@ from pynsn.visual_properties import fit, scale, flags
 class DotsSmall(unittest.TestCase):
 
     def settings(self):
-        self.ref = _lib.AttributeArray(target_area_radius=200)
+        self.para = _lib.ArrayParameter(target_area_radius=200)
         self.size_dist = random_array.SizeDistribution(
             diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
         self.n_dots = 5
 
     def setUp(self):
         self.settings()
-        self.stimulus = random_array.create(reference_array=self.ref,
-                                       size_distribution=self.size_dist,
-                                       n_objects=self.n_dots)
+        self.stimulus = random_array.create(array_parameter=self.para,
+                                            size_distribution=self.size_dist,
+                                            n_objects=self.n_dots)
 
     def test_numerosity(self):
         self.assertEqual(self.stimulus.properties.numerosity, self.n_dots)

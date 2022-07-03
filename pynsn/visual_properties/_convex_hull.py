@@ -46,7 +46,8 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        _lib._check_attribute_array(object_array)
+        assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
+                                         _lib.RectangleArray))
         self._initialize(object_array.xy)
 
 
@@ -57,8 +58,8 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        _lib._check_attribute_array(object_array)
-
+        assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
+                                         _lib.RectangleArray))
         if isinstance(object_array, _lib.DotArray):
             # centered polar coordinates
             minmax = np.array((np.min(object_array.xy, axis=0),

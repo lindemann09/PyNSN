@@ -12,14 +12,15 @@ class SizeDistribution(object):
                               height is not None,
                               rectangle_proportion is not None]
 
-        is_rect = sum(rect_parameter_set)>0
+        is_rect = sum(rect_parameter_set) > 0
         is_dot = diameter is not None
         if is_dot and is_rect:
-         raise TypeError("Please define either dot or rectangle parameter, not both.")
+            raise TypeError("Please define either dot or rectangle parameter, not both.")
         elif not is_dot and not is_rect:
-         raise TypeError("No size distribution define. Please define either diameter or width and height.")
+            raise TypeError("No size distribution define. Please define either diameter or width and height.")
         elif is_rect and sum(rect_parameter_set) != 2:
-            raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with either width or height.")
+            raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
+                            "either width or height.")
 
         if isinstance(diameter, (int, float)):
             diameter = Constant(diameter)
@@ -79,7 +80,6 @@ class SizeDistribution(object):
 
             return [shapes.Rectangle(xy=(0, 0), size=s) for s in zip(width, height)]
 
-
     def as_dict(self):
         rtn = {}
         try:
@@ -99,7 +99,6 @@ class SizeDistribution(object):
         except AttributeError:
             pass
         return rtn
-
 
     def __str__(self):
         return dict_to_text(self.as_dict(), col_a=12, col_b=7)

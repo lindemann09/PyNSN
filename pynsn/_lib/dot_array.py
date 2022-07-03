@@ -6,7 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from .object_array import ABCObjectArray
+from .base_classes import ABCObjectArray
 from .._lib import misc, geometry
 from .shapes import Dot
 from . import array_tools
@@ -25,8 +25,8 @@ class DotArray(ABCObjectArray):
 
     def __init__(self,
                  target_area_radius,
-                 min_dist_between = 2,
-                 min_dist_area_boarder = 1,
+                 min_dist_between=None,
+                 min_dist_area_boarder=None,
                  xy = None,
                  diameters = None,
                  attributes = None):

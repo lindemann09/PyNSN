@@ -20,7 +20,7 @@ from ..image import pil_image
 from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-        "ref": _lib.AttributeArray(target_area_radius=200,
+        "ref": _lib.ArrayParameter(target_area_radius=200,
                                    min_dist_between=2),
         "sdr": random_array.SizeDistribution(
                     diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
@@ -33,7 +33,7 @@ DEFAULT_ARRAY = {"num": 40,
                                     background="gray")}
 
 ICON = {"num": 11,
-        "ref": _lib.AttributeArray(target_area_radius=200),
+        "ref": _lib.ArrayParameter(target_area_radius=200),
         "sdr": random_array.SizeDistribution(
                 diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
         "col": _colour.ImageColours(target_area="#3e3e3e",
@@ -120,7 +120,7 @@ class GUIMainWindow(QMainWindow):
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
-        oa = random_array.create(reference_array=ICON["ref"],
+        oa = random_array.create(array_parameter=ICON["ref"],
                                  size_distribution=ICON["sdr"],
                                  n_objects=ICON["num"])
         self._image = pil_image.create( object_array=oa,
@@ -134,7 +134,7 @@ class GUIMainWindow(QMainWindow):
         ref_ar, sdr = self.get_specs()
         try:
             self.dot_array = random_array.create(n_objects=self.get_number(),
-                                                 reference_array=ref_ar,
+                                                 array_parameter=ref_ar,
                                                  size_distribution=sdr)
         except _lib.NoSolutionError as error:
             self.main_widget.text_error_feedback(error)
@@ -142,7 +142,7 @@ class GUIMainWindow(QMainWindow):
 
         if self.settings.bicoloured.isChecked():
             data_array2 = random_array.create(n_objects=self.main_widget.number2.value,
-                                              reference_array=ref_ar,
+                                              array_parameter=ref_ar,
                                               size_distribution=sdr,
                                               occupied_space=self.dot_array)
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
@@ -182,10 +182,10 @@ class GUIMainWindow(QMainWindow):
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
                                                   )
-        ref_array = _lib.AttributeArray(
+        ref_parameter = _lib.ArrayParameter(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_dist_between=self.main_widget.min_dist_between.value)
-        return ref_array, size_dist
+        return ref_parameter, size_dist
 
     def get_image_colours(self):
         # check colour input
