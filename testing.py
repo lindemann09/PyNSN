@@ -7,6 +7,8 @@ from pynsn import visual_properties as props
 import numpy as np
 
 # FIXME overlapping rects
+# FIXME check not implemented
+
 euro_col = nsn.ImageColours(target_area="#003399", background="#003399")
 euro_array = nsn.RectangleArray(target_area_radius=200, min_dist_between=1)
 pict_file = nsn.PictureFile("eurostar.png")
