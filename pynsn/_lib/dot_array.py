@@ -187,8 +187,7 @@ class DotArray(ABCObjectArray):
             rtn.append(i)
         return rtn
 
-    def csv(self, variable_names=True,
-            hash_column=True,
+    def csv(self, variable_names=True, hash_column=False,
             attribute_column=False):
         """Return the dot array as csv text
 
@@ -196,28 +195,20 @@ class DotArray(ABCObjectArray):
         ---------
         variable_names : bool, optional
             if True variable name will be printed in the first line
-
         """
-
-        rtn = ""
-        if variable_names:
-            if hash_column:
-                rtn += u"hash,"
-            rtn += u"x,y,diameter"
-            if attribute_column:
-                rtn += u",attribute"
-            rtn += u"\n"
-
-        obj_id = self.hash
-        for cnt in range(len(self._xy)):
-            if hash_column:
-                rtn += "{0}, ".format(obj_id)
-            rtn += "{},{},{}".format(self._xy[cnt, 0], self._xy[cnt, 1],
-                                     self._diameters[cnt])
-            if attribute_column:
-                rtn += ", {}".format(self._attributes[cnt])
-            rtn += "\n"
-        return rtn
+        size_dict = {"diameter": self._diameters}
+        if attribute_column:
+            attr = self.attributes
+        else:
+            attr = None
+        if hash_column:
+            array_hash = self.hash
+        else:
+            array_hash = None
+        return misc.make_csv(xy=self._xy,
+                             size_data_dict=size_dict,
+                             attributes=attr, array_hash=array_hash,
+                             make_variable_names=variable_names)
 
     def __realign_old(self):
         """Realigns the obejcts in order to remove all dots overlaps and dots

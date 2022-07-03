@@ -218,8 +218,7 @@ class RectangleArray(ABCObjectArray):
         else:
             raise TypeError("edge has to be of type Points")
 
-    def csv(self, variable_names=True,
-            hash_column=True,
+    def csv(self, variable_names=True, hash_column=True,
             attribute_column=False):
         """Return the rectangle array as csv text
 
@@ -228,28 +227,19 @@ class RectangleArray(ABCObjectArray):
         variable_names : bool, optional
             if True variable name will be printed in the first line
         """
-
-        rtn = ""
-        if variable_names:
-            if hash_column:
-                rtn += "hash,"
-            rtn += "x,y,width,height"
-            if attribute_column:
-                rtn += ",attribute"
-            rtn += "\n"
-
-        obj_id = self.hash
-        for cnt in range(len(self._xy)):
-            if hash_column:
-                rtn += "{0}, ".format(obj_id)
-            rtn += "{},{},{},{}".format(self._xy[cnt, 0],
-                                        self._xy[cnt, 1],
-                                        self._sizes[cnt, 0],
-                                        self._sizes[cnt, 1])
-            if attribute_column:
-                rtn += ", {}".format(self._attributes[cnt])
-            rtn += "\n"
-        return rtn
+        size_dict = {"width": self._sizes[:, 0], "height": self._sizes[:, 1]}
+        if attribute_column:
+            attr = self.attributes
+        else:
+            attr = None
+        if hash_column:
+            array_hash = self.hash
+        else:
+            array_hash = None
+        return misc.make_csv(xy=self._xy,
+                             size_data_dict=size_dict,
+                             attributes=attr, array_hash=array_hash,
+                             make_variable_names=variable_names)
 
     def get_split_arrays(self):
         """returns a list of arrays

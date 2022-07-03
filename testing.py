@@ -11,7 +11,7 @@ from pynsn import visual_properties as props
 import numpy as np
 
 # FIXME overlapping rects
-# TODO better csv and plotting
+# TODO better plotting
 euro_col = ImageColours(target_area="#003399", background="#003399")
 euro_array = RectangleArray(target_area_radius=200, min_dist_between=1)
 pict_file = PictureFile("eurostar.png")
@@ -29,8 +29,6 @@ img.save("demo.png")
 euro_array.shuffle_all_positions()
 img = pil_image.create(euro_array, euro_col)
 #img.save("demo.png")
-
-print(euro_array.csv(attribute_column=True))
 
 
 size_dist = random_array.SizeDistribution(width=distr.Discrete((10, 20, 30)),
@@ -75,7 +73,7 @@ my_colours = ImageColours(target_area="#EEEEEE",
 
 stimulus = random_array.create(n_objects=7,
                                reference_array=ref,
-                               size_distribution=size_dist_rect,
+                               size_distribution=size_dist_dot,
                                attributes=["blue", "green"])
 
 
@@ -93,6 +91,7 @@ stimulus = random_array.create(n_objects=7,
 stim_scaled = stimulus.copy()
 #stim_scaled.center_array()
 props.scale.log_size(stim_scaled, 1.15)
+print(stim_scaled.csv(attribute_column=True, hash_column=False))
 
 
 #stim_scaled.realign()

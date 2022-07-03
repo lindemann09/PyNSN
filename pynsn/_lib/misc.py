@@ -42,6 +42,42 @@ class PictureFile(object):
         return path.isfile(self.filename)
 
 
+def make_csv(xy, size_data_dict, attributes=None,
+              array_hash=None, make_variable_names=True):
+    """Not for User
+    makes csv for Arrays with object of different size information
+    size_data_dict: keys = variable names (e.g. width, height),
+                    values vector of size data
+    """
+    rtn = ""
+    if make_variable_names:
+        if array_hash:
+            rtn += "hash,"
+        rtn += "x,y," + ",".join(size_data_dict.keys()) + ","
+        if attributes is not None:
+            rtn += "attribute,"
+        rtn = rtn[:-1] + "\n"  # replace comma
+
+    size_data = np.array(list(size_data_dict.values())).T
+    if attributes is None:
+        attribute_vector = [None] * len(xy)  # to have something to loop
+    else:
+        attribute_vector = attributes
+
+    for pos, size, attr in zip(xy, size_data, attribute_vector):
+        if array_hash:
+            rtn += "{0},".format(array_hash)
+        rtn += "{},{},".format(pos[0], pos[1])
+        for s in size:
+            rtn += "{},".format(s)
+        if attributes is not None:
+            rtn += "{},".format(attr)
+        rtn = rtn[:-1] + "\n"  # replace comma
+    return rtn
+
+
+
+
 def is_base_string(s):
     return isinstance(s, (str, bytes))
 

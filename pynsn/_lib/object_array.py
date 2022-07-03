@@ -64,6 +64,20 @@ class ABCObjectArray(BaseArray, metaclass=ABCMeta):
     def check_stand_outs(self):
         pass
 
+    @abstractmethod
+    def center_array(self):
+        """places array in target area as central and possible and tries to
+        remove any stand_outs"""
+        pass
+
+    @abstractmethod
+    def realign(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def csv(self):
+        raise NotImplementedError()
+
     def join(self, object_array):
         """add another object arrays"""
         self.add(object_array.iter_objects())
@@ -231,16 +245,6 @@ class ABCObjectArray(BaseArray, metaclass=ABCMeta):
             print("Warning: " + warning_info)
 
         return convex_hull_had_changed
-
-    @abstractmethod
-    def center_array(self):
-        """places array in target area as central and possible and tries to
-        remove any stand_outs"""
-        pass
-
-    @abstractmethod
-    def realign(self):
-        raise NotImplementedError()
 
     def get_split_arrays(self):
         """returns a list of arrays
