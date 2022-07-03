@@ -30,7 +30,7 @@ class Colour(object):
         except TypeError:  # colour is not a valid colour
             self.set(default)
 
-    def __str__(self):
+    def __repr__(self):
         return "Colour({})".format(self.colour)
 
     def __hash__(self):

@@ -1,9 +1,10 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import os as _os
-import math as _math
 
+import math as _math
+from .misc import PictureFile
+from .. import image
 
 class Point(object):
 
@@ -108,7 +109,57 @@ class Point(object):
         return _math.hypot(self.x - d.x, self.y - d.y)
 
 
-class Dot(Point):
+class ShapeAttribute(object):
+
+    def __init__(self, attribute):
+        self._attribute = None
+        self.attribute = attribute # setter
+
+    @property
+    def attribute(self):
+        return self._attribute
+
+    @attribute.setter
+    def attribute(self, attr):
+        """set attribute 
+        
+        Parameters
+        ----------
+        attr : anything
+            can be, in principle, anything.
+            If Colour or PictureFile, it will convert it to their string
+            representation
+        """
+        if isinstance(attr, image.Colour):
+            self._attribute = attr.colour
+        elif isinstance(attr, PictureFile):
+            self._attribute = attr.attribute
+        else:
+            self._attribute = attr
+
+    def get_attribute_object(self):
+        """Class instance of the attribute, if possible
+
+        Returns
+        -------
+        rtn : attribute
+            If attribute represents Colour or PictureFile it returns the instance
+            of the respective class otherwise the previously defined  attribute
+        """
+
+        if isinstance(self._attribute, str):
+            # check is color or picture
+            col = image.Colour(self._attribute)
+            if col.colour is not None:
+                return col
+            else:
+                fl_name = PictureFile.check_attribute(self._attribute)
+                if fl_name is not None:
+                    return PictureFile(fl_name)
+        return self._attribute
+
+
+class Dot(Point, ShapeAttribute):
 
     def __init__(self, xy, diameter, attribute=None):
         """Initialize a point
@@ -122,16 +173,16 @@ class Dot(Point):
         diameter : numeric
         attribute : attribute (string, optional)
         """
+        if isinstance(attribute, PictureFile):
+            raise NotImplementedError("Dot arrays can not handle pictures.")
 
         Point.__init__(self, x=xy[0], y=xy[1])
+        ShapeAttribute.__init__(self, attribute)
         self.diameter = diameter
-        if attribute is not None and not isinstance(attribute, str):
-            raise ValueError("attributes must be a string or None, not {}".format(type(attribute).__name__))
-        self.attribute = attribute
 
     def __repr__(self):
-        return "Dot(xy={}, diameter={}, attribute={})".format(self.xy,
-                            self.diameter, repr(self.attribute))
+        return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
+                            self.diameter, self.get_attribute_str())
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the
@@ -159,10 +210,9 @@ class Dot(Point):
         return _math.pi * self.diameter
 
 
-class Rectangle(Point):
-    PICTURE_PREFIX = "p:"
+class Rectangle(Point, ShapeAttribute):
 
-    def __init__(self, xy, size, attribute=None, picture=None):
+    def __init__(self, xy, size, attribute=None):
         """Initialize a Rectangle
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -176,33 +226,16 @@ class Rectangle(Point):
             tuple of two numeric (default=(0, 0))
         size : tuple
             tuple of two numeric (default=(0, 0))
-        attribute : attribute (string)
-        picture: string
-            path to picture
+        attribute : attribute (string) or PictureFile
         """
 
         Point.__init__(self, x=xy[0], y=xy[1])
-        if attribute is not None and not isinstance(attribute, str):
-            raise ValueError("attributes must be a string or None, not {}".format(type(attribute).__name__))
-        self.attribute = attribute
+        ShapeAttribute.__init__(self, attribute)
         self.width, self.height = size
-        if picture is not None:
-            if attribute is not None:
-                raise TypeError("Set either attribute or picture, not both.")
-            self.set_picture(picture)
 
     def __repr__(self):
-        return "Rectangle(xy={}, size={}, attribute={})".format(self.xy,
-                                    self.size, repr(self.attribute))
-
-    def set_picture(self, filename):
-        self.attribute = picture_attr(filename)
-
-    def get_picture(self):
-        """returns filename if `attribute` represent a picture attribute
-        else returns None
-        """
-        return attr_to_picture(self.attribute)
+        return "Rectangle(xy={}, size={}, attribute='{}')".format(self.xy,
+                                    self.size, self.get_attribute_str())
 
     @property
     def left(self):
@@ -305,20 +338,3 @@ class Rectangle(Point):
         dx, dy = self.xy_distances(other=other)
         return _math.hypot(dx, dy)
 
-
-def picture_attr(filename):
-    """return picture attribute used for attributes of rectangles"""
-    if not _os.path.isfile(filename):
-        raise RuntimeError("{} is not a file.".format(filename))
-    return "{}{}".format(Rectangle.PICTURE_PREFIX, filename)
-
-
-def attr_to_picture(attribute):
-    """returns filename if `attribute` represent a picture attribute
-    else returns None
-    """
-    if isinstance(attribute, str) and \
-            attribute.startswith(Rectangle.PICTURE_PREFIX):
-        return attribute[len(Rectangle.PICTURE_PREFIX):]
-    else:
-        return None

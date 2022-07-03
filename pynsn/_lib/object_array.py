@@ -7,9 +7,9 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from scipy import spatial
 
-from .._lib import geometry
-from .._lib.exceptions import NoSolutionError
-from .._lib import shapes
+from . import geometry
+from . import shapes
+from .misc import NoSolutionError
 from .base_array import BaseArray
 from ..visual_properties import fit
 

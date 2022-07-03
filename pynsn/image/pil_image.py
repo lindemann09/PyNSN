@@ -5,7 +5,8 @@ from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib import DotArray, Rectangle, RectangleArray, Dot, _check_object_array
+from .._lib import DotArray, Rectangle, RectangleArray, Dot, \
+    _check_object_array, PictureFile
 
 
 from ._colour import ImageColours # make available
@@ -70,8 +71,11 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
                                      object_array.attributes):
                 obj = Rectangle(xy=xy, size=size,
                                         attribute=att)
-                if obj.get_picture() is None:
-                    # rect
+                att = obj.get_attribute_object()
+                if isinstance(att,  PictureFile):
+                    pass
+                else:
+                    # force colour, set default colour if no colour
                     obj.attribute = _colour.Colour(att,
                                 colours.default_object_colour)
                 _draw_shape(img, obj)
@@ -82,14 +86,14 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.properties.convex_hull_positions.xy * aaf, image_size),
-                              convex_hull_colour=colours.field_area_positions.colour)
+                              convex_hull_colour=colours.field_area_positions)
         if colours.field_area.colour is not None and \
                 object_array.properties.field_area > 0:
             _draw_convex_hull(img=img,
                               points=_c2i_coord(
                                   object_array.properties.convex_hull.xy * aaf,
                                   image_size),
-                              convex_hull_colour=colours.field_area.colour)
+                              convex_hull_colour=colours.field_area)
         #  and center of mass
         if colours.center_of_field_area.colour is not None:
             obj = Dot(xy=_c2i_coord(object_array.center_of_field_area() * aaf, image_size),
@@ -119,19 +123,19 @@ def create(object_array, colours=None, antialiasing=True, _gabor_filter=None):
 
 def _draw_shape(img, shape):
     # draw object
-    colour = _colour.Colour(shape.attribute)
+    attr = shape.get_attribute_object()
     if isinstance(shape, Dot):
         r = shape.diameter / 2
         _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                       shape.x + r, shape.y + r),
-                                     fill=colour.colour)
+                                      fill=attr.colour)
     elif isinstance(shape, Rectangle):
-        if shape.get_picture() is not None:
+        if isinstance(attr, PictureFile):
             # picture
             shape_size = (round(shape.width), round(shape.height))
             target_box = (round(shape.left), round(shape.bottom),
                           round(shape.right), round(shape.top)) # reversed y axes
-            pict = _Image.open(shape.get_picture(), "r")
+            pict = _Image.open(attr.filename, "r")
             if pict.size[0] != shape_size[0] or pict.size[1] != shape_size[1]:
                 pict = pict.resize(shape_size, resample=_Image.ANTIALIAS)
 
@@ -143,7 +147,7 @@ def _draw_shape(img, shape):
             # rectangle shape
             _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
                                         shape.right, shape.bottom),
-                                       fill=colour.colour) # FIXME decentral shapes seems to be bit larger than with pyplot
+                                       fill=attr.colour) # FIXME decentral shapes seems to be bit larger than with pyplot
 
     else:
         raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
@@ -158,6 +162,6 @@ def _draw_convex_hull(img, points, convex_hull_colour):
         if last is not None:
             draw.line(_np.append(last, p).tolist(),
                       width=2,
-                      fill=convex_hull_colour)
+                      fill=convex_hull_colour.colour)
         last = p
 

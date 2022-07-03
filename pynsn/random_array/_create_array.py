@@ -3,8 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import copy
 from random import shuffle
 
-from .._lib.exceptions import NoSolutionError
-from .._lib import DotArray, RectangleArray, _check_base_array
+from .._lib import DotArray, RectangleArray, _check_base_array, NoSolutionError
 from ._size_distribution import SizeDistribution
 
 

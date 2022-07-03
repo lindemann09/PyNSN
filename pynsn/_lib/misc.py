@@ -6,16 +6,53 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
 import numpy as np
+from os import path
+
+
+class NoSolutionError(Exception):
+    pass
+
+
+class PictureFile(object):
+    PICTURE_PREFIX = "p:"
+
+    def __init__(self, filename):
+        self._attribute = "{}{}".format(PictureFile.PICTURE_PREFIX, filename)
+
+    @property
+    def filename(self):
+        return PictureFile.check_attribute(self._attribute)
+
+    @property
+    def attribute(self):
+        return self._attribute
+
+    @classmethod
+    def check_attribute(cls, txt):
+        """returns filename if `txt` (str) represent a picture attribute
+        else returns None
+        """
+        if isinstance(txt, str) and \
+                txt.startswith(PictureFile.PICTURE_PREFIX):
+            return txt[len(PictureFile.PICTURE_PREFIX):]
+        else:
+            return None
+
+    def check_file_exists(self):
+        return path.isfile(self.filename)
 
 
 def is_base_string(s):
     return isinstance(s, (str, bytes))
 
+
 def is_unicode_string(s):
     return isinstance(s, str)
 
+
 def is_byte_string(s):
     return isinstance(s, bytes)
+
 
 def join_dict_list(list_of_dicts):
     """make a dictionary of lists from a list of dictionaries"""
@@ -44,6 +81,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
 
     return rtn
 
+
 def numpy_vector(x):
     """helper function:
     make an numpy vector from any element (list, arrays, and single data (str, numeric))
@@ -57,6 +95,7 @@ def numpy_vector(x):
     else:
         return x.flatten()
 
+
 def numpy_array_2d(two_d_data):
     """ensures well shaped to 2d numpy array"""
     rtn = np.array(two_d_data)
@@ -66,6 +105,7 @@ def numpy_array_2d(two_d_data):
         raise ValueError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
     return rtn
 
+
 def numpy_round2(array, decimals, int_type=np.int32):
     """rounds and changes to int type if decimals == 0"""
     array = np.round(array, decimals=decimals)
@@ -74,15 +114,19 @@ def numpy_round2(array, decimals, int_type=np.int32):
     else:
         return array
 
+
 def is_all_larger(vector, standard=0):
     return sum(map(lambda x: x > standard, vector))==len(vector)
+
 
 def is_all_smaller(vector, standard=0):
     return sum(map(lambda x: x < standard, vector))==len(vector)
 
+
 def is_all_equal(vector):
     # returns true if all elements are equal
     return sum(map(lambda x: x==vector[0], vector))==len(vector)
+
 
 def dict_to_text(the_dict, col_a = 22, col_b = 14,
                  spacing_char=" "):

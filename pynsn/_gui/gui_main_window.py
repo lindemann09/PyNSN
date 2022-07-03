@@ -12,7 +12,6 @@ from .sequence_display import SequenceDisplay
 from .. import __version__
 from .. import random_array
 from .. import _lib
-from .._lib.exceptions import NoSolutionError
 from .. import distributions as distr
 from .. import visual_properties as props
 
@@ -137,7 +136,7 @@ class GUIMainWindow(QMainWindow):
             self.dot_array = random_array.create(n_objects=self.get_number(),
                                                  reference_array=ref_ar,
                                                  size_distribution=sdr)
-        except NoSolutionError as error:
+        except _lib.NoSolutionError as error:
             self.main_widget.text_error_feedback(error)
             raise error
 

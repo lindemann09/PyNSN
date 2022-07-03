@@ -16,9 +16,8 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                       "Please use Python 3.6 or later.")
 
 from ._lib import DotArray, RectangleArray, BaseArray, \
-                    Point, Dot, Rectangle
-from ._lib.exceptions import NoSolutionError
-
+                Point, Dot, Rectangle, \
+                NoSolutionError, PictureFile
 from . import visual_properties
 from . import random_array
 from . import distributions
