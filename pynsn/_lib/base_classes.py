@@ -111,7 +111,7 @@ class AttributeArray(ArrayParameter):
         return np.array([0] * len(self._xy))
 
     @property
-    def perimeter(self):
+    def perimeters(self):
         """per definition always zero"""
         return np.array([0] * len(self._xy))
 
@@ -251,7 +251,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def perimeter(self):
+    def perimeters(self):
         pass
 
     @abstractmethod
@@ -263,12 +263,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return super().read_from_dict()
 
     @abstractmethod
-    def copy(self, indices=None, deepcopy=True):
-        """returns a (deep) copy of the dot array.
-
-        It allows to copy a subset of dot only.
-
-        """
+    def copy(self):
         pass
 
     @abstractmethod
