@@ -8,9 +8,8 @@ from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 from . import _colour
 from . import pil_image as _pil_image
-from .._lib import _check_object_array
+from .. import _lib
 
-from ._colour import ImageColours # make available
 
 class ExprimentDotArray(_Canvas):
 
@@ -19,7 +18,7 @@ class ExprimentDotArray(_Canvas):
                  position=(0, 0),
                  antialiasing=True):
 
-        _check_object_array(object_array)
+        _lib._check_object_array(object_array)
         if colours is None:
             colours = _colour.ImageColours()
         if not isinstance(colours, _colour.ImageColours):

@@ -18,6 +18,8 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
 from ._lib import DotArray, RectangleArray, BaseArray, \
                 Point, Dot, Rectangle, \
                 NoSolutionError, PictureFile
+from .image._colour import Colour, ImageColours
+
 from . import visual_properties
 from . import random_array
 from . import distributions

@@ -1,6 +1,5 @@
 import sqlite3
-from ..image import Colour
-from ..image.defaults import COL_DEFAULT_OBJECT
+from ..image._colour import Colour, ImageColours
 
 
 class DotArraySQLDB(object):
@@ -63,7 +62,7 @@ class DotArraySQLDB(object):
                 colour = Colour(attributes[0])
             except:
                 # if attribute is no colour, use default coolour
-                colour = Colour(COL_DEFAULT_OBJECT)
+                colour = Colour(ImageColours.COL_DEFAULT_OBJECT)
 
             sql = "INSERT INTO ARRAYS (" + \
                   "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \

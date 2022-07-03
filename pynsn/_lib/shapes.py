@@ -4,7 +4,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math as _math
 from .misc import PictureFile
-from .. import image
+from ..image._colour import Colour
 
 class Point(object):
 
@@ -130,7 +130,7 @@ class ShapeAttribute(object):
             If Colour or PictureFile, it will convert it to their string
             representation
         """
-        if isinstance(attr, image.Colour):
+        if isinstance(attr, Colour):
             self._attribute = attr.colour
         elif isinstance(attr, PictureFile):
             self._attribute = attr.attribute
@@ -149,7 +149,7 @@ class ShapeAttribute(object):
 
         if isinstance(self._attribute, str):
             # check is color or picture
-            col = image.Colour(self._attribute)
+            col = Colour(self._attribute)
             if col.colour is not None:
                 return col
             else:

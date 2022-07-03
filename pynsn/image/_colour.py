@@ -5,7 +5,6 @@ The named colour are the 140 HTML colour names:
 from collections import OrderedDict
 from functools import total_ordering
 from .._lib import misc
-from . import defaults
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
@@ -255,6 +254,15 @@ class Colour(object):
 
 
 class ImageColours(object):
+    COL_TARGET_AREA = "#FFF0D9"
+    COL_FIELD_AREA_POSITIONS = None
+    COL_FIELD_AREA = None
+    COL_CENTER_OF_FIELD_AREA = None
+    COL_CENTER_OF_MASS = None
+    COL_BACKGROUND = None
+    COL_DEFAULT_OBJECT = "darkgreen"
+    OPACITY_OBJECT = 1
+    OPACITY_GUIDES = 0.5
 
     def __init__(self,
                  target_area=None,
@@ -269,25 +277,25 @@ class ImageColours(object):
                  ):
 
         self.target_area = Colour(target_area,
-                                  default=defaults.COL_TARGET_AREA)
+                                  default=ImageColours.COL_TARGET_AREA)
         self.field_area_positions = Colour(field_area_positions,
-                                           default=defaults.COL_FIELD_AREA_POSITIONS)
+                                           default=ImageColours.COL_FIELD_AREA_POSITIONS)
         self.field_area = Colour(field_area,
-                                 default=defaults.COL_FIELD_AREA)
+                                 default=ImageColours.COL_FIELD_AREA)
         self.center_of_field_area = Colour(center_of_field_area,
-                                   default=defaults.COL_CENTER_OF_FIELD_AREA)
+                                   default=ImageColours.COL_CENTER_OF_FIELD_AREA)
         self.center_of_mass = Colour(center_of_mass,
-                                           default=defaults.COL_CENTER_OF_MASS)
+                                           default=ImageColours.COL_CENTER_OF_MASS)
         self.background = Colour(background,
-                                 default=defaults.COL_BACKGROUND)
+                                 default=ImageColours.COL_BACKGROUND)
         self.default_object_colour = Colour(default_object_colour,
-                                           default=defaults.COL_DEFAULT_OBJECT)
+                                           default=ImageColours.COL_DEFAULT_OBJECT)
         if opacity_guides is None:
-            opacity_guides = defaults.OPACITY_GUIDES
+            opacity_guides = ImageColours.OPACITY_GUIDES
         if opacity_guides < 0 or opacity_guides > 1:
             raise ValueError(f"opacity_guides ({opacity_guides}) has to be between 0 and 1")
         if opacity_object is None:
-            opacity_object = defaults.OPACITY_OBJECT
+            opacity_object = ImageColours.OPACITY_OBJECT
         if opacity_object < 0 or opacity_object > 1:
             raise ValueError(f"opacity_object ({opacity_object}) has to be between 0 and 1")
         self.opacity_object = opacity_object

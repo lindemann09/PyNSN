@@ -4,13 +4,13 @@ import numpy as _np
 import svgwrite as _svg
 from . import _colour
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib import DotArray, RectangleArray, Dot, Rectangle, _check_object_array
+from .. import _lib
 
-from ._colour import ImageColours # make available
+
 # FIXME can't handle pictures, throw exception
 
 def create(object_array, colours=None, filename="noname.svg"):
-    _check_object_array(object_array)
+    _lib._check_object_array(object_array)
     if colours is None:
         colours = _colour.ImageColours()
     if not isinstance(colours, _colour.ImageColours):
@@ -28,21 +28,21 @@ def create(object_array, colours=None, filename="noname.svg"):
 
     if object_array.properties.numerosity > 0:
         image_coord = _c2i_coord(object_array.xy, image_size)
-        if isinstance(object_array, DotArray):
+        if isinstance(object_array, _lib.DotArray):
             # draw dots
             for xy, d, att in zip(image_coord, object_array.diameters,
                                   object_array.attributes):
-                obj = Dot(xy=xy, diameter=d)
+                obj = _lib.Dot(xy=xy, diameter=d)
                 obj.attribute = _colour.Colour(att,
                                             colours.default_object_colour)
                 _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
 
-        elif isinstance(object_array, RectangleArray):
+        elif isinstance(object_array, _lib.RectangleArray):
             # draw rectangle
             for xy, size, att in zip(image_coord,
                                      object_array.sizes,
                                      object_array.attributes):
-                obj = Rectangle(xy=xy, size=size)
+                obj = _lib.Rectangle(xy=xy, size=size)
                 obj.attribute = _colour.Colour(att,
                                             colours.default_object_colour)
                 _draw_shape(svgdraw, obj, opacity=colours.opacity_object)
@@ -66,12 +66,12 @@ def create(object_array, colours=None, filename="noname.svg"):
                               opacity=colours.opacity_guides)
         #  and center of mass
         if colours.center_of_field_area.colour is not None:
-            obj = Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
+            obj = _lib.Dot(xy=_c2i_coord(object_array.center_of_field_area(), image_size),
                               diameter=10,
                               attribute=colours.center_of_field_area.colour)
             _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
         if colours.center_of_mass.colour is not None:
-            obj = Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
+            obj = _lib.Dot(xy=_c2i_coord(object_array.center_of_mass(), image_size),
                               diameter=10,
                               attribute=colours.center_of_mass.colour)
             _draw_shape(svgdraw, obj, opacity=colours.opacity_guides)
@@ -81,11 +81,11 @@ def create(object_array, colours=None, filename="noname.svg"):
 
 def _draw_shape(svgdraw, shape, opacity=1):
     # draw object
-    assert isinstance(shape, (Dot, Rectangle))
+    assert isinstance(shape, (_lib.Dot, _lib.Rectangle))
 
     colour = _colour.Colour(shape.attribute)
 
-    if isinstance(shape, Dot):
+    if isinstance(shape, _lib.Dot):
         r = shape.diameter / 2
         svgdraw.add(svgdraw.circle(center=shape.xy,
                                    r=shape.diameter/2,
@@ -93,7 +93,7 @@ def _draw_shape(svgdraw, shape, opacity=1):
                                    fill=colour.colour,
                                    opacity=opacity))
 
-    elif isinstance(shape, Rectangle):
+    elif isinstance(shape, _lib.Rectangle):
         svgdraw.add(svgdraw.rect(insert=(shape.left, shape.bottom),
                                  size=shape.size,
                                  fill=colour.colour,
