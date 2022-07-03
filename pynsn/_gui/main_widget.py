@@ -7,38 +7,35 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from .. import random_array
+from .. import SizeDistribution
 from .. import distributions as distr
 from .._lib import _check_array_parameter
 
 
 class MainWidget(QWidget):
 
-    def __init__(self, parent, settings, number, ref_array,
-                 size_distribution):
+    def __init__(self, parent, settings, number, nsn_factory):
         assert isinstance(settings, SettingsDialog)
         super(MainWidget, self).__init__(parent)
         self.settings = settings
 
-        self.initUI(number, ref_array, size_distribution.diameter)
+        self.initUI(number, nsn_factory)
 
-    def initUI(self, number, ref_array, dot_size_distribution):
-        _check_array_parameter(ref_array)
-        assert isinstance(dot_size_distribution, (distr.Beta, distr.Normal))
+    def initUI(self, number, nsn_factory):
 
-        sdr = random_array.SizeDistribution(diameter=dot_size_distribution)
+        sdr = nsn_factory.size_distribution
+        para = nsn_factory.array_parameter
         self.btn_generate = QPushButton("Generate new array")
-
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
-        self.target_area_radius = LabeledNumberInput("Max radius", ref_array.target_area_radius)
+        self.target_area_radius = LabeledNumberInput("Max radius", para.target_area_radius)
         self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.diameter.mu)
         self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr.diameter.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
                                                                value1=sdr.diameter.min_max[0],
                                                                value2=sdr.diameter.min_max[1])
 
-        self.min_dist_between = LabeledNumberInput("Minimum gap", ref_array.min_dist_between)
+        self.min_dist_between = LabeledNumberInput("Minimum gap", para.min_dist_between)
 
         self.dot_colour = LabeledInput("Colour", text=self.settings.default_object_colour,
                                        case_sensitive=False)
@@ -85,7 +82,6 @@ class MainWidget(QWidget):
     def updateUI(self):
         self.dot_colour2.setVisible(self.settings.bicoloured.isChecked())
         self.number2.setVisible(self.settings.bicoloured.isChecked())
-
 
     def resize_fields(self, width, text_height=150, minium_text_width=300):
         self.picture_field.setFixedSize(width, width)

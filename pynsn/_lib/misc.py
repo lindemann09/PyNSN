@@ -9,10 +9,6 @@ import numpy as np
 from os import path
 
 
-class NoSolutionError(Exception):
-    pass
-
-
 class PictureFile(object):
     PICTURE_PREFIX = "p:"
 

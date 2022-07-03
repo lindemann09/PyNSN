@@ -12,7 +12,7 @@ from . import misc
 from . import geometry
 from . import shapes
 from ..visual_properties._properties import ArrayProperties
-from .misc import NoSolutionError
+from ..exceptions import NoSolutionError
 from ..visual_properties import fit
 
 

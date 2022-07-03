@@ -17,6 +17,7 @@ def _jitter_identical_positions(xy, jitter_size=0.1):
 
     return xy
 
+
 def radial_replacement_from_reference_dots(xy, ref_pos_id,
                                             neighbour_ids, replacement_size):
     """remove neighbouring position radially from reference position

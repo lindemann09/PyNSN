@@ -1,23 +1,22 @@
 import unittest
-from pynsn import _lib, random_array
+from pynsn import SizeDistribution, NSNFactory
 from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale, flags
 
 # FIXME testing adapt setting and iterative_convex_hull_modification method
 
+
 class DotsSmall(unittest.TestCase):
 
     def settings(self):
-        self.para = _lib.ArrayParameter(target_area_radius=200)
-        self.size_dist = random_array.SizeDistribution(
+        self.factory = NSNFactory(target_area_radius=200)
+        self.factory.size_distribution = SizeDistribution(
             diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
         self.n_dots = 5
 
     def setUp(self):
         self.settings()
-        self.stimulus = random_array.create(array_parameter=self.para,
-                                            size_distribution=self.size_dist,
-                                            n_objects=self.n_dots)
+        self.stimulus = self.factory.create_random_array(n_objects=self.n_dots)
 
     def test_numerosity(self):
         self.assertEqual(self.stimulus.properties.numerosity, self.n_dots)
@@ -38,12 +37,11 @@ class DotsSmall(unittest.TestCase):
         fit.visual_property(stim, prop, new_value)
         self.assertAlmostEqual(stim.properties.get(prop),
                                new_value, places=places)
-        #second
+        # second
         new_value = stim.properties.get(prop) * second
         fit.visual_property(stim, prop, new_value)
         self.assertAlmostEqual(stim.properties.get(prop), new_value,
                                places=places)
-
 
     def test_match_av_surface_area(self):
         # decrease
@@ -89,6 +87,7 @@ class DotsMedium(DotsSmall):
     def settings(self):
         super().settings()
         self.n_dots = 25
+
 
 class DotsLarge(DotsSmall):
     def settings(self):

@@ -3,7 +3,8 @@ from .dot_array import DotArray
 from .rect_array import RectangleArray
 from .shapes import Point, Dot, Rectangle
 from .misc import PictureFile
-from .misc import NoSolutionError
+from .size_distribution import SizeDistribution
+from .factory import NSNFactory
 
 
 # helper for type checking and error raising error

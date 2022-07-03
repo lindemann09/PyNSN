@@ -1,5 +1,5 @@
 import unittest
-from pynsn import random_array
+from pynsn import SizeDistribution
 from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale
 from test_dot_array import DotsSmall
@@ -8,13 +8,13 @@ from test_dot_array import DotsSmall
 class RectanglesSmall(DotsSmall):
     def settings(self):
         super().settings()
-        self.size_dist = random_array.SizeDistribution(
+        self.factory.size_distribution = SizeDistribution(
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
 
     def test_match_av_size(self):
-        first=0.8
-        second=1.15
+        first = 0.8
+        second = 1.15
         scale_factor = 1.1
         places = 7
         # check scale
@@ -42,18 +42,20 @@ class RectanglesSmall(DotsSmall):
         self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
                                new_value[1], places=places)
 
+
 class RectanglesMedium(RectanglesSmall):
     def settings(self):
         super().settings()
-        self.size_dist = random_array.SizeDistribution(
+        self.size_dist = SizeDistribution(
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
         self.n_dots = 25
 
+
 class RectanglesLarge(RectanglesSmall):
     def settings(self):
         super().settings()
-        self.size_dist = random_array.SizeDistribution(
+        self.size_dist = SizeDistribution(
             width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
             height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
         self.n_dots = 75

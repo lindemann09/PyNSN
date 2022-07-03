@@ -10,21 +10,21 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import random_array
+from .. import NSNFactory, SizeDistribution, ImageColours
 from .. import _lib
 from .. import distributions as distr
 from .. import visual_properties as props
-
+from ..exceptions import NoSolutionError
 from ..image import _colour
 from ..image import pil_image
 from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-        "ref": _lib.ArrayParameter(target_area_radius=200,
-                                   min_dist_between=2),
-        "sdr": random_array.SizeDistribution(
-                    diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))),
-        "col": _colour.ImageColours(target_area="#303030",
+        "factory": NSNFactory(target_area_radius=200, min_dist_between=2,
+                               size_distribution= SizeDistribution(
+                    diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))
+                               )),
+        "col": ImageColours(target_area="#303030",
                                     field_area_positions=None,
                                     field_area=None,
                                     center_of_field_area=None,
@@ -33,10 +33,11 @@ DEFAULT_ARRAY = {"num": 40,
                                     background="gray")}
 
 ICON = {"num": 11,
-        "ref": _lib.ArrayParameter(target_area_radius=200),
-        "sdr": random_array.SizeDistribution(
-                diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))),
-        "col": _colour.ImageColours(target_area="#3e3e3e",
+        "factory": NSNFactory(target_area_radius=200,
+                              size_distribution=SizeDistribution(
+                diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))
+                              )),
+        "col": ImageColours(target_area="#3e3e3e",
                                     field_area_positions=None,
                                     field_area="expyriment_orange",
                                     center_of_field_area=None,
@@ -111,7 +112,7 @@ class GUIMainWindow(QMainWindow):
 
         # main widget
         self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY["num"],
-                                      DEFAULT_ARRAY["ref"], DEFAULT_ARRAY["sdr"])
+                                      DEFAULT_ARRAY["factory"])
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
         self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
@@ -120,10 +121,9 @@ class GUIMainWindow(QMainWindow):
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
-        oa = random_array.create(array_parameter=ICON["ref"],
-                                 size_distribution=ICON["sdr"],
-                                 n_objects=ICON["num"])
-        self._image = pil_image.create( object_array=oa,
+        factory = ICON["factory"]
+        oa = factory.create_random_array(n_objects=ICON["num"])
+        self._image = pil_image.create(object_array=oa,
                         colours=ICON["col"], antialiasing=True)
 
         self.setWindowIcon(QIcon(self.pixmap()))
@@ -131,12 +131,11 @@ class GUIMainWindow(QMainWindow):
         self.action_generate_btn()
 
     def make_new_array(self):
-        ref_ar, sdr = self.get_specs()
+        factory = self.get_factory()
         try:
-            self.dot_array = random_array.create(n_objects=self.get_number(),
-                                                 array_parameter=ref_ar,
-                                                 size_distribution=sdr)
-        except _lib.NoSolutionError as error:
+            self.dot_array = factory.create_random_array(
+                            n_objects=self.get_number())
+        except NoSolutionError as error:
             self.main_widget.text_error_feedback(error)
             raise error
 
@@ -175,17 +174,17 @@ class GUIMainWindow(QMainWindow):
     def get_number(self):
         return self.main_widget.number.value
 
-    def get_specs(self):
-        size_dist = random_array.SizeDistribution(diameter=
+    def get_factory(self):
+        size_dist = SizeDistribution(diameter=
                         distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                        sigma=self.main_widget.item_diameter_std.value,
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
                                                   )
-        ref_parameter = _lib.ArrayParameter(
+        return NSNFactory(
             target_area_radius=self.main_widget.target_area_radius.value,
-            min_dist_between=self.main_widget.min_dist_between.value)
-        return ref_parameter, size_dist
+            min_dist_between=self.main_widget.min_dist_between.value,
+            size_distribution=size_dist)
 
     def get_image_colours(self):
         # check colour input
@@ -228,8 +227,8 @@ class GUIMainWindow(QMainWindow):
         """"""
         if remake_image:
             self._image = None
-        ref_ar, _ = self.get_specs()
-        w = ref_ar.target_area_radius * 2
+        factory = self.get_factory()
+        w = factory.array_parameter.target_area_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
         self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
@@ -263,7 +262,7 @@ class GUIMainWindow(QMainWindow):
     def action_print_para(self):
         d = {'number': self.get_number()}
         d['image_parameter'] = self.get_image_colours().as_dict()
-        ref_array, size_distr = self.get_specs()
+        ref_array, size_distr = self.get_factory()
         d['reference_array'] = ref_array.as_dict()
         d['size_distribution'] = size_distr.as_dict()
         self.main_widget.text_out("# parameter\n" + json.dumps(d, indent=2))
@@ -335,7 +334,7 @@ class GUIMainWindow(QMainWindow):
         d["adapt_methods"] = adapt_methods
         self.main_widget.text_out("# Sequence\n" + \
                                            json.dumps(d))
-        ref_array, sdr = self.get_specs()
+        ref_array, sdr = self.get_factory()
         ref_array.min_dist_area_boarder = extra_space/2
         ref_array.target_area_radius += ref_array.min_dist_area_boarder
 

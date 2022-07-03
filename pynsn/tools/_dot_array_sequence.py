@@ -11,7 +11,6 @@ import numpy as _np
 
 from .._lib import misc as _misc
 from .._lib import DotArray
-from .. import random_array
 from ..visual_properties import flags, fit
 
 
