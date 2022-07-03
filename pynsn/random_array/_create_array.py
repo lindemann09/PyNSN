@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import copy
 from random import shuffle
 
-from .._lib import DotArray, RectangleArray, _check_base_array, NoSolutionError
+from .._lib import DotArray, RectangleArray, _check_attribute_array, NoSolutionError
 from ._size_distribution import SizeDistribution
 
 
@@ -18,7 +18,7 @@ def create(reference_array,
     attribute is an array, arrays are assigned randomly.
 
     """
-    _check_base_array(reference_array)
+    _check_attribute_array(reference_array)
     if not isinstance(size_distribution, SizeDistribution):
         raise RuntimeError("Size distribution has to be of type SizeDistribution, but not {}".format(
                         type(size_distribution).__name__))

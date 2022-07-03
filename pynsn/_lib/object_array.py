@@ -10,11 +10,11 @@ from scipy import spatial
 from . import geometry
 from . import shapes
 from .misc import NoSolutionError
-from .base_array import BaseArray
+from .attribute_array import AttributeArray
 from ..visual_properties import fit
 
 
-class ABCObjectArray(BaseArray, metaclass=ABCMeta):
+class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
     @property
     @abstractmethod

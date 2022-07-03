@@ -6,7 +6,7 @@ import numpy as np
 from .._lib import misc, geometry
 from ..visual_properties._properties import ArrayProperties
 
-class BaseArray(object):
+class AttributeArray(object):
     """Class for attributes on two dimensional space"""
 
     def __init__(self, target_area_radius,
@@ -138,25 +138,25 @@ class BaseArray(object):
         """
 
         if len(self._xy) == 0:
-            return BaseArray(target_area_radius=self.target_area_radius,
-                             min_dist_between=self.min_dist_between,
-                             min_dist_area_boarder=self.min_dist_area_boarder)
+            return AttributeArray(target_area_radius=self.target_area_radius,
+                                  min_dist_between=self.min_dist_between,
+                                  min_dist_area_boarder=self.min_dist_area_boarder)
 
         if indices is None:
             indices = list(range(len(self._xy)))
 
         if deepcopy:
-            return BaseArray(target_area_radius=self.target_area_radius,
-                             min_dist_between=self.min_dist_between,
-                             min_dist_area_boarder=self.min_dist_area_boarder,
-                             xy=self._xy[indices, :].copy(),
-                             attributes=self._attributes[indices].copy())
+            return AttributeArray(target_area_radius=self.target_area_radius,
+                                  min_dist_between=self.min_dist_between,
+                                  min_dist_area_boarder=self.min_dist_area_boarder,
+                                  xy=self._xy[indices, :].copy(),
+                                  attributes=self._attributes[indices].copy())
         else:
-            return BaseArray(target_area_radius=self.target_area_radius,
-                             min_dist_between=self.min_dist_between,
-                             min_dist_area_boarder=self.min_dist_area_boarder,
-                             xy=self._xy[indices, :],
-                             attributes=self._attributes[indices])
+            return AttributeArray(target_area_radius=self.target_area_radius,
+                                  min_dist_between=self.min_dist_between,
+                                  min_dist_area_boarder=self.min_dist_area_boarder,
+                                  xy=self._xy[indices, :],
+                                  attributes=self._attributes[indices])
 
     def as_dict(self):
         """

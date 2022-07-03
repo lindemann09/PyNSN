@@ -46,7 +46,7 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        _lib._check_base_array(object_array)
+        _lib._check_attribute_array(object_array)
         self._initialize(object_array.xy)
 
 
@@ -57,7 +57,7 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        _lib._check_base_array(object_array)
+        _lib._check_attribute_array(object_array)
 
         if isinstance(object_array, _lib.DotArray):
             # centered polar coordinates
@@ -77,7 +77,7 @@ class ConvexHull(ConvexHullBaseClass):
                 edges.extend([e.xy for e in rect.iter_edges()])
             outer_xy = np.array(edges)
 
-        else:  # Generic object array
+        else:  # generic attribute array
             outer_xy = object_array.xy
 
         self._initialize(outer_xy)

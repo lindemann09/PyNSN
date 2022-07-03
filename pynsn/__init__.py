@@ -15,12 +15,13 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
                                                     _python_version_info[1]) +
                       "Please use Python 3.6 or later.")
 
-from ._lib import DotArray, RectangleArray, BaseArray, \
-                Point, Dot, Rectangle, \
+from ._lib import Point, Dot, Rectangle, \
+                AttributeArray, DotArray, RectangleArray, \
                 NoSolutionError, PictureFile
+
 from .image._colour import Colour, ImageColours
 
-from . import visual_properties
 from . import random_array
+from . import visual_properties
 from . import distributions
 
