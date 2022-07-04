@@ -2,117 +2,84 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 from matplotlib import pyplot as _plt
-from . import _colour
 from .. import _lib
-
-# FIXME can't handle pictures
+from . import _array_draw
 
 
 def create(object_array, colours=None, dpi=100):
-    """create a matplotlib figure"""
+    """Matplotlib figure
 
-    _lib._check_object_array(object_array)
-    if colours is None:
-        colours = _colour.ImageColours()
-    if not isinstance(colours, _colour.ImageColours):
-        raise TypeError("Colours must be of type image.ImageColours")
+    Parameters
+    ----------
+    object_array
+    colours
+    filename
 
-    r = _np.ceil(object_array.target_area_radius)
+    Returns
+    -------
 
-    figure = _plt.figure(figsize=_np.array([r, r]) * 2 / dpi,
-                         dpi=dpi)
-    if colours.background.colour is None:
-        figure.patch.set_facecolor((0,0,0, 0))
-    else:
-        figure.patch.set_facecolor(colours.background.colour)
-    axes = _plt.Axes(figure, [0., 0., 1, 1])
-    axes.set_aspect('equal') # squared
-    axes.set_axis_off()
-    axes.set(xlim=[-1*r, r], ylim=[-1*r, r])
-    figure.add_axes(axes)
-
-    if colours.target_area.colour is not None:
-        obj = _lib.Dot(xy=(0, 0), diameter=object_array.target_area_radius * 2,
-                          attribute=colours.target_area.colour)
-        _draw_shape(axes, obj)
-
-    if object_array.properties.numerosity > 0:
-        if isinstance(object_array, _lib.DotArray):
-            # draw dots
-            for xy, d, att in zip(object_array.xy,
-                                  object_array.diameters,
-                                  object_array.attributes):
-                obj = _lib.Dot(xy=xy, diameter=d)
-                obj.attribute = _colour.Colour(att,
-                                                    colours.default_object_colour)
-                _draw_shape(axes, obj, opacity=colours.opacity_object)
-
-        elif isinstance(object_array, _lib.RectangleArray):
-            # draw rectangle
-            for xy, size, att in zip(object_array.xy,
-                                     object_array.sizes,
-                                     object_array.attributes):
-                obj = _lib.Rectangle(xy=xy, size=size)
-                obj.attribute = _colour.Colour(att,
-                                        colours.default_object_colour)
-                _draw_shape(axes, obj, opacity=colours.opacity_object)
-
-    # draw convex hulls
-    if colours.field_area_positions.colour is not None and \
-            object_array.properties.field_area_positions > 0:
-        _draw_convex_hull(axes=axes,
-                          points= object_array.properties.convex_hull_positions.xy,
-                          convex_hull_colour=colours.field_area_positions.colour,
-                          opacity=colours.opacity_guides)
-    if colours.field_area.colour is not None and \
-            object_array.properties.field_area > 0:
-        _draw_convex_hull(axes=axes,
-                          points=object_array.properties.convex_hull.xy,
-                          convex_hull_colour=colours.field_area.colour,
-                          opacity=colours.opacity_guides)
-    #  and center of mass
-    if colours.center_of_field_area.colour is not None:
-        obj = _lib.Dot(xy=object_array.center_of_field_area(),
-                          diameter=10,
-                          attribute=colours.center_of_field_area.colour)
-        _draw_shape(axes, obj, opacity=colours.opacity_guides)
-    if colours.center_of_mass.colour is not None:
-        obj = _lib.Dot(xy=object_array.center_of_mass(),
-                          diameter=10,
-                          attribute=colours.center_of_mass.colour)
-        _draw_shape(axes, obj, opacity=colours.opacity_guides)
-
-    return figure
+    """
+    return _Drawer().draw(object_array=object_array, colours=colours,
+                          dpi=dpi)
 
 
-def _draw_shape(axes, shape, opacity=1.0):
-    assert isinstance(shape, (_lib.Dot, _lib.Rectangle))
+class _Drawer(_array_draw.ArrayDraw):
 
-    colour = _colour.Colour(shape.attribute)
-    if isinstance(shape, _lib.Dot):
-        r = shape.diameter / 2
-        plt_shape = _plt.Circle(xy=shape.xy, radius=r, color=colour.colour,
-                                lw=0)
-    elif isinstance(shape, _lib.Rectangle):
-        xy = (shape.left, shape.bottom)
-        plt_shape = _plt.Rectangle(xy=xy,
-                                   width=shape.width,
-                                   height=shape.height,
-                                   color=colour.colour, lw=0)
+    @staticmethod
+    def get_squared_image(image_width, background_colour,  **kwargs):
+        dpi = kwargs["dpi"]
+        figure = _plt.figure(figsize=_np.array([image_width, image_width]) / dpi,
+                             dpi=dpi)
+        if background_colour is None:
+            figure.patch.set_facecolor((0, 0, 0, 0))
+        else:
+            figure.patch.set_facecolor(background_colour)
+        axes = _plt.Axes(figure, [0., 0., 1, 1])
+        axes.set_aspect('equal')  # squared
+        axes.set_axis_off()
+        r = image_width / 2
+        axes.set(xlim=[-1 * r, r], ylim=[-1 * r, r])
+        figure.add_axes(axes)
+        return figure
 
-    else:
-        raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+    @staticmethod
+    def scale_image(figure, scaling_factor):
+        # not used
+        pass
 
-    plt_shape.set_alpha(opacity)
-    axes.add_artist(plt_shape)
+    @staticmethod
+    def draw_shape(img, shape, opacity, scaling_factor):
+        attr = shape.get_attribute_object()
 
-def _draw_convex_hull(axes, points, convex_hull_colour, opacity):
-    # plot convey hull
-    hull = _np.append(points, [points[0]], axis=0)
-    for i in range(1, hull.shape[0]):
-        line = _plt.Line2D(xdata=hull[i-1:i+1, 0],
-                           ydata=hull[i-1:i+1, 1],
-                           linewidth = 1, color = convex_hull_colour)
-        line.set_alpha(opacity)
-        axes.add_artist(line)
+        if isinstance(attr, _lib.PictureFile):
+            raise RuntimeError("Pictures are not supported for matplotlib files.")
+
+        if isinstance(shape, _lib.Dot):
+            r = shape.diameter / 2
+            plt_shape = _plt.Circle(xy=shape.xy, radius=r, color=attr.colour,
+                                    lw=0)
+        elif isinstance(shape, _lib.Rectangle):
+            xy = (shape.left, shape.bottom)
+            plt_shape = _plt.Rectangle(xy=xy,
+                                       width=shape.width,
+                                       height=shape.height,
+                                       color=attr.colour, lw=0)
+        else:
+            raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+
+        plt_shape.set_alpha(opacity)
+        img.axes[0].add_artist(plt_shape)
+
+
+    @staticmethod
+    def draw_convex_hull(img, points, convex_hull_colour, opacity,
+                         scaling_factor):
+        hull = _np.append(points, [points[0]], axis=0)
+        for i in range(1, hull.shape[0]):
+            line = _plt.Line2D(xdata=hull[i - 1:i + 1, 0],
+                               ydata=hull[i - 1:i + 1, 1],
+                               linewidth=1, color=convex_hull_colour.colour)
+            line.set_alpha(opacity)
+            img.axes[0].add_artist(line)
+
 

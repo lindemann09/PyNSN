@@ -1,13 +1,12 @@
 import pynsn as nsn
 from pynsn import distributions as distr
-from pynsn.image import svg_file, pil_image
+from pynsn.image import svg_file, pil_image, mpl_figure
 from pynsn.visual_properties import fit
 
 from pynsn import visual_properties as props
 import numpy as np
 
 # FIXME overlapping rects
-# FIXME check not implemented
 
 euro_col = nsn.ImageColours(target_area="#003399", background="#003399")
 euro_array = nsn.RectangleArray(target_area_radius=200, min_dist_between=1)
@@ -35,29 +34,19 @@ size_dist_dot = nsn.SizeDistribution(
 )
 size_dist_rect = nsn.SizeDistribution(
     width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
-    #rectangle_height=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
 factory = nsn.NSNFactory(target_area_radius=150,
-                         size_distribution=size_dist_rect)
-stimulus = factory.create_random_array(n_objects=7,
+                         size_distribution=size_dist_dot)
+stimulus = factory.create_random_array(n_objects=20,
                                        attributes=["blue", "green"])
-
-# incr = random_array.create_incremental(n_objects=10,
-#                                               reference_array=ref,
-#                                               size_distribution=size_dist_rect,
-#                                               attributes=["blue", "green"])
-#
-# for c, arr in enumerate(incr):
-#     svg = svg_file.create(arr, my_colours, filename="demo{}.svg".format(c))
-#     svg.save()
 
 
 ####
 stim_scaled = stimulus.copy()
 #stim_scaled.center_array()
-props.scale.log_size(stim_scaled, 1.15)
+props.scale.log_size(stim_scaled, 1.5)
 
 
 #stim_scaled.realign()
@@ -74,3 +63,8 @@ my_colours = nsn.ImageColours(target_area="#EEEEEE",
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")
+svg = svg_file.create(stimulus, my_colours, filename="demo_scaled.svg")
+svg.save()
+
+mpl = mpl_figure.create(stimulus, my_colours)
+mpl.savefig("demo_mpl.png")
