@@ -8,6 +8,7 @@ from .. import _lib
 from .size_distribution import SizeDistribution
 
 
+#todo as_dict 
 class NSNFactory(object):
 
     def __init__(self, target_area_radius, size_distribution=None,
