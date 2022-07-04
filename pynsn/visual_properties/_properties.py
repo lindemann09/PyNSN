@@ -97,7 +97,7 @@ class ArrayProperties(object):
         elif self.numerosity == 0:
             return np.nan
         else:
-            return np.mean(self.oa.diameters)
+            return np.mean(self.oa.diameter)
 
     @property
     def average_rectangle_size(self):

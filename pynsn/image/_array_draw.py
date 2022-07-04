@@ -8,7 +8,15 @@ from .. import _lib
 
 
 class ArrayDraw(metaclass=ABCMeta):
-    """Generic array draw with abstract static methods"""
+    """Generic array draw with abstract static methods
+
+    To develop a plotter for other graphic system, inherit the abstract class
+    and define you own drawing class (MyDraw())
+        'get_squared_image', 'scale_image', 'draw_shape', 'draw_convex_hull'
+
+    Image can be then generated via
+    >>> MyDraw()().create_image(object_array=object_array, colours=colours)
+    """
 
     @staticmethod
     @abstractmethod
@@ -18,6 +26,11 @@ class ArrayDraw(metaclass=ABCMeta):
         rtn : should return image
         """
         return
+
+    @staticmethod
+    @abstractmethod
+    def scale_image(image, scaling_factor):
+        pass
 
     @staticmethod
     @abstractmethod
@@ -46,12 +59,8 @@ class ArrayDraw(metaclass=ABCMeta):
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def scale_image(image, scaling_factor):
-        pass
 
-    def draw(self, object_array, colours, antialiasing=None, **kwargs):
+    def create_image(self, object_array, colours, antialiasing=None, **kwargs):
         """create image
 
         Parameters
@@ -59,6 +68,9 @@ class ArrayDraw(metaclass=ABCMeta):
         object_array : the array
         colours : ImageColours
         antialiasing :   bool or number (scaling factor)
+            Only useful for pixel graphics. If turn on, picture will be
+            generated on a large pixel (cf. scaling factor) array and scaled
+            down after generation
 
 
         Returns

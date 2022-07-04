@@ -68,7 +68,7 @@ class ConvexHull(ConvexHullBaseClass):
             xy_centered = object_array.xy - center
             # outer positions
             polar_centered = cartesian2polar(xy_centered)
-            polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameters / 2)
+            polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameter / 2)
             outer_xy = polar2cartesian(polar_centered) + center
 
         elif isinstance(object_array, _lib.RectangleArray):

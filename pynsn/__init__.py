@@ -18,7 +18,7 @@ if not(_python_version_info[0] >= 3 and _python_version_info[1] >= 6):
 from ._lib import Point, Dot, Rectangle, \
                 DotArray, RectangleArray, ArrayParameter, \
                 PictureFile, NSNFactory, SizeDistribution
-from .image._colour import Colourgit, ImageColours
+from .image._colour import Colour, ImageColours
 
 from . import exceptions
 from . import visual_properties

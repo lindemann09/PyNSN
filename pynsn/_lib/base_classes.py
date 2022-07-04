@@ -111,7 +111,7 @@ class AttributeArray(ArrayParameter):
         return np.array([0] * len(self._xy))
 
     @property
-    def perimeters(self):
+    def perimeter(self):
         """per definition always zero"""
         return np.array([0] * len(self._xy))
 
@@ -251,7 +251,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def perimeters(self):
+    def perimeter(self):
         pass
 
     @abstractmethod

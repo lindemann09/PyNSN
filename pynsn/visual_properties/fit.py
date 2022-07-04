@@ -82,7 +82,7 @@ def average_diameter(dot_array, value):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.properties.average_dot_diameter
-    dot_array._diameters = dot_array.diameters * scale
+    dot_array._diameter = dot_array.diameter * scale
     dot_array.properties.reset()
     return dot_array
 
@@ -108,7 +108,7 @@ def total_surface_area(object_array, value):
     _lib._check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
     if isinstance(object_array, _lib.DotArray):
-        object_array._diameters = _np.sqrt(
+        object_array._diameter = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
                     _np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
     else: # rect

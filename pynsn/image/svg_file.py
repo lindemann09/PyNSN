@@ -20,11 +20,11 @@ def create(object_array, colours, filename):
     -------
 
     """
-    return _Drawer().draw(object_array=object_array, colours=colours,
-                          filename=filename)
+    return _SVGDraw().create_image(object_array=object_array, colours=colours,
+                                   filename=filename)
 
 
-class _Drawer(_array_draw.ArrayDraw):
+class _SVGDraw(_array_draw.ArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
@@ -56,7 +56,7 @@ class _Drawer(_array_draw.ArrayDraw):
                                        fill=attr.colour,
                                        opacity=opacity))
         elif isinstance(shape, _lib.Rectangle):
-            image.add(image.rect(insert=_c2i_coord((shape.left, shape.bottom)),
+            image.add(image.rect(insert=(shape.left, shape.bottom),
                                      size=shape.size,
                                      fill=attr.colour,
                                      opacity=opacity))

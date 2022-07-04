@@ -33,12 +33,12 @@ size_dist_dot = nsn.SizeDistribution(
     diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
 )
 size_dist_rect = nsn.SizeDistribution(
-    width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
+    width=distr.Normal(min_max=(10, 20), mu=15, sigma=2),
     rectangle_proportion=distr.Discrete([1, 2])
 )
 
 factory = nsn.NSNFactory(target_area_radius=150,
-                         size_distribution=size_dist_dot)
+                         size_distribution=size_dist_rect)
 stimulus = factory.create_random_array(n_objects=20,
                                        attributes=["blue", "green"])
 

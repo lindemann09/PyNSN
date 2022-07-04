@@ -11,19 +11,19 @@ def create(object_array, colours=None, dpi=100):
 
     Parameters
     ----------
+    dpi
     object_array
     colours
-    filename
 
     Returns
     -------
 
     """
-    return _Drawer().draw(object_array=object_array, colours=colours,
-                          dpi=dpi)
+    return _MatplotlibDraw().create_image(object_array=object_array, colours=colours,
+                                          dpi=dpi)
 
 
-class _Drawer(_array_draw.ArrayDraw):
+class _MatplotlibDraw(_array_draw.ArrayDraw):
 
     @staticmethod
     def get_squared_image(image_width, background_colour,  **kwargs):

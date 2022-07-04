@@ -8,7 +8,7 @@ from .. import _lib
 from . import _array_draw
 
 
-# FIXME pillow supports no alpha
+# FIXME pillow supports no alpha/opacity
 
 
 def create(object_array, colours=None, antialiasing=True):
@@ -22,12 +22,12 @@ def create(object_array, colours=None, antialiasing=True):
     default_dot_colour: if colour is undefined in _lib
     """
 
-    return _Drawer().draw(object_array=object_array,
-                          colours=colours,
-                          antialiasing=antialiasing)
+    return _PILDraw().create_image(object_array=object_array,
+                                   colours=colours,
+                                   antialiasing=antialiasing)
 
 
-class _Drawer(_array_draw.ArrayDraw):
+class _PILDraw(_array_draw.ArrayDraw):
 
     @staticmethod
     def get_squared_image(image_width, background_colour, **kwargs):
