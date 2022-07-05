@@ -5,8 +5,9 @@ PyNSN
 
 ---
 
-
-*Released under the GNU General Public License v3* 
+[![GitHub license](https://img.shields.io/github/license/lindemann09/PyNSN)](https://github.com/lindemann09/PyNSN/blob/master/LICENSE)
+[![Python Version](https://img.shields.io/pypi/pyversions/pynsn?style=flat)](https://www.python.org)
+[![PyPI](https://img.shields.io/pypi/v/pynsn?style=flat)](https://pypi.org/project/pynsn/)
 
 Oliver Lindemann (lindemann@cognitive-psychology.eu)
 
