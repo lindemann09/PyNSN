@@ -85,11 +85,12 @@ class Uniform(PyNSNDistribution):
         return _round_samples(rtn, round_to_decimals)
 
 
-class Discrete(PyNSNDistribution):
+class Levels(PyNSNDistribution):
     """
     """
     def __init__(self, population, weights=None):
-        """Discrete distribution. Samples from a population defined by population and optional weights.
+        """Distribution of level. Samples from a population discrete categories
+         with optional weights for each level or category.
 
         Parameter:
         ----------

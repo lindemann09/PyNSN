@@ -23,7 +23,7 @@ img.save("demo.png")
 
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
-factory.set_size_distribution(width=distr.Discrete((10, 20, 30)),
+factory.set_size_distribution(width=distr.Levels((10, 20, 30)),
                               rectangle_proportion=1)
 euro_array = factory.create_random_array(n_objects=27, attributes=pict_file)
 
@@ -34,7 +34,7 @@ size_dist_dot = nsn.SizeDistribution(
 )
 size_dist_rect = nsn.SizeDistribution(
     width=distr.Normal(min_max=(10, 20), mu=15, sigma=2),
-    rectangle_proportion=distr.Discrete([1, 2])
+    rectangle_proportion=distr.Levels([1, 2])
 )
 
 factory = nsn.NSNFactory(target_area_radius=150,
