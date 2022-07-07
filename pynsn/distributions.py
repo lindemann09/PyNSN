@@ -1,9 +1,10 @@
 import random as _random
 import numpy as _np
 from ._lib.misc import numpy_round2 as _numpy_round2
+from . import exceptions as _exceptions
 
 
-#todo multidimensional normal distribution 
+# todo multidimensional normal distribution
 def _round_samples(samples, round_to_decimals):
     if round_to_decimals is not None:
         return _numpy_round2(samples, decimals=round_to_decimals)
@@ -47,6 +48,7 @@ class PyNSNDistribution(object):
 class Uniform(PyNSNDistribution):
     """
     """
+
     def __init__(self, min_max):
         """Uniform distribution defined by the number range, min_max=(min, max)
 
@@ -67,34 +69,70 @@ class Uniform(PyNSNDistribution):
 class Levels(PyNSNDistribution):
     """
     """
-    def __init__(self, population, weights=None):
+
+    def __init__(self, levels, weights=None, exact_weighting=False):
         """Distribution of level. Samples from a population discrete categories
          with optional weights for each level or category.
 
         Parameter:
         ----------
-        min_max : tuple (numeric, numeric)
-            the range of the distribution
         """
-        super().__init__(min_max=(population[0], population[-1]))
-        self.population = population
-        self.weights = weights
+        super().__init__(min_max=(None, None))
+        self.levels = levels
+        self.exact_weighting = exact_weighting
+
+        if weights is None:
+            self.weights = [1] * len(self.levels)
+        else:
+            if len(levels) != len(weights):
+                raise ValueError("Number weights does not match the number of levels")
+            self.weights = weights
 
     def sample(self, n, round_to_decimals=None):
+        if not self.exact_weighting:
+            dist = _random.choices(population=self.levels, weights=self.weights, k=n)
 
-        dist = _random.choices(population=self.population, weights=self.weights, k=n)
+        else:
+            if self.weights is None:
+                n_levels = len(self.levels)
+                p = _np.array([1 / n_levels] * n_levels)
+            else:
+                p = _np.array(self.weights)
+                p = p / _np.sum(p)
+
+            n_distr = n * p
+            if not _np.alltrue(_np.round(n_distr) == n_distr):
+                # problem: some n are floats
+                try:
+                    gcd = _np.gcd.reduce(self.weights)  # greatest common denominator
+                    info = "\nSample size has to be a multiple of {}.".format(
+                        int(_np.sum(self.weights / gcd)))
+                except:
+                    info = ""
+                raise _exceptions.NoSolutionError(f"Can't find n={n} samples that" +
+                      f" are exactly distributed as specified by the weights (p={p}). " +
+                      info)
+
+            dist = []
+            for lev, n in zip(self.levels, n_distr):
+                dist.extend([lev] * int(n))
+            _random.shuffle(dist)
+
         return _round_samples(dist, round_to_decimals)
 
     def as_dict(self):
         d = super().as_dict()
-        d.update({"population" : self.population,
-                  "weights": self.weights})
+        d.update({"population": self.levels,
+                  "weights": self.weights,
+                  "exact_weighting": self.exact_weighting})
         return d
 
 
 class Triangle(PyNSNDistribution):
+    """
+    """
 
-    def __init__(self,  mode, min_max):
+    def __init__(self, mode, min_max):
         super().__init__(min_max=min_max)
         self.mode = mode
         if (min_max[0] is not None and mode <= min_max[0]) or \
@@ -103,16 +141,14 @@ class Triangle(PyNSNDistribution):
                 mode, min_max)
             raise ValueError(txt)
 
-
     def sample(self, n, round_to_decimals=None):
-
         dist = [_random.triangular(low=self.min_max[0], high=self.min_max[1],
-                                 mode=self.mode) for _ in range(n)]
+                                   mode=self.mode) for _ in range(n)]
         return _round_samples(dist, round_to_decimals)
 
     def as_dict(self):
         d = super().as_dict()
-        d.update({"mode" : self.mode})
+        d.update({"mode": self.mode})
         return d
 
 
@@ -137,7 +173,7 @@ class _PyNSNDistributionMuSigma(PyNSNDistribution):
 
 class Normal(_PyNSNDistributionMuSigma):
 
-    def __init__(self,  mu, sigma, min_max=None):
+    def __init__(self, mu, sigma, min_max=None):
         """Normal distribution with optional cut-off of minimum and maximum
 
         Resulting distribution has the defined mean and std, only if
@@ -157,9 +193,9 @@ class Normal(_PyNSNDistributionMuSigma):
     def sample(self, n, round_to_decimals=None):
         rtn = _np.array([])
         required = n
-        while required>0:
+        while required > 0:
             draw = _np.array([_random.normalvariate(self.mu, self.sigma) \
-                             for _ in range(required)])
+                              for _ in range(required)])
             rtn = self._cutoff_outside_range(_np.append(rtn, draw))
             required = n - len(rtn)
         return _round_samples(rtn, round_to_decimals)
@@ -202,8 +238,8 @@ class Beta(_PyNSNDistributionMuSigma):
 
         alpha, beta = self.shape_parameter
         dist = _np.array([_random.betavariate(alpha=alpha, beta=beta) \
-                         for _ in range(n)])
-        dist = (dist - _np.mean(dist)) / _np.std(dist) # z values
+                          for _ in range(n)])
+        dist = (dist - _np.mean(dist)) / _np.std(dist)  # z values
         rtn = dist * self.sigma + self.mu
         return _round_samples(rtn, round_to_decimals)
 
@@ -219,7 +255,7 @@ class Beta(_PyNSNDistributionMuSigma):
 
         """
         r = float(self.min_max[1] - self.min_max[0])
-        m = (self.mu - self.min_max[0]) / r # mean
+        m = (self.mu - self.min_max[0]) / r  # mean
         std = self.sigma / r
         x = (m * (1 - m) / std ** 2) - 1
         return x * m, (1 - m) * x
@@ -239,8 +275,8 @@ class Beta(_PyNSNDistributionMuSigma):
         r = float((min_max[1] - min_max[0]))
 
         e = a / (a + b)
-        mu =  e * r + min_max[0]
+        mu = e * r + min_max[0]
 
-        v = (a*b) / ((a+b)**2 * (a+b+1))
+        v = (a * b) / ((a + b) ** 2 * (a + b + 1))
         sigma = _np.sqrt(v) * r
         return mu, sigma

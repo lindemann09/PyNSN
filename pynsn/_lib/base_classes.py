@@ -17,8 +17,8 @@ from ..visual_properties import fit
 
 
 class ArrayParameter(object):
-    DEFAULT_MIN_DIST_BETWEEN = 2
-    DEFAULT_MIN_DIST_AREA_BOARDER = 1
+    _DEFAULT_MIN_DIST_BETWEEN = 2
+    _DEFAULT_MIN_DIST_AREA_BOARDER = 1
 
     def __init__(self, target_area_radius,
                  min_dist_between=None,
@@ -29,11 +29,11 @@ class ArrayParameter(object):
         """
         self.target_area_radius = target_area_radius
         if min_dist_between is None:
-            self.min_dist_between = ArrayParameter.DEFAULT_MIN_DIST_BETWEEN
+            self.min_dist_between = ArrayParameter._DEFAULT_MIN_DIST_BETWEEN
         else:
             self.min_dist_between = min_dist_between
         if min_dist_area_boarder is None:
-            self.min_dist_area_boarder = ArrayParameter.DEFAULT_MIN_DIST_AREA_BOARDER
+            self.min_dist_area_boarder = ArrayParameter._DEFAULT_MIN_DIST_AREA_BOARDER
         else:
             self.min_dist_area_boarder = min_dist_area_boarder
 

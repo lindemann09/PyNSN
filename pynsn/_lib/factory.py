@@ -11,6 +11,7 @@ from .rect_array import RectangleArray
 from .appearance_sampler import AppearanceSampler
 from ..distributions import Levels
 
+
 class NSNFactory(ArrayParameter, AppearanceSampler):
 
     def __init__(self, target_area_radius,
@@ -87,14 +88,12 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         return rtn
 
     def create_incremental_random_array(self, n_objects,
-                                        attributes=None,
                                         allow_overlapping=False):
         """
 
         Parameters
         ----------
         n_objects
-        attributes
         allow_overlapping
 
         Returns
@@ -104,7 +103,6 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         previous = None
         for n in range(n_objects):
             current = self.create_random_array(n_objects=1,
-                   attributes=attributes,
                    allow_overlapping=allow_overlapping,
                    occupied_space=previous)
             if previous is not None:

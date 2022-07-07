@@ -40,7 +40,7 @@ def _type_check_distr(value, variable_name):
     elif isinstance(value, PyNSNDistribution):
         return value
     elif isinstance(value, (list, tuple)):
-        return Levels(population=copy(value))
+        return Levels(levels=copy(value))
     else:
         return _Constant(value)
 
