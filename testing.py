@@ -23,24 +23,15 @@ img.save("demo.png")
 
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
-factory.set_size_distribution(width=distr.Levels((10, 20, 30)),
-                              rectangle_proportion=1)
-euro_array = factory.create_random_array(n_objects=27, attributes=pict_file)
-
+factory.set_appearance_rectangle(width=(20, 10, 30), proportion=1)
 
 # define the visual features of the  dot array
-size_dist_dot = nsn.SizeDistribution(
-    diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2)
-)
-size_dist_rect = nsn.SizeDistribution(
-    width=distr.Normal(min_max=(10, 20), mu=15, sigma=2),
-    rectangle_proportion=distr.Levels([1, 2])
-)
-
-factory = nsn.NSNFactory(target_area_radius=150,
-                         size_distribution=size_dist_rect)
-stimulus = factory.create_random_array(n_objects=20,
-                                       attributes=["blue", "green"])
+#factory.set_appearance_rectangle(
+#    width=distr.Normal(min_max=(10, 20), mu=15, sigma=2),
+#    proportion=distr.Levels([1, 2]))
+#factory.set_appearance_dot(diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
+stimulus = factory.create_random_array(n_objects=20)
+stimulus.set_attributes((["red"]*5) + ["green"]*15)
 
 
 ####

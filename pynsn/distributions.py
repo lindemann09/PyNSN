@@ -44,25 +44,6 @@ class PyNSNDistribution(object):
         return hist(self.sample(n=n), bins=100)[2]
 
 
-class Constant(PyNSNDistribution):
-
-    def __init__(self, constant):
-        """Constant distribution, that is distribution with no variance, that is,
-        sampling produces always the same number.
-
-        Useful is a random variable should be constant, for instance for size distributions
-
-        Parameter:
-        ----------
-        constant : numeric
-        """
-
-        super().__init__(min_max=[constant, constant])
-
-    def sample(self, n, round_to_decimals=None):
-        return _round_samples([self.min_max[0]] * n, round_to_decimals)
-
-
 class Uniform(PyNSNDistribution):
     """
     """
@@ -95,7 +76,7 @@ class Levels(PyNSNDistribution):
         min_max : tuple (numeric, numeric)
             the range of the distribution
         """
-        super().__init__(min_max=(min(population), max(population)))
+        super().__init__(min_max=(population[0], population[-1]))
         self.population = population
         self.weights = weights
 

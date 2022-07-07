@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
 from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from .. import SizeDistribution
+from .. import AppearanceSampler
 from .. import distributions as distr
 from .._lib import _check_array_parameter
 
@@ -29,11 +29,11 @@ class MainWidget(QWidget):
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
         self.target_area_radius = LabeledNumberInput("Max radius", para.target_area_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.diameter.mu)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr.diameter.sigma)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr._diameter.mu)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr._diameter.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=sdr.diameter.min_max[0],
-                                                               value2=sdr.diameter.min_max[1])
+                                                               value1=sdr._diameter.min_max[0],
+                                                               value2=sdr._diameter.min_max[1])
 
         self.min_dist_between = LabeledNumberInput("Minimum gap", para.min_dist_between)
 

@@ -2,5 +2,5 @@ class NoSolutionError(Exception):
     pass
 
 
-class NoSizeDistributionError(Exception):
+class NoAppearanceDefinedError(Exception):
     pass

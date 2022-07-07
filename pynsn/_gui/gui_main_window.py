@@ -10,7 +10,7 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import NSNFactory, SizeDistribution, ImageColours
+from .. import NSNFactory, AppearanceSampler, ImageColours
 from .. import _lib
 from .. import distributions as distr
 from .. import visual_properties as props
@@ -21,8 +21,8 @@ from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
         "factory": NSNFactory(target_area_radius=200, min_dist_between=2,
-                               size_distribution= SizeDistribution(
-                    diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))
+                               size_distribution= AppearanceSampler(
+                    dot_diameter=distr.Beta(mu=15, sigma=8, min_max=(5, 40))
                                )),
         "col": ImageColours(target_area="#303030",
                                     field_area_positions=None,
@@ -34,8 +34,8 @@ DEFAULT_ARRAY = {"num": 40,
 
 ICON = {"num": 11,
         "factory": NSNFactory(target_area_radius=200,
-                              size_distribution=SizeDistribution(
-                diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))
+                              size_distribution=AppearanceSampler(
+                dot_diameter=distr.Beta(mu=35, sigma=20, min_max=(5, 80))
                               )),
         "col": ImageColours(target_area="#3e3e3e",
                                     field_area_positions=None,
@@ -175,12 +175,12 @@ class GUIMainWindow(QMainWindow):
         return self.main_widget.number.value
 
     def get_factory(self):
-        size_dist = SizeDistribution(diameter=
+        size_dist = AppearanceSampler(dot_diameter=
                         distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                        sigma=self.main_widget.item_diameter_std.value,
                        min_max=[self.main_widget.item_diameter_range.value1,
                                 self.main_widget.item_diameter_range.value2])
-                                                  )
+                                      )
         return NSNFactory(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_dist_between=self.main_widget.min_dist_between.value,

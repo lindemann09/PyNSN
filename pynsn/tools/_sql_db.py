@@ -82,7 +82,7 @@ class DotArraySQLDB(object):
 
             ## add dots
             sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
-            for xy, d in zip(da._xy, da.diameter):
+            for xy, d in zip(da._xy, da._diameter):
                 sql += "\n  ('{}', {}, {}, {}),".format(da.hash, xy[0], xy[1], d)
             sql = sql[:-1] + ";"
             cur.execute(sql)
