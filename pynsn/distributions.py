@@ -2,8 +2,6 @@ import random as _random
 import numpy as _np
 from ._lib.misc import numpy_round2 as _numpy_round2
 
-_random.seed() #todo set seed
-
 
 #todo multidimensional normal distribution 
 def _round_samples(samples, round_to_decimals):

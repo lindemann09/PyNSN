@@ -1,7 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import copy
-from random import shuffle
+import random
 
 from ..exceptions import NoSolutionError, NoSizeDistributionError
 from .. import _lib
@@ -127,9 +127,9 @@ class NSNFactory(object):
             att = []
             while len(att) < n_objects:
                 tmp = copy.copy(attributes)
-                shuffle(tmp)
+                random.shuffle(tmp)
                 att.extend(tmp)
-            shuffle(att)
+            random.shuffle(att)
             rtn.set_attributes(att[:n_objects])
         else:
             rtn.set_attributes(attributes)
@@ -160,3 +160,18 @@ class NSNFactory(object):
                 current.join(previous)
             previous = current
             yield current
+
+    @staticmethod
+    def seed(a=None):
+        """Set random seed
+
+        Parameters
+        ----------
+        a : seed value
+            must be oneType, int, float, str, bytes, or bytearray
+
+        Notes
+        -----
+        see documentation of `random.seed()` of Python standard library
+        """
+        random.seed(a)
