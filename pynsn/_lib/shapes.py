@@ -3,8 +3,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 
 import math as _math
-from .misc import PictureFile
+from .picture_file import PictureFile
 from ..image._colour import Colour
+
 
 class Point(object):
 

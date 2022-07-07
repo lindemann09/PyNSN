@@ -4,7 +4,7 @@ from ._lib.misc import numpy_round2 as _numpy_round2
 from . import exceptions as _exceptions
 
 
-# todo multidimensional normal distribution
+#TODO multidimensional normal distribution
 def _round_samples(samples, round_to_decimals):
     if round_to_decimals is not None:
         return _numpy_round2(samples, decimals=round_to_decimals)

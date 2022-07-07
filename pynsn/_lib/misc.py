@@ -6,36 +6,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
 import numpy as np
-from os import path
+import sys
 
-
-class PictureFile(object):
-    PICTURE_PREFIX = "p:"
-
-    def __init__(self, filename):
-        self._attribute = "{}{}".format(PictureFile.PICTURE_PREFIX, filename)
-
-    @property
-    def filename(self):
-        return PictureFile.check_attribute(self._attribute)
-
-    @property
-    def attribute(self):
-        return self._attribute
-
-    @classmethod
-    def check_attribute(cls, txt):
-        """returns filename if `txt` (str) represent a picture attribute
-        else returns None
-        """
-        if isinstance(txt, str) and \
-                txt.startswith(PictureFile.PICTURE_PREFIX):
-            return txt[len(PictureFile.PICTURE_PREFIX):]
-        else:
-            return None
-
-    def check_file_exists(self):
-        return path.isfile(self.filename)
 
 
 def make_csv(xy, size_data_dict, attributes=None,
@@ -177,4 +149,25 @@ def dict_to_text(the_dict, col_a = 22, col_b = 14,
         rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
                          (" " * len_col_b) + value
     return rtn.rstrip()
+
+
+def is_interactive_mode():
+    """Returns if Python is running in interactive mode (such as IDLE or
+    IPthon)
+
+    Returns
+    -------
+    interactive_mode : boolean
+
+    """
+    #ipython?
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        pass
+
+    is_idle = "idlelib.run" in sys.modules
+    # ps2 is only defined in interactive mode
+    return is_idle or hasattr(sys, "ps2")
 
