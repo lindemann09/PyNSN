@@ -56,17 +56,21 @@ class AppearanceSampler(object):
         self._attributes = None
 
     def set_appearance_dot(self, diameter, attributes=None):
-        self.set_appearance_rectangle(width=None, height=None, proportion=None)
+        self._width = None
+        self._height = None
+        self._proportion = None
         self._diameter = _type_check_distr(diameter, "diameter")
         self._attributes = _type_check_distr(attributes, "attributes")
 
     def set_appearance_rectangle(self, width=None, height=None,
                                  proportion=None, attributes=None):
+
         n_rect_parameter = sum([width is not None, height is not None,
                                 proportion is not None])
         if n_rect_parameter == 1:
             raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
                             "either width or height.")
+        self._diameter = None
         self._width = _type_check_distr(width, "width")
         self._height = _type_check_distr(height, "height")
         self._proportion = _type_check_distr(proportion, "proportion")

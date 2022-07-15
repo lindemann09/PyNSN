@@ -1,5 +1,5 @@
 import unittest
-from pynsn import AppearanceSampler, NSNFactory
+from pynsn import NSNFactory
 from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale, flags
 
@@ -10,8 +10,8 @@ class DotsSmall(unittest.TestCase):
 
     def settings(self):
         self.factory = NSNFactory(target_area_radius=200)
-        self.factory.size_distribution = AppearanceSampler(
-            dot_diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
+        self.factory.set_appearance_dot(
+            diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
         self.n_dots = 5
 
     def setUp(self):
