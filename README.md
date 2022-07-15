@@ -49,8 +49,8 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-* [making arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fmake_object_arrays_demo.html): manually creating object arrays and exporting picture files
-* [random arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fpynsn_demo.html): Creating random dot arrays
+* [making arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fmake_object_arrays_demo.ipynb): manually creating object arrays and exporting picture files
+* [random arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fpynsn_demo.ipynb): Creating random dot arrays
 * matching visual features
 * data base, sequences
 * [Euro flag example](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Feuro_flag_demo.ipynb): using pictures as objects in array
