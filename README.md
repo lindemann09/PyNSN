@@ -49,11 +49,14 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-* [making arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fmake_object_arrays_demo.ipynb): manually creating object arrays and exporting picture files
-* [random arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fpynsn_demo.ipynb): Creating random dot arrays
+* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays_demo.html): manually creating object arrays and exporting picture file
+  ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fmake_object_arrays_demo.ipynb))
+* [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
+  ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fpynsn_demo.ipynb))
 * matching visual features
 * data base, sequences
-* [Euro flag example](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Feuro_flag_demo.ipynb): using pictures as objects in array
+* [Euro flag example](https://lindemann09.github.io/PyNSN/euro_flag_demo.html): using pictures as objects in array
+  ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Feuro_flag_demo.ipynb))
 
 RUN GUI tool
 -------------
