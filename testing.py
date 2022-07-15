@@ -33,7 +33,6 @@ factory.set_appearance_rectangle(width=(20, 10, 30), proportion=1,
 # factory.set_appearance_dot(diameter=distr.Beta(min_max=(10, 30), mu=15, sigma=2))
 stimulus = factory.create_random_array(n_objects=20)
 print(stimulus.properties.average_rectangle_size)
-exit()
 ####
 stim_scaled = stimulus.copy()
 # stim_scaled.center_array()
