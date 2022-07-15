@@ -1,5 +1,4 @@
 import unittest
-from pynsn import SizeDistribution
 from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale
 from test_dot_array import DotsSmall
@@ -8,7 +7,7 @@ from test_dot_array import DotsSmall
 class RectanglesSmall(DotsSmall):
     def settings(self):
         super().settings()
-        self.factory.size_distribution = SizeDistribution(
+        self.factory.set_appearance_rectangle(
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
 
@@ -46,7 +45,7 @@ class RectanglesSmall(DotsSmall):
 class RectanglesMedium(RectanglesSmall):
     def settings(self):
         super().settings()
-        self.size_dist = SizeDistribution(
+        self.factory.set_appearance_rectangle(
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
         self.n_dots = 25
@@ -55,7 +54,7 @@ class RectanglesMedium(RectanglesSmall):
 class RectanglesLarge(RectanglesSmall):
     def settings(self):
         super().settings()
-        self.size_dist = SizeDistribution(
+        self.factory.set_appearance_rectangle(
             width=distr.Normal(min_max=(5, 30), mu=10, sigma=5),
             height=distr.Normal(min_max=(5, 30), mu=10, sigma=5))
         self.n_dots = 75

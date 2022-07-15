@@ -125,8 +125,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = fit.DEFAULT_SPACING_PRECISION
-    adapt_FA2TA_ratio = fit.DEFAULT_ADAPT_FA2TA_RATIO
+    spacing_precision = fit._DEFAULT_SPACING_PRECISION
+    adapt_FA2TA_ratio = fit._DEFAULT_ADAPT_FA2TA_RATIO
 
 
     def __init__(self, parent):

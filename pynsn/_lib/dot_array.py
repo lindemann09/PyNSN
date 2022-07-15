@@ -28,7 +28,7 @@ class DotArray(ABCObjectArray):
                  min_dist_between=None,
                  min_dist_area_boarder=None,
                  xy = None,
-                 diameters = None,
+                 diameter = None,
                  attributes = None):
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
@@ -40,13 +40,13 @@ class DotArray(ABCObjectArray):
                          target_area_radius=target_area_radius,
                          min_dist_between=min_dist_between,
                          min_dist_area_boarder=min_dist_area_boarder)
-        if diameters is None:
-            self._diameters = np.array([])
+        if diameter is None:
+            self._diameter = np.array([])
         else:
-            self._diameters = misc.numpy_vector(diameters)
-        if self._xy.shape[0] != len(self._diameters):
+            self._diameter = misc.numpy_vector(diameter)
+        if self._xy.shape[0] != len(self._diameter):
             raise ValueError("Bad shaped data: " +
-                             u"xy has not the same length as item_diameters")
+                             u"xy has not the same length as item_diameter")
 
     def add(self, dots):
         """append one dot or list of dots"""
@@ -57,21 +57,21 @@ class DotArray(ABCObjectArray):
         for d in dots:
             assert isinstance(d, Dot)
             self._append_xy_attribute(xy=d.xy, attributes=d.attribute)
-            self._diameters = np.append(self._diameters, d.diameter)
+            self._diameter = np.append(self._diameter, d.diameter)
         self.properties.reset()
 
     @property
-    def diameters(self):
-        return self._diameters
+    def diameter(self):
+        return self._diameter
 
     @property
     def surface_areas(self):
         # a = pi r**2 = pi d**2 / 4
-        return np.pi * (self._diameters ** 2) / 4.0
+        return np.pi * (self._diameter ** 2) / 4.0
 
     @property
     def perimeter(self):
-        return np.pi * self._diameters
+        return np.pi * self._diameter
 
     def round(self, decimals=0, int_type=np.int32):
         """Round values of the array."""
@@ -80,28 +80,28 @@ class DotArray(ABCObjectArray):
             return
         self._xy = misc.numpy_round2(self._xy, decimals=decimals,
                                      int_type=int_type)
-        self._diameters = misc.numpy_round2(self._diameters, decimals=decimals,
-                                            int_type=int_type)
+        self._diameter = misc.numpy_round2(self._diameter, decimals=decimals,
+                                           int_type=int_type)
 
     def as_dict(self):
         """
         """
         d = super().as_dict()
-        d.update({"diameters": self._diameters.tolist()})
+        d.update({"diameter": self._diameter.tolist()})
         return d
 
     def read_from_dict(self, the_dict):
         """read Dot collection from dict"""
         super().read_from_dict(the_dict)
-        self._diameters = np.array(the_dict["diameters"])
+        self._diameter = np.array(the_dict["diameter"])
 
     def clear(self):
         super().clear()
-        self._diameters = np.array([])
+        self._diameter = np.array([])
 
     def delete(self, index):
         super().delete(index)
-        self._diameters = np.delete(self._diameters, index)
+        self._diameter = np.delete(self._diameter, index)
 
     def copy(self, indices=None, deepcopy=True):
         """returns a (deep) copy of the dot array.
@@ -120,18 +120,18 @@ class DotArray(ABCObjectArray):
 
         if deepcopy:
             return DotArray(target_area_radius=self.target_area_radius,
-                        min_dist_between=self.min_dist_between,
-                        min_dist_area_boarder = self.min_dist_area_boarder,
-                        xy=self._xy[indices, :].copy(),
-                        diameters=self._diameters[indices].copy(),
-                        attributes=self._attributes[indices].copy())
+                            min_dist_between=self.min_dist_between,
+                            min_dist_area_boarder = self.min_dist_area_boarder,
+                            xy=self._xy[indices, :].copy(),
+                            diameter=self._diameter[indices].copy(),
+                            attributes=self._attributes[indices].copy())
         else:
             return DotArray(target_area_radius=self.target_area_radius,
-                        min_dist_between=self.min_dist_between,
-                        min_dist_area_boarder = self.min_dist_area_boarder,
-                        xy=self._xy[indices, :],
-                        diameters=self._diameters[indices],
-                        attributes=self._attributes[indices])
+                            min_dist_between=self.min_dist_between,
+                            min_dist_area_boarder = self.min_dist_area_boarder,
+                            xy=self._xy[indices, :],
+                            diameter=self._diameter[indices],
+                            attributes=self._attributes[indices])
 
     def distances(self, dot):
         """Distances toward a single dot
@@ -146,7 +146,7 @@ class DotArray(ABCObjectArray):
             return np.array([])
         else:
             rtn = np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
-                   ((self._diameters + dot.diameter) / 2.0)
+                   ((self._diameter + dot.diameter) / 2.0)
             return rtn
 
     def iter_objects(self, indices=None):
@@ -164,13 +164,13 @@ class DotArray(ABCObjectArray):
         """
 
         if indices is None:
-            data = zip(self._xy, self._diameters, self._attributes)
+            data = zip(self._xy, self._diameter, self._attributes)
         else:
             try:
                 indices = list(indices)  # check if iterable
             except TypeError:
                 indices = [indices]
-            data = zip(self._xy[indices, :], self._diameters[indices],
+            data = zip(self._xy[indices, :], self._diameter[indices],
                        self._attributes[indices])
 
         for xy, dia, att in data:
@@ -180,8 +180,8 @@ class DotArray(ABCObjectArray):
         """returns indices of found objects
         """
         rtn = []
-        for i in range(len(self._diameters)):
-            if (diameter is not None and self._diameters[i] != diameter) or \
+        for i in range(len(self._diameter)):
+            if (diameter is not None and self._diameter[i] != diameter) or \
                     (attribute is not None and self._attributes[i] != attribute):
                 continue
             rtn.append(i)
@@ -196,7 +196,7 @@ class DotArray(ABCObjectArray):
         variable_names : bool, optional
             if True variable name will be printed in the first line
         """
-        size_dict = {"diameter": self._diameters}
+        size_dict = {"diameter": self._diameter}
         if attribute_column:
             attr = self.attributes
         else:
@@ -235,12 +235,12 @@ class DotArray(ABCObjectArray):
         cnt = 0
         while True:
             radii = geometry.cartesian2polar(self._xy, radii_only=True)
-            too_far = np.where((radii + self._diameters / 2) > self.target_area_radius)[0]  # find outlier
+            too_far = np.where((radii + self._diameter / 2) > self.target_area_radius)[0]  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
                 polar = geometry.cartesian2polar([self._xy[too_far[0], :]])[0]
-                polar[0] = self.target_area_radius - self._diameters[
+                polar[0] = self.target_area_radius - self._diameter[
                     too_far[0]] / 2 - 0.000000001  # new radius #todo check if 0.00001 required
                 new_xy = geometry.polar2cartesian([polar])[0]
                 self._xy[too_far[0], :] = new_xy

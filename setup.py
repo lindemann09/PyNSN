@@ -10,12 +10,12 @@ from sys import version_info as _vi
 
 package_name = "pynsn"
 
-if _vi.major < 3 and _vi.minor < 6:
+if _vi.major < 3 or _vi.minor < 6:
     raise RuntimeError("{0} requires Python 3.6 or larger.".format(package_name))
 
-install_requires = ["numpy>=1.21",
-                    "scipy>=1.7",
-                    "Pillow>=9.0",
+install_requires = ["numpy>=1.19",
+                    "scipy>=1.5",
+                    "Pillow>=8.4",
                     "svgwrite>=1.4"]
 
 extras_require = {

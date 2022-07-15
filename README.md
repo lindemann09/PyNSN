@@ -5,8 +5,9 @@ PyNSN
 
 ---
 
-
-*Released under the GNU General Public License v3* 
+[![GitHub license](https://img.shields.io/github/license/lindemann09/PyNSN)](https://github.com/lindemann09/PyNSN/blob/master/LICENSE)
+[![Python Version](https://img.shields.io/pypi/pyversions/pynsn?style=flat)](https://www.python.org)
+[![PyPI](https://img.shields.io/pypi/v/pynsn?style=flat)](https://pypi.org/project/pynsn/)
 
 Oliver Lindemann (lindemann@cognitive-psychology.eu)
 
@@ -48,11 +49,11 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays_demo.html): manually creating object arrays and exporting picture files
-* [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
+* [making arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/master?filepath=examples/make_object_arrays_demo.html): manually creating object arrays and exporting picture files
+* [random arrays](https://mybinder.org/v2/gh/lindemann09/PyNSN/master?filepath=examples/pynsn_demo.html): Creating random dot arrays
 * matching visual features
 * data base, sequences
-* [Euro flag example](https://lindemann09.github.io/PyNSN/euro_flag_demo.html): using pictures as objects in array
+* [Euro flag example](https://mybinder.org/v2/gh/lindemann09/PyNSN/master?filepath=examples/euro_flag_demo.ipynb): using pictures as objects in array
 
 RUN GUI tool
 -------------

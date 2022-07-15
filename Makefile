@@ -13,6 +13,9 @@ publish:
 unit_tests:
 	python -m unittest discover tests
 
+unit_test_docker:
+	docker build -t pynsn_unit_test .
+	docker run --rm pynsn_unit_test
 
 clean:
 		@rm -rf build \

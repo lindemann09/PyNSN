@@ -2,8 +2,8 @@ from .base_classes import ArrayParameter, AttributeArray
 from .dot_array import DotArray
 from .rect_array import RectangleArray
 from .shapes import Point, Dot, Rectangle
-from .misc import PictureFile
-from .size_distribution import SizeDistribution
+from .picture_file import PictureFile
+from .appearance_sampler import AppearanceSampler
 from .factory import NSNFactory
 
 

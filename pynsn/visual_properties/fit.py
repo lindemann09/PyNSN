@@ -3,15 +3,15 @@ import numpy as _np
 from math import log2 as _log2
 from .._lib import geometry as _geometry
 from .. import _lib
-from ..exceptions import NoSolutionError
+from ..exceptions import NoSolutionError as _NoSolutionError
 from ._properties import VisualPropertyFlag as _flags
 
-DEFAULT_SPACING_PRECISION = 0.0001
-DEFAULT_ADAPT_FA2TA_RATIO = 0.5
+_DEFAULT_SPACING_PRECISION = 0.0001
+_DEFAULT_ADAPT_FA2TA_RATIO = 0.5
 
 
-def change_adapt_settings(default_spacing_precision=None,
-                          default_adapt_fa2ta_ratio=None):
+def change_fit_settings(default_spacing_precision=None,
+                        default_adapt_fa2ta_ratio=None):
     """Changing class settings of property fitting.
 
     This changes the settings of the property fitting.
@@ -26,14 +26,15 @@ def change_adapt_settings(default_spacing_precision=None,
     -------
 
     """
-    global DEFAULT_ADAPT_FA2TA_RATIO
-    global DEFAULT_SPACING_PRECISION
+    global _DEFAULT_ADAPT_FA2TA_RATIO
+    global _DEFAULT_SPACING_PRECISION
     if isinstance(default_spacing_precision, float):
-        DEFAULT_SPACING_PRECISION = default_spacing_precision
+        _DEFAULT_SPACING_PRECISION = default_spacing_precision
     if isinstance(default_adapt_fa2ta_ratio, float):
-        DEFAULT_ADAPT_FA2TA_RATIO = default_adapt_fa2ta_ratio
+        _DEFAULT_ADAPT_FA2TA_RATIO = default_adapt_fa2ta_ratio
 
 #FIXME coverage for all
+
 
 def numerosity(object_array, value, center_of_field_area=False):
     TRY_OUT = 300
@@ -68,9 +69,9 @@ def numerosity(object_array, value, center_of_field_area=False):
                         ref_object=rnd_object, allow_overlapping=False,
                         inside_convex_hull=center_of_field_area
                     )
-                except NoSolutionError:
+                except _NoSolutionError:
                     # no free position
-                    raise NoSolutionError("Can't make the deviant. No free position found.")
+                    raise _NoSolutionError("Can't make the deviant. No free position found.")
                 object_array.add([rnd_object])
 
     return object_array
@@ -82,7 +83,7 @@ def average_diameter(dot_array, value):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.properties.average_dot_diameter
-    dot_array._diameters = dot_array.diameters * scale
+    dot_array._diameter = dot_array.diameter * scale
     dot_array.properties.reset()
     return dot_array
 
@@ -108,7 +109,7 @@ def total_surface_area(object_array, value):
     _lib._check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
     if isinstance(object_array, _lib.DotArray):
-        object_array._diameters = _np.sqrt(
+        object_array._diameter = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
                     _np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
     else: # rect
@@ -128,7 +129,7 @@ def field_area(object_array, value, precision=None):
 
     _lib._check_object_array(object_array)
     if precision is None:
-        precision = DEFAULT_SPACING_PRECISION
+        precision = _DEFAULT_SPACING_PRECISION
 
     if object_array.properties.field_area is _np.nan:
         return  object_array # not defined
@@ -195,11 +196,11 @@ def coverage(object_array, value,
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
     if FA2TA_ratio is None:
-        FA2TA_ratio = DEFAULT_ADAPT_FA2TA_RATIO
+        FA2TA_ratio = _DEFAULT_ADAPT_FA2TA_RATIO
     elif FA2TA_ratio < 0 or FA2TA_ratio > 1:
         FA2TA_ratio = 0.5
     if precision is None:
-        precision = DEFAULT_SPACING_PRECISION
+        precision = _DEFAULT_SPACING_PRECISION
 
     total_area_change100 = (value * object_array.properties.field_area) - \
                            object_array.properties.total_surface_area

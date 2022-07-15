@@ -17,9 +17,8 @@ from ..visual_properties import fit
 
 
 class ArrayParameter(object):
-
-    DEFAULT_MIN_DIST_BETWEEN=2
-    DEFAULT_MIN_DIST_AREA_BOARDER=1
+    _DEFAULT_MIN_DIST_BETWEEN = 2
+    _DEFAULT_MIN_DIST_AREA_BOARDER = 1
 
     def __init__(self, target_area_radius,
                  min_dist_between=None,
@@ -30,18 +29,23 @@ class ArrayParameter(object):
         """
         self.target_area_radius = target_area_radius
         if min_dist_between is None:
-            self.min_dist_between = ArrayParameter.DEFAULT_MIN_DIST_BETWEEN
+            self.min_dist_between = ArrayParameter._DEFAULT_MIN_DIST_BETWEEN
         else:
             self.min_dist_between = min_dist_between
         if min_dist_area_boarder is None:
-            self.min_dist_area_boarder = ArrayParameter.DEFAULT_MIN_DIST_AREA_BOARDER
+            self.min_dist_area_boarder = ArrayParameter._DEFAULT_MIN_DIST_AREA_BOARDER
         else:
             self.min_dist_area_boarder = min_dist_area_boarder
+
+    def as_dict(self):
+        return {"type": type(self).__name__,
+                "target_area_radius": self.target_area_radius,
+                "min_dist_between": self.min_dist_between,
+                "min_dist_area_boarder": self.min_dist_area_boarder}
 
 
 class AttributeArray(ArrayParameter):
     """Class for attributes on two dimensional space"""
-
 
     def __init__(self, target_area_radius,
                  min_dist_between=None,
@@ -195,10 +199,7 @@ class AttributeArray(ArrayParameter):
     def as_dict(self):
         """
         """
-        d = {"type": type(self).__name__,
-             "target_area_radius": self.target_area_radius,
-             "min_dist_between": self.min_dist_between,
-             "min_dist_area_boarder": self.min_dist_area_boarder}
+        d = super().as_dict()
         d.update({"xy": self._xy.tolist()})
         if len(self._attributes) > 0 and misc.is_all_equal(self._attributes):
             d.update({"attributes": self._attributes[0]})
@@ -263,12 +264,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return super().read_from_dict()
 
     @abstractmethod
-    def copy(self, indices=None, deepcopy=True):
-        """returns a (deep) copy of the dot array.
-
-        It allows to copy a subset of dot only.
-
-        """
+    def copy(self):
         pass
 
     @abstractmethod
@@ -353,7 +349,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             raise NotImplementedError("Not implemented for {}".format(
                 type(ref_object).__name__))
         if occupied_space is not None and \
-                not isinstance(occupied_space, ABCObjectArray): #FIXME check
+                not isinstance(occupied_space, ABCObjectArray):  # FIXME check
             raise TypeError("Occupied_space has to be a Dot or Rectangle Array or None.")
 
         area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size
@@ -408,11 +404,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         for obj in all_objects:
             try:
                 new = self.get_random_free_position(obj,
-                                        allow_overlapping=allow_overlapping)
+                                                    allow_overlapping=allow_overlapping)
             except NoSolutionError as e:
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
-
 
     def get_number_deviant(self, change_numerosity, preserve_field_area=False):
         """number deviant
@@ -488,6 +483,5 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn
-
 
 # TODO  everywhere: file header doc and author information
