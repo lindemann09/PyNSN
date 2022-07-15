@@ -1,2 +1,0 @@
-pynsn==0.11.8
-matplotlib==3.5.2
