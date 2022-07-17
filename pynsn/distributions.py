@@ -33,11 +33,15 @@ class PyNSNDistribution(object):
 
     def pyplot_samples(self, n=100000):
         try:
-            from matplotlib.pyplot import hist
+            from matplotlib.pyplot import hist, hist2d
         except:
-            raise ImportError("To use pyplot, please install matplotlib.")
+            raise ImportError("To use pyplot_samples, please install matplotlib.")
 
-        return hist(self.sample(n=n), bins=100)[2]
+        samples = self.sample(n=n)
+        if samples.ndim == 2:
+            return hist2d(samples[:,0], samples[:,1], bins=100)[2]
+        else:
+            return hist(samples, bins=100)[2]
 
 
 class Uniform(PyNSNDistribution):
