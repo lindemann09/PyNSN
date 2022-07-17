@@ -43,7 +43,7 @@ class _SVGDraw(_array_draw.ArrayDraw):
         """"""
         assert isinstance(image, _svg.Drawing)
         width = int(image.attribs['width'][:-2]) # string "300px" --> 300
-        shape.xy = _c2i_coord(_np.array(shape.xy), width).tolist()
+        shape.xy = _c2i_coord(_np.asarray(shape.xy), width).tolist()
         attr = shape.get_attribute_object()
 
         if isinstance(attr, _lib.PictureFile):

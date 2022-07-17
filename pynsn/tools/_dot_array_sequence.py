@@ -81,7 +81,7 @@ class DASequence(object):
     def get_numerosity_correlations(self):
         feat = self.get_properties_dict()
         del feat['hash']
-        prop_np = _np.round(_np.array(feat.values()).T, 2)
+        prop_np = _np.round(_np.asarray(feat.values()).T, 2)
         cor = _np.corrcoef(prop_np, rowvar=False)
         cor = cor[0, :]
         names = feat.keys()

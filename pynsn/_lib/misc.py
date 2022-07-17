@@ -77,7 +77,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
         rtn += ",".join(d.keys()) + "\n"
 
     if dict_of_lists:
-        prop_np = np.array(list(d.values())).T  # list is requires in PY3
+        prop_np = np.asarray(list(d.values())).T  # list is requires in PY3
         for x in prop_np:
             rtn += ", ".join(map(lambda s: str(s), x)) + "\n"
     else:
@@ -102,7 +102,7 @@ def numpy_vector(x):
 
 def numpy_array_2d(two_d_data):
     """ensures well shaped to 2d numpy array"""
-    rtn = np.array(two_d_data)
+    rtn = np.asarray(two_d_data)
     if rtn.ndim == 1 and len(rtn) == 2:
         rtn = rtn.reshape((1, 2))
     if rtn.ndim != 2:

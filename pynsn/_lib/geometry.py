@@ -8,7 +8,7 @@ import numpy as np
 
 def polar2cartesian(polar):
     """polar is an 2d-array representing polar coordinates (radius, angle)"""
-    polar = np.array(polar)
+    polar = np.asarray(polar)
     return np.array([polar[:, 0] * np.cos(polar[:, 1]),
                      polar[:, 0] * np.sin(polar[:, 1])]).T
 
@@ -18,7 +18,7 @@ def cartesian2polar(xy, radii_only=False):
     if only radii required you may consider radii_only=True for faster
     processing
     """
-    xy = np.array(xy)
+    xy = np.asarray(xy)
     radii = np.hypot(xy[:, 0], xy[:, 1])
     if radii_only:
         return radii
@@ -30,7 +30,7 @@ def cartesian2image_coordinates(xy, image_size):
     """convert cartesian to image coordinates with (0,0) at top left and
     reversed y axis
     """
-    return (np.array(xy) * [1, -1]) + image_size / 2
+    return (np.asarray(xy) * [1, -1]) + image_size / 2
 
 
 def lines_intersect(line1, line2):

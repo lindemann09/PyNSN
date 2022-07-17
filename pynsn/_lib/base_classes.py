@@ -99,7 +99,7 @@ class AttributeArray(ArrayParameter):
     @property
     def xy_rounded_integer(self):
         """rounded to integer"""
-        return np.array(np.round(self._xy))
+        return np.round(self._xy)
 
     @property
     def attributes(self):
@@ -314,7 +314,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)
         # matrix with all distance between all points
-        dist = np.array([self.distances(d) for d in self.iter_objects()])
+        dist = np.asarray([self.distances(d) for d in self.iter_objects()])
         return dist
 
     def check_overlaps(self):
@@ -323,7 +323,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         """
         dist = self.distances_matrix(between_positions=False)
         overlap = np.where(np.triu(dist, k=1) < 0)
-        return np.array(overlap).T
+        return np.asarray(overlap).T
 
     def center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)

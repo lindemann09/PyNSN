@@ -43,7 +43,7 @@ class _PILDraw(_array_draw.ArrayDraw):
     def draw_shape(img, shape, opacity, scaling_factor):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        shape.xy = _c2i_coord(_np.array(shape.xy) * scaling_factor, img.size[0]).tolist()
+        shape.xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size[0]).tolist()
         attr = shape.get_attribute_object()
 
         if isinstance(shape, _lib.Dot):
@@ -53,7 +53,7 @@ class _PILDraw(_array_draw.ArrayDraw):
                                           shape.x + r, shape.y + r),
                                          fill=attr.colour)
         elif isinstance(shape, _lib.Rectangle):
-            tmp = _np.array(shape.size) * scaling_factor
+            tmp = _np.asarray(shape.size) * scaling_factor
             shape.size = tmp.tolist()
             if isinstance(attr, _lib.PictureFile):
                 # picture
