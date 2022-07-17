@@ -21,6 +21,7 @@ from ._lib import Point, Dot, Rectangle, \
     DotArray, RectangleArray, ArrayParameter, \
     PictureFile, NSNFactory
 from .image._colour import Colour, ImageColours
+from ._lib.rng import init_random_generator
 
 from . import exceptions
 from . import visual_properties
@@ -31,6 +32,5 @@ def _print_version_info():
     from ._lib.misc import is_interactive_mode
     if is_interactive_mode():
         print("PyNSN {}".format(__version__))
-
 
 _print_version_info()

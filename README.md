@@ -58,8 +58,8 @@ packages.
 * [Euro flag example](https://lindemann09.github.io/PyNSN/euro_flag_demo.html): using pictures as objects in array
   ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Feuro_flag_demo.ipynb))
 
-RUN GUI tool
--------------
+RUN GUI tool (beta version)
+--------------------------
 
 *Note:* Using the PyNSN-GUI requires the installation of `PyQt5` 
 

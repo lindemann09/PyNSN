@@ -1,15 +1,16 @@
-import random as _random
 import numpy as _np
 from ._lib.misc import numpy_round2 as _numpy_round2
+from ._lib import rng
 from . import exceptions as _exceptions
 
-
 #TODO multidimensional normal distribution
+
 def _round_samples(samples, round_to_decimals):
     if round_to_decimals is not None:
         return _numpy_round2(samples, decimals=round_to_decimals)
     else:
         return _np.array(samples)
+
 
 
 class PyNSNDistribution(object):
@@ -61,7 +62,7 @@ class Uniform(PyNSNDistribution):
         super().__init__(min_max)
 
     def sample(self, n, round_to_decimals=None):
-        dist = _np.array([_random.random() for _ in range(n)])
+        dist = rng.generator.random(size=n)
         rtn = self.min_max[0] + dist * float(self.min_max[1] - self.min_max[0])
         return _round_samples(rtn, round_to_decimals)
 
@@ -81,25 +82,20 @@ class Levels(PyNSNDistribution):
         self.levels = levels
         self.exact_weighting = exact_weighting
 
-        if weights is None:
-            self.weights = [1] * len(self.levels)
-        else:
-            if len(levels) != len(weights):
-                raise ValueError("Number weights does not match the number of levels")
-            self.weights = weights
+        if weights is not None and len(levels) != len(weights):
+            raise ValueError("Number weights does not match the number of levels")
+        self.weights = weights
 
     def sample(self, n, round_to_decimals=None):
-        if not self.exact_weighting:
-            dist = _random.choices(population=self.levels, weights=self.weights, k=n)
-
+        if self.weights is None:
+            p = _np.array([1 / len(self.levels)] * len(self.levels))
         else:
-            if self.weights is None:
-                n_levels = len(self.levels)
-                p = _np.array([1 / n_levels] * n_levels)
-            else:
-                p = _np.array(self.weights)
-                p = p / _np.sum(p)
+            p = _np.array(self.weights)
+            p = p / _np.sum(p)
 
+        if not self.exact_weighting:
+            dist = rng.generator.choice(a=self.levels, p=p, size=n)
+        else:
             n_distr = n * p
             if not _np.alltrue(_np.round(n_distr) == n_distr):
                 # problem: some n are floats
@@ -116,7 +112,7 @@ class Levels(PyNSNDistribution):
             dist = []
             for lev, n in zip(self.levels, n_distr):
                 dist.extend([lev] * int(n))
-            _random.shuffle(dist)
+            rng.generator.shuffle(dist)
 
         return _round_samples(dist, round_to_decimals)
 
@@ -142,8 +138,8 @@ class Triangle(PyNSNDistribution):
             raise ValueError(txt)
 
     def sample(self, n, round_to_decimals=None):
-        dist = [_random.triangular(low=self.min_max[0], high=self.min_max[1],
-                                   mode=self.mode) for _ in range(n)]
+        dist = rng.generator.triangular(left=self.min_max[0], right=self.min_max[1],
+                              mode=self.mode, size=n)
         return _round_samples(dist, round_to_decimals)
 
     def as_dict(self):
@@ -194,8 +190,7 @@ class Normal(_PyNSNDistributionMuSigma):
         rtn = _np.array([])
         required = n
         while required > 0:
-            draw = _np.array([_random.normalvariate(self.mu, self.sigma) \
-                              for _ in range(required)])
+            draw = rng.generator.normal(loc=self.mu, scale=self.sigma, size=required)
             rtn = self._cutoff_outside_range(_np.append(rtn, draw))
             required = n - len(rtn)
         return _round_samples(rtn, round_to_decimals)
@@ -237,8 +232,7 @@ class Beta(_PyNSNDistributionMuSigma):
             return _np.array([self.mu] * n)
 
         alpha, beta = self.shape_parameter
-        dist = _np.array([_random.betavariate(alpha=alpha, beta=beta) \
-                          for _ in range(n)])
+        dist = rng.generator.beta(a=alpha, b=beta, size=n)
         dist = (dist - _np.mean(dist)) / _np.std(dist)  # z values
         rtn = dist * self.sigma + self.mu
         return _round_samples(rtn, round_to_decimals)

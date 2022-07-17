@@ -1,15 +1,11 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import copy
-import random
-
 from ..exceptions import NoSolutionError, NoAppearanceDefinedError
 from .base_classes import ArrayParameter
 from .._lib.misc import dict_to_text
 from .dot_array import DotArray
 from .rect_array import RectangleArray
 from .appearance_sampler import AppearanceSampler
-from ..distributions import Levels
 
 
 class NSNFactory(ArrayParameter, AppearanceSampler):
@@ -109,21 +105,6 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
                 current.join(previous)
             previous = current
             yield current
-
-    @staticmethod
-    def seed(a=None):
-        """Set random seed
-
-        Parameters
-        ----------
-        a : seed value
-            must be oneType, int, float, str, bytes, or bytearray
-
-        Notes
-        -----
-        see documentation of `random.seed()` of Python standard library
-        """
-        random.seed(a)
 
     def as_dict(self):
         d = ArrayParameter.as_dict(self)

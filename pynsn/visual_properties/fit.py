@@ -1,7 +1,7 @@
-import random as _random
 import numpy as _np
 from math import log2 as _log2
 from .._lib import geometry as _geometry
+from .._lib import rng as _rng
 from .. import _lib
 from ..exceptions import NoSolutionError as _NoSolutionError
 from ._properties import VisualPropertyFlag as _flags
@@ -53,7 +53,7 @@ def numerosity(object_array, value, center_of_field_area=False):
             else:
                 ch = []
             for _ in range(TRY_OUT):
-                rnd = _random.randint(0, object_array._properties.numerosity - 1)  # do not use np.random
+                rnd = _rng.generator.integers(0, object_array._properties.numerosity)
                 if rnd not in ch or change_numerosity > 0:
                     break
 
@@ -87,6 +87,7 @@ def average_diameter(dot_array, value):
     dot_array.properties.reset()
     return dot_array
 
+
 def average_rectangle_size(rect_array, value):
     # changes diameter
     if not isinstance(rect_array, _lib.RectangleArray):
@@ -104,6 +105,7 @@ def average_rectangle_size(rect_array, value):
     rect_array.properties.reset()
     return rect_array
 
+
 def total_surface_area(object_array, value):
     # changes diameter
     _lib._check_object_array(object_array)
@@ -117,6 +119,7 @@ def total_surface_area(object_array, value):
 
     object_array.properties.reset()
     return object_array
+
 
 def field_area(object_array, value, precision=None):
     """changes the convex hull area to a desired size with certain precision
@@ -136,6 +139,7 @@ def field_area(object_array, value, precision=None):
     else:
         return _scale_field_area(object_array, value=value,
                                  precision=precision)
+
 
 def _scale_field_area(object_array, value, precision):
     """change the convex hull area to a desired size by scale the polar
@@ -178,6 +182,7 @@ def _scale_field_area(object_array, value, precision):
     object_array.properties.reset()
     return object_array
 
+
 def coverage(object_array, value,
              precision=None,
              FA2TA_ratio=None):
@@ -212,10 +217,12 @@ def coverage(object_array, value,
     return field_area(object_array.properties.total_surface_area / value,
                precision=precision)
 
+
 def average_perimeter(object_array, value):
     _lib._check_object_array(object_array)
     total_peri = value * object_array.properties.numerosity
     return total_perimeter(object_array, total_peri)
+
 
 def total_perimeter(object_array, value):
     if isinstance(object_array, _lib.DotArray):
@@ -228,10 +235,12 @@ def total_perimeter(object_array, value):
     else:
         _lib._check_object_array(object_array)
 
+
 def average_surface_area(object_array, value):
     _lib._check_object_array(object_array)
     ta = object_array.properties.numerosity * value
     return total_surface_area(object_array, ta)
+
 
 def log_spacing(object_array, value, precision=None):
     _lib._check_object_array(object_array)
@@ -239,15 +248,18 @@ def log_spacing(object_array, value, precision=None):
         object_array.properties.numerosity)
     return field_area(object_array, value=2 ** logfa, precision=precision)
 
+
 def log_size(object_array, value):
     _lib._check_object_array(object_array)
     logtsa = 0.5 * value + 0.5 * _log2(object_array.properties.numerosity)
     return total_surface_area(object_array, 2 ** logtsa)
 
+
 def sparcity(object_array, value, precision=None):
     _lib._check_object_array(object_array)
     return field_area(object_array, value=value * object_array.properties.numerosity,
                       precision=precision)
+
 
 def visual_property(object_array, property_flag, value):
     """

@@ -1,7 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
-import random
 from abc import ABCMeta, abstractmethod
 from hashlib import md5
 import json
@@ -11,6 +10,7 @@ from scipy import spatial
 from . import misc
 from . import geometry
 from . import shapes
+from . import rng
 from ..visual_properties._properties import ArrayProperties
 from ..exceptions import NoSolutionError
 from ..visual_properties import fit
@@ -361,8 +361,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             ##  polar method seems to produce central clustering
             #  proposal_polar =  np.array([random.random(), random.random()]) *
             #                      (target_radius, TWO_PI)
-            rtn_object.xy = np.array([random.random(), random.random()]) \
-                            * 2 * area_rad - area_rad
+            rtn_object.xy = rng.generator.random(size=2) * 2 * area_rad - area_rad
 
             # is outside area
             if isinstance(ref_object, shapes.Dot):
