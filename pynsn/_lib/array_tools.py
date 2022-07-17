@@ -58,3 +58,29 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
                 neighbour_ids=idx_overlaps,
                 replacement_size=replace_size)
     return replacement_required
+
+
+class BrownianMotionInCircle(object):
+
+    def __init__(self, start_pos, delta, circle_radius):
+        """performs brownian motions (search walk) in a circular area
+
+        Notes
+        -----
+        see Brownian motion https://en.wikipedia.org/wiki/Brownian_motion
+        """
+        if np.hypot(start_pos[0], start_pos[1]) > circle_radius:
+            raise ValueError("start_pos is outside max_radius")
+
+        self.max_radius=circle_radius
+        self.scale = delta ** 2
+        self.current = np.array(start_pos)
+
+    def next(self, dt=1):
+
+        while True:  # FIXME quit criterion
+            new = rng.generator.normal(loc=0, scale=self.scale * dt,
+                                        size=2) + self.current
+            if np.hypot(new[0], new[1]) <= self.max_radius:
+                self.current = new
+                return self.current

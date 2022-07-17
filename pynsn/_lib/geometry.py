@@ -5,12 +5,12 @@ import math
 import numpy as np
 
 
-
 def polar2cartesian(polar):
     """polar is an 2d-array representing polar coordinates (radius, angle)"""
     polar = np.asarray(polar)
     return np.array([polar[:, 0] * np.cos(polar[:, 1]),
                      polar[:, 0] * np.sin(polar[:, 1])]).T
+
 
 def cartesian2polar(xy, radii_only=False):
     """polar coordinates (radius, angle)
@@ -67,6 +67,7 @@ def distance_between_edge_and_point(edge, point):
         return height
     return min(point.distance(edge[0]), point.distance(edge[1]))
 
+
 def triangle_area_at_points(p1, p2, p3):
     # p1, p2, p3: 2d Coordinates
     a=p1.distance(p2)
@@ -75,6 +76,7 @@ def triangle_area_at_points(p1, p2, p3):
     s=(a+b+c)/float(2)
     area=math.sqrt(s*(s-a)*(s-b)*(s-c))
     return area
+
 
 # Finds angle using cos law
 def angle(a, b, c):
@@ -88,6 +90,7 @@ def angle(a, b, c):
     else:
         return 0
 
+
 # Checks if point faces edge
 def point_faces_edge(edge, point):
     a=edge[0].distance(edge[1])
@@ -97,6 +100,7 @@ def point_faces_edge(edge, point):
     if ang1>math.pi/2 or ang2>math.pi/2:
         return False
     return True
+
 
 def center_of_positions(xy):
     min_max = np.array((np.min(xy, axis=0), np.max(xy, axis=0)))
