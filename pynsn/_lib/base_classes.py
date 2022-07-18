@@ -11,6 +11,7 @@ from . import misc
 from . import geometry
 from . import shapes
 from . import rng
+from .array_tools import BrownianMotion
 from ..visual_properties._properties import ArrayProperties
 from ..exceptions import NoSolutionError
 from ..visual_properties import fit
@@ -264,7 +265,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return super().read_from_dict()
 
     @abstractmethod
-    def copy(self):
+    def copy(self, indices=None, deepcopy=True):
         pass
 
     @abstractmethod
@@ -288,15 +289,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def check_stand_outs(self):
         pass
 
-    @abstractmethod
     def center_array(self):
         """places array in target area as central and possible and tries to
         remove any stand_outs"""
-        pass
-
-    @abstractmethod
-    def realign(self):
-        raise NotImplementedError()
+        return NotImplementedError()
 
     @abstractmethod
     def csv(self):
@@ -329,17 +325,18 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
-    def get_random_free_position(self, ref_object,
-                                 allow_overlapping=False,
-                                 inside_convex_hull=False,
-                                 occupied_space=None):
+    def find_free_position(self, ref_object,
+                           in_neighborhood=False,
+                           allow_overlapping=False,
+                           inside_convex_hull=False,
+                           occupied_space=None):
         """returns the copy of object of at a random free position
 
         raise exception if not found
         occupied space: see generator generate
         """
 
-        N_ATTEMPTS = 3000
+        N_ATTEMPTS = 5000
 
         if isinstance(ref_object, shapes.Dot):
             object_size = ref_object.diameter / 2.0
@@ -355,43 +352,52 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size
         rtn_object = deepcopy(ref_object)  # tested deepcopy required
 
+        if in_neighborhood:
+            random_walk = BrownianMotion(ref_object.xy, delta=2) # FIXME set good delta value
+        else:
+            random_walk = None
+
         cnt = 0
         while True:
+            if cnt > N_ATTEMPTS:
+                raise NoSolutionError(u"Can't find a free position")
             cnt += 1
-            ##  polar method seems to produce central clustering
-            #  proposal_polar =  np.array([random.random(), random.random()]) *
-            #                      (target_radius, TWO_PI)
-            rtn_object.xy = rng.generator.random(size=2) * 2 * area_rad - area_rad
+
+            if in_neighborhood:
+                rtn_object.xy = random_walk.next()
+            else:
+                rtn_object.xy = rng.generator.random(size=2) * 2 * area_rad - area_rad
 
             # is outside area
             if isinstance(ref_object, shapes.Dot):
-                bad_position = area_rad <= rtn_object.polar_radius
+                is_outside = area_rad <= rtn_object.polar_radius
             else:
                 # Rect: check if one edge is outside
-                bad_position = False
+                is_outside = False
                 for e in rtn_object.iter_edges():
                     if e.polar_radius >= area_rad:
-                        bad_position = True
+                        is_outside = True
                         break
 
-            if not bad_position and not allow_overlapping:
-                # find bad_positions
-                dist = self.distances(rtn_object)
-                if isinstance(occupied_space, ABCObjectArray):
-                    dist = np.append(dist, occupied_space.distances(rtn_object))
-                bad_position = sum(dist < self.min_dist_between) > 0  # at least one is overlapping
-
-            if not bad_position and inside_convex_hull:
+            if not is_outside and inside_convex_hull:
                 # use only those that do not change the convex hull
                 tmp_array = self.copy(deepcopy=True)
                 tmp_array.add([rtn_object])
-                bad_position = tmp_array.properties.convex_hull != \
+                is_outside = tmp_array.properties.convex_hull != \
                                self.properties.convex_hull
+            if is_outside:
+                if in_neighborhood:
+                    random_walk.step_back()
+                continue
 
-            if not bad_position:
-                return rtn_object
-            elif cnt > N_ATTEMPTS:
-                raise NoSolutionError(u"Can't find a free position")
+            if not allow_overlapping:
+                # find overlap
+                dist = self.distances(rtn_object)
+                if isinstance(occupied_space, ABCObjectArray):
+                    dist = np.append(dist, occupied_space.distances(rtn_object))
+                if sum(dist < self.min_dist_between) > 0:  # at least one is overlapping
+                    continue
+            return rtn_object
 
     def shuffle_all_positions(self, allow_overlapping=False):
         """might raise an exception"""
@@ -402,8 +408,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         self.clear()
         for obj in all_objects:
             try:
-                new = self.get_random_free_position(obj,
-                                                    allow_overlapping=allow_overlapping)
+                new = self.find_free_position(obj, in_neighborhood=False,
+                                              allow_overlapping=allow_overlapping)
             except NoSolutionError as e:
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
@@ -417,27 +423,25 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                        center_of_field_area=preserve_field_area)
         return object_array
 
-    def replace_overlapping_objects(self, center_of_field_area=False,
-                                    lenient=True):
+    def remove_overlaps(self, keep_field_area=False, strict=False):
         """
         Returns
         Parameters
         ----------
-        center_of_field_area
-        lenient
+        keep_field_area
+        strict
 
         Returns
         -------
         convex_hull_had_changed
         """
 
-        warning_info = "Field area had to change, because two overlapping " + \
-                       "objects on convex hull"
+        warning_info = "Can't keep convex hull unchanged."
         convex_hull_had_changed = False
 
         overlaps = self.check_overlaps()
         while len(overlaps):
-            if center_of_field_area:
+            if keep_field_area:
                 # check if overlaps are on convex hull
                 # do not replace convexhull objects and try to
                 # take that one not on convex hull or raise error/warning
@@ -446,27 +450,34 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                     idx = overlaps[0, 0]
                 elif overlaps[0, 1] not in ch_idx:
                     idx = overlaps[0, 1]
-                elif lenient:
+                elif not strict:
                     # warning
                     convex_hull_had_changed = True
                     idx = overlaps[0, 0]
                 else:
-                    raise NoSolutionError("Can't replace overlap and keep convex hull unchanged. " +
-                                          warning_info)
+                    raise NoSolutionError(warning_info)
             else:
                 idx = overlaps[0, 0]
 
             obj = next(self.iter_objects(idx))
             self.delete(idx)
-            obj = self.get_random_free_position(ref_object=obj,
-                                                inside_convex_hull=center_of_field_area)
+            try:
+                obj = self.find_free_position(ref_object=obj, in_neighborhood=True,
+                                          inside_convex_hull=keep_field_area)
+            except NoSolutionError as e:
+                if strict or not keep_field_area:
+                    raise e
+                # try again without keep field area
+                obj = self.find_free_position(ref_object=obj, in_neighborhood=True,
+                                              inside_convex_hull=False)
+                convex_hull_had_changed = True
+
             self.add([obj])
             overlaps = self.check_overlaps()
 
         if convex_hull_had_changed:
             print("Warning: " + warning_info)
-
-        return convex_hull_had_changed
+        return not convex_hull_had_changed
 
     def get_split_arrays(self):
         """returns a list of arrays
@@ -482,5 +493,30 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 da.add(self.find(attribute=c))
                 rtn.append(da)
         return rtn
+
+
+    def realign(self, keep_field_area=False, strict=True):
+        error = False
+        realign_required = False
+
+        return
+        #self.center_array()
+        cnt = 0
+        while True:
+            cnt += 1
+            if cnt > 20:
+                error = True
+                break
+
+        if error:
+            raise RuntimeError("Can't find solution when removing outlier (n=" + \
+                   str(self._properties.numerosity) + ")")
+
+        self._properties.reset()
+        if not realign_required:
+            return True, ""
+        else:
+            return self.realign()  # recursion
+
 
 # TODO  everywhere: file header doc and author information

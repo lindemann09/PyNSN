@@ -276,29 +276,3 @@ class DotArray(ABCObjectArray):
         return np.where(ch_radii > self.target_area_radius -
                         self.min_dist_area_boarder)[0]
 
-    def center_array(self):
-        """places array in target area as central and possible and tries to
-        remove any stand_outs"""
-        raise NotImplementedError()
-
-    def realign(self):
-        error = False
-        realign_required = False
-
-        self.center_array()
-        cnt = 0
-        while True:
-            cnt += 1
-            if cnt > 20:
-                error = True
-                break
-
-        if error:
-            raise RuntimeError("Can't find solution when removing outlier (n=" + \
-                   str(self._properties.numerosity) + ")")
-
-        self._properties.reset()
-        if not realign_required:
-            return True, ""
-        else:
-            return self.realign()  # recursion

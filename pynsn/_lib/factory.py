@@ -58,9 +58,9 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
 
             for dot in self.sample(n=n_objects):
                 try:
-                    dot = rtn.get_random_free_position(ref_object=dot,
-                                                       occupied_space=occupied_space,
-                                                       allow_overlapping=allow_overlapping)
+                    dot = rtn.find_free_position(ref_object=dot, in_neighborhood=False,
+                                                 occupied_space=occupied_space,
+                                                 allow_overlapping=allow_overlapping)
                 except NoSolutionError as e:
                     raise NoSolutionError("Can't find a solution for {} items in this array".format(n_objects))
                 rtn.add([dot])
@@ -73,9 +73,9 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
 
             for rect in self.sample(n=n_objects):
                 try:
-                    rect = rtn.get_random_free_position(ref_object=rect,
-                                                        occupied_space=occupied_space,
-                                                        allow_overlapping=allow_overlapping)
+                    rect = rtn.find_free_position(ref_object=rect,  in_neighborhood=False,
+                                                  occupied_space=occupied_space,
+                                                  allow_overlapping=allow_overlapping)
                 except NoSolutionError:
                     raise NoSolutionError("Can't find a solution for {} ".format(n_objects) +
                                           "items in this array.")

@@ -257,13 +257,8 @@ class RectangleArray(ABCObjectArray):
                 rtn.append(da)
         return rtn
 
-    def center_array(self):
-        raise NotImplementedError()
 
     def check_stand_outs(self):
-        raise NotImplementedError()
-
-    def realign(self):
         raise NotImplementedError()
 
 # FIXME overlapping does not work for rectangles

@@ -37,6 +37,9 @@ def change_fit_settings(default_spacing_precision=None,
 
 
 def numerosity(object_array, value, center_of_field_area=False):
+    """
+
+    """
     TRY_OUT = 300
     _lib._check_object_array(object_array)
 
@@ -65,7 +68,7 @@ def numerosity(object_array, value, center_of_field_area=False):
                 # copy a random dot
                 rnd_object = next(object_array.iter_objects(rnd))
                 try:
-                    rnd_object = object_array.get_random_free_position(
+                    rnd_object = object_array.find_free_position(
                         ref_object=rnd_object, allow_overlapping=False,
                         inside_convex_hull=center_of_field_area
                     )

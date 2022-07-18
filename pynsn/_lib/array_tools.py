@@ -60,15 +60,15 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
     return replacement_required
 
 
-class BrownianMotionInCircle(object):
+class BrownianMotion(object):
 
-    def __init__(self, start_pos, delta, circle_radius, bounce=True):
-        """performs brownian motions (search walk) in a circular area
+    def __init__(self, start_pos, delta=2, search_area_radius=None, bounce_boarder=True): #FIXME check delta
+        """performs brownian motions (search walk) optionally in a circular area
 
         Parameters
         ----------
 
-        bounce: bool
+        bounce_boarder: bool
             if true, random walk bounces back at circle boarder, otherwise walk
             will be continued in the center of the area.
 
@@ -76,22 +76,42 @@ class BrownianMotionInCircle(object):
         -----
         see Brownian motion https://en.wikipedia.org/wiki/Brownian_motion
         """
-        if np.hypot(start_pos[0], start_pos[1]) > circle_radius:
+        if search_area_radius is not None and \
+                np.hypot(start_pos[0], start_pos[1]) > search_area_radius:
             raise ValueError("start_pos is outside max_radius")
 
-        self.max_radius=circle_radius
+        self.area_radius = search_area_radius
         self.scale = delta ** 2
-        self.current = np.array(start_pos)
-        self.bounce = bounce
+        self._history = [np.array(start_pos)]
+        self.bounce = bounce_boarder
+
+    @property
+    def current(self):
+        return self._history[-1]
+
+    def step_back(self):
+        """redo last step """
+        if len(self._history) > 1:
+            return self._history.pop()
+
+    def center_last_step(self):
+        last = self.step_back()
+        if last is not None:
+            new = self._history[-1] - last
+            self._history.append(new)
+        return self.current
 
     def next(self, dt=1):
 
         while True:  # FIXME quit criterion
             new = rng.generator.normal(loc=0, scale=self.scale * dt,
                                         size=2) + self.current
-            if np.hypot(new[0], new[1]) <= self.max_radius:
-                self.current = new
+            if self.area_radius is None or \
+                    np.hypot(new[0], new[1]) <= self.area_radius:
+                self._history.append(new)
                 return self.current
+
             elif not self.bounce:
-                self.current = new - self.current # do this step from center
+                new = new - self.current # do this step from center
+                self._history.append(new)
                 return self.current
