@@ -327,6 +327,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         self._xy = self._xy - self.get_center_of_mass()
         self._properties.reset()
 
+    def center_field_area(self):
+        cxy = geometry.center_of_positions(self.properties.convex_hull.xy)
+        self._xy = self._xy - cxy
+        self._properties.reset()
 
     def find_free_position(self, ref_object,
                            in_neighborhood=False,

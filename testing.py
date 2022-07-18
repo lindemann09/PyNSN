@@ -8,7 +8,7 @@ import numpy as np
 
 from random import randint
 seed = randint(0, 1000)
-seed = 364
+seed = 998
 nsn.init_random_generator(seed)
 
 # FIXME overlapping rects
@@ -28,7 +28,7 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
                                         exact_weighting=True) )
 
 stimulus = factory.create_random_array(n_objects=10)
-props.scale.log_size(stimulus, 1)
+props.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
@@ -36,7 +36,8 @@ img.save("demo.png")
 ####
 t = monotonic()
 #stimulus.remove_overlaps(keep_field_area=True, strict=False)
-stimulus.center_array_mass()
+stimulus.center_field_area()
+
 # props.scale.visual_property(stim_scaled, feature=feat, factor=1)
 print("time {}".format((monotonic()-t)))
 
