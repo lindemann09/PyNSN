@@ -62,8 +62,15 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
 
 class BrownianMotionInCircle(object):
 
-    def __init__(self, start_pos, delta, circle_radius):
+    def __init__(self, start_pos, delta, circle_radius, bounce=True):
         """performs brownian motions (search walk) in a circular area
+
+        Parameters
+        ----------
+
+        bounce: bool
+            if true, random walk bounces back at circle boarder, otherwise walk
+            will be continued in the center of the area.
 
         Notes
         -----
@@ -75,6 +82,7 @@ class BrownianMotionInCircle(object):
         self.max_radius=circle_radius
         self.scale = delta ** 2
         self.current = np.array(start_pos)
+        self.bounce = bounce
 
     def next(self, dt=1):
 
@@ -83,4 +91,7 @@ class BrownianMotionInCircle(object):
                                         size=2) + self.current
             if np.hypot(new[0], new[1]) <= self.max_radius:
                 self.current = new
+                return self.current
+            elif not self.bounce:
+                self.current = new - self.current # do this step from center
                 return self.current
