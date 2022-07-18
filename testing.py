@@ -18,8 +18,8 @@ my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               default_object_colour="darkmagenta",
                               #field_area_positions="magenta",
                               field_area="gray",
-                              #center_of_field_area="red",
-                              # center_of_mass="green"
+                              center_of_positions="red",
+                              center_of_mass="magenta"
                               )
 
 
@@ -28,15 +28,15 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
                                         exact_weighting=True) )
 
 stimulus = factory.create_random_array(n_objects=10)
-props.scale.log_size(stimulus, 1.4)
+props.scale.log_size(stimulus, 1)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
 ####
-print("start")
 t = monotonic()
-stimulus.remove_overlaps(keep_field_area=True, strict=False)
+#stimulus.remove_overlaps(keep_field_area=True, strict=False)
+stimulus.center_array_mass()
 # props.scale.visual_property(stim_scaled, feature=feat, factor=1)
 print("time {}".format((monotonic()-t)))
 

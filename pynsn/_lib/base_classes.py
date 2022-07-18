@@ -150,7 +150,7 @@ class AttributeArray(ArrayParameter):
         m.update(self._attributes.tobytes())
         return m.hexdigest()
 
-    def center_of_positions(self):
+    def get_center_of_positions(self):
         """Center of all object positions
         Notes
         -----
@@ -158,6 +158,12 @@ class AttributeArray(ArrayParameter):
         center_of_field_area
         """
         return geometry.center_of_positions(self._xy)
+
+    def center_array_positions(self):
+        """places array in target area as central and possible and tries to
+        remove any stand_outs"""
+        self._xy = self._xy - self.get_center_of_positions()
+        self._properties.reset()
 
     def clear(self):
         self._xy = np.array([])
@@ -289,11 +295,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def check_stand_outs(self):
         pass
 
-    def center_array(self):
-        """places array in target area as central and possible and tries to
-        remove any stand_outs"""
-        return NotImplementedError()
-
     @abstractmethod
     def csv(self):
         raise NotImplementedError()
@@ -301,9 +302,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def join(self, object_array):
         """add another object arrays"""
         self.add(object_array.iter_objects())
-
-    def center_of_field_area(self):
-        return geometry.center_of_positions(self.properties.convex_hull.xy)
 
     def distances_matrix(self, between_positions=False):
         """between position ignores the dot size"""
@@ -321,9 +319,14 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         overlap = np.where(np.triu(dist, k=1) < 0)
         return np.asarray(overlap).T
 
-    def center_of_mass(self):
+    def get_center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
+
+    def center_array_mass(self):
+        self._xy = self._xy - self.get_center_of_mass()
+        self._properties.reset()
+
 
     def find_free_position(self, ref_object,
                            in_neighborhood=False,

@@ -135,14 +135,14 @@ class ArrayDraw(metaclass=ABCMeta):
                                       opacity=colours.opacity_guides,
                                       scaling_factor=aaf)
             #  and center of mass
-            if colours.center_of_field_area.colour is not None:
-                obj = _lib.Dot(xy=object_array.center_of_field_area(),
+            if colours.center_of_positions.colour is not None:
+                obj = _lib.Dot(xy=object_array.get_center_of_positions(),
                                diameter=10,
-                               attribute=colours.center_of_field_area.colour)
+                               attribute=colours.center_of_positions.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
             if colours.center_of_mass.colour is not None:
-                obj = _lib.Dot(xy=object_array.center_of_mass(),
+                obj = _lib.Dot(xy=object_array.get_center_of_mass(),
                                diameter=10,
                                attribute=colours.center_of_mass.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,

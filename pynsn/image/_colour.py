@@ -257,7 +257,7 @@ class ImageColours(object):
     COL_TARGET_AREA = "#FFF0D9"
     COL_FIELD_AREA_POSITIONS = None
     COL_FIELD_AREA = None
-    COL_CENTER_OF_FIELD_AREA = None
+    COL_CENTER_OF_POSITIONS = None
     COL_CENTER_OF_MASS = None
     COL_BACKGROUND = None
     COL_DEFAULT_OBJECT = "darkgreen"
@@ -268,7 +268,7 @@ class ImageColours(object):
                  target_area=None,
                  field_area_positions=None,
                  field_area=None,
-                 center_of_field_area=None,
+                 center_of_positions=None,
                  center_of_mass=None,
                  background=None,
                  default_object_colour=None,
@@ -282,8 +282,8 @@ class ImageColours(object):
                                            default=ImageColours.COL_FIELD_AREA_POSITIONS)
         self.field_area = Colour(field_area,
                                  default=ImageColours.COL_FIELD_AREA)
-        self.center_of_field_area = Colour(center_of_field_area,
-                                   default=ImageColours.COL_CENTER_OF_FIELD_AREA)
+        self.center_of_positions = Colour(center_of_positions,
+                                          default=ImageColours.COL_CENTER_OF_POSITIONS)
         self.center_of_mass = Colour(center_of_mass,
                                            default=ImageColours.COL_CENTER_OF_MASS)
         self.background = Colour(background,
@@ -306,7 +306,7 @@ class ImageColours(object):
             {"total_area": self.target_area.colour,
              "field_area_positions": self.field_area_positions.colour,
              "field_area": self.field_area.colour,
-             "center_of_positions": self.center_of_field_area.colour,
+             "center_of_positions": self.center_of_positions.colour,
              "center_of_mass": self.center_of_mass.colour,
              "background": self.background.colour,
              "default_object": self.default_object_colour.colour,
