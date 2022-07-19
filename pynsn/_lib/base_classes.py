@@ -445,47 +445,72 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         """
 
         warning_info = "Can't keep convex hull unchanged."
-        convex_hull_had_changed = False
+        old_fa = self.properties.field_area
 
-        overlaps = self.get_overlaps()[0]
-        while len(overlaps):
-            if keep_field_area:
-                # check if overlaps are on convex hull
+        if not keep_field_area:
+            # touch convex hull objects
+            ids = list(range(len(self._xy)))
+            for x in self.properties.convex_hull.indices:
+                self.mod_move_object(x, 0, (0, 0), push_other=True)
+                ids.remove(x)
+            # touch remaining ids
+            for x in ids:
+                # touch each object and push other
+                self.mod_move_object(x, 0, (0, 0), push_other=True)
+
+        else:
+            overlaps = self.get_overlaps()[0]
+            ch_idx = self.properties.convex_hull.indices
+
+            while len(overlaps):
                 # do not replace convexhull objects and try to
                 # take that one not on convex hull or raise error/warning
-                ch_idx = self.properties.convex_hull.indices
                 if overlaps[0, 0] not in ch_idx:
                     idx = overlaps[0, 0]
                 elif overlaps[0, 1] not in ch_idx:
                     idx = overlaps[0, 1]
                 elif not strict:
                     # warning
-                    convex_hull_had_changed = True
                     idx = overlaps[0, 0]
                 else:
                     raise NoSolutionError(warning_info)
+
+                obj = next(self.iter_objects(idx))
+                self.delete(idx)
+
+                # search new pos: fist inside convex hull later outside
+                found = None
+                for inside_convex_hull in (True, False):
+                    if strict and not inside_convex_hull:
+                        continue
+                    for in_neighborhood in (True, False):
+                        if found is None:
+                            try:
+                                found = self.get_free_position(ref_object=obj,
+                                                    in_neighborhood=in_neighborhood,
+                                                    inside_convex_hull=inside_convex_hull)
+                            except NoSolutionError as e:
+                                found = None
+
+                if found is None:
+                    self.add([obj])
+                    raise NoSolutionError("Can't find a solution for remove overlap")
+                else:
+                    self.add([found])
+                    overlaps = self.get_overlaps()[0]
+
+            self.properties.reset()
+
+        # check convex hull change
+        new_ch = self.properties.field_area
+        if keep_field_area and old_fa != new_ch:
+            if strict:
+                raise NoSolutionError(warning_info)
             else:
-                idx = overlaps[0, 0]
-
-            obj = next(self.iter_objects(idx))
-            self.delete(idx)
-            try:
-                obj = self.get_free_position(ref_object=obj, in_neighborhood=True,
-                                             inside_convex_hull=keep_field_area)
-            except NoSolutionError as e:
-                if strict or not keep_field_area:
-                    raise e
-                # try again without keep field area
-                obj = self.get_free_position(ref_object=obj, in_neighborhood=True,
-                                             inside_convex_hull=False)
-                convex_hull_had_changed = True
-
-            self.add([obj])
-            overlaps = self.get_overlaps()[0]
-
-        if convex_hull_had_changed:
-            print("Warning: " + warning_info)
-        return not convex_hull_had_changed
+                print("Warning: " + warning_info)
+            return False
+        else:
+            return True
 
     def mod_move_object(self, object_id, distance, direction,
                         push_other=False):
@@ -543,7 +568,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
     def mod_squeeze_to_area(self, push_other=True):
         """squeeze in target area to remove all standouts"""
-        self.mod_center_field_area()
         cnt = 0
         while True:
             cnt += 1

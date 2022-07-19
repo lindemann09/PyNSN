@@ -8,7 +8,7 @@ import numpy as np
 
 from random import randint
 seed = randint(0, 1000)
-seed = 998
+seed = 993
 nsn.init_random_generator(seed)
 
 # FIXME overlapping rects
@@ -34,11 +34,10 @@ props.scale.log_size(stimulus, 1.2)
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
-#stimulus.mod_remove_overlaps(keep_field_area=False)
-for x in range(stimulus.properties.numerosity):
-    stimulus.mod_move_object(x, 0, (0, 0), push_other=True)
 
-print(stimulus.mod_squeeze_to_area())
+stimulus.mod_remove_overlaps(keep_field_area=True, strict=False)
+#stimulus.mod_center_field_area()
+#stimulus.mod_squeeze_to_area()
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")
