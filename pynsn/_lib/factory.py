@@ -50,7 +50,7 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         if not self.is_appearance_set:
             raise NoAppearanceDefinedError("No appearance defined. Please use 'set_dot', 'set_rect_or' "
                                            "'set_appearance'")
-        if self._diameter is not None:
+        if self._distr_diameter is not None:
             # DotArray
             rtn = DotArray(target_area_radius=self.target_area_radius,
                                 min_dist_between=self.min_dist_between,

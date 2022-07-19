@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
+from .. import constants
 from ..visual_properties import flags, fit
 
 
@@ -125,8 +126,8 @@ class SettingsDialog(QDialog):
 class SequenceDialog(QDialog):
     extra_space = 50
     sequence_range = [10, 100]
-    spacing_precision = fit._DEFAULT_SPACING_PRECISION
-    adapt_FA2TA_ratio = fit._DEFAULT_ADAPT_FA2TA_RATIO
+    spacing_precision = constants.DEFAULT_FIT_SPACING_PRECISION
+    adapt_FA2TA_ratio = constants.DEFAULT_FIT_FA2TA_RATIO
 
 
     def __init__(self, parent):

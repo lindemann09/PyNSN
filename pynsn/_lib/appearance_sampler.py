@@ -45,18 +45,38 @@ class AppearanceSampler(object):
 
     def __init__(self):
 
-        self._diameter = None
-        self._width = None
-        self._height = None
-        self._proportion = None
-        self._attributes = None
+        self._distr_diameter = None
+        self._distr_width = None
+        self._distr_height = None
+        self._distr_proportion = None
+        self._distr_attributes = None
+
+    @property
+    def distr_diameter(self):
+        return self._distr_diameter
+
+    @property
+    def distr_width(self):
+        return self._distr_width
+
+    @property
+    def distr_height(self):
+        return self._distr_height
+
+    @property
+    def distr_proportion(self):
+        return self._distr_proportion
+
+    @property
+    def distr_attributes(self):
+        return self._distr_attributes
 
     def set_appearance_dot(self, diameter, attributes=None):
-        self._width = None
-        self._height = None
-        self._proportion = None
-        self._diameter = _make_distr(diameter)
-        self._attributes = _make_distr(attributes)
+        self._distr_width = None
+        self._distr_height = None
+        self._distr_proportion = None
+        self._distr_diameter = _make_distr(diameter)
+        self._distr_attributes = _make_distr(attributes)
 
     def set_appearance_rectangle(self, width=None, height=None,
                                  proportion=None, attributes=None):
@@ -66,41 +86,41 @@ class AppearanceSampler(object):
         if n_rect_parameter == 1:
             raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
                             "either width or height.")
-        self._diameter = None
-        self._width = _make_distr(width)
-        self._height = _make_distr(height)
-        self._proportion = _make_distr(proportion)
-        self._attributes = _make_distr(attributes)
+        self._distr_diameter = None
+        self._distr_width = _make_distr(width)
+        self._distr_height = _make_distr(height)
+        self._distr_proportion = _make_distr(proportion)
+        self._distr_attributes = _make_distr(attributes)
 
     def is_appearance_set(self):
-        return self._diameter is not None or self._width is not None or \
-               self._height is not None
+        return self._distr_diameter is not None or self._distr_width is not None or \
+               self._distr_height is not None
 
     def sample(self, n, round_to_decimals=None):
         """return list objects (Dot or Rect) with random size
         all positions = (0,0)
         """
-        if self._attributes is not None:
-            attributes = self._attributes.sample(n)
+        if self._distr_attributes is not None:
+            attributes = self._distr_attributes.sample(n)
         else:
             attributes = [None] * n
-        if self._diameter is not None:
-            diameter = self._diameter.sample(n)
+        if self._distr_diameter is not None:
+            diameter = self._distr_diameter.sample(n)
 
             return [shapes.Dot(xy=(0, 0), diameter=dia, attribute=attr) \
                     for dia, attr in zip(diameter, attributes)]
         else:
             # Rect
             try:
-                width = self._width.sample(n)
+                width = self._distr_width.sample(n)
             except AttributeError:
                 width = None
             try:
-                height = self._height.sample(n)
+                height = self._distr_height.sample(n)
             except AttributeError:
                 height = None
             try:
-                proportion = self._proportion.sample(n)
+                proportion = self._distr_proportion.sample(n)
             except AttributeError:
                 proportion = None
 
@@ -119,23 +139,23 @@ class AppearanceSampler(object):
     def as_dict(self):
         rtn = {}
         try:
-            rtn.update({"diameter": self._diameter.as_dict()})
+            rtn.update({"diameter": self._distr_diameter.as_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"width": self._width.as_dict()})
+            rtn.update({"width": self._distr_width.as_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"height": self._height.as_dict()})
+            rtn.update({"height": self._distr_height.as_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"proportion": self._proportion.as_dict()})
+            rtn.update({"proportion": self._distr_proportion.as_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"attributes": self._attributes.as_dict()})
+            rtn.update({"attributes": self._distr_attributes.as_dict()})
         except AttributeError:
             pass
         return rtn
