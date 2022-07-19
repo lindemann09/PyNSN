@@ -411,16 +411,16 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
 
-    def get_stand_outs(self):
+    def get_outlier(self):
         """returns indices of object that stand out and array with the size
         of outstanding
         """
 
         xy = self.properties.convex_hull.xy
-        sizes_outstand = np.hypot(xy[:, 0], xy[:, 1]) - \
+        sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
                         (self.target_area_radius - self.min_dist_area_boarder)
-        idx = sizes_outstand > 0
-        return self.properties.convex_hull.indices[idx], sizes_outstand[idx]
+        idx = sizes_outlying > 0
+        return self.properties.convex_hull.indices[idx], sizes_outlying[idx]
 
     def get_number_deviant(self, change_numerosity, preserve_field_area=False):
         """number deviant
@@ -441,10 +441,12 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         Returns
         -------
-        convex_hull_had_changed
+        rtn: boolean
+            True, if field area has not been changed (in case strict=False)
+
         """
 
-        warning_info = "Can't keep convex hull unchanged."
+        warning_info = "Can't keep field area constant."
         old_fa = self.properties.field_area
 
         if not keep_field_area:
@@ -508,9 +510,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 raise NoSolutionError(warning_info)
             else:
                 print("Warning: " + warning_info)
-            return False
-        else:
-            return True
+
+        return old_fa == new_ch
 
     def mod_move_object(self, object_id, distance, direction,
                         push_other=False):
@@ -574,15 +575,13 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             if cnt > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a solution for squeezing")
 
-            idx, size = self.get_stand_outs()
+            idx, size = self.get_outlier()
             if len(idx) == 0:
-                break
+                return
             for object_id, size in zip(idx, size):
                 self.mod_move_object(object_id, distance=size,
                                      direction = (0,0),
                                      push_other=push_other)
-
-
 
     def get_split_arrays(self):
         """returns a list of arrays
@@ -599,29 +598,36 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 rtn.append(da)
         return rtn
 
+    def mod_realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
+        """
 
-    def _realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
-        error = False
-        realign_required = False
+        Parameters
+        ----------
+        keep_field_area
+        strict
 
-        return
-        #self.center_array()
-        cnt = 0
-        while True:
-            cnt += 1
-            if cnt > 20:
-                error = True
-                break
+        Returns
+        -------
+        field_area_unchanged, no_outlier
 
-        if error:
-            raise RuntimeError("Can't find solution when removing outlier (n=" + \
-                   str(self._properties.numerosity) + ")")
+        """
+        fa_unchanged = self.mod_remove_overlaps(keep_field_area=keep_field_area,
+                                                strict=strict)
+        self.mod_center_field_area()
 
-        self._properties.reset()
-        if not realign_required:
-            return True, ""
-        else:
-            return self.realign()  # recursion
+        has_no_outlier = len(self.get_outlier()[0]) == 0
+        if not has_no_outlier:
+            if keep_field_area:
+                warning_info = "Can't keep field area constant."
+                if strict:
+                    raise NoSolutionError(warning_info)
+                else:
+                    print("Warning: " + warning_info)
 
+            self.mod_squeeze_to_area(push_other=True)
+            has_no_outlier = True
+            fa_unchanged = False
+
+        return fa_unchanged, has_no_outlier
 
 # TODO  everywhere: file header doc and author information

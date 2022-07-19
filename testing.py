@@ -29,15 +29,13 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
 
 stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.DotArray)
-props.scale.log_size(stimulus, 1.2)
+props.scale.log_size(stimulus, 1)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
 
-stimulus.mod_remove_overlaps(keep_field_area=True, strict=False)
-#stimulus.mod_center_field_area()
-#stimulus.mod_squeeze_to_area()
+print(stimulus.mod_realign(keep_field_area=False, strict=False))
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")
