@@ -77,7 +77,7 @@ class RectangleArray(ABCObjectArray):
     def perimeter(self):
         return 2 * (self._sizes[:, 0] + self._sizes[:, 1])
 
-    def round(self, decimals=0, int_type=np.int32):
+    def mod_round_values(self, decimals=0, int_type=np.int32):
         """Round values of the array."""
 
         if decimals is None:
@@ -151,7 +151,7 @@ class RectangleArray(ABCObjectArray):
             dist = pos_dist - max_overlap_dist
             return dist
 
-    def distances(self, rect):
+    def get_distances(self, rect):
         """Euclidean Distances toward a single Rectangle
         negative numbers indicate overlap
 
@@ -257,9 +257,6 @@ class RectangleArray(ABCObjectArray):
                 rtn.append(da)
         return rtn
 
-
-    def check_stand_outs(self):
-        raise NotImplementedError()
 
 # FIXME overlapping does not work for rectangles
 # FIXME picture random size distribution

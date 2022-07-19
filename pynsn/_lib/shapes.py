@@ -92,7 +92,6 @@ class Point(object):
         self.x = rad_ang[0] * _math.cos(rad_ang[1])
         self.y = rad_ang[0] * _math.sin(rad_ang[1])
 
-
     def distance(self, d):
         """Returns Euclidean distance to the another Coordinate. The function
         does not takes the size of an object into account.
@@ -183,7 +182,7 @@ class Dot(Point, ShapeAttribute):
 
     def __repr__(self):
         return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
-                            self.diameter, self.get_attribute_str())
+                            self.diameter, self.attribute)
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the

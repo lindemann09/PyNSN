@@ -141,7 +141,7 @@ class GUIMainWindow(QMainWindow):
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
-        self.dot_array.round(decimals=self.settings.rounding_decimals.value)
+        self.dot_array.mod_round_values(decimals=self.settings.rounding_decimals.value)
         self._image = None
 
     def image(self):

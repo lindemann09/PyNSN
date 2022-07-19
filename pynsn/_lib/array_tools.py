@@ -8,7 +8,7 @@ def _jitter_identical_positions(xy, jitter_size=0.1):
     """jitters points with identical position"""
 
     for idx, ref_object in enumerate(xy):
-        identical = np.where(np.all(np.equal(xy, ref_object), axis=1))[0]  # find identical positions
+        identical = np.flatnonzero(np.all(np.equal(xy, ref_object), axis=1))  # find identical positions
         if len(identical) > 1:
             for x in identical:  # jitter all identical positions
                 if x != idx:
@@ -47,7 +47,7 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
     for i in np.argsort(geometry.cartesian2polar(xy, radii_only=True)):
         dist_mtx = distance_matrix_function(between_positions=False)
         dist = dist_mtx[i, :]
-        idx_overlaps = np.where(dist < min_dist_between)[0].tolist()  # overlapping dot ids
+        idx_overlaps = np.flatnonzero(dist < min_dist_between).tolist()  # overlapping dot ids
         if len(idx_overlaps) > 1:
             replacement_required = True
             idx_overlaps.remove(i)  # don't move yourself

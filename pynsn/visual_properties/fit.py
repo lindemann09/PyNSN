@@ -70,7 +70,7 @@ def numerosity(object_array, value, keep_field_area=False):
                 clone_id = _rng.generator.integers(0, object_array._properties.numerosity)
                 rnd_object = next(object_array.iter_objects(clone_id))
                 try:
-                    rnd_object = object_array.find_free_position(
+                    rnd_object = object_array.get_free_position(
                         ref_object=rnd_object, allow_overlapping=False,
                         inside_convex_hull=keep_field_area)
                 except _NoSolutionError:
@@ -148,11 +148,11 @@ def field_area(object_array, value, precision=None):
 
 def _scale_field_area(object_array, value, precision):
     """change the convex hull area to a desired size by scale the polar
-    positions  with certain precision
+    positions with certain precision
 
     iterative method can takes some time.
 
-    Note: see doc string `_adapt_field_area`
+    Note: see doc string `field_area`
     """
     _lib._check_object_array(object_array)
     current = object_array.properties.field_area
@@ -166,7 +166,7 @@ def _scale_field_area(object_array, value, precision):
         step *= -1
 
     # centered points
-    old_center = object_array.get_center_of_mass()
+    old_center = object_array.get_
     object_array._xy = object_array.xy - old_center
     centered_polar = _geometry.cartesian2polar(object_array.xy)
 

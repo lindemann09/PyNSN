@@ -8,7 +8,7 @@ import numpy as np
 
 from .base_classes import ABCObjectArray
 from .._lib import misc, geometry
-from .shapes import Dot
+from .shapes import Dot, Point
 from . import array_tools
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
@@ -73,7 +73,7 @@ class DotArray(ABCObjectArray):
     def perimeter(self):
         return np.pi * self._diameter
 
-    def round(self, decimals=0, int_type=np.int32):
+    def mod_round_values(self, decimals=0, int_type=np.int32):
         """Round values of the array."""
 
         if decimals is None:
@@ -133,7 +133,7 @@ class DotArray(ABCObjectArray):
                             diameter=self._diameter[indices],
                             attributes=self._attributes[indices])
 
-    def distances(self, dot):
+    def get_distances(self, dot):
         """Distances toward a single dot
         negative numbers indicate overlap
 
@@ -154,7 +154,7 @@ class DotArray(ABCObjectArray):
 
         Parameters
         ----------
-        indices
+        indices: int or interable of integer
 
         Notes
         -----
@@ -163,18 +163,18 @@ class DotArray(ABCObjectArray):
         >>>    print(obj)
         """
 
-        if indices is None:
-            data = zip(self._xy, self._diameter, self._attributes)
+        if isinstance(indices, (int, np.integer)):
+            yield Dot(xy=self._xy[indices, :],
+                      diameter=self._diameter[indices],
+                      attribute=self._attributes[indices])
         else:
-            try:
-                indices = list(indices)  # check if iterable
-            except TypeError:
-                indices = [indices]
-            data = zip(self._xy[indices, :], self._diameter[indices],
-                       self._attributes[indices])
-
-        for xy, dia, att in data:
-            yield Dot(xy=xy, diameter=dia, attribute=att)
+            if indices is None:
+                data = zip(self._xy, self._diameter, self._attributes)
+            else:
+                data = zip(self._xy[indices, :],  self._diameter[indices],
+                                    self._attributes[indices])
+            for xy, dia, att in data:
+                yield Dot(xy=xy, diameter=dia, attribute=att)
 
     def find(self, diameter=None, attribute=None):
         """returns indices of found objects
@@ -229,13 +229,13 @@ class DotArray(ABCObjectArray):
 
         xy, shift_required = array_tools.remove_overlap_from_inner_to_outer(
             xy=self.xy, min_dist_between=self.min_dist_between,
-            distance_matrix_function=self.distances_matrix)
+            distance_matrix_function=self.get_distances_matrix)
 
         # sqeeze in points that pop out of the image area radius
         cnt = 0
         while True:
             radii = geometry.cartesian2polar(self._xy, radii_only=True)
-            too_far = np.where((radii + self._diameter / 2) > self.target_area_radius)[0]  # find outlier
+            too_far = np.flatnonzero((radii + self._diameter / 2) > self.target_area_radius)  # find outlier
             if len(too_far) > 0:
 
                 # squeeze in outlier
@@ -269,10 +269,3 @@ class DotArray(ABCObjectArray):
             return True, ""
         else:
             return self.realign()  # recursion
-
-    def check_stand_outs(self):  # FIXME ignores object size
-        """returns indices of object that stand out"""
-        ch_radii = geometry.cartesian2polar(self._xy, radii_only=True)
-        return np.where(ch_radii > self.target_area_radius -
-                        self.min_dist_area_boarder)[0]
-

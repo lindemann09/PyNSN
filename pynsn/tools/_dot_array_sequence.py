@@ -170,7 +170,7 @@ def create(specs,
                                     specs=specs)
     source_da = fit.visual_property(source_da, property_flag=adapt_property, value=adapt_value)
     source_da.center_array()
-    source_da.round(round_decimals)
+    source_da.mod_round_values(round_decimals)
 
     # adapted deviants
     rtn = DASequence()
@@ -240,7 +240,7 @@ def _make_adapted_deviants(reference_da, adapt_property, target_numerosity,
             if cnt > 10:
                 error = u"ERROR: realign, " + str(cnt) + ", " + str(da._properties.numerosity)
 
-        da.round(round_decimals)
+        da.mod_round_values(round_decimals)
         da_sequence.append(da)
 
         if error is not None or da._properties.numerosity == target_numerosity:

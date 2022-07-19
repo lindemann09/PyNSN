@@ -18,8 +18,8 @@ my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               default_object_colour="darkmagenta",
                               #field_area_positions="magenta",
                               field_area="gray",
-                              center_of_positions="red",
-                              center_of_mass="magenta"
+                              #center_of_positions="red",
+                              #center_of_mass="magenta"
                               )
 
 
@@ -27,19 +27,18 @@ factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],
                                         exact_weighting=True) )
 
-stimulus = factory.create_random_array(n_objects=10)
+stimulus = factory.create_random_array(n_objects=20)
+assert isinstance(stimulus, nsn.DotArray)
 props.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
-####
-t = monotonic()
-#stimulus.remove_overlaps(keep_field_area=True, strict=False)
-stimulus.center_field_area()
+#stimulus.mod_remove_overlaps(keep_field_area=False)
+for x in range(stimulus.properties.numerosity):
+    stimulus.mod_move_object(x, 0, (0, 0), push_other=True)
 
-# props.scale.visual_property(stim_scaled, feature=feat, factor=1)
-print("time {}".format((monotonic()-t)))
+print(stimulus.mod_squeeze_to_area())
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")

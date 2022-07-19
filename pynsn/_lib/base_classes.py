@@ -151,18 +151,8 @@ class AttributeArray(ArrayParameter):
 
     def get_center_of_positions(self):
         """Center of all object positions
-        Notes
-        -----
-        if you want centre that takes into account the object size, use
-        center_of_field_area
         """
         return geometry.center_of_positions(self._xy)
-
-    def center_array_positions(self):
-        """places array in target area as central and possible and tries to
-        remove any stand_outs"""
-        self._xy = self._xy - self.get_center_of_positions()
-        self._properties.reset()
 
     def clear(self):
         self._xy = np.array([])
@@ -277,6 +267,9 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def iter_objects(self, indices=None):
         pass
 
+    def get_objects(self, indices=None):
+        return list(self.iter_objects(indices=indices))
+
     @abstractmethod
     def add(self, something):
         pass
@@ -286,56 +279,56 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def distances(self, ref_object):
+    def get_distances(self, ref_object):
         # override this method
         pass
 
     @abstractmethod
-    def check_stand_outs(self):
+    def csv(self):
         pass
 
     @abstractmethod
-    def csv(self):
-        raise NotImplementedError()
+    def mod_round_values(self):
+        pass
 
     def join(self, object_array):
         """add another object arrays"""
         self.add(object_array.iter_objects())
 
-    def distances_matrix(self, between_positions=False):
+    def get_distances_matrix(self, between_positions=False):
         """between position ignores the dot size"""
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)
         # matrix with all distance between all points
-        dist = np.asarray([self.distances(d) for d in self.iter_objects()])
+        dist = np.asarray([self.get_distances(d) for d in self.iter_objects()])
         return dist
 
-    def check_overlaps(self):
-        """return pairs of indices of overlapping of objects
-        numpy.array
+    def get_overlaps(self):
+        """return pairs of indices of overlapping of objects and an array of the
+        amount of overlap
         """
-        dist = self.distances_matrix(between_positions=False)
-        overlap = np.where(np.triu(dist, k=1) < 0)
-        return np.asarray(overlap).T
+        dist = np.triu(self.get_distances_matrix(between_positions=False), k=1)
+        overlap = np.where(dist < 0)
+        return np.asarray(overlap).T, np.abs(dist[overlap])
 
     def get_center_of_mass(self):
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
-    def center_array_mass(self):
+    def mod_center_array_mass(self):
         self._xy = self._xy - self.get_center_of_mass()
         self._properties.reset()
 
-    def center_field_area(self):
+    def mod_center_field_area(self):
         cxy = geometry.center_of_positions(self.properties.convex_hull.xy)
         self._xy = self._xy - cxy
         self._properties.reset()
 
-    def find_free_position(self, ref_object,
-                           in_neighborhood=False,
-                           allow_overlapping=False,
-                           inside_convex_hull=False,
-                           occupied_space=None):
+    def get_free_position(self, ref_object,
+                          in_neighborhood=False,
+                          allow_overlapping=False,
+                          inside_convex_hull=False,
+                          occupied_space=None):
         """returns the copy of object of at a random free position
 
         raise exception if not found
@@ -396,14 +389,14 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
             if not allow_overlapping:
                 # find overlap
-                dist = self.distances(rtn_object)
+                dist = self.get_distances(rtn_object)
                 if isinstance(occupied_space, ABCObjectArray):
-                    dist = np.append(dist, occupied_space.distances(rtn_object))
+                    dist = np.append(dist, occupied_space.get_distances(rtn_object))
                 if sum(dist < self.min_dist_between) > 0:  # at least one is overlapping
                     continue
             return rtn_object
 
-    def shuffle_all_positions(self, allow_overlapping=False):
+    def mod_shuffle_positions(self, allow_overlapping=False):
         """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
@@ -412,11 +405,22 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         self.clear()
         for obj in all_objects:
             try:
-                new = self.find_free_position(obj, in_neighborhood=False,
-                                              allow_overlapping=allow_overlapping)
+                new = self.get_free_position(obj, in_neighborhood=False,
+                                             allow_overlapping=allow_overlapping)
             except NoSolutionError as e:
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
+
+    def get_stand_outs(self):
+        """returns indices of object that stand out and array with the size
+        of outstanding
+        """
+
+        xy = self.properties.convex_hull.xy
+        sizes_outstand = np.hypot(xy[:, 0], xy[:, 1]) - \
+                        (self.target_area_radius - self.min_dist_area_boarder)
+        idx = sizes_outstand > 0
+        return self.properties.convex_hull.indices[idx], sizes_outstand[idx]
 
     def get_number_deviant(self, change_numerosity, preserve_field_area=False):
         """number deviant
@@ -427,7 +431,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                        keep_field_area=preserve_field_area)
         return object_array
 
-    def remove_overlaps(self, keep_field_area=False, strict=False):
+    def mod_remove_overlaps(self, keep_field_area=False, strict=False):
         """
         Returns
         Parameters
@@ -443,7 +447,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         warning_info = "Can't keep convex hull unchanged."
         convex_hull_had_changed = False
 
-        overlaps = self.check_overlaps()
+        overlaps = self.get_overlaps()[0]
         while len(overlaps):
             if keep_field_area:
                 # check if overlaps are on convex hull
@@ -466,22 +470,95 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             obj = next(self.iter_objects(idx))
             self.delete(idx)
             try:
-                obj = self.find_free_position(ref_object=obj, in_neighborhood=True,
-                                          inside_convex_hull=keep_field_area)
+                obj = self.get_free_position(ref_object=obj, in_neighborhood=True,
+                                             inside_convex_hull=keep_field_area)
             except NoSolutionError as e:
                 if strict or not keep_field_area:
                     raise e
                 # try again without keep field area
-                obj = self.find_free_position(ref_object=obj, in_neighborhood=True,
-                                              inside_convex_hull=False)
+                obj = self.get_free_position(ref_object=obj, in_neighborhood=True,
+                                             inside_convex_hull=False)
                 convex_hull_had_changed = True
 
             self.add([obj])
-            overlaps = self.check_overlaps()
+            overlaps = self.get_overlaps()[0]
 
         if convex_hull_had_changed:
             print("Warning: " + warning_info)
         return not convex_hull_had_changed
+
+    def mod_move_object(self, object_id, distance, direction,
+                        push_other=False):
+        """
+
+        Parameters
+        ----------
+        object_id
+        distance
+        direction: numeric (polar) or tuple, list or Point (cartesian)
+            angle (numeric, polar angle coordinate) or a cartesian 2D coordinates indicating
+            the direction towards the object should be moved
+
+        Returns
+        -------
+
+        """
+
+        try:
+            ang = float(direction)
+        except (TypeError, ValueError):
+            try:
+                ang = shapes.Point(x=direction[0], y=direction[1])
+            except IndexError:
+                ang = None
+        if ang is None:
+            raise TypeError("Direction has to be float or a 2D coordinate, that is, a "
+                            "shapes.Point or  a tuple/list of two elements.")
+
+        obj = next(self.iter_objects(indices=object_id))
+
+        movement = shapes.Point()
+        if isinstance(ang, float):
+            movement.polar = (distance, ang)
+        else:
+            # "ang" isnot an angle it a point
+            movement = ang - obj
+            movement.polar_radius = distance
+
+        self._xy[object_id, :] = self._xy[object_id, :] + movement.xy
+
+        if push_other:
+            # push overlapping object
+            obj = next(self.iter_objects(indices=object_id))
+            dist = self.get_distances(obj)
+            for other_id in np.flatnonzero(dist<0):
+                if other_id != object_id:
+                    movement.xy = self._xy[other_id, :] - self._xy[object_id, :]
+                    self.mod_move_object(other_id,
+                                direction = movement.polar_angle,
+                                distance = abs(dist[other_id]) + self.min_dist_between,
+                                push_other=True)
+
+        self.properties.reset()
+
+    def mod_squeeze_to_area(self, push_other=True):
+        """squeeze in target area to remove all standouts"""
+        self.mod_center_field_area()
+        cnt = 0
+        while True:
+            cnt += 1
+            if cnt > constants.MAX_ITERATIONS:
+                raise NoSolutionError("Can't find a solution for squeezing")
+
+            idx, size = self.get_stand_outs()
+            if len(idx) == 0:
+                break
+            for object_id, size in zip(idx, size):
+                self.mod_move_object(object_id, distance=size,
+                                     direction = (0,0),
+                                     push_other=push_other)
+
+
 
     def get_split_arrays(self):
         """returns a list of arrays
@@ -499,7 +576,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return rtn
 
 
-    def __realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
+    def _realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
         error = False
         realign_required = False
 
