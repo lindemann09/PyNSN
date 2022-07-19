@@ -10,6 +10,7 @@ Install `PyQt5` or  reinstall PyNSN via: `pip install pynsn[gui] -U`""")
 import sys as _sys
 from ._gui.gui_main_window import GUIMainWindow as _GUIMainWindow
 
+
 def start():
     app = _QApplication(_sys.argv)
     ex = _GUIMainWindow()

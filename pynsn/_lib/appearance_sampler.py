@@ -26,14 +26,10 @@ class _Constant(object):
                 "value": self.value}
 
 
-def _type_check_distr(value, variable_name):
+def _make_distr(value):
     """helper
-    returns a distribution
+    returns a distribution or None, if None
     """
-
-    #err = "{} has to be a PyNSNDistribution, a single number (constant) or None"
-    #if value is not None and not isinstance(value, (int, float, PyNSNDistribution)):
-    #    raise TypeError(err.format(variable_name))
 
     if value is None:
         return None
@@ -59,8 +55,8 @@ class AppearanceSampler(object):
         self._width = None
         self._height = None
         self._proportion = None
-        self._diameter = _type_check_distr(diameter, "diameter")
-        self._attributes = _type_check_distr(attributes, "attributes")
+        self._diameter = _make_distr(diameter)
+        self._attributes = _make_distr(attributes)
 
     def set_appearance_rectangle(self, width=None, height=None,
                                  proportion=None, attributes=None):
@@ -71,10 +67,10 @@ class AppearanceSampler(object):
             raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
                             "either width or height.")
         self._diameter = None
-        self._width = _type_check_distr(width, "width")
-        self._height = _type_check_distr(height, "height")
-        self._proportion = _type_check_distr(proportion, "proportion")
-        self._attributes = _type_check_distr(attributes, "attributes")
+        self._width = _make_distr(width)
+        self._height = _make_distr(height)
+        self._proportion = _make_distr(proportion)
+        self._attributes = _make_distr(attributes)
 
     def is_appearance_set(self):
         return self._diameter is not None or self._width is not None or \

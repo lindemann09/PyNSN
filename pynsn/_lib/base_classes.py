@@ -15,11 +15,10 @@ from .array_tools import BrownianMotion
 from ..visual_properties._properties import ArrayProperties
 from ..exceptions import NoSolutionError
 from ..visual_properties import fit
+from .. import constants
 
 
 class ArrayParameter(object):
-    _DEFAULT_MIN_DIST_BETWEEN = 2
-    _DEFAULT_MIN_DIST_AREA_BOARDER = 1
 
     def __init__(self, target_area_radius,
                  min_dist_between=None,
@@ -30,11 +29,11 @@ class ArrayParameter(object):
         """
         self.target_area_radius = target_area_radius
         if min_dist_between is None:
-            self.min_dist_between = ArrayParameter._DEFAULT_MIN_DIST_BETWEEN
+            self.min_dist_between = constants.DEFAULT_MIN_DIST_BETWEEN
         else:
             self.min_dist_between = min_dist_between
         if min_dist_area_boarder is None:
-            self.min_dist_area_boarder = ArrayParameter._DEFAULT_MIN_DIST_AREA_BOARDER
+            self.min_dist_area_boarder = constants.DEFAULT_MIN_DIST_AREA_BOARDER
         else:
             self.min_dist_area_boarder = min_dist_area_boarder
 
@@ -343,8 +342,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         occupied space: see generator generate
         """
 
-        SOLUTION_ATTEMPTS = 5000
-
         if isinstance(ref_object, shapes.Dot):
             object_size = ref_object.diameter / 2.0
         elif isinstance(ref_object, shapes.Rectangle):
@@ -366,7 +363,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         cnt = 0
         while True:
-            if cnt > SOLUTION_ATTEMPTS:
+            if cnt > constants.MAX_ITERATIONS:
                 raise NoSolutionError(u"Can't find a free position")
             cnt += 1
 
@@ -502,7 +499,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return rtn
 
 
-    def realign(self, keep_field_area=False, strict=True):
+    def __realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
         error = False
         realign_required = False
 

@@ -3,15 +3,13 @@ from math import log2 as _log2
 from .._lib import geometry as _geometry
 from .._lib import rng as _rng
 from .. import _lib
+from .. import constants
 from ..exceptions import NoSolutionError as _NoSolutionError
 from ._properties import VisualPropertyFlag as _flags
 
-_DEFAULT_SPACING_PRECISION = 0.0001
-_DEFAULT_ADAPT_FA2TA_RATIO = 0.5
-
 
 def change_fit_settings(default_spacing_precision=None,
-                        default_adapt_fa2ta_ratio=None):
+                        default_fa2ta_ratio=None):
     """Changing class settings of property fitting.
 
     This changes the settings of the property fitting.
@@ -20,18 +18,17 @@ def change_fit_settings(default_spacing_precision=None,
     Parameters
     ----------
     default_spacing_precision
-    default_adapt_fa2ta_ratio
+    default_fa2ta_ratio
 
     Returns
     -------
 
     """
-    global _DEFAULT_ADAPT_FA2TA_RATIO
-    global _DEFAULT_SPACING_PRECISION
-    if isinstance(default_spacing_precision, float):
-        _DEFAULT_SPACING_PRECISION = default_spacing_precision
-    if isinstance(default_adapt_fa2ta_ratio, float):
-        _DEFAULT_ADAPT_FA2TA_RATIO = default_adapt_fa2ta_ratio
+
+    if default_spacing_precision is not None:
+        constants.DEFAULT_FIT_SPACING_PRECISION = float(default_spacing_precision)
+    if default_fa2ta_ratio is not None:
+        constants.DEFAULT_FIT_FA2TA_RATIO = float(default_fa2ta_ratio)
 
 #FIXME coverage for all
 
@@ -140,7 +137,7 @@ def field_area(object_array, value, precision=None):
 
     _lib._check_object_array(object_array)
     if precision is None:
-        precision = _DEFAULT_SPACING_PRECISION
+        precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
     if object_array.properties.field_area is _np.nan:
         return  object_array # not defined
@@ -209,11 +206,11 @@ def coverage(object_array, value,
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
     if FA2TA_ratio is None:
-        FA2TA_ratio = _DEFAULT_ADAPT_FA2TA_RATIO
+        FA2TA_ratio = constants.DEFAULT_FIT_FA2TA_RATIO
     elif FA2TA_ratio < 0 or FA2TA_ratio > 1:
         FA2TA_ratio = 0.5
     if precision is None:
-        precision = _DEFAULT_SPACING_PRECISION
+        precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
     total_area_change100 = (value * object_array.properties.field_area) - \
                            object_array.properties.total_surface_area
@@ -323,3 +320,5 @@ def visual_property(object_array, property_flag, value):
     else:
         raise NotImplementedError("Not implemented for {}".format(
             property_flag.label()))
+
+# TODO "visual test" (eye inspection) of fitting rect arrays
