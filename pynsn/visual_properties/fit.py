@@ -36,11 +36,10 @@ def change_fit_settings(default_spacing_precision=None,
 #FIXME coverage for all
 
 
-def numerosity(object_array, value, center_of_field_area=False):
+def numerosity(object_array, value, keep_field_area=False):
     """
 
     """
-    TRY_OUT = 300
     _lib._check_object_array(object_array)
 
     # make a copy for the deviant
@@ -49,32 +48,38 @@ def numerosity(object_array, value, center_of_field_area=False):
     else:
         # add or remove random dots
         change_numerosity = value - object_array._properties.numerosity
-        rnd = None
         for _ in range(abs(change_numerosity)):
-            if center_of_field_area:
-                ch = object_array._properties.convex_hull.indices
-            else:
-                ch = []
-            for _ in range(TRY_OUT):
-                rnd = _rng.generator.integers(0, object_array._properties.numerosity)
-                if rnd not in ch or change_numerosity > 0:
-                    break
-
             if change_numerosity < 0:
                 # remove dots
-                object_array.delete(rnd)
+                if keep_field_area:
+                    # find a random object that is not in convex hull
+                    delete_id = None
+                    ch = object_array._properties.convex_hull.indices
+                    rnd_seq = list(range(0, object_array._properties.numerosity))
+                    _rng.generator.shuffle(rnd_seq)
+                    for x in rnd_seq:
+                        if x not in ch:
+                            delete_id = x
+                            break
+                    if delete_id is None:
+                        raise _NoSolutionError("Can't increase numeroisty, while keeping field area.")
+                else:
+                    delete_id = _rng.generator.integers(0, object_array._properties.numerosity)
+
+                object_array.delete(delete_id)
+
             else:
-                # add dot
-                # copy a random dot
-                rnd_object = next(object_array.iter_objects(rnd))
+                # add dot: copy a random dot
+                clone_id = _rng.generator.integers(0, object_array._properties.numerosity)
+                rnd_object = next(object_array.iter_objects(clone_id))
                 try:
                     rnd_object = object_array.find_free_position(
                         ref_object=rnd_object, allow_overlapping=False,
-                        inside_convex_hull=center_of_field_area
-                    )
+                        inside_convex_hull=keep_field_area)
                 except _NoSolutionError:
                     # no free position
-                    raise _NoSolutionError("Can't make the deviant. No free position found.")
+                    raise _NoSolutionError("Can't increase numerosity. No free position found.")
+
                 object_array.add([rnd_object])
 
     return object_array

@@ -343,7 +343,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         occupied space: see generator generate
         """
 
-        N_ATTEMPTS = 5000
+        SOLUTION_ATTEMPTS = 5000
 
         if isinstance(ref_object, shapes.Dot):
             object_size = ref_object.diameter / 2.0
@@ -360,13 +360,13 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         rtn_object = deepcopy(ref_object)  # tested deepcopy required
 
         if in_neighborhood:
-            random_walk = BrownianMotion(ref_object.xy, delta=2) # FIXME set good delta value
+            random_walk = BrownianMotion(ref_object.xy, delta=2)
         else:
             random_walk = None
 
         cnt = 0
         while True:
-            if cnt > N_ATTEMPTS:
+            if cnt > SOLUTION_ATTEMPTS:
                 raise NoSolutionError(u"Can't find a free position")
             cnt += 1
 
@@ -427,7 +427,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
         fit.numerosity(object_array, value=new_num,
-                       center_of_field_area=preserve_field_area)
+                       keep_field_area=preserve_field_area)
         return object_array
 
     def remove_overlaps(self, keep_field_area=False, strict=False):
