@@ -16,8 +16,8 @@ Project homepage: https://github.com/lindemann09/PyNSN
 
 ## Dependencies
 
-* Python 3 (>=3.6)
-* numpy (>=1.6)
+* Python 3 (>=3.8)
+* numpy (>=1.20)
 * scipy (>=1.0)
 * Pillow (>=5.0)
 * svgwrite (>=1.4)
