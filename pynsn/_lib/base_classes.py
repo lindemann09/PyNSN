@@ -275,7 +275,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def find(self, attribute):
+    def find_objects(self, attribute):
         pass
 
     @abstractmethod
@@ -594,7 +594,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             if c is not None:
                 da = self.copy(indices=0, deepcopy=False)  # fast. shallow copy with just one object
                 da.clear()
-                da.add(self.find(attribute=c))
+                da.add(self.find_objects(attribute=c))
                 rtn.append(da)
         return rtn
 

@@ -195,7 +195,7 @@ class RectangleArray(ABCObjectArray):
             rtn = Rectangle(xy=xy, size=s, attribute=att)
             yield rtn
 
-    def find(self, size=None, attribute=None, edge=None):
+    def find_objects(self, size=None, attribute=None, edge=None):
         """returns indices of found objects
 
         2D-tuple
@@ -253,7 +253,7 @@ class RectangleArray(ABCObjectArray):
                 da = RectangleArray(target_area_radius=self.target_area_radius,
                                     min_dist_between=self.min_dist_between,
                                     min_dist_area_boarder=self.min_dist_area_boarder)
-                da.add(self.find(attribute=c))
+                da.add(self.find_objects(attribute=c))
                 rtn.append(da)
         return rtn
 

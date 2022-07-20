@@ -176,7 +176,7 @@ class DotArray(ABCObjectArray):
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
 
-    def find(self, diameter=None, attribute=None):
+    def find_objects(self, diameter=None, attribute=None):
         """returns indices of found objects
         """
         rtn = []
