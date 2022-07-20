@@ -62,7 +62,7 @@ def remove_overlap_from_inner_to_outer(xy, min_dist_between, distance_matrix_fun
 
 class BrownianMotion(object):
 
-    def __init__(self, start_pos, delta=2, search_area_radius=None, bounce_boarder=True): #FIXME check delta
+    def __init__(self, start_pos, delta=2, search_area_radius=None, bounce_boarder=True):
         """performs brownian motions (search walk) optionally in a circular area
 
         Parameters
@@ -102,8 +102,7 @@ class BrownianMotion(object):
         return self.current
 
     def next(self, dt=1):
-
-        while True:  # FIXME quit criterion
+        while True:
             new = rng.generator.normal(loc=0, scale=self.scale * dt,
                                         size=2) + self.current
             if self.area_radius is None or \

@@ -30,7 +30,6 @@ def change_fit_settings(default_spacing_precision=None,
     if default_fa2ta_ratio is not None:
         constants.DEFAULT_FIT_FA2TA_RATIO = float(default_fa2ta_ratio)
 
-#FIXME coverage for all
 
 
 def numerosity(object_array, value, keep_convex_hull=False):
@@ -193,7 +192,7 @@ def coverage(object_array, value,
              FA2TA_ratio=None):
 
     # FIXME check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
-    # FIXME when to realign, realignment changes field_area!
+    # when to realign, realignment changes field_area!
     """this function changes the area and remixes to get a desired density
     precision in percent between 1 < 0
 

@@ -269,8 +269,6 @@ class Normal2D(PyNSNDistribution):
                   "max_radius": self.max_radius})
         return d
 
-    # TODO:Norma2D pyplot sample
-
 
 class Beta(_PyNSNDistributionMuSigma):
 

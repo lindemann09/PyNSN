@@ -8,8 +8,8 @@ import numpy as np
 from .. import _lib
 from ._convex_hull import ConvexHull, ConvexHullPositions
 
-class VisualPropertyFlag(IntFlag):
 
+class VisualPropertyFlag(IntFlag):
     AV_DOT_DIAMETER = auto()
     AV_SURFACE_AREA = auto()
     AV_PERIMETER = auto()
@@ -155,7 +155,6 @@ class ArrayProperties(object):
         except ValueError:
             return np.nan
 
-
     @property
     def log_spacing(self):
         try:
@@ -275,12 +274,12 @@ class ArrayProperties(object):
                 rtn = ""
             rtn += "N: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: " \
                    "{:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
-                self.numerosity,
-                int(self.total_surface_area),
-                int(self.average_surface_area),
-                int(self.field_area),
-                self.sparsity,
-                self.log_size,
-                self.log_spacing,
-                self.converage)
+                    self.numerosity,
+                    int(self.total_surface_area),
+                    int(self.average_surface_area),
+                    int(self.field_area),
+                    self.sparsity,
+                    self.log_size,
+                    self.log_spacing,
+                    self.converage)
         return rtn.rstrip()

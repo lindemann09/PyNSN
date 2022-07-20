@@ -24,9 +24,9 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
 
         AppearanceSampler.__init__(self)
         ArrayParameter.__init__(self,
-            target_area_radius=target_area_radius,
-            min_dist_between=min_dist_between,
-            min_dist_area_boarder=min_dist_area_boarder)
+                                target_area_radius=target_area_radius,
+                                min_dist_between=min_dist_between,
+                                min_dist_area_boarder=min_dist_area_boarder)
 
     def create_random_array(self, n_objects,
                             allow_overlapping=False,
@@ -53,23 +53,23 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         if self._distr_diameter is not None:
             # DotArray
             rtn = DotArray(target_area_radius=self.target_area_radius,
-                                min_dist_between=self.min_dist_between,
-                                min_dist_area_boarder=self.min_dist_area_boarder)
+                           min_dist_between=self.min_dist_between,
+                           min_dist_area_boarder=self.min_dist_area_boarder)
 
             for dot in self.sample(n=n_objects):
                 try:
                     dot = rtn.get_free_position(ref_object=dot, in_neighborhood=False,
                                                 occupied_space=occupied_space,
                                                 allow_overlapping=allow_overlapping)
-                except NoSolutionError as e:
+                except NoSolutionError:
                     raise NoSolutionError("Can't find a solution for {} items in this array".format(n_objects))
                 rtn.add([dot])
 
         else:
             # RectArray
             rtn = RectangleArray(target_area_radius=self.target_area_radius,
-                                      min_dist_between=self.min_dist_between,
-                                      min_dist_area_boarder=self.min_dist_area_boarder)
+                                 min_dist_between=self.min_dist_between,
+                                 min_dist_area_boarder=self.min_dist_area_boarder)
 
             for rect in self.sample(n=n_objects):
                 try:
@@ -99,8 +99,8 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         previous = None
         for n in range(n_objects):
             current = self.create_random_array(n_objects=1,
-                   allow_overlapping=allow_overlapping,
-                   occupied_space=previous)
+                                               allow_overlapping=allow_overlapping,
+                                               occupied_space=previous)
             if previous is not None:
                 current.join(previous)
             previous = current

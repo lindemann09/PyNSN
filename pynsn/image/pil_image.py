@@ -8,7 +8,7 @@ from .. import _lib
 from . import _array_draw
 
 
-# FIXME pillow supports no alpha/opacity
+# TODO pillow supports no alpha/opacity
 
 
 def create(object_array, colours=None, antialiasing=True):

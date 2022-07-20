@@ -1,5 +1,6 @@
 from os import path
 
+
 class PictureFile(object):
     PICTURE_PREFIX = "p:"
 

@@ -36,7 +36,7 @@ class ConvexHullBaseClass(object):
         """convex hulls are assumed to be identical if same field area is
         identical and convex comprises the same amount of points"""
         return len(self.xy) == len(other.xy) and \
-                self.field_area == other.field_area
+               self.field_area == other.field_area
 
 
 class ConvexHullPositions(ConvexHullBaseClass):
@@ -88,7 +88,7 @@ class ConvexHull(ConvexHullBaseClass):
     @property
     def object_indices(self):
         if self._is_rect_array:
-            return np.int16(self._convex_hull.vertices/4)
+            return np.int16(self._convex_hull.vertices / 4)
         else:
             return self._convex_hull.vertices
 

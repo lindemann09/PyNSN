@@ -107,7 +107,7 @@ class AppearanceSampler(object):
         if self._distr_diameter is not None:
             diameter = self._distr_diameter.sample(n)
 
-            return [shapes.Dot(xy=(0, 0), diameter=dia, attribute=attr) \
+            return [shapes.Dot(xy=(0, 0), diameter=dia, attribute=attr)
                     for dia, attr in zip(diameter, attributes)]
         else:
             # Rect
@@ -133,7 +133,7 @@ class AppearanceSampler(object):
                 width = _round_samples(width, round_to_decimals=round_to_decimals)
                 height = _round_samples(width, round_to_decimals=round_to_decimals)
 
-            return [shapes.Rectangle(xy=(0, 0), size=(w,h), attribute=attr)\
+            return [shapes.Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
                     for w, h, attr in zip(width, height, attributes)]
 
     def as_dict(self):

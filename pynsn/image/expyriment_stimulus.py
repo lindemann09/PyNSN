@@ -53,9 +53,9 @@ class ExprimentDotArray(_Canvas):
 class ExpyrimentDASequence(object):
 
     def __init__(self, da_sequence,
-                 # pil_image_generator TODO better using generator
+                 # pil_image_generator
                  position=(0, 0),
-                 colours = _colour.ImageColours(),
+                 colours=_colour.ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):

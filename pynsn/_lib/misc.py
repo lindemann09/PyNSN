@@ -10,7 +10,7 @@ import sys
 
 
 def make_csv(xy, size_data_dict, attributes=None,
-              array_hash=None, make_variable_names=True):
+             array_hash=None, make_variable_names=True):
     """Not for User
     makes csv for Arrays with object of different size information
     size_data_dict: keys = variable names (e.g. width, height),
@@ -109,7 +109,7 @@ def is_all_equal(vector):
     return len(np.unique(np.asarray(vector))) == 1
 
 
-def dict_to_text(the_dict, col_a = 22, col_b = 14,
+def dict_to_text(the_dict, col_a=22, col_b=14,
                  spacing_char=" "):
     rtn = None
     for k, v in the_dict.items():
@@ -121,10 +121,10 @@ def dict_to_text(the_dict, col_a = 22, col_b = 14,
 
         value = "{}\n".format(v)
         len_col_b = col_b - len(value)
-        if len_col_b<2:
+        if len_col_b < 2:
             len_col_b = 2
         rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
-                         (" " * len_col_b) + value
+               (" " * len_col_b) + value
     return rtn.rstrip()
 
 
@@ -137,7 +137,7 @@ def is_interactive_mode():
     interactive_mode : boolean
 
     """
-    #ipython?
+    # ipython?
     try:
         __IPYTHON__
         return True
@@ -154,4 +154,4 @@ def triu_nan(m, k=0):
     upper triangular but nan instead of zeros (as in numpy's original function,
     see docu numpy.triu)
     """
-    return m + np.tril(np.full(m.shape, np.nan), k=k-1)
+    return m + np.tril(np.full(m.shape, np.nan), k=k - 1)

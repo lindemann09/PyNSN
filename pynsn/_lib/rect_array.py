@@ -149,7 +149,7 @@ class RectangleArray(ABCObjectArray):
             pos_dist = np.abs(self._xy - rect.xy)
             max_not_overlap_dist = (self.sizes + rect.size) / 2
             dist = pos_dist - max_not_overlap_dist
-            return dist # FIXME intebnsive test distance function rect (also get_distance)
+            return dist # FIXME intensive test distance function rect (also get_distance)
 
     def get_distances(self, rect):
         """Euclidean Distances toward a single Rectangle
@@ -233,8 +233,8 @@ class RectangleArray(ABCObjectArray):
         else:
             raise TypeError("edge has to be of type Points")
 
-    def csv(self, variable_names=True, hash_column=True,
-            attribute_column=False):
+    def csv(self, variable_names=True, hash_column=False,
+            attribute_column=True):
         """Return the rectangle array as csv text
 
         Parameter
@@ -260,7 +260,7 @@ class RectangleArray(ABCObjectArray):
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
-        att[np.where(att == None)] = "None"  # TODO check "is none"
+        att[np.where(att==None)] = "None"
 
         rtn = []
         for c in np.unique(att):
@@ -272,6 +272,3 @@ class RectangleArray(ABCObjectArray):
                 rtn.append(da)
         return rtn
 
-
-# FIXME overlapping does not work for rectangles
-# FIXME picture random size distribution

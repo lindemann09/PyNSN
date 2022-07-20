@@ -11,7 +11,6 @@ seed = randint(0, 1000)
 seed = 997
 nsn.init_random_generator(seed)
 
-# FIXME overlapping rects
 my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               background=None,
                               opacity_object=0.9,
@@ -29,8 +28,7 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
 
 factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
                                         attributes=distr.Levels(["blue", "green"],
-                                        exact_weighting=True) )
-
+                                        exact_weighting=True))
 
 stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.RectangleArray)
@@ -38,9 +36,8 @@ props.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
-print(stimulus.mod_realign(keep_convex_hull=False, strict=False))
-
-
+stimulus.mod_realign(keep_convex_hull=False, strict=False)
+print(stimulus.save("demp.json"))
 
 dist = stimulus.get_distances_matrix()
 

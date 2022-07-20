@@ -188,7 +188,7 @@ class DotArray(ABCObjectArray):
         return rtn
 
     def csv(self, variable_names=True, hash_column=False,
-            attribute_column=False):
+            attribute_column=True):
         """Return the dot array as csv text
 
         Parameter

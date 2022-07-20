@@ -1,6 +1,4 @@
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-
 
 import math as _math
 from .picture_file import PictureFile
@@ -27,7 +25,7 @@ class Point(object):
 
     def __div__(self, other):
         return Point(self.x / other if other else self.x,
-                            self.y / other if other else self.y)
+                     self.y / other if other else self.y)
 
     def __iadd__(self, other):
         self.x += other.x
@@ -113,7 +111,7 @@ class ShapeAttribute(object):
 
     def __init__(self, attribute):
         self._attribute = None
-        self.attribute = attribute # setter
+        self.attribute = attribute  # setter
 
     @property
     def attribute(self):
@@ -182,7 +180,7 @@ class Dot(Point, ShapeAttribute):
 
     def __repr__(self):
         return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
-                            self.diameter, self.attribute)
+                                                                self.diameter, self.attribute)
 
     def distance(self, d):
         """Return Euclidean distance to the dot d. The function takes the
@@ -198,8 +196,7 @@ class Dot(Point, ShapeAttribute):
 
         """
 
-        return Point.distance(self, d) - \
-               ((self.diameter + d.diameter) / 2.0)
+        return Point.distance(self, d) - ((self.diameter + d.diameter) / 2.0)
 
     @property
     def area(self):
@@ -235,7 +232,7 @@ class Rectangle(Point, ShapeAttribute):
 
     def __repr__(self):
         return "Rectangle(xy={}, size={}, attribute='{}')".format(self.xy,
-                                    self.size, self.get_attribute_str())
+                                                                  self.size, self.get_attribute_str())
 
     @property
     def left(self):
@@ -283,12 +280,12 @@ class Rectangle(Point, ShapeAttribute):
 
     def overlaps_with(self, rect):
         d = self.xy_distances(rect)
-        return not(d[0]>0 or d[1]>0)
+        return not (d[0] > 0 or d[1] > 0)
 
     @property
     def proportion(self):
         """Proportion of the rectangle (width/height)"""
-        return self.width/self.height
+        return self.width / self.height
 
     @property
     def area(self):
@@ -300,22 +297,22 @@ class Rectangle(Point, ShapeAttribute):
 
     @property
     def diagonal(self):
-        return _math.sqrt(self.width**2 + self.height**2)
+        return _math.sqrt(self.width ** 2 + self.height ** 2)
 
     def xy_distances(self, other):
         """return distances on both axes between rectangles. 0 indicates
         overlap off edges along that dimension.
         """
         assert isinstance(other, Rectangle)
-        #overlaps in x or y
+        # overlaps in x or y
         pos_dist = abs(self.x - other.x), abs(self.y - other.y)
-        max_overlap_dist = (self.width + other.width)/2, (self.height + other.height)/2
-        if  pos_dist[0] <= max_overlap_dist[0]:
+        max_overlap_dist = (self.width + other.width) / 2, (self.height + other.height) / 2
+        if pos_dist[0] <= max_overlap_dist[0]:
             dx = 0
         else:
             dx = pos_dist[0] - max_overlap_dist[0]
 
-        if  pos_dist[1] <= max_overlap_dist[1]:
+        if pos_dist[1] <= max_overlap_dist[1]:
             dy = 0
         else:
             dy = pos_dist[1] - max_overlap_dist[1]
@@ -337,4 +334,3 @@ class Rectangle(Point, ShapeAttribute):
         """
         dx, dy = self.xy_distances(other=other)
         return _math.hypot(dx, dy)
-

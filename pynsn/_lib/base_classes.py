@@ -7,6 +7,7 @@ import json
 import numpy as np
 from scipy import spatial
 
+
 from . import misc
 from . import geometry
 from . import shapes
@@ -346,7 +347,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             raise NotImplementedError("Not implemented for {}".format(
                 type(ref_object).__name__))
         if occupied_space is not None and \
-                not isinstance(occupied_space, ABCObjectArray):  # FIXME check
+                not isinstance(occupied_space, ABCObjectArray):
             raise TypeError("Occupied_space has to be a Dot or Rectangle Array or None.")
 
         area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size

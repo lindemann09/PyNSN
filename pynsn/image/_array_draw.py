@@ -51,6 +51,7 @@ class ArrayDraw(metaclass=ABCMeta):
 
         Parameters
         ----------
+        opacity
         scaling_factor
         convex_hull_colour
         points

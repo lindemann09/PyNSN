@@ -3,8 +3,6 @@ from pynsn import NSNFactory
 from pynsn import distributions as distr
 from pynsn.visual_properties import fit, scale, flags
 
-# FIXME testing adapt setting and iterative_convex_hull_modification method
-
 
 class DotsSmall(unittest.TestCase):
 
