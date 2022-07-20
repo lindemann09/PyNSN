@@ -306,9 +306,12 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def get_overlaps(self):
         """return pairs of indices of overlapping of objects and an array of the
         amount of overlap
+        takes into account min_dist_between property
+
         """
-        dist = np.triu(self.get_distances_matrix(between_positions=False), k=1)
-        overlap = np.where(dist < 0)
+        dist = misc.triu_nan(self.get_distances_matrix(between_positions=False),
+                             k=1)
+        overlap = np.where(dist < self.min_dist_between)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
     def get_center_of_mass(self):

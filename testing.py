@@ -5,7 +5,7 @@ from pynsn.visual_properties import fit
 from time import monotonic
 from pynsn import visual_properties as props
 import numpy as np
-
+from pynsn._lib import misc
 from random import randint
 seed = randint(0, 1000)
 seed = 997
@@ -32,13 +32,21 @@ factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
                                         exact_weighting=True) )
 
 
-stimulus = factory.create_random_array(n_objects=20)
+stimulus = factory.create_random_array(n_objects=4)
 assert isinstance(stimulus, nsn.RectangleArray)
-props.scale.log_size(stimulus, 1)
+props.scale.log_size(stimulus, 1.3)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 print(stimulus.mod_realign(keep_convex_hull=False, strict=False))
+
+
+
+print(stimulus.get_overlaps()[0])
+dist = stimulus.get_distances_matrix()
+
+
+
 
 
 

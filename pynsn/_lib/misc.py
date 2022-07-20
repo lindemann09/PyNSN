@@ -9,7 +9,6 @@ import numpy as np
 import sys
 
 
-
 def make_csv(xy, size_data_dict, attributes=None,
               array_hash=None, make_variable_names=True):
     """Not for User
@@ -42,20 +41,6 @@ def make_csv(xy, size_data_dict, attributes=None,
             rtn += "{},".format(attr)
         rtn = rtn[:-1] + "\n"  # replace comma
     return rtn
-
-
-
-
-def is_base_string(s):
-    return isinstance(s, (str, bytes))
-
-
-def is_unicode_string(s):
-    return isinstance(s, str)
-
-
-def is_byte_string(s):
-    return isinstance(s, bytes)
 
 
 def join_dict_list(list_of_dicts):
@@ -119,17 +104,9 @@ def numpy_round2(array, decimals, int_type=np.int32):
         return array
 
 
-def is_all_larger(vector, standard=0):
-    return sum(map(lambda x: x > standard, vector))==len(vector)
-
-
-def is_all_smaller(vector, standard=0):
-    return sum(map(lambda x: x < standard, vector))==len(vector)
-
-
 def is_all_equal(vector):
     # returns true if all elements are equal
-    return sum(map(lambda x: x==vector[0], vector))==len(vector)
+    return len(np.unique(np.asarray(vector))) == 1
 
 
 def dict_to_text(the_dict, col_a = 22, col_b = 14,
@@ -171,3 +148,10 @@ def is_interactive_mode():
     # ps2 is only defined in interactive mode
     return is_idle or hasattr(sys, "ps2")
 
+
+def triu_nan(m, k=0):
+    """helper function
+    upper triangular but nan instead of zeros (as in numpy's original function,
+    see docu numpy.triu)
+    """
+    return m + np.tril(np.full(m.shape, np.nan), k=k-1)

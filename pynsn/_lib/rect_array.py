@@ -147,9 +147,9 @@ class RectangleArray(ABCObjectArray):
             return np.array([])
         else:
             pos_dist = np.abs(self._xy - rect.xy)
-            max_overlap_dist = (self.sizes + rect.size) / 2
-            dist = pos_dist - max_overlap_dist
-            return dist
+            max_not_overlap_dist = (self.sizes + rect.size) / 2
+            dist = pos_dist - max_not_overlap_dist
+            return dist # FIXME intebnsive test distance function rect (also get_distance)
 
     def get_distances(self, rect):
         """Euclidean Distances toward a single Rectangle
