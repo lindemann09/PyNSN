@@ -4,22 +4,22 @@ import random
 import numpy as np
 from .misc import numpy_round2
 
-random.seed()
+from .lib_typing import OptInt, NumPair, Any, Tuple, Optional
 
 class PyNSNDistribution(object):
 
-    def __init__(self, min_max):
+    def __init__(self, min_max: NumPair) -> None:
         if not isinstance(min_max, (list, tuple)) or len(min_max) != 2 or \
                 (None not in min_max and min_max[0] > min_max[1]):
             raise TypeError("min_max {} ".format(min_max) + \
                             "has to be a tuple of two values (a, b) with a <= b.")
         self.min_max = min_max
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         return {"type": type(self).__name__,
                 "min_max": self.min_max}
 
-    def _cutoff_outside_range(self, np_vector):
+    def _cutoff_outside_range(self, np_vector: np.array) -> np.array:
         # helper function that cuts off values outside min_max range
         if self.min_max[0] is not None:
             np_vector = np.delete(np_vector, np_vector < self.min_max[0])
@@ -27,10 +27,10 @@ class PyNSNDistribution(object):
             np_vector = np.delete(np_vector, np_vector > self.min_max[1])
         return np_vector
 
-    def sample(self, n, round_to_decimals=False):
+    def sample(self, n: int) -> np.ndarray:
         return np.array([0] * n)
 
-    def pyplot_samples(self, n=100000):
+    def pyplot_samples(self, n: int = 100000) -> Any:
 
         try:
             from matplotlib.pyplot import hist
@@ -42,7 +42,7 @@ class PyNSNDistribution(object):
 
 class _PyNSNDistributionMuSigma(PyNSNDistribution):
 
-    def __init__(self, mu, sigma, min_max):
+    def __init__(self, mu: float, sigma: float, min_max: NumPair) -> None:
         super().__init__(min_max)
         self.mu = mu
         self.sigma = abs(sigma)
@@ -52,7 +52,7 @@ class _PyNSNDistributionMuSigma(PyNSNDistribution):
                 mu, min_max)
             raise RuntimeError(txt)
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         d = super().as_dict()
         d.update({"mu" : self.mu,
                   "sigma": self.sigma})
@@ -62,7 +62,7 @@ class _PyNSNDistributionMuSigma(PyNSNDistribution):
 class Laplace(PyNSNDistribution):
     """
     """
-    def __init__(self, min_max):
+    def __init__(self, min_max: NumPair) -> None:
         """Laplace distribution defined by the number range, min_max=(min, max)
 
         Parameter:
@@ -72,7 +72,8 @@ class Laplace(PyNSNDistribution):
         """
         super().__init__(min_max)
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int,
+               round_to_decimals: OptInt = None) -> np.ndarray:
         dist = np.array([random.random() for _ in range(n)])
         r = float(self.min_max[1] - self.min_max[0])
         rtn = self.min_max[0] + dist * r
@@ -82,10 +83,10 @@ class Laplace(PyNSNDistribution):
             return rtn
 
 
-
 class Normal(_PyNSNDistributionMuSigma):
 
-    def __init__(self,  mu, sigma, min_max=None):
+    def __init__(self,  mu: float, sigma: float,
+                 min_max: Optional[NumPair] = None) -> None:
         """Normal distribution with optional cut-off of minimum and maximum
 
         Resulting distribution has the defined mean and std, only if
@@ -102,7 +103,8 @@ class Normal(_PyNSNDistributionMuSigma):
             min_max = (None, None)
         super().__init__(mu, sigma, min_max)
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int,
+               round_to_decimals: OptInt = None) -> np.ndarray:
         rtn = np.array([])
         required = n
         while required>0:
@@ -116,9 +118,10 @@ class Normal(_PyNSNDistributionMuSigma):
         else:
             return rtn
 
+
 class Beta(_PyNSNDistributionMuSigma):
 
-    def __init__(self, mu, sigma, min_max):
+    def __init__(self, mu: float, sigma: float, min_max: NumPair) -> None:
         """Beta distribution defined by the number range, min_max=(min, max),
          the mean and the standard deviation (std)
 
@@ -143,7 +146,8 @@ class Beta(_PyNSNDistributionMuSigma):
         """
         super().__init__(mu=mu, sigma=sigma, min_max=min_max)
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int,
+               round_to_decimals: OptInt = None) -> np.ndarray:
         if self.sigma is None or self.sigma == 0:
             return np.array([self.mu] * n)
 
@@ -159,7 +163,7 @@ class Beta(_PyNSNDistributionMuSigma):
             return rtn
 
     @property
-    def shape_parameter(self):
+    def shape_parameter(self) -> Tuple[float, float]:
         """Alpha (p) & beta (q) parameter for the beta distribution
         http://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm
 

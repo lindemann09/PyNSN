@@ -7,9 +7,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from .base_classes import ABCObjectArray
-from .._lib import misc, geometry
-from .shapes import Dot, Point
-from . import array_tools
+from .lib_typing import OptInt, OptArrayLike, IntOVector, Iterable, \
+    Any, Union, Sequence, Optional, OptFloat, ObjectArray
+from .shapes import Dot
+from .._lib import misc
+
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by as_dict and get_csv and
@@ -24,12 +26,12 @@ class DotArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area_radius,
-                 min_dist_between=None,
-                 min_dist_area_boarder=None,
-                 xy = None,
-                 diameter = None,
-                 attributes = None):
+                 target_area_radius: int,
+                 min_dist_between: OptInt = None,
+                 min_dist_area_boarder: OptInt = None,
+                 xy: OptArrayLike = None,
+                 diameter: OptArrayLike = None,
+                 attributes: OptArrayLike = None) -> None:
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
 
@@ -48,7 +50,7 @@ class DotArray(ABCObjectArray):
             raise ValueError("Bad shaped data: " +
                              u"xy has not the same length as item_diameter")
 
-    def add(self, dots):
+    def add(self, dots: Union[Dot, Sequence[Dot]]) -> None:
         """append one dot or list of dots"""
         try:
             dots = list(dots)
@@ -61,19 +63,20 @@ class DotArray(ABCObjectArray):
         self.properties.reset()
 
     @property
-    def diameter(self):
+    def diameter(self) -> np.ndarray:
         return self._diameter
 
     @property
-    def surface_areas(self):
+    def surface_areas(self) -> np.ndarray:
         # a = pi r**2 = pi d**2 / 4
         return np.pi * (self._diameter ** 2) / 4.0
 
     @property
-    def perimeter(self):
+    def perimeter(self) -> np.ndarray:
         return np.pi * self._diameter
 
-    def mod_round_values(self, decimals=0, int_type=np.int32):
+    def mod_round_values(self, decimals: int = 0,
+                         int_type=np.int32) -> None:
         """Round values of the array."""
 
         if decimals is None:
@@ -83,27 +86,28 @@ class DotArray(ABCObjectArray):
         self._diameter = misc.numpy_round2(self._diameter, decimals=decimals,
                                            int_type=int_type)
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """
         """
         d = super().as_dict()
         d.update({"diameter": self._diameter.tolist()})
         return d
 
-    def read_from_dict(self, the_dict):
+    def read_from_dict(self, the_dict: dict) -> None:
         """read Dot collection from dict"""
         super().read_from_dict(the_dict)
         self._diameter = np.array(the_dict["diameter"])
 
-    def clear(self):
+    def clear(self) -> None:
         super().clear()
         self._diameter = np.array([])
 
-    def delete(self, index):
+    def delete(self, index: IntOVector) -> None:
         super().delete(index)
         self._diameter = np.delete(self._diameter, index)
 
-    def copy(self, indices=None, deepcopy=True):
+    def copy(self, indices: OptArrayLike = None,
+             deepcopy: bool = True) -> ObjectArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -133,7 +137,7 @@ class DotArray(ABCObjectArray):
                             diameter=self._diameter[indices],
                             attributes=self._attributes[indices])
 
-    def get_distances(self, dot):
+    def get_distances(self, dot: Dot) -> np.ndarray:
         """Distances toward a single dot
         negative numbers indicate overlap
 
@@ -149,7 +153,7 @@ class DotArray(ABCObjectArray):
                    ((self._diameter + dot.diameter) / 2.0)
             return rtn
 
-    def iter_objects(self, indices=None):
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterable[Dot]:
         """iterate over all or a part of the objects
 
         Parameters
@@ -176,7 +180,8 @@ class DotArray(ABCObjectArray):
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
 
-    def find_objects(self, diameter=None, attribute=None):
+    def find_objects(self, diameter: OptFloat = None,
+                     attribute: Any = None) -> Sequence[int]:
         """returns indices of found objects
         """
         rtn = []
@@ -187,8 +192,9 @@ class DotArray(ABCObjectArray):
             rtn.append(i)
         return rtn
 
-    def csv(self, variable_names=True, hash_column=False,
-            attribute_column=True):
+    def csv(self, variable_names: bool = True,
+            hash_column: bool = False,
+            attribute_column: bool = True) -> str:
         """Return the dot array as csv text
 
         Parameter

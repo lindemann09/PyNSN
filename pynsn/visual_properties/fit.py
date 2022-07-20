@@ -1,15 +1,18 @@
-import numpy as _np
 from math import log2 as _log2
-from .._lib import geometry as _geometry
-from .._lib import rng as _rng
+
+import numpy as _np
+
+from ._properties import VisualPropertyFlag as _flags
 from .. import _lib
 from .. import constants
+from .._lib import geometry as _geometry
+from .._lib import rng as _rng
+from .._lib.lib_typing import Any, NumPair, OptFloat, ObjectArray
 from ..exceptions import NoSolutionError as _NoSolutionError
-from ._properties import VisualPropertyFlag as _flags
 
 
-def change_fit_settings(default_spacing_precision=None,
-                        default_fa2ta_ratio=None):
+def change_fit_settings(default_spacing_precision: OptFloat = None,
+                        default_fa2ta_ratio: OptFloat = None) -> None:
     """Changing class settings of property fitting.
 
     This changes the settings of the property fitting.
@@ -31,8 +34,9 @@ def change_fit_settings(default_spacing_precision=None,
         constants.DEFAULT_FIT_FA2TA_RATIO = float(default_fa2ta_ratio)
 
 
-
-def numerosity(object_array, value, keep_convex_hull=False):
+def numerosity(object_array:ObjectArray,
+               value: int,
+               keep_convex_hull: bool = False) -> None:
     """
 
     """
@@ -78,10 +82,8 @@ def numerosity(object_array, value, keep_convex_hull=False):
 
                 object_array.add([rnd_object])
 
-    return object_array
 
-
-def average_diameter(dot_array, value):
+def average_diameter(dot_array: ObjectArray, value: float) -> None:
     # changes diameter
     if not isinstance(dot_array, _lib.DotArray):
         raise TypeError("Adapting diameter is not possible for {}.".format(
@@ -89,10 +91,9 @@ def average_diameter(dot_array, value):
     scale = value / dot_array.properties.average_dot_diameter
     dot_array._diameter = dot_array.diameter * scale
     dot_array.properties.reset()
-    return dot_array
 
 
-def average_rectangle_size(rect_array, value):
+def average_rectangle_size(rect_array: ObjectArray, value: NumPair) -> None:
     # changes diameter
     if not isinstance(rect_array, _lib.RectangleArray):
         raise TypeError("Adapting rectangle size is not possible for {}.".format(
@@ -107,10 +108,9 @@ def average_rectangle_size(rect_array, value):
                        height / rect_array.properties.average_rectangle_size[1]])
     rect_array._sizes = rect_array._sizes * scale
     rect_array.properties.reset()
-    return rect_array
 
 
-def total_surface_area(object_array, value):
+def total_surface_area(object_array: ObjectArray, value: float) -> None:
     # changes diameter
     _lib._check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
@@ -122,10 +122,10 @@ def total_surface_area(object_array, value):
         object_array._sizes = object_array._sizes * _np.sqrt(a_scale)
 
     object_array.properties.reset()
-    return object_array
 
 
-def field_area(object_array, value, precision=None):
+def field_area(object_array: ObjectArray, value: float,
+               precision: OptFloat = None) -> None:
     """changes the convex hull area to a desired size with certain precision
 
     uses scaling radial positions if field area has to be increased
@@ -139,13 +139,13 @@ def field_area(object_array, value, precision=None):
         precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
     if object_array.properties.field_area is _np.nan:
-        return  object_array # not defined
+        return  # not defined
     else:
-        return _scale_field_area(object_array, value=value,
-                                 precision=precision)
+        _scale_field_area(object_array, value=value,
+                          precision=precision)
 
 
-def _scale_field_area(object_array, value, precision):
+def _scale_field_area(object_array: ObjectArray, value: float, precision: float) -> None:
     """change the convex hull area to a desired size by scale the polar
     positions with certain precision
 
@@ -184,12 +184,11 @@ def _scale_field_area(object_array, value, precision):
 
     object_array._xy = object_array.xy + old_center
     object_array.properties.reset()
-    return object_array
 
 
-def coverage(object_array, value,
-             precision=None,
-             FA2TA_ratio=None):
+def coverage(object_array: ObjectArray, value: float,
+             precision: OptFloat = None,
+             FA2TA_ratio: OptFloat = None) -> None:
 
     # FIXME check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
     # when to realign, realignment changes field_area!
@@ -218,54 +217,57 @@ def coverage(object_array, value,
         total_surface_area(object_array.properties.total_surface_area + \
                            d_change_total_area)
 
-    return field_area(object_array.properties.total_surface_area / value,
+    field_area(object_array.properties.total_surface_area / value,
                precision=precision)
 
 
-def average_perimeter(object_array, value):
+def average_perimeter(object_array: ObjectArray, value: float) -> None:
     _lib._check_object_array(object_array)
     total_peri = value * object_array.properties.numerosity
-    return total_perimeter(object_array, total_peri)
+    total_perimeter(object_array, total_peri)
 
 
-def total_perimeter(object_array, value):
+def total_perimeter(object_array: ObjectArray, value: float) -> None:
     if isinstance(object_array, _lib.DotArray):
         tmp = value / (object_array.properties.numerosity * _np.pi)
-        return average_diameter(object_array, tmp)
+        average_diameter(object_array, tmp)
     elif isinstance(object_array, _lib.RectangleArray):
         scale = value / object_array.properties.total_perimeter
         new_size = object_array.properties.average_rectangle_size * scale
-        return average_rectangle_size(object_array, new_size)
+        average_rectangle_size(object_array, new_size)
     else:
         _lib._check_object_array(object_array)
 
 
-def average_surface_area(object_array, value):
+def average_surface_area(object_array: ObjectArray, value: float) -> None:
     _lib._check_object_array(object_array)
     ta = object_array.properties.numerosity * value
-    return total_surface_area(object_array, ta)
+    total_surface_area(object_array, ta)
 
 
-def log_spacing(object_array, value, precision=None):
+def log_spacing(object_array: ObjectArray, value: float,
+                precision: OptFloat = None) -> None:
     _lib._check_object_array(object_array)
     logfa = 0.5 * value + 0.5 * _log2(
         object_array.properties.numerosity)
-    return field_area(object_array, value=2 ** logfa, precision=precision)
+    field_area(object_array, value=2 ** logfa, precision=precision)
 
 
-def log_size(object_array, value):
+def log_size(object_array: ObjectArray, value: float) -> None:
     _lib._check_object_array(object_array)
     logtsa = 0.5 * value + 0.5 * _log2(object_array.properties.numerosity)
-    return total_surface_area(object_array, 2 ** logtsa)
+    total_surface_area(object_array, 2 ** logtsa)
 
 
-def sparcity(object_array, value, precision=None):
+def sparcity(object_array: ObjectArray, value:float,
+             precision=None) -> None:
     _lib._check_object_array(object_array)
     return field_area(object_array, value=value * object_array.properties.numerosity,
                       precision=precision)
 
 
-def visual_property(object_array, property_flag, value):
+def visual_property(object_array: ObjectArray, property_flag: _flags,
+                    value: float) -> Any:
     """
     adapt_properties: continuous property or list of continuous properties
     several properties to be adapted
@@ -287,7 +289,7 @@ def visual_property(object_array, property_flag, value):
         return average_diameter(object_array, value=value)
 
     elif property_flag == _flags.NUMEROSITY:
-        return numerosity(object_array, value=value)
+        return numerosity(object_array, value=int(value))
 
     elif property_flag == _flags.AV_PERIMETER:
         return average_perimeter(object_array, value=value)

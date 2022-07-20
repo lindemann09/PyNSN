@@ -6,9 +6,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
+from . import misc
 from .base_classes import ABCObjectArray
-from .._lib import misc
-from .._lib.shapes import Rectangle, Point
+from .lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterable, \
+    Any, Union, Sequence, Optional, NumPair, ObjectArray
+from .shapes import Rectangle, Point
 
 
 class RectangleArray(ABCObjectArray):
@@ -16,12 +18,12 @@ class RectangleArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area_radius,
-                 min_dist_between=None,
-                 min_dist_area_boarder=None,
-                 xy=None,
-                 sizes=None,
-                 attributes=None):
+                 target_area_radius: int,
+                 min_dist_between: bool = None,
+                 min_dist_area_boarder: bool = None,
+                 xy: OptArrayLike = None,
+                 sizes: OptArrayLike = None,
+                 attributes: OptArrayLike = None) -> None:
         """Rectangular array is restricted to a certain area, it has a target area
         and a minimum gap.
 
@@ -41,7 +43,7 @@ class RectangleArray(ABCObjectArray):
             raise ValueError("Bad shaped data: " +
                              u"xy has not the same length as sizes array")
 
-    def _append_sizes(self, sizes):
+    def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""
         sizes = misc.numpy_array_2d(sizes)
         if len(self._sizes) == 0:
@@ -51,7 +53,7 @@ class RectangleArray(ABCObjectArray):
             self._sizes = np.append(self._sizes, sizes, axis=0)
         return sizes.shape[0]
 
-    def add(self, rectangles):
+    def add(self, rectangles: Union[Rectangle, Sequence[Rectangle]]) -> None:
         """append one dot or list of dots"""
         try:
             rectangles = list(rectangles)
@@ -65,19 +67,20 @@ class RectangleArray(ABCObjectArray):
         self.properties.reset()
 
     @property
-    def sizes(self):
+    def sizes(self) -> np.ndarray:
         return self._sizes
 
     @property
-    def surface_areas(self):
+    def surface_areas(self) -> np.ndarray:
         # a = w*h
         return self._sizes[:, 0] * self._sizes[:, 1]
 
     @property
-    def perimeter(self):
+    def perimeter(self) -> np.ndarray:
         return 2 * (self._sizes[:, 0] + self._sizes[:, 1])
 
-    def mod_round_values(self, decimals=0, int_type=np.int32):
+    def mod_round_values(self, decimals: int = 0,
+                         int_type = np.int16) -> None:
         """Round values of the array."""
 
         if decimals is None:
@@ -87,27 +90,28 @@ class RectangleArray(ABCObjectArray):
         self._sizes = misc.numpy_round2(self._sizes, decimals=decimals,
                                         int_type=int_type)
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """
         """
         d = super().as_dict()
         d.update({"sizes": self._sizes.tolist()})
         return d
 
-    def read_from_dict(self, the_dict):
+    def read_from_dict(self, the_dict: dict) -> None:
         """read rectangle array from dict"""
         super().read_from_dict(the_dict)
         self._sizes = np.array(the_dict["sizes"])
 
-    def clear(self):
+    def clear(self) -> None:
         super().clear()
         self._sizes = np.array([])
 
-    def delete(self, index):
+    def delete(self, index: IntOVector) -> None:
         super().delete(index)
         self._sizes = np.delete(self._sizes, index, axis=0)
 
-    def copy(self, indices=None, deepcopy=True):
+    def copy(self, indices: OptArrayLike = None,
+             deepcopy: bool = True) -> ObjectArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -139,7 +143,7 @@ class RectangleArray(ABCObjectArray):
                 sizes=self._sizes[indices],
                 attributes=self._attributes[indices])
 
-    def _xy_distances(self, rect):
+    def _xy_distances(self, rect: Rectangle) -> np.ndarray:
         """return distances on both axes between rectangles and reference rec.
          negative number indicates overlap edges along that dimension.
         """
@@ -151,7 +155,7 @@ class RectangleArray(ABCObjectArray):
             dist = pos_dist - max_not_overlap_dist
             return dist # FIXME intensive test distance function rect (also get_distance)
 
-    def get_distances(self, rect):
+    def get_distances(self, rect: Rectangle) -> np.ndarray:
         """Euclidean Distances toward a single Rectangle
         negative numbers indicate overlap
 
@@ -183,7 +187,7 @@ class RectangleArray(ABCObjectArray):
 
             return eucl_dist
 
-    def iter_objects(self, indices=None):
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterable[Rectangle]:
         """iterate over all or a part of the objects
 
         Parameters
@@ -210,19 +214,22 @@ class RectangleArray(ABCObjectArray):
             rtn = Rectangle(xy=xy, size=s, attribute=att)
             yield rtn
 
-    def find_objects(self, size=None, attribute=None, edge=None):
+    def find_objects(self, size: Optional[NumPair] = None,
+                     attribute: Optional[Any] = None,
+                     edge: Optional[Point] = None) -> Sequence[int]:
         """returns indices of found objects
 
         2D-tuple
         """
         rtn = []
         for i in range(len(self._sizes)):
-            if (size is not None and self._sizes[i] != size) or \
+            if (size is not None and
+                self._sizes[i, 0] != size[0] and self._sizes[i, 1] != size[1]) or \
                     (attribute is not None and self._attributes[i] != attribute):
                 continue
             rtn.append(i)
 
-        if edge is not None:
+        if edge is None:
             return rtn
         elif isinstance(edge, Point):
             new_rtn = []
@@ -231,10 +238,12 @@ class RectangleArray(ABCObjectArray):
                     new_rtn.append(i)
             return new_rtn
         else:
-            raise TypeError("edge has to be of type Points")
+            raise TypeError("edge has to be of type Points and not {}.".format(
+                type(edge)))
 
-    def csv(self, variable_names=True, hash_column=False,
-            attribute_column=True):
+    def csv(self, variable_names: bool = True,
+            hash_column: bool = False,
+            attribute_column: bool = True) -> str:
         """Return the rectangle array as csv text
 
         Parameter
@@ -255,20 +264,3 @@ class RectangleArray(ABCObjectArray):
                              size_data_dict=size_dict,
                              attributes=attr, array_hash=array_hash,
                              make_variable_names=variable_names)
-
-    def get_split_arrays(self):
-        """returns a list of arrays
-        each array contains all dots of with particular colour"""
-        att = self._attributes
-        att[np.where(att==None)] = "None"
-
-        rtn = []
-        for c in np.unique(att):
-            if c is not None:
-                da = RectangleArray(target_area_radius=self.target_area_radius,
-                                    min_dist_between=self.min_dist_between,
-                                    min_dist_area_boarder=self.min_dist_area_boarder)
-                da.add(self.find_objects(attribute=c))
-                rtn.append(da)
-        return rtn
-

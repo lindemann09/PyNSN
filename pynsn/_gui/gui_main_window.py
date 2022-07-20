@@ -8,9 +8,8 @@ from PyQt5.QtWidgets import QAction, QMainWindow, qApp, QFileDialog
 from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
-from .. import __version__
 from .. import NSNFactory, ImageColours
-
+from .. import __version__
 from .. import distributions as distr
 from .. import visual_properties as props
 from ..exceptions import NoSolutionError
@@ -127,15 +126,9 @@ class GUIMainWindow(QMainWindow):
     def make_new_array(self):
         factory = self.get_factory()
         try:
-<<<<<<< HEAD
-            self.dot_array = factory.random_array(n_dots=self.get_number(),
-                                                  specs=self.get_specs())
-        except StopIteration as error:
-=======
             self.dot_array = factory.create_random_array(
                 n_objects=self.get_number())
         except NoSolutionError as error:
->>>>>>> devel
             self.main_widget.text_error_feedback(error)
             raise error
 

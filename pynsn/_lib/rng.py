@@ -5,17 +5,17 @@ been called
 """
 
 import numpy as np
-
+from .lib_typing import Union, ArrayLike
 generator = np.random.default_rng()
 
 
-def init_random_generator(seed=None):
+def init_random_generator(seed: Union[int, ArrayLike, None] = None):
     """Init random generator and set random seed (optional)
 
     Parameters
     ----------
     seed: seed value
-        must be  int, array_like[ints], SeedSequence, BitGenerator, Generator
+        must be none, int or array_like[ints]
 
     Notes
     -----

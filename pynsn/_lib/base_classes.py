@@ -6,25 +6,10 @@ from hashlib import md5
 import json
 import numpy as np
 from scipy import spatial
-from typing import (
-    Dict,
-    List,
-    Tuple,
-    Set,
-    Deque,
-    NamedTuple,
-    IO,
-    Pattern,
-    Match,
-    Text,
-    Optional,
-    Sequence,
-    Iterable,
-    Mapping,
-    MutableMapping,
-    Any,
-)
 
+
+from .lib_typing import OptInt, OptArrayLike, IntOVector, ArrayLike, NumPair, \
+    Any, Union, Tuple, Sequence, ObjectArray
 from . import misc
 from . import geometry
 from . import shapes
@@ -40,8 +25,8 @@ class ArrayParameter(object):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: Optional[int] = None,
-                 min_dist_area_boarder: Optional[int] = None):
+                 min_dist_between: OptInt = None,
+                 min_dist_area_boarder: OptInt = None):
         """Numpy Position lists with attributes for optimized for numpy calculations
 
         Abstract class for implementation of dot and rect
@@ -68,10 +53,10 @@ class AttributeArray(ArrayParameter):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: Optional[int] = None,
-                 min_dist_area_boarder: Optional[int] = None,
-                 xy: Optional[Sequence[float, int]] =None,
-                 attributes=None):
+                 min_dist_between: OptInt = None,
+                 min_dist_area_boarder: OptInt = None,
+                 xy: OptArrayLike = None,
+                 attributes: OptArrayLike = None):
         """Numpy Position lists with attributes for optimized for numpy calculations
 
         Abstract class for implementation of dot and rect
@@ -87,7 +72,8 @@ class AttributeArray(ArrayParameter):
         if xy is not None:
             self._append_xy_attribute(xy=xy, attributes=attributes)
 
-    def _append_xy_attribute(self, xy, attributes=None):
+    def _append_xy_attribute(self, xy: ArrayLike,
+                             attributes: OptArrayLike = None) -> int:
         """returns number of added rows"""
         xy = misc.numpy_array_2d(xy)
         if not isinstance(attributes, (tuple, list)):
@@ -106,40 +92,40 @@ class AttributeArray(ArrayParameter):
         self._properties.reset()
         return xy.shape[0]
 
-    def __str__(self):
+    def __str__(self) -> str:
         prop_text = self._properties.as_text(extended_format=True)
         rtn = "- {}".format(type(self).__name__)
         rtn += "\n " + prop_text[1:]  # replace "-" with " "
         return rtn
 
     @property
-    def xy(self):
+    def xy(self) -> np.ndarray:
         return self._xy
 
     @property
-    def xy_rounded_integer(self):
+    def xy_rounded_integer(self) -> np.ndarray:
         """rounded to integer"""
         return np.round(self._xy)
 
     @property
-    def attributes(self):
+    def attributes(self) -> np.ndarray:
         return self._attributes
 
     @property
-    def properties(self):
+    def properties(self) -> ArrayProperties:
         return self._properties
 
     @property
-    def surface_areas(self):
+    def surface_areas(self) -> np.ndarray:
         """per definition always zero"""
         return np.array([0] * len(self._xy))
 
     @property
-    def perimeter(self):
+    def perimeter(self) -> np.ndarray:
         """per definition always zero"""
         return np.array([0] * len(self._xy))
 
-    def set_attributes(self, attributes):
+    def set_attributes(self, attributes: ArrayLike) -> None:
         """Set all attributes
 
         Parameter
@@ -157,7 +143,7 @@ class AttributeArray(ArrayParameter):
             self._attributes = np.array([attributes] * self._properties.numerosity)
 
     @property
-    def hash(self):
+    def hash(self) -> str:
         """md5_hash of positions and perimeter"""
         m = md5()
         m.update(
@@ -169,22 +155,23 @@ class AttributeArray(ArrayParameter):
         m.update(self._attributes.tobytes())
         return m.hexdigest()
 
-    def get_center_of_field_area(self):
+    def get_center_of_field_area(self) -> np.ndarray:
         """Center of all object positions
         """
         return geometry.center_of_positions(self.properties.convex_hull.xy)
 
-    def clear(self):
+    def clear(self) -> None:
         self._xy = np.array([])
         self._attributes = np.array([])
         self._properties.reset()
 
-    def delete(self, index):
+    def delete(self, index: ArrayLike) -> None:
         self._xy = np.delete(self._xy, index, axis=0)
         self._attributes = np.delete(self._attributes, index)
         self._properties.reset()
 
-    def copy(self, indices=None, deepcopy=True):
+    def copy(self, indices: OptArrayLike = None,
+             deepcopy: bool = True) -> ObjectArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -212,7 +199,7 @@ class AttributeArray(ArrayParameter):
                                   xy=self._xy[indices, :],
                                   attributes=self._attributes[indices])
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """
         """
         d = super().as_dict()
@@ -223,20 +210,21 @@ class AttributeArray(ArrayParameter):
             d.update({"attributes": self._attributes.tolist()})
         return d
 
-    def read_from_dict(self, dict):
+    def read_from_dict(self, the_dict: dict) -> None:
         """read dot array from dict"""
-        self.target_area_radius = dict["target_area_radius"]
-        self.min_dist_between = dict["min_dist_between"]
-        self.min_dist_area_boarder = dict["min_dist_area_boarder"]
-        self._xy = np.array(dict["xy"])
-        if not isinstance(dict["attributes"], (list, tuple)):
-            att = [dict["attributes"]] * self._properties.numerosity
+        self.target_area_radius = the_dict["target_area_radius"]
+        self.min_dist_between = the_dict["min_dist_between"]
+        self.min_dist_area_boarder = the_dict["min_dist_area_boarder"]
+        self._xy = np.array(the_dict["xy"])
+        if not isinstance(the_dict["attributes"], (list, tuple)):
+            att = [the_dict["attributes"]] * self._properties.numerosity
         else:
-            att = dict["attributes"]
+            att = the_dict["attributes"]
         self._attributes = np.array(att)
         self._properties.reset()
 
-    def json(self, indent=None, include_hash=False):
+    def json(self, indent: int = None,
+             include_hash: bool = False) -> str:
         """"""
         # override and extend as_dict not this function
 
@@ -247,16 +235,17 @@ class AttributeArray(ArrayParameter):
             indent = None
         return json.dumps(d, indent=indent)
 
-    def save(self, json_file_name, indent=None, include_hash=False):
+    def save(self, json_file_name: str,
+             indent: int = None,
+             include_hash: bool = False) -> None:
         """"""
         with open(json_file_name, 'w') as fl:
             fl.write(self.json(indent=indent, include_hash=include_hash))
 
-    def load(self, json_file_name):
+    def load(self, json_file_name: str) -> None:
         # override and extend read_from_dict not this function
         with open(json_file_name, 'r') as fl:
-            dict = json.load(fl)
-        self.read_from_dict(dict)
+            self.read_from_dict(json.load(fl))
 
 
 class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
@@ -276,8 +265,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return super().as_dict()
 
     @abstractmethod
-    def read_from_dict(self, dict):
-        return super().read_from_dict()
+    def read_from_dict(self, the_dict):
+        return super().read_from_dict(the_dict)
 
     @abstractmethod
     def copy(self, indices=None, deepcopy=True):
@@ -286,9 +275,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     @abstractmethod
     def iter_objects(self, indices=None):
         pass
-
-    def get_objects(self, indices=None):
-        return list(self.iter_objects(indices=indices))
 
     @abstractmethod
     def add(self, something):
@@ -311,11 +297,14 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     def mod_round_values(self):
         pass
 
-    def join(self, object_array):
+    def get_objects(self, indices: IntOVector = None) -> Sequence[Union[shapes.Dot, shapes.Rectangle]]:
+        return list(self.iter_objects(indices=indices))
+
+    def join(self, object_array) -> None:
         """add another object arrays"""
         self.add(object_array.iter_objects())
 
-    def get_distances_matrix(self, between_positions=False):
+    def get_distances_matrix(self, between_positions: bool = False) -> np.ndarray:
         """between position ignores the dot size"""
         if between_positions:
             return spatial.distance.cdist(self._xy, self._xy)
@@ -323,7 +312,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         dist = np.asarray([self.get_distances(d) for d in self.iter_objects()])
         return dist
 
-    def get_overlaps(self):
+    def get_overlaps(self) -> Tuple[np.ndarray, np.ndarray]:
         """return pairs of indices of overlapping of objects and an array of the
         amount of overlap
         takes into account min_dist_between property
@@ -334,24 +323,25 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         overlap = np.where(dist < self.min_dist_between)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
-    def get_center_of_mass(self):
+    def get_center_of_mass(self) -> np.ndarray:
         weighted_sum = np.sum(self._xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
-    def mod_center_array_mass(self):
+    def mod_center_array_mass(self) -> None:
         self._xy = self._xy - self.get_center_of_mass()
         self._properties.reset()
 
-    def mod_center_field_area(self):
+    def mod_center_field_area(self) -> None:
         cxy = geometry.center_of_positions(self.properties.convex_hull.xy)
         self._xy = self._xy - cxy
         self._properties.reset()
 
-    def get_free_position(self, ref_object,
-                          in_neighborhood=False,
-                          allow_overlapping=False,
-                          inside_convex_hull=False,
-                          occupied_space=None):
+    def get_free_position(self,
+                          ref_object: Union[shapes.Dot, shapes.Rectangle],
+                          in_neighborhood: bool = False,
+                          allow_overlapping: bool = False,
+                          inside_convex_hull: bool = False,
+                          occupied_space=None) -> Union[shapes.Dot, shapes.Rectangle]:
         """returns the copy of object of at a random free position
 
         raise exception if not found
@@ -404,7 +394,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 tmp_array = self.copy(deepcopy=True)
                 tmp_array.add([rtn_object])
                 is_outside = tmp_array.properties.convex_hull != \
-                               self.properties.convex_hull
+                             self.properties.convex_hull
             if is_outside:
                 if in_neighborhood:
                     random_walk.step_back()
@@ -419,7 +409,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                     continue
             return rtn_object
 
-    def mod_shuffle_positions(self, allow_overlapping=False):
+    def mod_shuffle_positions(self, allow_overlapping: bool = False) -> None:
         """might raise an exception"""
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
@@ -434,18 +424,19 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
             self.add([new])
 
-    def get_outlier(self):
+    def get_outlier(self) -> Tuple[np.ndarray, np.ndarray]:
         """returns indices of object that stand out and array with the size
         of outstanding
         """
 
         xy = self.properties.convex_hull.xy
         sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
-                        (self.target_area_radius - self.min_dist_area_boarder)
+                         (self.target_area_radius - self.min_dist_area_boarder)
         idx = sizes_outlying > 0
         return self.properties.convex_hull.object_indices[idx], sizes_outlying[idx]
 
-    def get_number_deviant(self, change_numerosity, preserve_field_area=False):
+    def get_number_deviant(self, change_numerosity: int,
+                           preserve_field_area: bool = False) -> ObjectArray:
         """number deviant
         """
         object_array = self.copy()
@@ -454,7 +445,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                        keep_convex_hull=preserve_field_area)
         return object_array
 
-    def mod_remove_overlaps(self, keep_convex_hull=False, strict=False):
+    def mod_remove_overlaps(self, keep_convex_hull: bool = False,
+                            strict: bool = False) -> bool:
         """
         Returns
         Parameters
@@ -516,8 +508,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                         if found is None:
                             try:
                                 found = self.get_free_position(ref_object=obj,
-                                                    in_neighborhood=in_neighborhood,
-                                                    inside_convex_hull=inside_convex_hull)
+                                                               in_neighborhood=in_neighborhood,
+                                                               inside_convex_hull=inside_convex_hull)
                             except NoSolutionError as e:
                                 found = None
 
@@ -540,8 +532,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         return old_fa == new_ch
 
-    def mod_move_object(self, object_id, distance, direction,
-                        push_other=False):
+    def mod_move_object(self, object_id: int,
+                        distance: float,
+                        direction: Union[float, Tuple[float, float]],
+                        push_other: bool = False) -> None:
         """
 
         Parameters
@@ -584,17 +578,17 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             # push overlapping object
             obj = next(self.iter_objects(indices=object_id))
             dist = self.get_distances(obj)
-            for other_id in np.flatnonzero(dist<0):
+            for other_id in np.flatnonzero(dist < 0):
                 if other_id != object_id:
                     movement.xy = self._xy[other_id, :] - self._xy[object_id, :]
                     self.mod_move_object(other_id,
-                                direction = movement.polar_angle,
-                                distance = abs(dist[other_id]) + self.min_dist_between,
-                                push_other=True)
+                                         direction=movement.polar_angle,
+                                         distance=abs(dist[other_id]) + self.min_dist_between,
+                                         push_other=True)
 
         self.properties.reset()
 
-    def mod_squeeze_to_area(self, push_other=True):
+    def mod_squeeze_to_area(self, push_other: bool = True) -> None:
         """squeeze in target area to remove all standouts"""
         cnt = 0
         while True:
@@ -607,14 +601,14 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 return
             for object_id, size in zip(idx, size):
                 self.mod_move_object(object_id, distance=size,
-                                     direction = (0,0),
+                                     direction=(0, 0),
                                      push_other=push_other)
 
-    def get_split_arrays(self):
+    def get_split_arrays(self) -> ObjectArray:
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
-        att[np.where(att == None)] = "None"  # TODO check "is none"
+        att[np.where(att==None)] = "None"  # TODO check "is none"
 
         rtn = []
         for c in np.unique(att):
@@ -625,7 +619,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 rtn.append(da)
         return rtn
 
-    def mod_realign(self, keep_convex_hull=False, strict=True):
+    def mod_realign(self, keep_convex_hull=False, strict=True) -> Tuple[bool, bool]:
         """
 
         Parameters
@@ -639,7 +633,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         """
         convex_hull_unchanged = self.mod_remove_overlaps(keep_convex_hull=keep_convex_hull,
-                                                strict=strict)
+                                                         strict=strict)
         self.mod_center_field_area()
 
         has_no_outlier = len(self.get_outlier()[0]) == 0

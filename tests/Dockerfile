@@ -3,7 +3,7 @@ FROM python:3.6
 WORKDIR /home
 
 RUN pip install pip -U && \
-	pip install numpy scipy pillow matplotlib svgwrite
+	pip install numpy scipy pillow matplotlib svgwrite -U
 
 COPY pynsn/ pynsn/
 COPY tests/ tests/

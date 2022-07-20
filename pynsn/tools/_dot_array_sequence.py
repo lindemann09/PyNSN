@@ -264,13 +264,8 @@ def check_property_list(feature_list):
         feature_list = [feature_list]
 
     for x in feature_list:
-<<<<<<< HEAD:pynsn/_sequence/dot_array_sequence.py
-        if x not in _Feat.ALL_FEATURES:
-            raise ValueError("Parameter is not a continuous feature or a " + \
-=======
         if x not in flags:
             raise ValueError("Parameter is not a continuous propertyor a " + \
->>>>>>> devel:pynsn/tools/_dot_array_sequence.py
                             "list of continuous properties")
             # continious property or visual prop
 

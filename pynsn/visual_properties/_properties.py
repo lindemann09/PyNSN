@@ -3,8 +3,10 @@
 from collections import OrderedDict
 from enum import IntFlag, auto
 from math import log2
-
 import numpy as np
+
+from .._lib.lib_typing import Any, Optional, NumPair, ObjectArray
+
 from .. import _lib
 from ._convex_hull import ConvexHull, ConvexHullPositions
 
@@ -27,12 +29,12 @@ class VisualPropertyFlag(IntFlag):
 
     NUMEROSITY = auto()
 
-    def is_dependent_from(self, other_property):
+    def is_dependent_from(self, other_property: Any) -> bool:
         """returns true if both properties are not independent"""
         return (self.is_size_property() and other_property.is_size_property()) or \
                (self.is_space_property() and other_property.is_space_property())
 
-    def is_size_property(self):
+    def is_size_property(self) -> bool :
         return self in (VisualPropertyFlag.LOG_SIZE,
                         VisualPropertyFlag.TOTAL_SURFACE_AREA,
                         VisualPropertyFlag.AV_DOT_DIAMETER,
@@ -40,12 +42,12 @@ class VisualPropertyFlag(IntFlag):
                         VisualPropertyFlag.AV_PERIMETER,
                         VisualPropertyFlag.TOTAL_PERIMETER)
 
-    def is_space_property(self):
+    def is_space_property(self) -> bool:
         return self in (VisualPropertyFlag.LOG_SPACING,
                         VisualPropertyFlag.SPARSITY,
                         VisualPropertyFlag.FIELD_AREA)
 
-    def label(self):
+    def label(self) -> str:
         labels = {
             VisualPropertyFlag.NUMEROSITY: "Numerosity",
             VisualPropertyFlag.LOG_SIZE: "Log Size",
@@ -65,7 +67,7 @@ class VisualPropertyFlag(IntFlag):
 
 class ArrayProperties(object):
 
-    def __init__(self, object_array):
+    def __init__(self, object_array: ObjectArray) -> None:
         # _lib or dot_cloud
         assert isinstance(object_array, (_lib.DotArray, _lib.RectangleArray,
                                          _lib.AttributeArray))
@@ -73,71 +75,73 @@ class ArrayProperties(object):
         self._convex_hull = None
         self._convex_hull_positions = None
 
-    def reset(self):
+    def reset(self) -> None:
         """reset to enforce recalculation of certain parameter """
         self._convex_hull = None
         self._convex_hull_positions = None
 
     @property
-    def convex_hull(self):
+    def convex_hull(self) -> ConvexHull:
         if self._convex_hull is None:
             self._convex_hull = ConvexHull(self.oa)
         return self._convex_hull
 
     @property
-    def convex_hull_positions(self):
+    def convex_hull_positions(self) -> ConvexHullPositions:
         if self._convex_hull_positions is None:
             self._convex_hull_positions = ConvexHullPositions(self.oa)
         return self._convex_hull_positions
 
     @property
-    def average_dot_diameter(self):
+    def average_dot_diameter(self) -> Optional[float]:
         if not isinstance(self.oa, _lib.DotArray):
             return None
         elif self.numerosity == 0:
-            return np.nan
+            return None
         else:
-            return np.mean(self.oa.diameter)
+            return float(np.mean(self.oa.diameter))
 
     @property
-    def average_rectangle_size(self):
+    def average_rectangle_size(self) -> Optional[NumPair]:
         if not isinstance(self.oa, _lib.RectangleArray):
             return None
         elif self.numerosity == 0:
-            return np.array([np.nan, np.nan])
+            return np.array([np.na, np.na])
         else:
             return np.mean(self.oa.sizes, axis=0)
 
     @property
-    def total_surface_area(self):
-        return np.sum(self.oa.surface_areas)
+    def total_surface_area(self) -> Optional[float]:
+        return float(np.sum(self.oa.surface_areas))
 
     @property
-    def average_surface_area(self):
+    def average_surface_area(self) -> Optional[float]:
         if self.numerosity == 0:
-            return np.nan
-        return np.mean(self.oa.surface_areas)
+            return None
+        return float(np.mean(self.oa.surface_areas))
 
     @property
-    def total_perimeter(self):
-        return np.sum(self.oa.perimeter)
-
-    @property
-    def average_perimeter(self):
+    def total_perimeter(self) -> Optional[float]:
         if self.numerosity == 0:
-            return np.nan
-        return np.mean(self.oa.perimeter)
+            return None
+        return float(np.sum(self.oa.perimeter))
 
     @property
-    def field_area_positions(self):
+    def average_perimeter(self) -> Optional[float]:
+        if self.numerosity == 0:
+            return None
+        return float(np.mean(self.oa.perimeter))
+
+    @property
+    def field_area_positions(self) -> Optional[float]:
         return self.convex_hull_positions.field_area
 
     @property
-    def numerosity(self):
+    def numerosity(self) -> int:
         return len(self.oa._xy)
 
     @property
-    def converage(self):
+    def converage(self) -> Optional[float]:
         """ percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
@@ -145,35 +149,35 @@ class ArrayProperties(object):
         try:
             return self.total_surface_area / self.field_area
         except ZeroDivisionError:
-            return np.nan
+            return None
 
     @property
-    def log_size(self):
+    def log_size(self) -> Optional[float]:
         try:
             return log2(self.total_surface_area) + \
                    log2(self.average_surface_area)
         except ValueError:
-            return np.nan
+            return None
 
     @property
-    def log_spacing(self):
+    def log_spacing(self) -> Optional[float]:
         try:
             return log2(self.field_area) + log2(self.sparsity)
         except ValueError:
-            return np.nan
+            return None
 
     @property
-    def sparsity(self):
+    def sparsity(self) -> Optional[float]:
         try:
             return self.field_area / self.numerosity
         except ZeroDivisionError:
-            return np.nan
+            return None
 
     @property
-    def field_area(self):
+    def field_area(self) -> Optional[float]:
         return self.convex_hull.field_area
 
-    def get(self, property_flag):
+    def get(self, property_flag: VisualPropertyFlag) -> Any:
         """returns a visual property"""
 
         assert isinstance(property_flag, VisualPropertyFlag)
@@ -218,7 +222,7 @@ class ArrayProperties(object):
         else:
             raise ValueError("{} is a unknown visual feature".format(property_flag))
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """ordered dictionary with the most important visual properties"""
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
@@ -241,10 +245,12 @@ class ArrayProperties(object):
             rtn.pop(2)
         return OrderedDict(rtn)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.as_text()
 
-    def as_text(self, with_hash=True, extended_format=False, spacing_char="."):
+    def as_text(self, with_hash: bool = True,
+                extended_format: bool = False,
+                spacing_char: str = ".") -> str:
         if extended_format:
             rtn = None
             for k, v in self.as_dict().items():

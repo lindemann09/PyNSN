@@ -4,16 +4,23 @@ The named colour are the 140 HTML colour names:
 """
 from collections import OrderedDict
 from functools import total_ordering
+
 from .._lib import misc
+from .._lib.lib_typing import Union, Tuple, List
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
 
+RGBType = Tuple[int, int, int]
+ColourType = Union[None, RGBType, List[float], str]
+
+
 @total_ordering
 class Colour(object):
 
-    def __init__(self, colour, default=None):
+    def __init__(self, colour: ColourType,
+                 default: ColourType = None) -> None:
         """if colour is unknown or None, default colour is used
 
         Thus, `Colour(variable, default="red")` will result in red is variable
@@ -45,10 +52,10 @@ class Colour(object):
         return self._colour != other._colour
 
     @property
-    def colour(self):
+    def colour(self) -> str:
         return self._colour
 
-    def set(self, value):
+    def set(self, value: ColourType) -> None:
         if value is None:
             self._colour = None
         elif isinstance(value, Colour):
@@ -71,10 +78,10 @@ class Colour(object):
                                             value))
 
     @property
-    def rgb(self):
+    def rgb(self) -> RGBType:
         return Colour.hextriplet2rgb(self._colour)
 
-    def rgb_alpha(self, alpha):
+    def rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int]:
         """if alpha can be float <= 1.0 or an integer between [0, 255]"""
 
         if isinstance(alpha, float):
@@ -88,16 +95,15 @@ class Colour(object):
             raise TypeError("If alpha has to be a float or int and not {}.".format(
                 type(alpha)))
 
-        a = Colour.hextriplet2rgb(self._colour)
         return Colour.hextriplet2rgb(self._colour) + (alpha,)
 
     @staticmethod
-    def hextriplet2rgb(hextriplet):
+    def hextriplet2rgb(hextriplet: str) -> RGBType:
         ht = hextriplet.lstrip("#")
         return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
 
     @staticmethod
-    def rgb2hextriplet(rgb, uppercase=True):
+    def rgb2hextriplet(rgb: RGBType, uppercase: bool = True):
         if len(rgb) != 3:
             raise TypeError("rgb must be a list of three values.")
         if uppercase:
@@ -260,15 +266,15 @@ class ImageColours(object):
     OPACITY_GUIDES = 0.5
 
     def __init__(self,
-                 target_area=None,
-                 field_area_positions=None,
-                 field_area=None,
-                 center_of_field_area=None,
-                 center_of_mass=None,
-                 background=None,
-                 default_object_colour=None,
-                 opacity_object=None,
-                 opacity_guides=None
+                 target_area: ColourType = None,
+                 field_area_positions: ColourType = None,
+                 field_area: ColourType = None,
+                 center_of_field_area: ColourType = None,
+                 center_of_mass: ColourType = None,
+                 background: ColourType = None,
+                 default_object_colour: ColourType = None,
+                 opacity_object: float = None,
+                 opacity_guides: float = None
                  ):
 
         self.target_area = Colour(target_area,
@@ -279,7 +285,7 @@ class ImageColours(object):
         self.center_of_mass = Colour(center_of_mass, default=None)
         self.background = Colour(background, default=None)
         self.default_object_colour = Colour(default_object_colour,
-                                           default=ImageColours.COL_DEFAULT_OBJECT)
+                                            default=ImageColours.COL_DEFAULT_OBJECT)
         if opacity_guides is None:
             opacity_guides = ImageColours.OPACITY_GUIDES
         if opacity_guides < 0 or opacity_guides > 1:
@@ -291,7 +297,7 @@ class ImageColours(object):
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         return OrderedDict(
             {"total_area": self.target_area.colour,
              "field_area_positions": self.field_area_positions.colour,
@@ -304,5 +310,5 @@ class ImageColours(object):
              "info_opacity": self.opacity_guides
              })
 
-    def __str__(self):
+    def __str__(self) -> str:
         return misc.dict_to_text(self.as_dict(), col_a=24, col_b=10)
