@@ -255,11 +255,6 @@ class Colour(object):
 
 class ImageColours(object):
     COL_TARGET_AREA = "#FFF0D9"
-    COL_FIELD_AREA_POSITIONS = None
-    COL_FIELD_AREA = None
-    COL_CENTER_OF_POSITIONS = None
-    COL_CENTER_OF_MASS = None
-    COL_BACKGROUND = None
     COL_DEFAULT_OBJECT = "darkgreen"
     OPACITY_OBJECT = 1
     OPACITY_GUIDES = 0.5
@@ -268,7 +263,7 @@ class ImageColours(object):
                  target_area=None,
                  field_area_positions=None,
                  field_area=None,
-                 center_of_positions=None,
+                 center_of_field_area=None,
                  center_of_mass=None,
                  background=None,
                  default_object_colour=None,
@@ -278,16 +273,11 @@ class ImageColours(object):
 
         self.target_area = Colour(target_area,
                                   default=ImageColours.COL_TARGET_AREA)
-        self.field_area_positions = Colour(field_area_positions,
-                                           default=ImageColours.COL_FIELD_AREA_POSITIONS)
-        self.field_area = Colour(field_area,
-                                 default=ImageColours.COL_FIELD_AREA)
-        self.center_of_positions = Colour(center_of_positions,
-                                          default=ImageColours.COL_CENTER_OF_POSITIONS)
-        self.center_of_mass = Colour(center_of_mass,
-                                           default=ImageColours.COL_CENTER_OF_MASS)
-        self.background = Colour(background,
-                                 default=ImageColours.COL_BACKGROUND)
+        self.field_area_positions = Colour(field_area_positions, default=None)
+        self.field_area = Colour(field_area, default=None)
+        self.center_of_field_area = Colour(center_of_field_area, default=None)
+        self.center_of_mass = Colour(center_of_mass, default=None)
+        self.background = Colour(background, default=None)
         self.default_object_colour = Colour(default_object_colour,
                                            default=ImageColours.COL_DEFAULT_OBJECT)
         if opacity_guides is None:
@@ -306,7 +296,7 @@ class ImageColours(object):
             {"total_area": self.target_area.colour,
              "field_area_positions": self.field_area_positions.colour,
              "field_area": self.field_area.colour,
-             "center_of_positions": self.center_of_positions.colour,
+             "center_of_field_area": self.center_of_field_area.colour,
              "center_of_mass": self.center_of_mass.colour,
              "background": self.background.colour,
              "default_object": self.default_object_colour.colour,

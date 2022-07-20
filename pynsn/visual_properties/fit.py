@@ -166,7 +166,7 @@ def _scale_field_area(object_array, value, precision):
         step *= -1
 
     # centered points
-    old_center = object_array.get_center_of_positions()
+    old_center = object_array.get_center_of_field_area()
     object_array._xy = object_array.xy - old_center
     centered_polar = _geometry.cartesian2polar(object_array.xy)
 

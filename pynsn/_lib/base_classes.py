@@ -149,10 +149,10 @@ class AttributeArray(ArrayParameter):
         m.update(self._attributes.tobytes())
         return m.hexdigest()
 
-    def get_center_of_positions(self):
+    def get_center_of_field_area(self):
         """Center of all object positions
         """
-        return geometry.center_of_positions(self._xy)
+        return geometry.center_of_positions(self.properties.convex_hull.xy)
 
     def clear(self):
         self._xy = np.array([])
