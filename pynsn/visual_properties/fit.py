@@ -33,7 +33,7 @@ def change_fit_settings(default_spacing_precision=None,
 #FIXME coverage for all
 
 
-def numerosity(object_array, value, keep_field_area=False):
+def numerosity(object_array, value, keep_convex_hull=False):
     """
 
     """
@@ -48,10 +48,10 @@ def numerosity(object_array, value, keep_field_area=False):
         for _ in range(abs(change_numerosity)):
             if change_numerosity < 0:
                 # remove dots
-                if keep_field_area:
+                if keep_convex_hull:
                     # find a random object that is not in convex hull
                     delete_id = None
-                    ch = object_array._properties.convex_hull.indices
+                    ch = object_array._properties.convex_hull.object_indices_unique
                     rnd_seq = list(range(0, object_array._properties.numerosity))
                     _rng.generator.shuffle(rnd_seq)
                     for x in rnd_seq:
@@ -72,7 +72,7 @@ def numerosity(object_array, value, keep_field_area=False):
                 try:
                     rnd_object = object_array.get_free_position(
                         ref_object=rnd_object, allow_overlapping=False,
-                        inside_convex_hull=keep_field_area)
+                        inside_convex_hull=keep_convex_hull)
                 except _NoSolutionError:
                     # no free position
                     raise _NoSolutionError("Can't increase numerosity. No free position found.")

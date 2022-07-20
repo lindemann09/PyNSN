@@ -8,7 +8,7 @@ class ConvexHullBaseClass(object):
     """convenient wrapper class for calculation of convex hulls
     """
 
-    def _initialize(self, xy):
+    def __init__(self, xy):
         try:
             self._convex_hull = spatial.ConvexHull(xy)
         except spatial.QhullError:
@@ -29,7 +29,7 @@ class ConvexHullBaseClass(object):
             return self._convex_hull.volume
 
     @property
-    def indices(self):
+    def object_indices(self):
         return self._convex_hull.vertices
 
     def __eq__(self, other):
@@ -48,18 +48,19 @@ class ConvexHullPositions(ConvexHullBaseClass):
     def __init__(self, object_array):
         assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
                                          _lib.RectangleArray))
-        self._initialize(object_array.xy)
+        ConvexHullBaseClass.__init__(self, xy=object_array.xy)
 
 
 class ConvexHull(ConvexHullBaseClass):
     """convenient wrapper class for calculation of convex hulls
 
-    using outer positions
+    using outer positions, able to handle rects
     """
 
     def __init__(self, object_array):
         assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
                                          _lib.RectangleArray))
+
         if isinstance(object_array, _lib.DotArray):
             # centered polar coordinates
             minmax = np.array((np.min(object_array.xy, axis=0),
@@ -81,4 +82,16 @@ class ConvexHull(ConvexHullBaseClass):
         else:  # generic attribute array
             outer_xy = object_array.xy
 
-        self._initialize(outer_xy)
+        ConvexHullBaseClass.__init__(self, xy=outer_xy)
+        self._is_rect_array = isinstance(object_array, _lib.RectangleArray)
+
+    @property
+    def object_indices(self):
+        if self._is_rect_array:
+            return np.int16(self._convex_hull.vertices/4)
+        else:
+            return self._convex_hull.vertices
+
+    @property
+    def object_indices_unique(self):
+        return np.unique(self.object_indices)

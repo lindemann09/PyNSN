@@ -420,7 +420,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
                         (self.target_area_radius - self.min_dist_area_boarder)
         idx = sizes_outlying > 0
-        return self.properties.convex_hull.indices[idx], sizes_outlying[idx]
+        return self.properties.convex_hull.object_indices[idx], sizes_outlying[idx]
 
     def get_number_deviant(self, change_numerosity, preserve_field_area=False):
         """number deviant
@@ -428,15 +428,15 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
         fit.numerosity(object_array, value=new_num,
-                       keep_field_area=preserve_field_area)
+                       keep_convex_hull=preserve_field_area)
         return object_array
 
-    def mod_remove_overlaps(self, keep_field_area=False, strict=False):
+    def mod_remove_overlaps(self, keep_convex_hull=False, strict=False):
         """
         Returns
         Parameters
         ----------
-        keep_field_area
+        keep_convex_hull
         strict
 
         Returns
@@ -449,10 +449,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         warning_info = "Can't keep field area constant."
         old_fa = self.properties.field_area
 
-        if not keep_field_area:
+        if not keep_convex_hull:
             # touch convex hull objects
             ids = list(range(len(self._xy)))
-            for x in self.properties.convex_hull.indices:
+            for x in self.properties.convex_hull.object_indices_unique:
                 self.mod_move_object(x, 0, (0, 0), push_other=True)
                 ids.remove(x)
             # touch remaining ids
@@ -462,7 +462,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         else:
             overlaps = self.get_overlaps()[0]
-            ch_idx = self.properties.convex_hull.indices
+            ch_idx = self.properties.convex_hull.object_indices_unique
 
             while len(overlaps):
                 # do not replace convexhull objects and try to
@@ -505,7 +505,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
         # check convex hull change
         new_ch = self.properties.field_area
-        if keep_field_area and old_fa != new_ch:
+        if keep_convex_hull and old_fa != new_ch:
             if strict:
                 raise NoSolutionError(warning_info)
             else:
@@ -598,12 +598,12 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 rtn.append(da)
         return rtn
 
-    def mod_realign(self, keep_field_area=False, strict=True): # FIXME do we need this function at all?
+    def mod_realign(self, keep_convex_hull=False, strict=True):
         """
 
         Parameters
         ----------
-        keep_field_area
+        keep_convex_hull
         strict
 
         Returns
@@ -611,13 +611,13 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         field_area_unchanged, no_outlier
 
         """
-        fa_unchanged = self.mod_remove_overlaps(keep_field_area=keep_field_area,
+        convex_hull_unchanged = self.mod_remove_overlaps(keep_convex_hull=keep_convex_hull,
                                                 strict=strict)
         self.mod_center_field_area()
 
         has_no_outlier = len(self.get_outlier()[0]) == 0
         if not has_no_outlier:
-            if keep_field_area:
+            if keep_convex_hull:
                 warning_info = "Can't keep field area constant."
                 if strict:
                     raise NoSolutionError(warning_info)
@@ -626,8 +626,8 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
             self.mod_squeeze_to_area(push_other=True)
             has_no_outlier = True
-            fa_unchanged = False
+            convex_hull_unchanged = False
 
-        return fa_unchanged, has_no_outlier
+        return convex_hull_unchanged, has_no_outlier
 
 # TODO  everywhere: file header doc and author information

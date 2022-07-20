@@ -8,7 +8,7 @@ import numpy as np
 
 from random import randint
 seed = randint(0, 1000)
-seed = 993
+seed = 997
 nsn.init_random_generator(seed)
 
 # FIXME overlapping rects
@@ -27,15 +27,21 @@ factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],
                                         exact_weighting=True) )
 
+factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
+                                        attributes=distr.Levels(["blue", "green"],
+                                        exact_weighting=True) )
+
+
 stimulus = factory.create_random_array(n_objects=20)
-assert isinstance(stimulus, nsn.DotArray)
+assert isinstance(stimulus, nsn.RectangleArray)
 props.scale.log_size(stimulus, 1)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
+print(stimulus.mod_realign(keep_convex_hull=False, strict=False))
 
 
-print(stimulus.mod_realign(keep_field_area=False, strict=False))
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")
+
