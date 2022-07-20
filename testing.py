@@ -32,9 +32,9 @@ factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
                                         exact_weighting=True) )
 
 
-stimulus = factory.create_random_array(n_objects=4)
+stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.RectangleArray)
-props.scale.log_size(stimulus, 1.3)
+props.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
@@ -42,13 +42,7 @@ print(stimulus.mod_realign(keep_convex_hull=False, strict=False))
 
 
 
-print(stimulus.get_overlaps()[0])
 dist = stimulus.get_distances_matrix()
-
-
-
-
-
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")

@@ -447,6 +447,10 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         rtn: boolean
             True, if field area has not been changed (in case strict=False)
 
+        Notes
+        -----
+
+        TODO describe different algorithm for keep and not keep CH
         """
 
         warning_info = "Can't keep field area constant."

@@ -105,7 +105,7 @@ class RectangleArray(ABCObjectArray):
 
     def delete(self, index):
         super().delete(index)
-        self._sizes = np.delete(self._sizes, index)
+        self._sizes = np.delete(self._sizes, index, axis=0)
 
     def copy(self, indices=None, deepcopy=True):
         """returns a (deep) copy of the dot array.
@@ -164,9 +164,24 @@ class RectangleArray(ABCObjectArray):
             return np.array([])
         else:
             d_xy = self._xy_distances(rect)
-            # distances with a two one negative xy_distances --> overlap
-            overlap = np.array(np.sum(d_xy < 0, axis=1) == 2, dtype=int)
-            return np.hypot(d_xy[:, 0], d_xy[:, 1]) * (overlap * -2 + 1)  # overlap [0, 1, 0] -> [1,-1, 1]
+            eucl_dist = np.hypot(d_xy[:, 0], d_xy[:, 1])
+            for i, n_neg in enumerate(np.sum(d_xy < 0, axis=1)):
+                if n_neg == 2:
+                    # two dimensions overlap -> calc distance and make negative
+                    eucl_dist[i] = -1 * eucl_dist[i]
+                elif n_neg == 1:
+                    # one dimension overlaps -> set to zero
+                    if d_xy[i, 0] < 0:
+                        x = 0
+                    else:
+                        x = d_xy[i, 0]
+                    if d_xy[i, 1] < 0:
+                        y = 0
+                    else:
+                        y = d_xy[i, 1]
+                    eucl_dist[i] = np.hypot(x, y)
+
+            return eucl_dist
 
     def iter_objects(self, indices=None):
         """iterate over all or a part of the objects
