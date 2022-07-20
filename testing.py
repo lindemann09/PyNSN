@@ -34,12 +34,13 @@ stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.RectangleArray)
 props.scale.log_size(stimulus, 1.2)
 
+stimulus.copy()
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
-stimulus.find_objects(size=(23, 434))
-
+print(stimulus)
+fit.average_perimeter(stimulus, 130)
 dist = stimulus.get_distances_matrix()
 
 img = pil_image.create(stimulus, my_colours)

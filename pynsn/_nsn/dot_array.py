@@ -30,9 +30,9 @@ class DotArray(_RestrictedCloud):
     def __init__(self,
                  target_array_radius: float,
                  minimum_gap: float,
-                 xy: _tp.Optional[NumArray] = None,
-                 diameters: _tp.Optional[NumVector] = None,
-                 attributes: _tp.Optional[AttributeOrAttributeVector] = None) -> None:
+                 xy: Optional[NumArray] = None,
+                 diameters: Optional[NumVector] = None,
+                 attributes: Optional[AttributeOrAttributeVector] = None) -> None:
         """Dot array is restricted to a certain area, it has a target area
         and a minimum gap.
 

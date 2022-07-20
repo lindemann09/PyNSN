@@ -91,10 +91,10 @@ class RectangleArraySpecs(_Specs):
         return rtn
 
 
-def random_array(specs: _tp.Union[DotArraySpecs, RectangleArraySpecs],
+def random_array(specs: Union[DotArraySpecs, RectangleArraySpecs],
                  n_dots: int,
-                 attribute: _tp.Any = None,
-                 occupied_space: _tp.Any = None):
+                 attribute: Any = None,
+                 occupied_space: Any = None):
     """occupied_space is a dot array (used for multicolour dot array (join after)
 
     """

@@ -1,6 +1,7 @@
 """
 Dot Array
 """
+from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -8,7 +9,7 @@ import numpy as np
 
 from .base_classes import ABCObjectArray
 from .lib_typing import OptInt, OptArrayLike, IntOVector, Iterable, \
-    Any, Union, Sequence, Optional, OptFloat, ObjectArray
+    Any, Union, Sequence, Optional, OptFloat
 from .shapes import Dot
 from .._lib import misc
 
@@ -107,7 +108,7 @@ class DotArray(ABCObjectArray):
         self._diameter = np.delete(self._diameter, index)
 
     def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> ObjectArray:
+             deepcopy: bool = True) -> DotArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.

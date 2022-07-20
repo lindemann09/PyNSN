@@ -5,7 +5,7 @@ from enum import IntFlag, auto
 from math import log2
 import numpy as np
 
-from .._lib.lib_typing import Any, Optional, NumPair, ObjectArray
+from .._lib.lib_typing import Any, Optional, NumPair
 
 from .. import _lib
 from ._convex_hull import ConvexHull, ConvexHullPositions
@@ -67,7 +67,7 @@ class VisualPropertyFlag(IntFlag):
 
 class ArrayProperties(object):
 
-    def __init__(self, object_array: ObjectArray) -> None:
+    def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
         assert isinstance(object_array, (_lib.DotArray, _lib.RectangleArray,
                                          _lib.AttributeArray))

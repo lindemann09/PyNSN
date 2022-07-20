@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
@@ -8,8 +11,8 @@ import numpy as np
 from scipy import spatial
 
 
-from .lib_typing import OptInt, OptArrayLike, IntOVector, ArrayLike, NumPair, \
-    Any, Union, Tuple, Sequence, ObjectArray
+from .lib_typing import OptInt, OptArrayLike, IntOVector, ArrayLike, List, \
+     Union, Tuple, Sequence
 from . import misc
 from . import geometry
 from . import shapes
@@ -26,7 +29,7 @@ class ArrayParameter(object):
     def __init__(self,
                  target_area_radius: int,
                  min_dist_between: OptInt = None,
-                 min_dist_area_boarder: OptInt = None):
+                 min_dist_area_boarder: OptInt = None) -> None:
         """Numpy Position lists with attributes for optimized for numpy calculations
 
         Abstract class for implementation of dot and rect
@@ -171,7 +174,7 @@ class AttributeArray(ArrayParameter):
         self._properties.reset()
 
     def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> ObjectArray:
+             deepcopy: bool = True) -> AttributeArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -436,7 +439,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return self.properties.convex_hull.object_indices[idx], sizes_outlying[idx]
 
     def get_number_deviant(self, change_numerosity: int,
-                           preserve_field_area: bool = False) -> ObjectArray:
+                           preserve_field_area: bool = False) -> AttributeArray:
         """number deviant
         """
         object_array = self.copy()
@@ -604,7 +607,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                                      direction=(0, 0),
                                      push_other=push_other)
 
-    def get_split_arrays(self) -> ObjectArray:
+    def get_split_arrays(self) -> List[AttributeArray]:
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes

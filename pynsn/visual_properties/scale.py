@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 from . import fit as _fit
 from ._properties import VisualPropertyFlag as _flags
 from .. import _lib
-from .._lib.lib_typing import OptFloat, ObjectArray
+from .._lib import lib_typing as _tp
+
+_ObjectArrayType = _tp.Union["_lib.DotArray", "_lib.RectangleArray",
+                             "_lib.AttributeArray"]
 
 
-def average_diameter(dot_array: ObjectArray, factor: float) -> None:
+def average_diameter(dot_array: _ObjectArrayType, factor: float) -> None:
     if not isinstance(dot_array, _lib.DotArray):
         raise TypeError("Scaling diameter is not possible for {}.".format(
             type(dot_array).__name__))
@@ -14,7 +19,7 @@ def average_diameter(dot_array: ObjectArray, factor: float) -> None:
     _fit.average_diameter(dot_array, value)
 
 
-def average_rectangle_size(rect_array: ObjectArray, factor: float) -> None:
+def average_rectangle_size(rect_array: _ObjectArrayType, factor: float) -> None:
     if not isinstance(rect_array, _lib.RectangleArray):
         raise TypeError("Scaling rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
@@ -24,7 +29,7 @@ def average_rectangle_size(rect_array: ObjectArray, factor: float) -> None:
     _fit.average_rectangle_size(rect_array, value)
 
 
-def total_surface_area(object_array: ObjectArray, factor: float) -> None:
+def total_surface_area(object_array: _ObjectArrayType, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -32,8 +37,8 @@ def total_surface_area(object_array: ObjectArray, factor: float) -> None:
     _fit.total_surface_area(object_array, value)
 
 
-def field_area(object_array: ObjectArray, factor: float,
-               precision: OptFloat = None) -> None:
+def field_area(object_array: _ObjectArrayType, factor: float,
+               precision: _tp.OptFloat = None) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -41,9 +46,9 @@ def field_area(object_array: ObjectArray, factor: float,
     _fit.field_area(object_array, value, precision=precision)
 
 
-def coverage(object_array: ObjectArray, factor: float,
-             precision: OptFloat = None,
-             FA2TA_ratio: OptFloat = None) -> None:
+def coverage(object_array: _ObjectArrayType, factor: float,
+             precision: _tp.OptFloat = None,
+             FA2TA_ratio: _tp.OptFloat = None) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -53,7 +58,7 @@ def coverage(object_array: ObjectArray, factor: float,
                   FA2TA_ratio=FA2TA_ratio)
 
 
-def average_perimeter(object_array: ObjectArray, factor: float) -> None:
+def average_perimeter(object_array: _ObjectArrayType, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -61,7 +66,7 @@ def average_perimeter(object_array: ObjectArray, factor: float) -> None:
     _fit.average_perimeter(object_array, value)
 
 
-def total_perimeter(object_array: ObjectArray, factor: float) -> None:
+def total_perimeter(object_array: _ObjectArrayType, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -69,7 +74,7 @@ def total_perimeter(object_array: ObjectArray, factor: float) -> None:
     _fit.total_perimeter(object_array, value)
 
 
-def average_surface_area(object_array: ObjectArray, factor: float) -> None:
+def average_surface_area(object_array: _ObjectArrayType, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -77,8 +82,8 @@ def average_surface_area(object_array: ObjectArray, factor: float) -> None:
     _fit.average_surface_area(object_array, value)
 
 
-def log_spacing(object_array: ObjectArray, factor: float,
-                precision: OptFloat = None) -> None:
+def log_spacing(object_array: _ObjectArrayType, factor: float,
+                precision: _tp.OptFloat = None) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -86,7 +91,7 @@ def log_spacing(object_array: ObjectArray, factor: float,
     _fit.log_spacing(object_array, value, precision=precision)
 
 
-def log_size(object_array: ObjectArray, factor: float) -> None:
+def log_size(object_array: _ObjectArrayType, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -94,8 +99,8 @@ def log_size(object_array: ObjectArray, factor: float) -> None:
     _fit.log_size(object_array, value)
 
 
-def sparcity(object_array: ObjectArray, factor: float,
-             precision: OptFloat = None) -> None:
+def sparcity(object_array: _ObjectArrayType, factor: float,
+             precision: _tp.OptFloat = None) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)
@@ -103,7 +108,7 @@ def sparcity(object_array: ObjectArray, factor: float,
     _fit.sparcity(object_array, value, precision=precision)
 
 
-def visual_property(object_array: ObjectArray, feature: _flags, factor: float) -> None:
+def visual_property(object_array: _ObjectArrayType, feature: _flags, factor: float) -> None:
     if factor == 1:
         return
     _lib._check_object_array(object_array)

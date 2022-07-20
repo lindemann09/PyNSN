@@ -1,6 +1,7 @@
 """
 Rectangle Array
 """
+from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -9,7 +10,7 @@ import numpy as np
 from . import misc
 from .base_classes import ABCObjectArray
 from .lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterable, \
-    Any, Union, Sequence, Optional, NumPair, ObjectArray
+    Any, Union, Sequence, Optional, NumPair
 from .shapes import Rectangle, Point
 
 
@@ -111,7 +112,7 @@ class RectangleArray(ABCObjectArray):
         self._sizes = np.delete(self._sizes, index, axis=0)
 
     def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> ObjectArray:
+             deepcopy: bool = True) -> RectangleArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
