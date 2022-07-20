@@ -6,7 +6,24 @@ from hashlib import md5
 import json
 import numpy as np
 from scipy import spatial
-
+from typing import (
+    Dict,
+    List,
+    Tuple,
+    Set,
+    Deque,
+    NamedTuple,
+    IO,
+    Pattern,
+    Match,
+    Text,
+    Optional,
+    Sequence,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Any,
+)
 
 from . import misc
 from . import geometry
@@ -21,9 +38,10 @@ from .. import constants
 
 class ArrayParameter(object):
 
-    def __init__(self, target_area_radius,
-                 min_dist_between=None,
-                 min_dist_area_boarder=None):
+    def __init__(self,
+                 target_area_radius: int,
+                 min_dist_between: Optional[int] = None,
+                 min_dist_area_boarder: Optional[int] = None):
         """Numpy Position lists with attributes for optimized for numpy calculations
 
         Abstract class for implementation of dot and rect
@@ -38,7 +56,7 @@ class ArrayParameter(object):
         else:
             self.min_dist_area_boarder = min_dist_area_boarder
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         return {"type": type(self).__name__,
                 "target_area_radius": self.target_area_radius,
                 "min_dist_between": self.min_dist_between,
@@ -48,10 +66,11 @@ class ArrayParameter(object):
 class AttributeArray(ArrayParameter):
     """Class for attributes on two dimensional space"""
 
-    def __init__(self, target_area_radius,
-                 min_dist_between=None,
-                 min_dist_area_boarder=None,
-                 xy=None,
+    def __init__(self,
+                 target_area_radius: int,
+                 min_dist_between: Optional[int] = None,
+                 min_dist_area_boarder: Optional[int] = None,
+                 xy: Optional[Sequence[float, int]] =None,
                  attributes=None):
         """Numpy Position lists with attributes for optimized for numpy calculations
 
