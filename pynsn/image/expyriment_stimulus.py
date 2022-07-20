@@ -7,21 +7,29 @@ from multiprocessing import Pool as _Pool
 from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 from . import _colour
-from . import pil as _pil_image
+from . import pil_image as _pil_image
+from .. import _lib
 
 
 class ExprimentDotArray(_Canvas):
 
-    def __init__(self, dot_array,
+    def __init__(self, object_array,
+                 colours=None,
                  position=(0, 0),
-                 colours = _colour.ImageColours(),
                  antialiasing=True):
 
+        _lib._check_object_array(object_array)
+        if colours is None:
+            colours = _colour.ImageColours()
         if not isinstance(colours, _colour.ImageColours):
+<<<<<<< HEAD
             raise TypeError("Colours must be a ImageColours instance")
+=======
+            raise TypeError("Colours must be of type image.ImageColours")
+>>>>>>> devel
 
         _Canvas.__init__(self, size=(0, 0), position=position)
-        self.dot_array = dot_array
+        self.dot_array = object_array
         self.colours = colours
         self.antialiasing = antialiasing
         self._image = None
@@ -49,9 +57,9 @@ class ExprimentDotArray(_Canvas):
 class ExpyrimentDASequence(object):
 
     def __init__(self, da_sequence,
-                 # pil_image_generator TODO better using generator
+                 # pil_image_generator
                  position=(0, 0),
-                 colours = _colour.ImageColours(),
+                 colours=_colour.ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):
@@ -65,7 +73,7 @@ class ExpyrimentDASequence(object):
         self.antialiasing = antialiasing
 
         for da in self.da_sequence.dot_arrays:
-            stim = ExprimentDotArray(dot_array=da, position=position,
+            stim = ExprimentDotArray(object_array=da, position=position,
                                      colours=colours,
                                      antialiasing=antialiasing)
             self.stimuli.append(stim)
@@ -99,7 +107,7 @@ class ExpyrimentDASequence(object):
 
     def preload(self, until_percent=100, time=None, do_not_return_earlier=False):
         """
-        preloaded all _nsn stimuli
+        preloaded all _lib stimuli
 
         Note: this will take a while!
 

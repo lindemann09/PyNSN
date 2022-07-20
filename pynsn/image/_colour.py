@@ -2,25 +2,35 @@
 The named colour are the 140 HTML colour names:
    see https://www.w3schools.com/colors/colors_names.asp
 """
+from collections import OrderedDict
 from functools import total_ordering
+from .._lib import misc
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
-DEFAULT_ITEM_COLOUR = "lime" # used if no color specified in dot array
 
 @total_ordering
 class Colour(object):
 
-    def __init__(self, colour):
+    def __init__(self, colour, default=None):
+        """if colour is unknown or None, default colour is used
+
+        Thus, `Colour(variable, default="red")` will result in red is variable
+        is None or Unknown. If default is not defined a `None colour` will be
+        returned.
+        """
+        if colour is None:
+            colour = default
+
         self._colour = None
-        self.set(colour) # using setter
+        try:
+            self.set(colour)
+        except TypeError:  # colour is not a valid colour
+            self.set(default)
 
     def __repr__(self):
         return "Colour({})".format(self.colour)
-
-    def __str__(self):
-        return self._colour
 
     def __hash__(self):
         return hash(self._colour)
@@ -57,12 +67,29 @@ class Colour(object):
                         self._colour = Colour.rgb2hextriplet(value)
                     except:
                         raise TypeError("Incorrect colour " + \
-                                           "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
-                                               value))
+                                        "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
+                                            value))
 
     @property
     def rgb(self):
         return Colour.hextriplet2rgb(self._colour)
+
+    def rgb_alpha(self, alpha):
+        """if alpha can be float <= 1.0 or an integer between [0, 255]"""
+
+        if isinstance(alpha, float):
+            if alpha < 0. or alpha > 1.:
+                raise TypeError("If alpha is a float, it has to be between 0 and 1.")
+            alpha = round(alpha * 255)
+        elif isinstance(alpha, int):
+            if alpha < 0 or alpha > 255:
+                raise TypeError("If alpha is an int, it has to be between 0 and 255.")
+        else:
+            raise TypeError("If alpha has to be a float or int and not {}.".format(
+                type(alpha)))
+
+        a = Colour.hextriplet2rgb(self._colour)
+        return Colour.hextriplet2rgb(self._colour) + (alpha,)
 
     @staticmethod
     def hextriplet2rgb(hextriplet):
@@ -227,31 +254,55 @@ class Colour(object):
 
 
 class ImageColours(object):
+    COL_TARGET_AREA = "#FFF0D9"
+    COL_DEFAULT_OBJECT = "darkgreen"
+    OPACITY_OBJECT = 1
+    OPACITY_GUIDES = 0.5
 
     def __init__(self,
                  target_area=None,
+                 field_area_positions=None,
                  field_area=None,
-                 field_area_outer=None,
+                 center_of_field_area=None,
                  center_of_mass=None,
-                 center_of_outer_positions=None,
                  background=None,
-                 item_colour=DEFAULT_ITEM_COLOUR,
+                 default_object_colour=None,
+                 opacity_object=None,
+                 opacity_guides=None
                  ):
 
-        self.target_area = Colour(target_area)
-        self.field_area = Colour(field_area)
-        self.field_area_outer = Colour(field_area_outer)
-        self.center_of_mass = Colour(center_of_mass)
-        self.center_of_outer_positions = Colour(center_of_outer_positions)
-        self.background = Colour(background)
-        self.default_item_colour = Colour(item_colour)
+        self.target_area = Colour(target_area,
+                                  default=ImageColours.COL_TARGET_AREA)
+        self.field_area_positions = Colour(field_area_positions, default=None)
+        self.field_area = Colour(field_area, default=None)
+        self.center_of_field_area = Colour(center_of_field_area, default=None)
+        self.center_of_mass = Colour(center_of_mass, default=None)
+        self.background = Colour(background, default=None)
+        self.default_object_colour = Colour(default_object_colour,
+                                           default=ImageColours.COL_DEFAULT_OBJECT)
+        if opacity_guides is None:
+            opacity_guides = ImageColours.OPACITY_GUIDES
+        if opacity_guides < 0 or opacity_guides > 1:
+            raise ValueError(f"opacity_guides ({opacity_guides}) has to be between 0 and 1")
+        if opacity_object is None:
+            opacity_object = ImageColours.OPACITY_OBJECT
+        if opacity_object < 0 or opacity_object > 1:
+            raise ValueError(f"opacity_object ({opacity_object}) has to be between 0 and 1")
+        self.opacity_object = opacity_object
+        self.opacity_guides = opacity_guides
 
     def as_dict(self):
-        return {"colour_total_area": self.target_area.colour,
-                "colour_field_area": self.field_area.colour,
-                "colour_field_area_outer": self.field_area_outer.colour,
-                "colour_center_of_mass": self.center_of_mass.colour,
-                "colour_center_of_outer_positions": self.center_of_outer_positions.colour,
-                "colour_background": self.background.colour,
-                "dot_colour": self.default_item_colour.colour}
+        return OrderedDict(
+            {"total_area": self.target_area.colour,
+             "field_area_positions": self.field_area_positions.colour,
+             "field_area": self.field_area.colour,
+             "center_of_field_area": self.center_of_field_area.colour,
+             "center_of_mass": self.center_of_mass.colour,
+             "background": self.background.colour,
+             "default_object": self.default_object_colour.colour,
+             "object_opacity": self.opacity_object,
+             "info_opacity": self.opacity_guides
+             })
 
+    def __str__(self):
+        return misc.dict_to_text(self.as_dict(), col_a=24, col_b=10)

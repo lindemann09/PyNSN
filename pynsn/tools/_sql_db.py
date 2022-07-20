@@ -1,5 +1,6 @@
 import sqlite3
-from ..image._colour import Colour, DEFAULT_ITEM_COLOUR
+from ..image._colour import Colour, ImageColours
+
 
 class DotArraySQLDB(object):
     """DotArray DB (two tables: arrays, dots)"""
@@ -61,27 +62,27 @@ class DotArraySQLDB(object):
                 colour = Colour(attributes[0])
             except:
                 # if attribute is no colour, use default coolour
-                colour = Colour(DEFAULT_ITEM_COLOUR)
+                colour = Colour(ImageColours.COL_DEFAULT_OBJECT)
 
             sql = "INSERT INTO ARRAYS (" + \
                   "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \
                   ") \n VALUES\n" + \
                   "('{}',{},{},{},{},{},{},{},{},'{}');".format(
                           da.hash,
-                          da._features.numerosity,
-                          da._features.total_surface_area,
-                          da._features.mean_item_surface_area,
-                          da._features.field_area,
-                          da._features.sparsity,
-                          da._features.logSize,
-                          da._features.logSpacing,
-                          da._features.converage,
+                          da._properties.numerosity,
+                          da._properties.total_surface_area,
+                          da._properties.average_surface_area,
+                          da._properties.field_area,
+                          da._properties.sparsity,
+                          da._properties.log_size,
+                          da._properties.log_spacing,
+                          da._properties.converage,
                           colour.colour)
             cur.execute(sql)
 
             ## add dots
             sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
-            for xy, d in zip(da._xy, da.diameters):
+            for xy, d in zip(da._xy, da._diameter):
                 sql += "\n  ('{}', {}, {}, {}),".format(da.hash, xy[0], xy[1], d)
             sql = sql[:-1] + ";"
             cur.execute(sql)

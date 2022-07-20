@@ -4,37 +4,36 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QLabel, \
     QTextBrowser, QScrollBar, QPushButton
 
+from . dialogs import SettingsDialog
 from .misc import heading, LabeledNumberInput, LabeledNumberInputTwoValues, \
     LabeledInput
-from ..factory import DotArraySpecs, distr
 
 
 class MainWidget(QWidget):
 
-    def __init__(self, parent, settings, number, da_specs):
+    def __init__(self, parent, settings, number, nsn_factory):
+        assert isinstance(settings, SettingsDialog)
         super(MainWidget, self).__init__(parent)
         self.settings = settings
 
-        self.initUI(number, da_specs)
+        self.initUI(number, nsn_factory)
 
-    def initUI(self, number, da_specs):
-        assert isinstance(da_specs, DotArraySpecs)
-        assert isinstance(da_specs.diameter_distr, (distr.Beta, distr.Normal))
+    def initUI(self, number, nsn_factory):
 
+        sdr = nsn_factory.distr_diameter
         self.btn_generate = QPushButton("Generate new array")
-
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
-        self.target_array_radius = LabeledNumberInput("Max radius", da_specs.target_array_radius)
-        self.item_diameter_mean = LabeledNumberInput("Mean diameter", da_specs.diameter_distr.mu)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", da_specs.diameter_distr.sigma)
+        self.target_area_radius = LabeledNumberInput("Max radius", nsn_factory.target_area_radius)
+        self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.mu)
+        self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
-                                                               value1=da_specs.diameter_distr.min_max[0],
-                                                               value2=da_specs.diameter_distr.min_max[1])
+                                                               value1=sdr.min_max[0],
+                                                               value2=sdr.min_max[1])
 
-        self.minimum_gap = LabeledNumberInput("Minimum gap", da_specs.minimum_gap)
+        self.min_dist_between = LabeledNumberInput("Minimum gap", nsn_factory.min_dist_between)
 
-        self.dot_colour = LabeledInput("Colour", text=self.settings.default_item_colour,
+        self.dot_colour = LabeledInput("Colour", text=self.settings.default_object_colour,
                                        case_sensitive=False)
         self.dot_colour2 = LabeledInput("Colour 2", text="expyriment_orange", case_sensitive=False)
 
@@ -52,8 +51,8 @@ class MainWidget(QWidget):
         ctrl.addLayout(self.dot_colour2.layout())
 
         ctrl.addWidget(heading("Array"))
-        ctrl.addLayout(self.target_array_radius.layout())
-        ctrl.addLayout(self.minimum_gap.layout())
+        ctrl.addLayout(self.target_area_radius.layout())
+        ctrl.addLayout(self.min_dist_between.layout())
         ctrl.addStretch(1)
 
         # Add text field
@@ -79,7 +78,6 @@ class MainWidget(QWidget):
     def updateUI(self):
         self.dot_colour2.setVisible(self.settings.bicoloured.isChecked())
         self.number2.setVisible(self.settings.bicoloured.isChecked())
-
 
     def resize_fields(self, width, text_height=150, minium_text_width=300):
         self.picture_field.setFixedSize(width, width)

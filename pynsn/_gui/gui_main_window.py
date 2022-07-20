@@ -1,4 +1,3 @@
-
 import json
 import os
 
@@ -10,36 +9,36 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import __version__
-from .. import factory,  match
-from .._lib import distributions as distr
-from .._nsn.visual_features import VisualFeatures
+from .. import NSNFactory, ImageColours
+
+from .. import distributions as distr
+from .. import visual_properties as props
+from ..exceptions import NoSolutionError
 from ..image import _colour
-from ..image import pil
-from .._sequence import dot_array_sequence
+from ..image import pil_image
+from ..tools import _dot_array_sequence
 
-DEFAULT_ARRAY = (40, factory.DotArraySpecs(target_area_radius=200,
-                                diameter_distribution=distr.Beta(mu=15,
-                                                sigma=8, min_max=(5,40)),
-                                minimum_gap=2),
-                 _colour.ImageColours(target_area="#303030",
+DEFAULT_ARRAY = {"num": 40,
+                 "factory": NSNFactory(target_area_radius=200, min_dist_between=2),
+                 "dot_diameter": distr.Beta(mu=15, sigma=8, min_max=(5, 40)),
+                 "col": ImageColours(target_area="#303030",
+                                     field_area_positions=None,
                                      field_area=None,
-                                     field_area_outer=None,
+                                     center_of_field_area=None,
                                      center_of_mass=None,
-                                     center_of_outer_positions=None,
-                                     item_colour="green",
-                                     background="gray"))
+                                     default_object_colour="green",
+                                     background="gray")}
 
-ICON = (11, factory.DotArraySpecs(target_area_radius=200,
-                                  diameter_distribution=distr.Beta(mu=35,
-                                                  sigma=20, min_max=(5, 80))
-                                  ),
-        _colour.ImageColours(target_area="#3e3e3e",
-                            field_area=None,
-                            field_area_outer="expyriment_orange",
+ICON = {"num": 11,
+        "factory": NSNFactory(target_area_radius=200),
+        "dot_diameter": distr.Beta(mu=35, sigma=20, min_max=(5, 80)),
+        "col": ImageColours(target_area="#3e3e3e",
+                            field_area_positions=None,
+                            field_area="expyriment_orange",
+                            center_of_field_area=None,
                             center_of_mass=None,
-                            center_of_outer_positions=None,
-                            item_colour="lime",
-                            background=None))
+                            default_object_colour="lime",
+                            background=None)}
 
 
 class GUIMainWindow(QMainWindow):
@@ -50,16 +49,15 @@ class GUIMainWindow(QMainWindow):
 
         self._image = None
         self.dot_array = None
-        self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY[2])
+        self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY["col"])
         self.initUI()
         self.show()
-
 
     def initUI(self):
 
         # menus
         exitAction = QAction(QIcon('exit.png'), '&Exit',
-                                       self)
+                             self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
@@ -71,14 +69,13 @@ class GUIMainWindow(QMainWindow):
         saveAction.setShortcut('Ctrl+S')
         saveAction.triggered.connect(self.save_array)
 
-
         printxyAction = QAction('&Print array', self)
         printxyAction.triggered.connect(self.action_print_xy)
         printparaAction = QAction('&Print parameter', self)
         printparaAction.triggered.connect(self.action_print_para)
 
-        matchAction = QAction('&Match property', self)
-        matchAction.triggered.connect(self.action_match)
+        adaptAction = QAction('&Adapt property', self)
+        adaptAction.triggered.connect(self.action_adapt)
 
         sequenceAction = QAction('&Make _sequence', self)
         sequenceAction.triggered.connect(self.action_make_sequence)
@@ -96,7 +93,7 @@ class GUIMainWindow(QMainWindow):
 
         toolMenu = menubar.addMenu('&Tools')
         toolMenu.addAction(sequenceAction)
-        toolMenu.addAction(matchAction)
+        toolMenu.addAction(adaptAction)
         toolMenu.addSeparator()
         toolMenu.addAction(printparaAction)
         toolMenu.addAction(printxyAction)
@@ -104,10 +101,11 @@ class GUIMainWindow(QMainWindow):
         aboutMenu = menubar.addMenu('&About')
         aboutMenu.addAction(aboutAction)
 
-
-
         # main widget
-        self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY[0], DEFAULT_ARRAY[1])
+        factory = DEFAULT_ARRAY["factory"]
+        factory.set_appearance_dot(diameter=DEFAULT_ARRAY["dot_diameter"])
+        self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY["num"],
+                                      factory)
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
         self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
@@ -116,32 +114,40 @@ class GUIMainWindow(QMainWindow):
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
-        colours = ICON[2]
-        self._image = pil.create(
-                        object_array=factory.random_array(n_dots=ICON[0], specs= ICON[1]),
-                        colours=colours, antialiasing=True)
+        factory = ICON["factory"]
+        factory.set_appearance_dot(diameter=ICON["dot_diameter"])
+        oa = factory.create_random_array(n_objects=ICON["num"])
+        self._image = pil_image.create(object_array=oa,
+                                       colours=ICON["col"], antialiasing=True)
 
         self.setWindowIcon(QIcon(self.pixmap()))
         self._image = None
         self.action_generate_btn()
 
     def make_new_array(self):
-
+        factory = self.get_factory()
         try:
+<<<<<<< HEAD
             self.dot_array = factory.random_array(n_dots=self.get_number(),
                                                   specs=self.get_specs())
         except StopIteration as error:
+=======
+            self.dot_array = factory.create_random_array(
+                n_objects=self.get_number())
+        except NoSolutionError as error:
+>>>>>>> devel
             self.main_widget.text_error_feedback(error)
             raise error
 
         if self.settings.bicoloured.isChecked():
-            data_array2 = factory.random_array(n_dots=self.main_widget.number2.value,
-                                               specs=self.get_specs(),
-                                               occupied_space=self.dot_array)
+            data_array2 = random_array.create(n_objects=self.main_widget.number2.value,
+                                              array_parameter=ref_ar,
+                                              size_distribution=sdr,
+                                              occupied_space=self.dot_array)
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
-        self.dot_array.round(decimals=self.settings.rounding_decimals.value)
+        self.dot_array.mod_round_values(decimals=self.settings.rounding_decimals.value)
         self._image = None
 
     def image(self):
@@ -151,31 +157,34 @@ class GUIMainWindow(QMainWindow):
             para = self.get_image_colours()
             image_colours = _colour.ImageColours(
                 target_area=para.target_area,
+                field_area_positions=para.field_area_positions,
                 field_area=para.field_area,
-                field_area_outer=para.field_area_outer,
+                center_of_field_area=para.center_of_field_area,
                 center_of_mass=para.center_of_mass,
-                center_of_outer_positions=para.center_of_outer_positions,
-                item_colour=para.default_item_colour,
+                default_object_colour=para.default_object_colour,
                 background=para.background)
 
-            self._image = pil.create(object_array=self.dot_array,
-                                     colours=image_colours,
-                                     antialiasing=self.settings.antialiasing.isChecked())
-                                            # todo maybe: gabor_filter=ImageFilter.GaussianBlur
+            self._image = pil_image.create(object_array=self.dot_array,
+                                           colours=image_colours,
+                                           antialiasing=self.settings.antialiasing.isChecked())
+            # todo maybe: gabor_filter=ImageFilter.GaussianBlur
 
             return self._image
 
     def get_number(self):
         return self.main_widget.number.value
 
-    def get_specs(self):
-        d = distr.Beta(mu=self.main_widget.item_diameter_mean.value,
-                       sigma=self.main_widget.item_diameter_std.value,
-                       min_max=[self.main_widget.item_diameter_range.value1,
-                                self.main_widget.item_diameter_range.value2])
-        return factory.DotArraySpecs(target_area_radius=self.main_widget.target_array_radius.value,
-                                     diameter_distribution=d,
-                                     minimum_gap=self.main_widget.minimum_gap.value)
+    def get_factory(self):
+        rtn = NSNFactory(
+            target_area_radius=self.main_widget.target_area_radius.value,
+            min_dist_between=self.main_widget.min_dist_between.value)
+        rtn.set_appearance_dot(
+            diameter=distr.Beta(mu=self.main_widget.item_diameter_mean.value,
+                                sigma=self.main_widget.item_diameter_std.value,
+                                min_max=[self.main_widget.item_diameter_range.value1,
+                                         self.main_widget.item_diameter_range.value2]))
+
+        return rtn
 
     def get_image_colours(self):
         # check colour input
@@ -204,12 +213,12 @@ class GUIMainWindow(QMainWindow):
             self.settings.colour_background.text = "None"
 
         return _colour.ImageColours(target_area=colour_area,
-                                   field_area=colour_convex_hull_positions,
-                                   field_area_outer=colour_convex_hull_dots,
-                                   center_of_mass=None,
-                                   center_of_outer_positions=None,
-                                   item_colour=self.settings.default_dot_colour,
-                                   background=colour_background)
+                                    field_area_positions=colour_convex_hull_positions,
+                                    field_area=colour_convex_hull_dots,
+                                    center_of_field_area=None,
+                                    center_of_mass=None,
+                                    default_object_colour=self.settings.default_object_colour,
+                                    background=colour_background)
 
     def pixmap(self):
         return QPixmap.fromImage(ImageQt(self.image()))
@@ -218,7 +227,8 @@ class GUIMainWindow(QMainWindow):
         """"""
         if remake_image:
             self._image = None
-        w = self.get_specs().target_array_radius * 2
+        factory = self.get_factory()
+        w = factory.target_area_radius * 2
         self.main_widget.resize_fields(width=w, text_height=150)
         self.main_widget.picture_field.setPixmap(self.pixmap())
         self.main_widget.adjustSize()
@@ -232,13 +242,13 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.updateUI()
 
     def write_properties(self, clear_field=True):
-        txt = self.dot_array._features.get_features_text(extended_format=True,
-                                                         with_hash=True)
+        txt = self.dot_array._properties.as_text(extended_format=True,
+                                                 with_hash=True)
         if self.settings.bicoloured.isChecked():
-            for da in self.dot_array.split_array_by_attributes():
+            for da in self.dot_array.get_split_arrays():
                 txt += "Attribute {}\n".format(da._attributes[0])
-                txt += da._features.get_features_text(extended_format=True,
-                                                      with_hash=False)
+                txt += da._properties.as_text(extended_format=True,
+                                              with_hash=False)
         if clear_field:
             self.main_widget.text_clear()
 
@@ -252,7 +262,9 @@ class GUIMainWindow(QMainWindow):
     def action_print_para(self):
         d = {'number': self.get_number()}
         d['image_parameter'] = self.get_image_colours().as_dict()
-        d['randomization'] = self.get_specs().as_dict()
+        ref_array, size_distr = self.get_factory()
+        d['reference_array'] = ref_array.as_dict()
+        d['size_distribution'] = size_distr.as_dict()
         self.main_widget.text_out("# parameter\n" + json.dumps(d, indent=2))
 
     def save_array(self):
@@ -264,11 +276,11 @@ class GUIMainWindow(QMainWindow):
             directory=".",
             filter="Image PNG File (*.png);; Image BMP File (*.bmp);; JSON File (.json)")
 
-        if len(filename)>0:
+        if len(filename) > 0:
             filename = os.path.abspath(filename)
 
-            ext = extension.split("(")[1].replace(")", "")\
-                                         .replace("*", "").strip()
+            ext = extension.split("(")[1].replace(")", "") \
+                .replace("*", "").strip()
             if not filename.endswith(ext):
                 filename = filename + ext
 
@@ -278,15 +290,14 @@ class GUIMainWindow(QMainWindow):
             elif ext == ".png" or ext == ".bmp":
                 self.image().save(filename)
 
-    def action_match(self):
+    def action_adapt(self):
         """"""
-        prop = self.dot_array._features.get_features_dict()
-        feature, value = dialogs.MatchPropertyDialog.get_response(self,
-                                                                  prop)  #
-        if feature is not None:
-            self.dot_array = match.visual_feature(self.dot_array,
-                                                   feature, value=value)
-            if feature in VisualFeatures.SIZE_FEATURES:
+        prop = self.dot_array._properties.as_dict()
+        prop, value = dialogs.AdaptPropertyDialog.get_response(self, prop)
+        if prop is not None:
+            self.dot_array = props.fit.visual_property(self.dot_array,
+                                                       prop, value=value)
+            if prop in [x for x in props.flags if x.is_size_property()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)
@@ -298,44 +309,42 @@ class GUIMainWindow(QMainWindow):
         result = self.settings.exec_()
         self.main_widget.updateUI()
         self.action_generate_btn()
-        #self.show_current_image(remake_image=True)
+        # self.show_current_image(remake_image=True)
 
     def action_dot_colour_change(self):
         """
         """
         try:
             colour_dot = _colour.Colour(self.main_widget.dot_colour.text)
-            self.settings.default_dot_colour = colour_dot
+            self.settings.default_object_colour = colour_dot
         except TypeError:
-            colour_dot = self.settings.default_dot_colour
+            colour_dot = self.settings.default_object_colour
             self.main_widget.dot_colour.text = colour_dot.colour
 
         self.dot_array.set_attributes(colour_dot.colour)
         self.show_current_image(remake_image=True)
 
     def action_make_sequence(self):
-        match_methods, match_range, extra_space = \
-                                    dialogs.SequenceDialog.get_response(self)
-        match_methods = match_methods[0] #FIXME just match the first
+        adapt_methods, adapt_range, extra_space = \
+            dialogs.SequenceDialog.get_response(self)
+        adapt_methods = adapt_methods[0]  # FIXME just adapt the first
 
-        d = {"match range": match_range,
+        d = {"adapt range": adapt_range,
              "extra_space": extra_space}
-        d["match_methods"] = match_methods
+        d["adapt_methods"] = adapt_methods
         self.main_widget.text_out("# Sequence\n" + \
-                                           json.dumps(d))
-        specs = self.get_specs().copy()
-        specs.min_distance_area_boarder = extra_space//2
-        specs.target_array_radius += specs.min_distance_area_boarder
+                                  json.dumps(d))
+        ref_array, sdr = self.get_factory()
+        ref_array.min_dist_area_boarder = extra_space / 2
+        ref_array.target_area_radius += ref_array.min_dist_area_boarder
 
-        if match_methods is not None:
-            sequence = dot_array_sequence.create(
-                              specs=specs,
-                              match_feature=match_methods,
-                              match_value=self.dot_array._features.get(match_methods),
-                              min_max_numerosity=match_range)
+        if adapt_methods is not None:
+            sequence = _dot_array_sequence.create(
+                specs=specs,
+                adapt_property=adapt_methods,
+                adapt_value=self.dot_array._properties.get(adapt_methods),
+                min_max_numerosity=adapt_range)
             SequenceDisplay(self, da_sequence=sequence,
-                            start_numerosity=self.dot_array._features.numerosity,
+                            start_numerosity=self.dot_array._properties.numerosity,
                             image_colours=self.get_image_colours(),
                             antialiasing=self.settings.antialiasing.isChecked()).exec_()
-
-

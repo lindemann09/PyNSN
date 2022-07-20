@@ -25,13 +25,6 @@ __pycache__
 .tox
 nosetests.xml
 
-# Translations
-*.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
 
 # PyCharm
 .idea
@@ -49,8 +42,12 @@ venv/
 .bak
 .Rproj.user
 
-.ipynb*/
+#examples
+*/.ipynb_checkpoints/
+examples/pynsn
 
 test-*
 *.json
 *.svg
+*.png
+

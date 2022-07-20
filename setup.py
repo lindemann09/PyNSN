@@ -3,19 +3,20 @@
 Installer
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import codecs
 import os
 from sys import version_info as _vi
 
 package_name = "pynsn"
 
-install_requires = ["numpy>=1.6",
-                    "scipy>=1.0",
-                    "pandas>=1.3",
-                    "Pillow>=5.0",
-                    "svgwrite>=1.4"
-                    ]
+if _vi.major < 3 or _vi.minor < 6:
+    raise RuntimeError("{0} requires Python 3.6 or larger.".format(package_name))
+
+install_requires = ["numpy>=1.19",
+                    "scipy>=1.5",
+                    "Pillow>=8.4",
+                    "svgwrite>=1.4"]
 
 extras_require = {
     'gui':                ["PyQt5>=5.14"],
@@ -24,16 +25,10 @@ extras_require = {
     'matplotlib':         ["matplotlib>=3.2"]
 }
 
-# FIXME Docu extra requirements, make some packages suggested
-
 entry_points = {'console_scripts': ['pynsn=pynsn.gui:start']}
 
-packages = [package_name]
-for subp in ["_nsn","image", "_lib", "gui", "database", "_sequence"]:
-    packages.append("{}.{}".format(package_name, subp))
+packages = find_packages(".")
 
-if _vi.major < 1 and _vi.minor < 5:
-    raise RuntimeError("{0} requires Python 3.5 or larger.".format(package_name))
 
 def readme():
     directory = os.path.dirname(os.path.join(
@@ -45,6 +40,7 @@ def readme():
         errors="replace",
         ) as file:
         return file.read()
+
 
 def get_version(package):
     """Get version number"""
@@ -71,7 +67,7 @@ if __name__ == '__main__':
         install_requires=install_requires,
         entry_points=entry_points,
         extras_require=extras_require,
-        keywords = "", #ToDo
+        keywords = "",
         classifiers=[
             "Intended Audience :: Education",
             "Intended Audience :: Science/Research",
@@ -84,9 +80,3 @@ if __name__ == '__main__':
         long_description=readme(),
         long_description_content_type='text/markdown'
     )
-
-    try:
-        import PyQt5
-    except:
-        print("Please note:\n"
-          "Running the PyNSN GUI requires the installation 'PyQt5' ")

@@ -1,9 +1,16 @@
+#FIXME Depricated model currently BROKEN
+
 import os
 import json
 import gzip
 
+<<<<<<< HEAD:pynsn/_sequence/dot_array_archive.py
 from .._nsn.dot_array import DotArray
 from pynsn._sequence.dot_array_sequence import DASequence
+=======
+from .._lib import DotArray
+from ._dot_array_sequence import DASequence
+>>>>>>> devel:pynsn/tools/_dot_array_archive.py
 
 def load(json_file_name, zipped=False):
 
@@ -95,30 +102,32 @@ class DotArraySequenceArchive(object):
         rtn.append_dot_arrays(tmp)
         return rtn
 
-    def _all_features(self):
-        """helper function returns array with all features and varnames"""
+    def all_properties(self):
+        """eturns array with all properties and varnames
+
+        Examples
+        --------
+        could be used to make a pandas dataframe
+
+        >>> array, varnames = my_dot_array_archive.all_properties()
+        >>> pandas.DataFrame(array, columns=varnames)
+        """
         array = []
         feat = {}
         for id in self.array_ids:
-            feat = self.get_dot_array(id)._features.get_features_dict()
+            feat = self.get_dot_array(id)._properties.as_dict()
             array.append(list(feat.values()))
 
         varnames = map(lambda x:x.replace(" ", "_"), feat.keys())
         return array, list(varnames)
 
-    def features_csv(self, delimiter =","):
+    def properties_csv(self, delimiter =","):
 
-        array, varnames = self._all_features()
+        array, varnames = self.all_properties()
         rtn = delimiter.join(varnames)
         for row in array:
             rtn += "\n" + delimiter.join(map(lambda x:str(x), row))
         return rtn
-
-    def features_dataframe(self):
-        """returns pandas dataframe with all features"""
-        from pandas import DataFrame
-        array, varnames = self._all_features()
-        return DataFrame(array, columns=varnames)
 
     def save(self, json_file_name, indent=None, zipped=False):
 
