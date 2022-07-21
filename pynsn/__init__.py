@@ -17,13 +17,13 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                            _python_version_info[1]) +
                        "Please use Python 3.8 or later.")
 
-from ._lib import Point, Dot, Rectangle, \
-    DotArray, RectangleArray, ArrayParameter, \
+from ._lib import Coordinate, Point, Dot, Rectangle, \
+    DotArray, RectangleArray, PointArray, ArrayParameter, \
     PictureFile, NSNFactory
+
 from .image._colour import Colour, ImageColours
 from ._lib.rng import init_random_generator
 
-from . import exceptions
 from . import visual_properties
 from . import distributions
 

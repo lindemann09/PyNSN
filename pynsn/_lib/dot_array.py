@@ -8,7 +8,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from .base_classes import ABCObjectArray
-from .lib_typing import OptInt, OptArrayLike, IntOVector, Iterable, \
+from .lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
     Any, Union, Sequence, Optional, OptFloat
 from .shapes import Dot
 from .._lib import misc
@@ -154,7 +154,7 @@ class DotArray(ABCObjectArray):
                    ((self._diameter + dot.diameter) / 2.0)
             return rtn
 
-    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterable[Dot]:
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
         """iterate over all or a part of the objects
 
         Parameters

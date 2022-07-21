@@ -15,6 +15,15 @@ from ..exceptions import NoSolutionError as _NoSolutionError
 _ObjectArrayType = _tp.Union["_lib.DotArray", "_lib.RectangleArray",
                              "_lib.AttributeArray"]
 
+
+# helper for type checking and error raising error
+def _check_object_array(obj):
+    if not isinstance(obj, (_lib.DotArray, _lib.RectangleArray, 
+                            _lib.PointArray)):
+        raise TypeError("DotArray, RectangleArray or PointArray expected, but not {}".format(
+            type(obj).__name__))
+
+
 def change_fit_settings(default_spacing_precision: _tp.OptFloat = None,
                         default_fa2ta_ratio: _tp.OptFloat = None) -> None:
     """Changing class settings of property fitting.
@@ -44,7 +53,7 @@ def numerosity(object_array: _ObjectArrayType,
     """
 
     """
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
 
     # make a copy for the deviant
     if value <= 0:
@@ -116,7 +125,7 @@ def average_rectangle_size(rect_array: _ObjectArrayType, value: _tp.NumPair) -> 
 
 def total_surface_area(object_array: _ObjectArrayType, value: float) -> None:
     # changes diameter
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
     if isinstance(object_array, _lib.DotArray):
         object_array._diameter = _np.sqrt(
@@ -138,7 +147,7 @@ def field_area(object_array: _ObjectArrayType, value: float,
     iterative method can takes some time.
     """
 
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     if precision is None:
         precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
@@ -157,7 +166,7 @@ def _scale_field_area(object_array: _ObjectArrayType, value: float, precision: f
 
     Note: see doc string `field_area`
     """
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     current = object_array.properties.field_area
 
     if current is None:
@@ -203,7 +212,7 @@ def coverage(object_array: _ObjectArrayType, value: float,
         ratio of adaptation via area or via convex_hull (between 0 and 1)
 
     """
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
 
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
@@ -226,7 +235,7 @@ def coverage(object_array: _ObjectArrayType, value: float,
 
 
 def average_perimeter(object_array: _ObjectArrayType, value: float) -> None:
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     total_peri = value * object_array.properties.numerosity
     total_perimeter(object_array, total_peri)
 
@@ -240,32 +249,32 @@ def total_perimeter(object_array: _ObjectArrayType, value: float) -> None:
         new_size = object_array.properties.average_rectangle_size * scale
         average_rectangle_size(object_array, new_size)
     else:
-        _lib._check_object_array(object_array)
+        _check_object_array(object_array)
 
 
 def average_surface_area(object_array: _ObjectArrayType, value: float) -> None:
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     ta = object_array.properties.numerosity * value
     total_surface_area(object_array, ta)
 
 
 def log_spacing(object_array: _ObjectArrayType, value: float,
                 precision: _tp.OptFloat = None) -> None:
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     logfa = 0.5 * value + 0.5 * _log2(
         object_array.properties.numerosity)
     field_area(object_array, value=2 ** logfa, precision=precision)
 
 
 def log_size(object_array: _ObjectArrayType, value: float) -> None:
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     logtsa = 0.5 * value + 0.5 * _log2(object_array.properties.numerosity)
     total_surface_area(object_array, 2 ** logtsa)
 
 
 def sparcity(object_array: _ObjectArrayType, value:float,
              precision=None) -> None:
-    _lib._check_object_array(object_array)
+    _check_object_array(object_array)
     return field_area(object_array, value=value * object_array.properties.numerosity,
                       precision=precision)
 

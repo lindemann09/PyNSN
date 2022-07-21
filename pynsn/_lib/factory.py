@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from ..exceptions import NoSolutionError, NoAppearanceDefinedError
+from ..exceptions import NoSolutionError
 from .base_classes import ArrayParameter
 from .._lib.misc import dict_to_text
 from .dot_array import DotArray
@@ -48,7 +48,7 @@ class NSNFactory(ArrayParameter, AppearanceSampler):
         rtn : object array
         """
         if not self.is_appearance_set:
-            raise NoAppearanceDefinedError("No appearance defined. Please use 'set_dot', 'set_rect_or' "
+            raise RuntimeError("No appearance defined. Please use 'set_dot', 'set_rect_or' "
                                            "'set_appearance'")
         if self._distr_diameter is not None:
             # DotArray

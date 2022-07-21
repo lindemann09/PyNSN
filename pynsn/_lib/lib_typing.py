@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple, Union, Sequence, Optional, List, Any, Iterable
+from typing import Tuple, Union, Sequence, Optional, List, Any, Iterator
 from numpy.typing import ArrayLike, NDArray
 from numpy import float_, int_
 

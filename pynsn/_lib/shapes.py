@@ -1,117 +1,19 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math as _math
+from abc import ABCMeta, abstractmethod, ABC
 from .picture_file import PictureFile
 from ..image._colour import Colour
+from .coordinate import Coordinate
 
+# todo typing
 
-class Point(object):
+class ABCShape(Coordinate, metaclass=ABCMeta):
 
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return "Point(xy={})".format(self.xy)
-
-    def __add__(self, other):
-        return Point(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other):
-        return Point(self.x - other.x, self.y - other.y)
-
-    def __mul__(self, other):
-        return Point(self.x * other, self.y * other)
-
-    def __div__(self, other):
-        return Point(self.x / other if other else self.x,
-                     self.y / other if other else self.y)
-
-    def __iadd__(self, other):
-        self.x += other.x
-        self.y += other.y
-        return self
-
-    def __isub__(self, other):
-        self.x -= other.x
-        self.y -= other.y
-        return self
-
-    def __imul__(self, other):
-        self.x *= other
-        self.y *= other
-        return self
-
-    def __idiv__(self, other):
-        self.x /= other
-        self.y /= other
-        return self
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-    def __ne__(self, other):
-        return self.x != other.x or self.y != other.y
-
-    @property
-    def xy(self):
-        return self.x, self.y
-
-    @xy.setter
-    def xy(self, xy_tuple):
-        self.x = xy_tuple[0]
-        self.y = xy_tuple[1]
-
-    @property
-    def polar_radius(self):
-        return _math.hypot(self.x, self.y)
-
-    @polar_radius.setter
-    def polar_radius(self, value):
-        self.polar = (value, self.polar_angle)
-
-    @property
-    def polar_angle(self):
-        return _math.atan2(self.y, self.x)
-
-    @polar_angle.setter
-    def polar_angle(self, value):
-        self.polar = (self.polar_radius, value)
-
-    @property
-    def polar(self):
-        """polar coordinate (radius, pos_angle) """
-        return self.polar_radius, self.polar_angle
-
-    @polar.setter
-    def polar(self, rad_ang):
-        """polar coordinate (radius, angle) """
-
-        self.x = rad_ang[0] * _math.cos(rad_ang[1])
-        self.y = rad_ang[0] * _math.sin(rad_ang[1])
-
-    def distance(self, d):
-        """Returns Euclidean distance to the another Coordinate. The function
-        does not takes the size of an object into account.
-
-        Parameters
-        ----------
-        d : Point
-
-        Returns
-        -------
-        distance : float
-
-        """
-
-        return _math.hypot(self.x - d.x, self.y - d.y)
-
-
-class ShapeAttribute(object):
-
-    def __init__(self, attribute):
+    def __init__(self, xy, attribute):
+        Coordinate.__init__(self, x=xy[0], y=xy[1])
         self._attribute = None
-        self.attribute = attribute  # setter
+        self.attribute = attribute  # call setter
 
     @property
     def attribute(self):
@@ -154,13 +56,66 @@ class ShapeAttribute(object):
                 fl_name = PictureFile.check_attribute(self._attribute)
                 if fl_name is not None:
                     return PictureFile(fl_name)
+
         return self._attribute
 
+    @abstractmethod
+    def __repr__(self):
+        pass
 
-class Dot(Point, ShapeAttribute):
+    @abstractmethod
+    def distance(self, other):
+        pass
+
+    @property
+    @abstractmethod
+    def area(self):
+        pass
+
+    @property
+    @abstractmethod
+    def perimeter(self):
+        pass
+
+
+class Point(ABCShape):
+
+    def __init__(self, xy, attribute=None):
+        """Initialize a point
+
+        Handles polar and cartesian representation (optimised processing, i.e.,
+        conversions between coordinates systems will be done only once if needed)
+
+        Parameters
+        ----------
+        xy : tuple of two numeric
+        attribute : attribute (string, optional)
+        """
+
+        super().__init__(xy, attribute)
+        if isinstance(attribute, PictureFile) or \
+                PictureFile.check_attribute(attribute) is not None:
+            raise NotImplementedError("Point arrays can not handle pictures.")
+
+    def __repr__(self):
+        return "Point(xy={}, attribute='{}')".format(self.xy, self.attribute)
+
+    def distance(self, other):
+        Coordinate.distance(self, other)
+
+    @property
+    def area(self):
+        return 0
+
+    @property
+    def perimeter(self):
+        return 0
+
+
+class Dot(ABCShape):
 
     def __init__(self, xy, diameter, attribute=None):
-        """Initialize a point
+        """Initialize a dot
 
         Handles polar and cartesian representation (optimised processing, i.e.,
         conversions between coordinates systems will be done only once if needed)
@@ -171,24 +126,24 @@ class Dot(Point, ShapeAttribute):
         diameter : numeric
         attribute : attribute (string, optional)
         """
-        if isinstance(attribute, PictureFile):
+        if isinstance(attribute, PictureFile) or \
+                PictureFile.check_attribute(attribute) is not None:
             raise NotImplementedError("Dot arrays can not handle pictures.")
 
-        Point.__init__(self, x=xy[0], y=xy[1])
-        ShapeAttribute.__init__(self, attribute)
+        super().__init__(xy, attribute)
         self.diameter = diameter
 
     def __repr__(self):
         return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
                                                                 self.diameter, self.attribute)
 
-    def distance(self, d):
+    def distance(self, other):
         """Return Euclidean distance to the dot d. The function takes the
         diameter of the points into account.
 
         Parameters
         ----------
-        d : Dot
+        other : Dot
 
         Returns
         -------
@@ -196,7 +151,7 @@ class Dot(Point, ShapeAttribute):
 
         """
 
-        return Point.distance(self, d) - ((self.diameter + d.diameter) / 2.0)
+        return Coordinate.distance(self, other) - ((self.diameter + other.diameter) / 2.0)
 
     @property
     def area(self):
@@ -207,7 +162,7 @@ class Dot(Point, ShapeAttribute):
         return _math.pi * self.diameter
 
 
-class Rectangle(Point, ShapeAttribute):
+class Rectangle(ABCShape):
 
     def __init__(self, xy, size, attribute=None):
         """Initialize a Rectangle
@@ -226,13 +181,36 @@ class Rectangle(Point, ShapeAttribute):
         attribute : attribute (string) or PictureFile
         """
 
-        Point.__init__(self, x=xy[0], y=xy[1])
-        ShapeAttribute.__init__(self, attribute)
+        super().__init__(xy, attribute)
         self.width, self.height = size
 
     def __repr__(self):
         return "Rectangle(xy={}, size={}, attribute='{}')".format(self.xy,
-                                                                  self.size, self.get_attribute_str())
+                                    self.size, self.get_attribute_object())
+
+    @property
+    def area(self):
+        return self.width * self.height
+
+    @property
+    def perimeter(self):
+        return 2 * (self.width + self.height)
+
+    def distance(self, other):
+        """Return Euclidean distance to the dot d. The function takes the
+        size of the rectangles into account.
+
+        Parameters
+        ----------
+        other : Rectangle
+
+        Returns
+        -------
+        distance : float
+
+        """
+        dx, dy = self.xy_distances(other=other)
+        return _math.hypot(dx, dy)
 
     @property
     def left(self):
@@ -255,12 +233,12 @@ class Rectangle(Point, ShapeAttribute):
 
         Returns
         -------
-        iterator over Points or tuple (x,y)
+        iterator over Coordinates or tuple (x,y)
         """
-        for x in [Point(self.left, self.top),
-                  Point(self.right, self.top),
-                  Point(self.right, self.bottom),
-                  Point(self.left, self.bottom)]:
+        for x in [Coordinate(self.left, self.top),
+                  Coordinate(self.right, self.top),
+                  Coordinate(self.right, self.bottom),
+                  Coordinate(self.left, self.bottom)]:
             if xy_tuple:
                 yield x.xy
             else:
@@ -288,14 +266,6 @@ class Rectangle(Point, ShapeAttribute):
         return self.width / self.height
 
     @property
-    def area(self):
-        return self.width * self.height
-
-    @property
-    def perimeter(self):
-        return 2 * (self.width + self.height)
-
-    @property
     def diagonal(self):
         return _math.sqrt(self.width ** 2 + self.height ** 2)
 
@@ -318,19 +288,3 @@ class Rectangle(Point, ShapeAttribute):
             dy = pos_dist[1] - max_overlap_dist[1]
 
         return dx, dy
-
-    def distance(self, other):
-        """Return Euclidean distance to the dot d. The function takes the
-        size of the rectangles into account.
-
-        Parameters
-        ----------
-        other : Rectangle
-
-        Returns
-        -------
-        distance : float
-
-        """
-        dx, dy = self.xy_distances(other=other)
-        return _math.hypot(dx, dy)

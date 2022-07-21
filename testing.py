@@ -8,7 +8,7 @@ import numpy as np
 from pynsn._lib import misc
 from random import randint
 seed = randint(0, 1000)
-seed = 997
+seed = 991
 nsn.init_random_generator(seed)
 
 my_colours = nsn.ImageColours(#target_area="#EEEEEE",
@@ -21,6 +21,10 @@ my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               #center_of_mass="magenta"
                               )
 
+from pynsn._lib.shapes import ABCShape
+p = nsn.Point(xy=(0,0))
+
+print(isinstance(p, ABCShape))
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],
@@ -34,12 +38,10 @@ stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.RectangleArray)
 props.scale.log_size(stimulus, 1.2)
 
-stimulus.copy()
-
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
-print(stimulus)
+
 fit.average_perimeter(stimulus, 130)
 dist = stimulus.get_distances_matrix()
 

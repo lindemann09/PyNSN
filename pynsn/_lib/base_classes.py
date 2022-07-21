@@ -1,27 +1,27 @@
 from __future__ import annotations
 
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from copy import deepcopy
-from abc import ABCMeta, abstractmethod
-from hashlib import md5
 import json
+from abc import ABCMeta, abstractmethod
+from copy import deepcopy
+from hashlib import md5
+
 import numpy as np
 from scipy import spatial
 
-
-from .lib_typing import OptInt, OptArrayLike, IntOVector, ArrayLike, List, \
-     Union, Tuple, Sequence
-from . import misc
 from . import geometry
-from . import shapes
+from . import misc
 from . import rng
+from .shapes import Dot, Rectangle, Point
+from .coordinate import Coordinate
 from .array_tools import BrownianMotion
-from ..visual_properties._properties import ArrayProperties
+from .lib_typing import OptInt, OptArrayLike, ArrayLike, List, \
+    Union, Tuple, Sequence, Iterator, IntOVector, Optional
+from .. import constants
 from ..exceptions import NoSolutionError
 from ..visual_properties import fit
-from .. import constants
+from ..visual_properties._properties import ArrayProperties
 
 
 class ArrayParameter(object):
@@ -51,7 +51,7 @@ class ArrayParameter(object):
                 "min_dist_area_boarder": self.min_dist_area_boarder}
 
 
-class AttributeArray(ArrayParameter):
+class PointArray(ArrayParameter):
     """Class for attributes on two dimensional space"""
 
     def __init__(self,
@@ -94,6 +94,17 @@ class AttributeArray(ArrayParameter):
             self._xy = np.append(self._xy, xy, axis=0)
         self._properties.reset()
         return xy.shape[0]
+
+    def add(self, points: Union[Point, Sequence[Point]]) -> None:
+        """append one dot or list of dots"""
+        try:
+            points = list(points)
+        except TypeError:
+            points = [points]
+        for p in points:
+            assert isinstance(p, Point)
+            self._append_xy_attribute(xy=p.xy, attributes=p.attribute)
+        self.properties.reset()
 
     def __str__(self) -> str:
         prop_text = self._properties.as_text(extended_format=True)
@@ -174,7 +185,7 @@ class AttributeArray(ArrayParameter):
         self._properties.reset()
 
     def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> AttributeArray:
+             deepcopy: bool = True) -> PointArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -182,25 +193,25 @@ class AttributeArray(ArrayParameter):
         """
 
         if len(self._xy) == 0:
-            return AttributeArray(target_area_radius=self.target_area_radius,
-                                  min_dist_between=self.min_dist_between,
-                                  min_dist_area_boarder=self.min_dist_area_boarder)
+            return PointArray(target_area_radius=self.target_area_radius,
+                              min_dist_between=self.min_dist_between,
+                              min_dist_area_boarder=self.min_dist_area_boarder)
 
         if indices is None:
             indices = list(range(len(self._xy)))
 
         if deepcopy:
-            return AttributeArray(target_area_radius=self.target_area_radius,
-                                  min_dist_between=self.min_dist_between,
-                                  min_dist_area_boarder=self.min_dist_area_boarder,
-                                  xy=self._xy[indices, :].copy(),
-                                  attributes=self._attributes[indices].copy())
+            return PointArray(target_area_radius=self.target_area_radius,
+                              min_dist_between=self.min_dist_between,
+                              min_dist_area_boarder=self.min_dist_area_boarder,
+                              xy=self._xy[indices, :].copy(),
+                              attributes=self._attributes[indices].copy())
         else:
-            return AttributeArray(target_area_radius=self.target_area_radius,
-                                  min_dist_between=self.min_dist_between,
-                                  min_dist_area_boarder=self.min_dist_area_boarder,
-                                  xy=self._xy[indices, :],
-                                  attributes=self._attributes[indices])
+            return PointArray(target_area_radius=self.target_area_radius,
+                              min_dist_between=self.min_dist_between,
+                              min_dist_area_boarder=self.min_dist_area_boarder,
+                              xy=self._xy[indices, :],
+                              attributes=self._attributes[indices])
 
     def as_dict(self) -> dict:
         """
@@ -250,8 +261,50 @@ class AttributeArray(ArrayParameter):
         with open(json_file_name, 'r') as fl:
             self.read_from_dict(json.load(fl))
 
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Point]:
+        """iterate over all or a part of the objects
 
-class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
+        Parameters
+        ----------
+        indices: int or interable of integer
+
+        Notes
+        -----
+        To iterate all object you might all use the class iterator __iter__:
+        >>> for obj in my_array:
+        >>>    print(obj)
+        """
+
+        if isinstance(indices, (int, np.integer)):
+            yield Point(xy=self._xy[indices, :],
+                      attribute=self._attributes[indices])
+        else:
+            if indices is None:
+                data = zip(self._xy, self._attributes)
+            else:
+                data = zip(self._xy[indices, :],
+                           self._attributes[indices])
+            for xy, att in data:
+                yield Point(xy=xy, attribute=att)
+
+    def get_objects(self, indices: Sequence[int] = None) \
+            -> Sequence[Union[Dot, Rectangle, Point]]:
+        return list(self.iter_objects(indices=indices))
+
+    def get_object(self, index: int) -> Union[None, Dot, Rectangle, Point]:
+        if isinstance(index, int):
+            return next(self.iter_objects(indices=index))
+        else:
+            raise ValueError("Index must be a integer not a {}. ".format(
+                type(index).__name__) + "To handle multiple indices use 'get_objects'. ")
+
+    def join(self, object_array) -> None:
+        """add another object arrays"""
+        self.add(object_array.iter_objects())
+
+
+
+class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @property
     @abstractmethod
@@ -281,7 +334,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
 
     @abstractmethod
     def add(self, something):
-        pass
+        return super().add(something)
 
     @abstractmethod
     def find_objects(self, attribute):
@@ -299,13 +352,6 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
     @abstractmethod
     def mod_round_values(self):
         pass
-
-    def get_objects(self, indices: IntOVector = None) -> Sequence[Union[shapes.Dot, shapes.Rectangle]]:
-        return list(self.iter_objects(indices=indices))
-
-    def join(self, object_array) -> None:
-        """add another object arrays"""
-        self.add(object_array.iter_objects())
 
     def get_distances_matrix(self, between_positions: bool = False) -> np.ndarray:
         """between position ignores the dot size"""
@@ -340,21 +386,23 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         self._properties.reset()
 
     def get_free_position(self,
-                          ref_object: Union[shapes.Dot, shapes.Rectangle],
+                          ref_object: Union[Dot, Rectangle, Point],
                           in_neighborhood: bool = False,
                           allow_overlapping: bool = False,
                           inside_convex_hull: bool = False,
-                          occupied_space=None) -> Union[shapes.Dot, shapes.Rectangle]:
+                          occupied_space=None) -> Union[Dot, Rectangle]:
         """returns the copy of object of at a random free position
 
         raise exception if not found
         occupied space: see generator generate
-        """
+        """ #TODO check for point array (point array check is anyway required)
 
-        if isinstance(ref_object, shapes.Dot):
+        if isinstance(ref_object, Dot):
             object_size = ref_object.diameter / 2.0
-        elif isinstance(ref_object, shapes.Rectangle):
+        elif isinstance(ref_object, Rectangle):
             object_size = max(ref_object.size)
+        elif isinstance(ref_object, Point):
+            object_size = 0
         else:
             raise NotImplementedError("Not implemented for {}".format(
                 type(ref_object).__name__))
@@ -382,7 +430,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 rtn_object.xy = rng.generator.random(size=2) * 2 * area_rad - area_rad
 
             # is outside area
-            if isinstance(ref_object, shapes.Dot):
+            if isinstance(ref_object, (Dot, Point)):
                 is_outside = area_rad <= rtn_object.polar_radius
             else:
                 # Rect: check if one edge is outside
@@ -392,6 +440,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                         is_outside = True
                         break
 
+            # check convex hull is not already outside
             if not is_outside and inside_convex_hull:
                 # use only those that do not change the convex hull
                 tmp_array = self.copy(deepcopy=True)
@@ -404,7 +453,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                 continue
 
             if not allow_overlapping:
-                # find overlap
+                # find overlap (and lower minimum distance)
                 dist = self.get_distances(rtn_object)
                 if isinstance(occupied_space, ABCObjectArray):
                     dist = np.append(dist, occupied_space.get_distances(rtn_object))
@@ -439,7 +488,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         return self.properties.convex_hull.object_indices[idx], sizes_outlying[idx]
 
     def get_number_deviant(self, change_numerosity: int,
-                           preserve_field_area: bool = False) -> AttributeArray:
+                           preserve_field_area: bool = False) -> PointArray:
         """number deviant
         """
         object_array = self.copy()
@@ -545,7 +594,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
         ----------
         object_id
         distance
-        direction: numeric (polar) or tuple, list or Point (cartesian)
+        direction: numeric (polar) or tuple, list or Coordinate (cartesian)
             angle (numeric, polar angle coordinate) or a cartesian 2D coordinates indicating
             the direction towards the object should be moved
 
@@ -558,16 +607,16 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
             ang = float(direction)
         except (TypeError, ValueError):
             try:
-                ang = shapes.Point(x=direction[0], y=direction[1])
+                ang = Coordinate(x=direction[0], y=direction[1])
             except IndexError:
                 ang = None
         if ang is None:
-            raise TypeError("Direction has to be float or a 2D coordinate, that is, a "
-                            "shapes.Point or  a tuple/list of two elements.")
+            raise TypeError("Direction has to be float or a 2D Coordinate "
+                            "or a tuple/list of two elements.")
 
         obj = next(self.iter_objects(indices=object_id))
 
-        movement = shapes.Point()
+        movement = Coordinate()
         if isinstance(ang, float):
             movement.polar = (distance, ang)
         else:
@@ -607,7 +656,7 @@ class ABCObjectArray(AttributeArray, metaclass=ABCMeta):
                                      direction=(0, 0),
                                      push_other=push_other)
 
-    def get_split_arrays(self) -> List[AttributeArray]:
+    def get_split_arrays(self) -> List[PointArray]:
         """returns a list of arrays
         each array contains all dots of with particular colour"""
         att = self._attributes

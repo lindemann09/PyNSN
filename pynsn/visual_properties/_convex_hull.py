@@ -46,7 +46,7 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
+        assert isinstance(object_array, (_lib.PointArray, _lib.DotArray,
                                          _lib.RectangleArray))
         ConvexHullBaseClass.__init__(self, xy=object_array.xy)
 
@@ -58,7 +58,7 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, (_lib.AttributeArray, _lib.DotArray,
+        assert isinstance(object_array, (_lib.PointArray, _lib.DotArray,
                                          _lib.RectangleArray))
 
         if isinstance(object_array, _lib.DotArray):

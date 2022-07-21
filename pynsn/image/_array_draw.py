@@ -7,6 +7,13 @@ from . import _colour
 from .. import _lib
 
 
+# helper for type checking and error raising error
+def _check_object_array(obj):
+    if not isinstance(obj, (_lib.DotArray, _lib.RectangleArray)):
+        raise TypeError("DotArray or RectangleArray expected, but not {}".format(
+            type(obj).__name__))
+
+
 class ArrayDraw(metaclass=ABCMeta):
     """Generic array draw with abstract static methods
 
@@ -79,7 +86,7 @@ class ArrayDraw(metaclass=ABCMeta):
         rtn : image
         """
 
-        _lib._check_object_array(object_array)
+        _check_object_array(object_array)
         if colours is None:
             colours = _colour.ImageColours()
         if not isinstance(colours, _colour.ImageColours):

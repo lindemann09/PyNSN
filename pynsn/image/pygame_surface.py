@@ -14,11 +14,7 @@ def create(object_array,
     if colours is None:
         colours = _colour.ImageColours()
     if not isinstance(colours, _colour.ImageColours):
-<<<<<<< HEAD
-        raise TypeError("Colours must be a ImageColours instance.")
-=======
         raise TypeError("Colours must be of type image.ImageColours")
->>>>>>> devel
 
     img = _pil_image.create(object_array=object_array,
                             colours=colours,

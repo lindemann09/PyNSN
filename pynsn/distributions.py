@@ -3,7 +3,7 @@ import numpy as np
 
 from ._lib.misc import numpy_round2 as _numpy_round2
 from ._lib import rng as _rng
-from . import exceptions as _exceptions
+from .exceptions import NoSolutionError as _NoSolutionError
 
 
 def _round_samples(samples, round_to_decimals):
@@ -101,7 +101,7 @@ class Levels(PyNSNDistribution):
                         int(_np.sum(self.weights / gcd)))
                 except:
                     info = ""
-                raise _exceptions.NoSolutionError(f"Can't find n={n} samples that" +
+                raise _NoSolutionError(f"Can't find n={n} samples that" +
                       f" are exactly distributed as specified by the weights (p={p}). " +
                       info)
 

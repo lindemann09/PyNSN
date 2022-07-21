@@ -22,11 +22,7 @@ class ExprimentDotArray(_Canvas):
         if colours is None:
             colours = _colour.ImageColours()
         if not isinstance(colours, _colour.ImageColours):
-<<<<<<< HEAD
-            raise TypeError("Colours must be a ImageColours instance")
-=======
             raise TypeError("Colours must be of type image.ImageColours")
->>>>>>> devel
 
         _Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = object_array
@@ -57,9 +53,9 @@ class ExprimentDotArray(_Canvas):
 class ExpyrimentDASequence(object):
 
     def __init__(self, da_sequence,
-                 # pil_image_generator
+                 # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colours=_colour.ImageColours(),
+                 colours = _colour.ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):

@@ -70,7 +70,7 @@ class ArrayProperties(object):
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
         assert isinstance(object_array, (_lib.DotArray, _lib.RectangleArray,
-                                         _lib.AttributeArray))
+                                         _lib.PointArray))
         self.oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None

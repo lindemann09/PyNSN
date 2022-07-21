@@ -9,9 +9,10 @@ import numpy as np
 
 from . import misc
 from .base_classes import ABCObjectArray
-from .lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterable, \
+from .lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterator, \
     Any, Union, Sequence, Optional, NumPair
-from .shapes import Rectangle, Point
+from .shapes import Rectangle
+from .coordinate import Coordinate
 
 
 class RectangleArray(ABCObjectArray):
@@ -188,7 +189,7 @@ class RectangleArray(ABCObjectArray):
 
             return eucl_dist
 
-    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterable[Rectangle]:
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:
         """iterate over all or a part of the objects
 
         Parameters
@@ -217,7 +218,7 @@ class RectangleArray(ABCObjectArray):
 
     def find_objects(self, size: Optional[NumPair] = None,
                      attribute: Optional[Any] = None,
-                     edge: Optional[Point] = None) -> Sequence[int]:
+                     edge: Optional[Coordinate] = None) -> Sequence[int]:
         """returns indices of found objects
 
         2D-tuple
@@ -232,14 +233,14 @@ class RectangleArray(ABCObjectArray):
 
         if edge is None:
             return rtn
-        elif isinstance(edge, Point):
+        elif isinstance(edge, Coordinate):
             new_rtn = []
             for i, rect in zip(rtn, self.iter_objects(indices=rtn)):
                 if edge in list(rect.iter_edges()):
                     new_rtn.append(i)
             return new_rtn
         else:
-            raise TypeError("edge has to be of type Points and not {}.".format(
+            raise TypeError("edge has to be a Coordinate and not {}.".format(
                 type(edge)))
 
     def csv(self, variable_names: bool = True,
