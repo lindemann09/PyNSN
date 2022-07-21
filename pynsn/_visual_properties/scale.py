@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from . import fit as _fit
-from ._properties import VisualPropertyFlag as _flags
-from .. import _lib
+from .. import _arrays
 from .._lib import lib_typing as _tp
 
+from .properties import VisualPropertyFlag as flags
 
 def average_diameter(dot_array: _fit._ObjectArrayType, factor: float) -> None:
-    if not isinstance(dot_array, _lib.DotArray):
+    if not isinstance(dot_array, _arrays.DotArray):
         raise TypeError("Scaling diameter is not possible for {}.".format(
             type(dot_array).__name__))
     if factor == 1:
@@ -17,7 +17,7 @@ def average_diameter(dot_array: _fit._ObjectArrayType, factor: float) -> None:
 
 
 def average_rectangle_size(rect_array: _fit._ObjectArrayType, factor: float) -> None:
-    if not isinstance(rect_array, _lib.RectangleArray):
+    if not isinstance(rect_array, _arrays.RectangleArray):
         raise TypeError("Scaling rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
     if factor == 1:
@@ -105,7 +105,7 @@ def sparcity(object_array: _fit._ObjectArrayType, factor: float,
     _fit.sparcity(object_array, value, precision=precision)
 
 
-def visual_property(object_array: _fit._ObjectArrayType, feature: _flags, factor: float) -> None:
+def visual_property(object_array: _fit._ObjectArrayType, feature: flags, factor: float) -> None:
     if factor == 1:
         return
     _fit._check_object_array(object_array)

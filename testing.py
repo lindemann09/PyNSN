@@ -1,11 +1,7 @@
 import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn.visual_properties import fit
-from time import monotonic
-from pynsn import visual_properties as props
-import numpy as np
-from pynsn._lib import misc
+
 from random import randint
 seed = randint(0, 1000)
 seed = 991
@@ -32,13 +28,13 @@ factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
 
 stimulus = factory.create_random_array(n_objects=20)
 assert isinstance(stimulus, nsn.RectangleArray)
-props.scale.log_size(stimulus, 1.2)
+nsn.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
 
-fit.average_perimeter(stimulus, 130)
+nsn.fit.average_perimeter(stimulus, 130)
 dist = stimulus.get_distances_matrix()
 
 img = pil_image.create(stimulus, my_colours)

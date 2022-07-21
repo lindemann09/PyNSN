@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
 from .abc_shape import ABCShape
-from ..coordinate import Coordinate
+from .._lib.coordinate import Coordinate
 
 
 class Rectangle(ABCShape):

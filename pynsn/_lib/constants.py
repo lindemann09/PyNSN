@@ -1,5 +1,5 @@
 
-# arrays
+# _arrays
 DEFAULT_MIN_DIST_BETWEEN = 2
 DEFAULT_MIN_DIST_AREA_BOARDER = 1
 

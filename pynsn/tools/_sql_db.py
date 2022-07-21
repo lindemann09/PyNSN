@@ -3,7 +3,7 @@ from ..image._colour import Colour, ImageColours
 
 
 class DotArraySQLDB(object):
-    """DotArray DB (two tables: arrays, dots)"""
+    """DotArray DB (two tables: _arrays, dots)"""
 
     def __init__(self, db_file, setup=False):
         self.db_file = db_file
@@ -56,7 +56,7 @@ class DotArraySQLDB(object):
         for da in dot_arrays:
             attributes = da.as_dict()['attributes']
 
-            # assuming single colour dot arrays
+            # assuming single colour dot _arrays
             # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
             try:
                 colour = Colour(attributes[0])

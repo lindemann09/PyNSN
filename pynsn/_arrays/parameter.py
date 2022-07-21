@@ -2,8 +2,8 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from ..lib_typing import OptInt
-from ... import constants
+from .._lib.lib_typing import OptInt
+from .._lib import constants
 
 
 class ArrayParameter(object):

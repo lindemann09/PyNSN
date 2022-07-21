@@ -73,7 +73,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
 
 def numpy_vector(x):
     """helper function:
-    make an numpy vector from any element (list, arrays, and single data (str, numeric))
+    make an numpy vector from any element (list, _arrays, and single data (str, numeric))
     """
 
     x = np.array(x)

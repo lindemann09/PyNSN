@@ -1,7 +1,7 @@
 import unittest
 from pynsn import NSNFactory
 from pynsn import distributions as distr
-from pynsn.visual_properties import fit, scale, flags
+from pynsn import fit, scale
 
 
 class DotsSmall(unittest.TestCase):
@@ -43,41 +43,41 @@ class DotsSmall(unittest.TestCase):
 
     def test_match_av_surface_area(self):
         # decrease
-        self.change_prop(prop=flags.AV_SURFACE_AREA)
+        self.change_prop(prop=fit.flags.AV_SURFACE_AREA)
 
     def test_match_av_size(self):
         # decrease
-        self.change_prop(prop=flags.AV_DOT_DIAMETER)
+        self.change_prop(prop=fit.flags.AV_DOT_DIAMETER)
 
     def test_match_av_perimeter(self):
         # decrease
-        self.change_prop(prop=flags.AV_PERIMETER)
+        self.change_prop(prop=fit.flags.AV_PERIMETER)
 
     def test_match_total_surface_area(self):
         # decrease
-        self.change_prop(prop=flags.TOTAL_SURFACE_AREA)
+        self.change_prop(prop=fit.flags.TOTAL_SURFACE_AREA)
 
     def test_match_total_perimeter(self):
         # decrease
-        self.change_prop(prop=flags.TOTAL_PERIMETER)
+        self.change_prop(prop=fit.flags.TOTAL_PERIMETER)
 
     def test_match_field_area(self):
         # decrease
-        self.change_prop(prop=flags.SPARSITY, first=1.2,
+        self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
     def test_match_sparcity(self):
         # decrease
-        self.change_prop(prop=flags.SPARSITY, first=1.2,
+        self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
     def test_match_log_size(self):
         # decrease
-        self.change_prop(prop=flags.LOG_SIZE)
+        self.change_prop(prop=fit.flags.LOG_SIZE)
 
     def test_match_log_spacing(self):
         # decrease
-        self.change_prop(prop=flags.LOG_SPACING, first=1.2,
+        self.change_prop(prop=fit.flags.LOG_SPACING, first=1.2,
                          second=0.85)
 
 

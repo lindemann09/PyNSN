@@ -11,14 +11,14 @@ from .sequence_display import SequenceDisplay
 from .. import NSNFactory, ImageColours
 from .. import __version__
 from .. import distributions as distr
-from .. import visual_properties as props
-from ..exceptions import NoSolutionError
+from .. import _visual_properties as props
+from .._lib.exception import NoSolutionError
 from ..image import _colour
 from ..image import pil_image
 from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-                 "factory": NSNFactory(target_area_radius=200, min_dist_between=2),
+                 "_factory": NSNFactory(target_area_radius=200, min_dist_between=2),
                  "dot_diameter": distr.Beta(mu=15, sigma=8, min_max=(5, 40)),
                  "col": ImageColours(target_area="#303030",
                                      field_area_positions=None,
@@ -29,7 +29,7 @@ DEFAULT_ARRAY = {"num": 40,
                                      background="gray")}
 
 ICON = {"num": 11,
-        "factory": NSNFactory(target_area_radius=200),
+        "_factory": NSNFactory(target_area_radius=200),
         "dot_diameter": distr.Beta(mu=35, sigma=20, min_max=(5, 80)),
         "col": ImageColours(target_area="#3e3e3e",
                             field_area_positions=None,
@@ -101,7 +101,7 @@ class GUIMainWindow(QMainWindow):
         aboutMenu.addAction(aboutAction)
 
         # main widget
-        factory = DEFAULT_ARRAY["factory"]
+        factory = DEFAULT_ARRAY["_factory"]
         factory.set_appearance_dot(diameter=DEFAULT_ARRAY["dot_diameter"])
         self.main_widget = MainWidget(self, self.settings, DEFAULT_ARRAY["num"],
                                       factory)
@@ -113,7 +113,7 @@ class GUIMainWindow(QMainWindow):
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
 
         # ICON
-        factory = ICON["factory"]
+        factory = ICON["_factory"]
         factory.set_appearance_dot(diameter=ICON["dot_diameter"])
         oa = factory.create_random_array(n_objects=ICON["num"])
         self._image = pil_image.create(object_array=oa,

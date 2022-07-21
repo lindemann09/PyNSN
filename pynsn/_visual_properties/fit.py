@@ -4,22 +4,23 @@ from math import log2 as _log2
 
 import numpy as _np
 
-from ._properties import VisualPropertyFlag as _flags
-from .. import _lib
-from .. import constants
+from .. import _arrays
+from .._lib import constants
 from .._lib import geometry as _geometry
-from .._lib import rng as _rng
 from .._lib import lib_typing as _tp
-from ..exceptions import NoSolutionError as _NoSolutionError
+from .._lib import rng as _rng
+from .._lib.exception import NoSolutionError as _NoSolutionError
 
-_ObjectArrayType = _tp.Union["_lib.DotArray", "_lib.RectangleArray",
+from .properties import VisualPropertyFlag as flags
+
+_ObjectArrayType = _tp.Union["_arrays.DotArray", "_arrays.RectangleArray",
                              "_lib.AttributeArray"]
 
 
 # helper for type checking and error raising error
 def _check_object_array(obj):
-    if not isinstance(obj, (_lib.DotArray, _lib.RectangleArray, 
-                            _lib.PointArray)):
+    if not isinstance(obj, (_arrays.DotArray, _arrays.RectangleArray, 
+                            _arrays.PointArray)):
         raise TypeError("DotArray, RectangleArray or PointArray expected, but not {}".format(
             type(obj).__name__))
 
@@ -98,7 +99,7 @@ def numerosity(object_array: _ObjectArrayType,
 
 def average_diameter(dot_array: _ObjectArrayType, value: float) -> None:
     # changes diameter
-    if not isinstance(dot_array, _lib.DotArray):
+    if not isinstance(dot_array, _arrays.DotArray):
         raise TypeError("Adapting diameter is not possible for {}.".format(
             type(dot_array).__name__))
     scale = value / dot_array.properties.average_dot_diameter
@@ -108,7 +109,7 @@ def average_diameter(dot_array: _ObjectArrayType, value: float) -> None:
 
 def average_rectangle_size(rect_array: _ObjectArrayType, value: _tp.NumPair) -> None:
     # changes diameter
-    if not isinstance(rect_array, _lib.RectangleArray):
+    if not isinstance(rect_array, _arrays.RectangleArray):
         raise TypeError("Adapting rectangle size is not possible for {}.".format(
             type(rect_array).__name__))
     try:
@@ -127,7 +128,7 @@ def total_surface_area(object_array: _ObjectArrayType, value: float) -> None:
     # changes diameter
     _check_object_array(object_array)
     a_scale = value / object_array.properties.total_surface_area
-    if isinstance(object_array, _lib.DotArray):
+    if isinstance(object_array, _arrays.DotArray):
         object_array._diameter = _np.sqrt(
             object_array.surface_areas * a_scale) * 2 / _np.sqrt(
                     _np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
@@ -241,10 +242,10 @@ def average_perimeter(object_array: _ObjectArrayType, value: float) -> None:
 
 
 def total_perimeter(object_array: _ObjectArrayType, value: float) -> None:
-    if isinstance(object_array, _lib.DotArray):
+    if isinstance(object_array, _arrays.DotArray):
         tmp = value / (object_array.properties.numerosity * _np.pi)
         average_diameter(object_array, tmp)
-    elif isinstance(object_array, _lib.RectangleArray):
+    elif isinstance(object_array, _arrays.RectangleArray):
         scale = value / object_array.properties.total_perimeter
         new_size = object_array.properties.average_rectangle_size * scale
         average_rectangle_size(object_array, new_size)
@@ -279,7 +280,7 @@ def sparcity(object_array: _ObjectArrayType, value:float,
                       precision=precision)
 
 
-def visual_property(object_array: _ObjectArrayType, property_flag: _flags,
+def visual_property(object_array: _ObjectArrayType, property_flag: flags,
                     value: float) -> _tp.Any:
     """
     adapt_properties: continuous property or list of continuous properties
@@ -294,45 +295,45 @@ def visual_property(object_array: _ObjectArrayType, property_flag: _flags,
     """
 
     # type check
-    if not isinstance(property_flag, _flags):
+    if not isinstance(property_flag, flags):
         raise ValueError("{} is not a visual feature.".format(property_flag))
 
     # Adapt
-    if property_flag == _flags.AV_DOT_DIAMETER:
+    if property_flag == flags.AV_DOT_DIAMETER:
         return average_diameter(object_array, value=value)
 
-    elif property_flag == _flags.NUMEROSITY:
+    elif property_flag == flags.NUMEROSITY:
         return numerosity(object_array, value=int(value))
 
-    elif property_flag == _flags.AV_PERIMETER:
+    elif property_flag == flags.AV_PERIMETER:
         return average_perimeter(object_array, value=value)
 
-    elif property_flag == _flags.TOTAL_PERIMETER:
+    elif property_flag == flags.TOTAL_PERIMETER:
         return total_perimeter(object_array, value=value)
 
-    elif property_flag == _flags.AV_SURFACE_AREA:
+    elif property_flag == flags.AV_SURFACE_AREA:
         return average_surface_area(object_array, value=value)
 
-    elif property_flag == _flags.TOTAL_SURFACE_AREA:
+    elif property_flag == flags.TOTAL_SURFACE_AREA:
         return total_surface_area(object_array, value=value)
 
-    elif property_flag == _flags.LOG_SIZE:
+    elif property_flag == flags.LOG_SIZE:
         return log_size(object_array, value=value)
 
-    elif property_flag == _flags.LOG_SPACING:
+    elif property_flag == flags.LOG_SPACING:
         return log_spacing(object_array, value=value)
 
-    elif property_flag == _flags.SPARSITY:
+    elif property_flag == flags.SPARSITY:
         return sparcity(object_array, value=value)
 
-    elif property_flag == _flags.FIELD_AREA:
+    elif property_flag == flags.FIELD_AREA:
         return field_area(object_array, value=value)
 
-    elif property_flag == _flags.COVERAGE:
+    elif property_flag == flags.COVERAGE:
         return coverage(object_array, value=value)
 
     else:
         raise NotImplementedError("Not implemented for {}".format(
             property_flag.label()))
 
-# TODO "visual test" (eye inspection) of fitting rect arrays
+# TODO "visual test" (eye inspection) of fitting rect _arrays

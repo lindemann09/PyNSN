@@ -1,9 +1,9 @@
 import numpy as _np
 import numpy as np
 
-from ._lib.misc import numpy_round2 as _numpy_round2
-from ._lib import rng as _rng
-from .exceptions import NoSolutionError as _NoSolutionError
+from .._lib.misc import numpy_round2 as _numpy_round2
+from .._lib import rng as _rng
+from .._lib.exception import NoSolutionError as _NoSolutionError
 
 
 def _round_samples(samples, round_to_decimals):

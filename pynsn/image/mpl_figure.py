@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 from matplotlib import pyplot as _plt
-from .. import _lib
+from .. import _shapes
 from . import _array_draw
 
 
@@ -26,7 +26,7 @@ def create(object_array, colours=None, dpi=100):
 class _MatplotlibDraw(_array_draw.ArrayDraw):
 
     @staticmethod
-    def get_squared_image(image_width, background_colour,  **kwargs):
+    def get_squared_image(image_width, background_colour, **kwargs):
         dpi = kwargs["dpi"]
         figure = _plt.figure(figsize=_np.array([image_width, image_width]) / dpi,
                              dpi=dpi)
@@ -51,14 +51,14 @@ class _MatplotlibDraw(_array_draw.ArrayDraw):
     def draw_shape(img, shape, opacity, scaling_factor):
         attr = shape.get_attribute_object()
 
-        if isinstance(attr, _lib.PictureFile):
+        if isinstance(attr, _shapes.PictureFile):
             raise RuntimeError("Pictures are not supported for matplotlib files.")
 
-        if isinstance(shape, _lib.Dot):
+        if isinstance(shape, _shapes.Dot):
             r = shape.diameter / 2
             plt_shape = _plt.Circle(xy=shape.xy, radius=r, color=attr.colour,
                                     lw=0)
-        elif isinstance(shape, _lib.Rectangle):
+        elif isinstance(shape, _shapes.Rectangle):
             xy = (shape.left, shape.bottom)
             plt_shape = _plt.Rectangle(xy=xy,
                                        width=shape.width,
@@ -70,7 +70,6 @@ class _MatplotlibDraw(_array_draw.ArrayDraw):
         plt_shape.set_alpha(opacity)
         img.axes[0].add_artist(plt_shape)
 
-
     @staticmethod
     def draw_convex_hull(img, points, convex_hull_colour, opacity,
                          scaling_factor):
@@ -81,5 +80,3 @@ class _MatplotlibDraw(_array_draw.ArrayDraw):
                                linewidth=1, color=convex_hull_colour.colour)
             line.set_alpha(opacity)
             img.axes[0].add_artist(line)
-
-

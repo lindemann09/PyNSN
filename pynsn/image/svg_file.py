@@ -3,7 +3,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as _np
 import svgwrite as _svg
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import _lib
+from .. import _shapes
 from . import _array_draw
 
 
@@ -46,16 +46,16 @@ class _SVGDraw(_array_draw.ArrayDraw):
         shape.xy = _c2i_coord(_np.asarray(shape.xy), width).tolist()
         attr = shape.get_attribute_object()
 
-        if isinstance(attr, _lib.PictureFile):
+        if isinstance(attr, _shapes.PictureFile):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
-        if isinstance(shape, _lib.Dot):
+        if isinstance(shape, _shapes.Dot):
             image.add(image.circle(center=shape.xy,
                                        r=shape.diameter / 2,
                                        # stroke_width="0", stroke="black",
                                        fill=attr.colour,
                                        opacity=opacity))
-        elif isinstance(shape, _lib.Rectangle):
+        elif isinstance(shape, _shapes.Rectangle):
             image.add(image.rect(insert=(shape.left, shape.bottom),
                                      size=shape.size,
                                      fill=attr.colour,

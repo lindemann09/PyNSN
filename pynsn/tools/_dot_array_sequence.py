@@ -10,8 +10,8 @@ from hashlib import md5 as _md5
 import numpy as _np
 
 from .._lib import misc as _misc
-from .._lib import DotArray
-from ..visual_properties import flags, fit
+from .._arrays import DotArray
+from .._visual_properties import flags, fit
 
 
 class DASequence(object):
@@ -60,7 +60,7 @@ class DASequence(object):
         return m.hexdigest()
 
     def get_properties_dict(self):
-        """dictionary with arrays
+        """dictionary with _arrays
 
         Examples
         --------
@@ -74,7 +74,7 @@ class DASequence(object):
         """
         dicts = [x._properties.as_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
-        rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all arrays have the same _sequence ID
+        rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all _arrays have the same _sequence ID
         return rtn
 
 
@@ -126,7 +126,7 @@ def create(specs,
            min_max_numerosity,
            round_decimals = None,
            source_number = None):  # todo could be an iterator
-    """factory function
+    """_factory function
 
     Methods takes take , you might use make Process
         adapt_properties:

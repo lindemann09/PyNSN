@@ -2,7 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
-from ..coordinate import Coordinate
+from .._lib.coordinate import Coordinate
 
 
 class Point(ABCShape):
@@ -22,7 +22,7 @@ class Point(ABCShape):
         super().__init__(xy, attribute)
         if isinstance(attribute, PictureFile) or \
                 PictureFile.check_attribute(attribute) is not None:
-            raise NotImplementedError("Point arrays can not handle pictures.")
+            raise NotImplementedError("Point _arrays can not handle pictures.")
 
     def __repr__(self):
         return "Point(xy={}, attribute='{}')".format(self.xy, self.attribute)

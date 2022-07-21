@@ -10,17 +10,17 @@ from scipy import spatial
 
 from .point_array import PointArray
 from .tools import BrownianMotion
-from .. import geometry
-from .. import misc
-from .. import rng
-from ..coordinate import Coordinate
-from ..lib_typing import List, Union, Tuple
-from ..shapes.dot import Dot
-from ..shapes.point import Point
-from ..shapes.rectangle import Rectangle
-from ... import constants
-from ...exceptions import NoSolutionError
-from ...visual_properties import fit
+from .._lib import constants
+from .._lib import geometry
+from .._lib import misc
+from .._lib import rng
+from .._lib.coordinate import Coordinate
+from .._lib.exception import NoSolutionError
+from .._lib.lib_typing import List, Union, Tuple
+from .._shapes.dot import Dot
+from .._shapes.point import Point
+from .._shapes.rectangle import Rectangle
+from .._visual_properties import fit
 
 
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
@@ -376,7 +376,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                                      push_other=push_other)
 
     def get_split_arrays(self) -> List[PointArray]:
-        """returns a list of arrays
+        """returns a list of _arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
         att[np.where(att==None)] = "None"  # TODO check "is none"

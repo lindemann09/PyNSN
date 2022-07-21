@@ -7,14 +7,15 @@ from hashlib import md5
 
 import numpy as np
 
-from .. import geometry
-from .. import misc
+from .._lib import geometry
+from .._lib import misc
 from .parameter import ArrayParameter
-from ..lib_typing import OptInt, OptArrayLike, ArrayLike, Union, Sequence, Iterator, IntOVector, Optional
-from ..shapes.dot import Dot
-from ..shapes.point import Point
-from ..shapes.rectangle import Rectangle
-from ...visual_properties._properties import ArrayProperties
+from .._lib.lib_typing import OptInt, OptArrayLike, ArrayLike, Union, \
+    Sequence, Iterator, IntOVector, Optional
+from .._shapes.dot import Dot
+from .._shapes.point import Point
+from .._shapes.rectangle import Rectangle
+from .._visual_properties.properties import ArrayProperties
 
 
 class PointArray(ArrayParameter):
@@ -265,6 +266,6 @@ class PointArray(ArrayParameter):
                 type(index).__name__) + "To handle multiple indices use 'get_objects'. ")
 
     def join(self, object_array) -> None:
-        """add another object arrays"""
+        """add another object _arrays"""
         self.add(object_array.iter_objects())
 

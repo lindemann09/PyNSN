@@ -2,14 +2,14 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import copy
 
-from .arrays.dot_array import DotArray
-from .arrays.parameter import ArrayParameter
-from .arrays.rect_array import RectangleArray
-from . import Dot
-from . import Rectangle
+from .._arrays.dot_array import DotArray
+from .._arrays.parameter import ArrayParameter
+from .._arrays.rect_array import RectangleArray
+from .._shapes.dot import Dot
+from .._shapes.rectangle import Rectangle
 from .._lib.misc import dict_to_text
-from ..distributions import PyNSNDistribution, _round_samples, Levels
-from ..exceptions import NoSolutionError
+from .distributions import PyNSNDistribution, _round_samples, Levels
+from .._lib.exception import NoSolutionError
 
 
 class _Constant(object):
@@ -190,7 +190,7 @@ class NSNFactory(ArrayParameter):
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
 
-        attribute is an array, arrays are assigned randomly.
+        attribute is an array, _arrays are assigned randomly.
 
 
         Parameters
@@ -250,7 +250,7 @@ class NSNFactory(ArrayParameter):
 
         Returns
         -------
-        rtn : iterator of object arrays
+        rtn : iterator of object _arrays
         """
         previous = None
         for n in range(n_objects):

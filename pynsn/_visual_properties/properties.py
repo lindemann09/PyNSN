@@ -7,8 +7,8 @@ import numpy as np
 
 from .._lib.lib_typing import Any, Optional, NumPair
 
-from .. import _lib
-from ._convex_hull import ConvexHull, ConvexHullPositions
+from .. import _arrays
+from .convex_hull import ConvexHull, ConvexHullPositions
 
 
 class VisualPropertyFlag(IntFlag):
@@ -69,8 +69,8 @@ class ArrayProperties(object):
 
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
-        assert isinstance(object_array, (_lib.DotArray, _lib.RectangleArray,
-                                         _lib.PointArray))
+        assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray,
+                                         _arrays.PointArray))
         self.oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None
@@ -94,7 +94,7 @@ class ArrayProperties(object):
 
     @property
     def average_dot_diameter(self) -> Optional[float]:
-        if not isinstance(self.oa, _lib.DotArray):
+        if not isinstance(self.oa, _arrays.DotArray):
             return None
         elif self.numerosity == 0:
             return None
@@ -103,7 +103,7 @@ class ArrayProperties(object):
 
     @property
     def average_rectangle_size(self) -> Optional[NumPair]:
-        if not isinstance(self.oa, _lib.RectangleArray):
+        if not isinstance(self.oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:
             return np.array([np.na, np.na])
@@ -237,9 +237,9 @@ class ArrayProperties(object):
                (VisualPropertyFlag.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlag.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self.oa, _lib.DotArray):
+        if isinstance(self.oa, _arrays.DotArray):
             rtn[2] = (VisualPropertyFlag.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
-        elif isinstance(self.oa, _lib.RectangleArray):
+        elif isinstance(self.oa, _arrays.RectangleArray):
             rtn[2] = (VisualPropertyFlag.AV_RECT_SIZE.label(), self.average_rectangle_size)
         else:
             rtn.pop(2)

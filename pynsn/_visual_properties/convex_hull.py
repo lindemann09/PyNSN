@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import spatial
 from .._lib.geometry import cartesian2polar, polar2cartesian
-from .. import _lib
+from .. import _arrays
 
 
 class ConvexHullBaseClass(object):
@@ -46,8 +46,8 @@ class ConvexHullPositions(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, (_lib.PointArray, _lib.DotArray,
-                                         _lib.RectangleArray))
+        assert isinstance(object_array, (_arrays.PointArray, _arrays.DotArray,
+                                         _arrays.RectangleArray))
         ConvexHullBaseClass.__init__(self, xy=object_array.xy)
 
 
@@ -58,10 +58,10 @@ class ConvexHull(ConvexHullBaseClass):
     """
 
     def __init__(self, object_array):
-        assert isinstance(object_array, (_lib.PointArray, _lib.DotArray,
-                                         _lib.RectangleArray))
+        assert isinstance(object_array, (_arrays.PointArray, _arrays.DotArray,
+                                         _arrays.RectangleArray))
 
-        if isinstance(object_array, _lib.DotArray):
+        if isinstance(object_array, _arrays.DotArray):
             # centered polar coordinates
             minmax = np.array((np.min(object_array.xy, axis=0),
                                np.max(object_array.xy, axis=0)))
@@ -72,7 +72,7 @@ class ConvexHull(ConvexHullBaseClass):
             polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameter / 2)
             outer_xy = polar2cartesian(polar_centered) + center
 
-        elif isinstance(object_array, _lib.RectangleArray):
+        elif isinstance(object_array, _arrays.RectangleArray):
             # simple solution: get all edges
             edges = []
             for rect in object_array.iter_objects():
@@ -83,7 +83,7 @@ class ConvexHull(ConvexHullBaseClass):
             outer_xy = object_array.xy
 
         ConvexHullBaseClass.__init__(self, xy=outer_xy)
-        self._is_rect_array = isinstance(object_array, _lib.RectangleArray)
+        self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)
 
     @property
     def object_indices(self):

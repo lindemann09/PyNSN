@@ -2,8 +2,8 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 
-from ..coordinate import Coordinate
-from ...image._colour import Colour
+from .._lib.coordinate import Coordinate
+from ..image._colour import Colour
 from .picture_file import PictureFile
 
 

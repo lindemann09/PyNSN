@@ -4,7 +4,7 @@ import math
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
-from ..coordinate import Coordinate
+from .._lib.coordinate import Coordinate
 
 
 class Dot(ABCShape):
@@ -23,7 +23,7 @@ class Dot(ABCShape):
         """
         if isinstance(attribute, PictureFile) or \
                 PictureFile.check_attribute(attribute) is not None:
-            raise NotImplementedError("Dot arrays can not handle pictures.")
+            raise NotImplementedError("Dot _arrays can not handle pictures.")
 
         super().__init__(xy, attribute)
         self.diameter = diameter

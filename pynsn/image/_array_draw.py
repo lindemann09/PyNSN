@@ -5,11 +5,12 @@ from abc import ABCMeta, abstractmethod
 import numpy as _np
 from . import _colour
 from .. import _lib
-
+from .. import _arrays
+from .._shapes import Dot, PictureFile
 
 # helper for type checking and error raising error
 def _check_object_array(obj):
-    if not isinstance(obj, (_lib.DotArray, _lib.RectangleArray)):
+    if not isinstance(obj, (_arrays.DotArray, _arrays.RectangleArray)):
         raise TypeError("DotArray or RectangleArray expected, but not {}".format(
             type(obj).__name__))
 
@@ -110,7 +111,7 @@ class ArrayDraw(metaclass=ABCMeta):
                                      **kwargs)
 
         if colours.target_area.colour is not None:
-            obj = _lib.Dot(xy=(0, 0), diameter=image_width,
+            obj = Dot(xy=(0, 0), diameter=image_width,
                            attribute=colours.target_area.colour)
             self.draw_shape(img, obj, opacity=1,
                             scaling_factor=1)
@@ -120,7 +121,7 @@ class ArrayDraw(metaclass=ABCMeta):
             # draw objects
             for obj in object_array.iter_objects():
                 att = obj.get_attribute_object()
-                if isinstance(att, _lib.PictureFile):
+                if isinstance(att, PictureFile):
                     pass
                 else:  # dot or rect: force colour, set default colour if no colour
                     obj.attribute = _colour.Colour(att, colours.default_object_colour)

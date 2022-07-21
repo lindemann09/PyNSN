@@ -91,7 +91,7 @@ class ExpyrimentDASequence(object):
         """returns image with a particular numerosity"""
         try:
             return self.stimuli[self.da_sequence.numerosity_idx[number_of_dots]]
-        except:
+        except IndexError:
             return None
 
     @property

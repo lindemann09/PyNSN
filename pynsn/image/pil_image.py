@@ -4,7 +4,7 @@ from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 import numpy as _np
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import _lib
+from .. import _shapes
 from . import _array_draw
 
 
@@ -46,16 +46,16 @@ class _PILDraw(_array_draw.ArrayDraw):
         shape.xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size[0]).tolist()
         attr = shape.get_attribute_object()
 
-        if isinstance(shape, _lib.Dot):
+        if isinstance(shape, _shapes.Dot):
             shape.diameter = shape.diameter * scaling_factor
             r = shape.diameter / 2
             _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                           shape.x + r, shape.y + r),
                                          fill=attr.colour)
-        elif isinstance(shape, _lib.Rectangle):
+        elif isinstance(shape, _shapes.Rectangle):
             tmp = _np.asarray(shape.size) * scaling_factor
             shape.size = tmp.tolist()
-            if isinstance(attr, _lib.PictureFile):
+            if isinstance(attr, _shapes.PictureFile):
                 # picture
                 shape_size = (round(shape.width), round(shape.height))
                 target_box = (round(shape.left), round(shape.bottom),  # FIXME ceil?
@@ -72,7 +72,7 @@ class _PILDraw(_array_draw.ArrayDraw):
                 # rectangle shape
                 _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
                                                 shape.right, shape.bottom),
-                                               fill=attr.colour)  # FIXME decentral shapes seems to be bit larger than with pyplot
+                                               fill=attr.colour)  # FIXME decentral _shapes seems to be bit larger than with pyplot
 
         else:
             raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))

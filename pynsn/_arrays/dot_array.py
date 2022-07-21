@@ -8,10 +8,10 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 
 from .abc_object_array import ABCObjectArray
-from .. import misc
-from ..lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
+from .._lib import misc
+from .._lib.lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
     Any, Union, Sequence, Optional, OptFloat
-from ..shapes.dot import Dot
+from .._shapes.dot import Dot
 
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:

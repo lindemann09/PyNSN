@@ -7,12 +7,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from .. import misc
+from .._lib import misc
 from .abc_object_array import ABCObjectArray
-from ..lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterator, \
+from .._lib.lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterator, \
     Any, Union, Sequence, Optional, NumPair
-from ..shapes.rectangle import Rectangle
-from ..coordinate import Coordinate
+from .._shapes.rectangle import Rectangle
+from .._lib.coordinate import Coordinate
 
 
 class RectangleArray(ABCObjectArray):
