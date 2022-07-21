@@ -7,11 +7,13 @@ init:
 	#pip install pynsn -U
 	pip list
 	rm *demo.html -f
+	ln -s ../pynsn ./ -f
+
 
 build_docs:
 	make venv
 	. venv/bin/activate
-	ln -s ../pynsn pynsn -f
+	ln -s ../pynsn ./ -f
 	make pynsn_demo.html
 	make make_object_arrays_demo.html
 	make euro_flag_demo.html
@@ -24,7 +26,7 @@ build_docs:
 
 start_jupyter:
 	. venv/bin/activate
-	ln -s ../pynsn pynsn -f
+	ln -s ../pynsn ./ -f
 	jupyter notebook
 	rm -f pynsn
 
