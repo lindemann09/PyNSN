@@ -4,7 +4,6 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as _np
 from . import _colour
-from .. import _lib
 from .. import _arrays
 from .._shapes import Dot, PictureFile
 
@@ -145,13 +144,13 @@ class ArrayDraw(metaclass=ABCMeta):
                                       scaling_factor=aaf)
             #  and center of mass
             if colours.center_of_field_area.colour is not None:
-                obj = _lib.Dot(xy=object_array.get_center_of_field_area(),
+                obj = Dot(xy=object_array.get_center_of_field_area(),
                                diameter=10,
                                attribute=colours.center_of_field_area.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
             if colours.center_of_mass.colour is not None:
-                obj = _lib.Dot(xy=object_array.get_center_of_mass(),
+                obj = Dot(xy=object_array.get_center_of_mass(),
                                diameter=10,
                                attribute=colours.center_of_mass.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
