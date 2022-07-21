@@ -74,6 +74,7 @@ class DotArray(ABCObjectArray):
 
     @property
     def perimeter(self) -> np.ndarray:
+        """Perimeter of all objects"""
         return np.pi * self._diameter
 
     def mod_round_values(self, decimals: int = 0,
@@ -139,8 +140,11 @@ class DotArray(ABCObjectArray):
                             attributes=self._attributes[indices])
 
     def get_distances(self, dot: Dot) -> np.ndarray:
-        """Distances toward a single dot
-        negative numbers indicate overlap
+        """Distances toward a single dot negative numbers indicate overlap
+
+        Parameters
+        __________
+        dot : Dot
 
         Returns
         -------
