@@ -21,10 +21,6 @@ my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               #center_of_mass="magenta"
                               )
 
-from pynsn._lib.shapes import ABCShape
-p = nsn.Point(xy=(0,0))
-
-print(isinstance(p, ABCShape))
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],

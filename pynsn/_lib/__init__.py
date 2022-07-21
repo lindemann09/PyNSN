@@ -1,8 +1,10 @@
-from .base_classes import ArrayParameter, PointArray
-from .dot_array import DotArray
-from .rect_array import RectangleArray
+from .arrays.parameter import ArrayParameter
+from .arrays.point_array import PointArray
+from .arrays.dot_array import DotArray
+from .arrays.rect_array import RectangleArray
 from .coordinate import Coordinate
-from .shapes import Point, Dot, Rectangle
-from .picture_file import PictureFile
-from .appearance_sampler import AppearanceSampler
+from .shapes.point import Point
+from .shapes.dot import Dot
+from .shapes.rectangle import Rectangle
+from .shapes.picture_file import PictureFile
 from .factory import NSNFactory

@@ -7,11 +7,11 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 
-from .base_classes import ABCObjectArray
-from .lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
+from .abc_object_array import ABCObjectArray
+from .. import misc
+from ..lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
     Any, Union, Sequence, Optional, OptFloat
-from .shapes import Dot
-from .._lib import misc
+from ..shapes.dot import Dot
 
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:

@@ -17,6 +17,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                            _python_version_info[1]) +
                        "Please use Python 3.8 or later.")
 
+
 from ._lib import Coordinate, Point, Dot, Rectangle, \
     DotArray, RectangleArray, PointArray, ArrayParameter, \
     PictureFile, NSNFactory

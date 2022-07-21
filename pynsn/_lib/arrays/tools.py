@@ -1,7 +1,7 @@
 import numpy as np
 
-from .._lib import geometry
-from .._lib import rng
+from .. import geometry
+from .. import rng
 
 
 def _jitter_identical_positions(xy, jitter_size=0.1):
