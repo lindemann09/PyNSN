@@ -10,14 +10,12 @@ publish:
 	twine check dist/*
 	twine upload dist/*
 
-unit_tests:
-	python -m unittest discover tests
-
 
 clean:
 		@rm -rf build \
 			dist \
 			pynsn.egg-info \
+			.tox \
 			.pytest_cache
 
 

@@ -46,6 +46,8 @@ numpydoc_show_class_members = False
 autosummary_generate = True
 autosummary_imported_members = True
 
+autodoc_inherit_docstrings = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

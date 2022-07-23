@@ -74,7 +74,9 @@ class DotArray(ABCObjectArray):
 
     @property
     def perimeter(self) -> np.ndarray:
-        """Perimeter of all objects"""
+        """Perimeter of all objects
+
+        """
         return np.pi * self._diameter
 
     def mod_round_values(self, decimals: int = 0,
