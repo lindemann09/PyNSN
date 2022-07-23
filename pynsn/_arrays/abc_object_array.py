@@ -39,9 +39,16 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     def as_dict(self):
         return super().as_dict()
 
+    @staticmethod
     @abstractmethod
-    def read_from_dict(self, the_dict):
-        return super().read_from_dict(the_dict)
+    def read_from_dict(the_dict):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def load(json_file_name):
+        pass
+
 
     @abstractmethod
     def copy(self, indices=None, deepcopy=True):

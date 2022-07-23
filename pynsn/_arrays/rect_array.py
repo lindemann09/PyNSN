@@ -5,6 +5,7 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+import json
 import numpy as np
 
 from .._lib import misc
@@ -99,10 +100,26 @@ class RectangleArray(ABCObjectArray):
         d.update({"sizes": self._sizes.tolist()})
         return d
 
-    def read_from_dict(self, the_dict: dict) -> None:
+    @staticmethod
+    def read_from_dict(the_dict: dict) -> RectangleArray:
         """read rectangle array from dict"""
-        super().read_from_dict(the_dict)
-        self._sizes = np.array(the_dict["sizes"])
+
+        rtn = RectangleArray(target_area_radius=the_dict["target_area_radius"],
+                       min_dist_between=the_dict["min_dist_between"],
+                       min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+        rtn._append_xy_attribute(xy=the_dict["xy"],
+                                 attributes=the_dict["attributes"])
+        rtn._sizes = np.array(the_dict["sizes"])
+        if len(rtn.sizes) != len(rtn.xy):
+            raise RuntimeError("Badly shaped data: size data have not " +
+                               "the same length as the coordinates")
+        return rtn
+
+    @staticmethod
+    def load(json_file_name: str) -> RectangleArray:
+        # override and extend read_from_dict not this function
+        with open(json_file_name, 'r') as fl:
+            return RectangleArray.read_from_dict(json.load(fl))
 
     def clear(self) -> None:
         super().clear()

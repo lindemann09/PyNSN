@@ -50,8 +50,8 @@ class PointArray(ArrayParameter):
             attributes = [attributes] * xy.shape[0]
 
         if len(attributes) != xy.shape[0]:
-            raise ValueError("Bad shaped data: attributes have not " +
-                             "the same length as the coordinates")
+            raise RuntimeError("Badly shaped data: attributes have not " +
+                               "the same length as the coordinates")
 
         self._attributes = np.append(self._attributes, attributes)
         if len(self._xy) == 0:
@@ -191,18 +191,23 @@ class PointArray(ArrayParameter):
             d.update({"attributes": self._attributes.tolist()})
         return d
 
-    def read_from_dict(self, the_dict: dict) -> None:
+    @staticmethod
+    def read_from_dict(the_dict: dict) -> PointArray:
         """read dot array from dict"""
-        self.target_area_radius = the_dict["target_area_radius"]
-        self.min_dist_between = the_dict["min_dist_between"]
-        self.min_dist_area_boarder = the_dict["min_dist_area_boarder"]
-        self._xy = np.array(the_dict["xy"])
-        if not isinstance(the_dict["attributes"], (list, tuple)):
-            att = [the_dict["attributes"]] * self._properties.numerosity
-        else:
-            att = the_dict["attributes"]
-        self._attributes = np.array(att)
-        self._properties.reset()
+        rtn = PointArray(target_area_radius=the_dict["target_area_radius"],
+                         min_dist_between=the_dict["min_dist_between"],
+                         min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+        rtn._append_xy_attribute(xy=the_dict["xy"],
+                                 attributes=the_dict["attributes"])
+
+        return rtn
+
+    @staticmethod
+    def load(json_file_name: str) -> PointArray:
+        # override and extend read_from_dict not this function
+        with open(json_file_name, 'r') as fl:
+            return PointArray.read_from_dict(json.load(fl))
+
 
     def json(self, indent: int = None,
              include_hash: bool = False) -> str:
@@ -222,11 +227,6 @@ class PointArray(ArrayParameter):
         """"""
         with open(json_file_name, 'w') as fl:
             fl.write(self.json(indent=indent, include_hash=include_hash))
-
-    def load(self, json_file_name: str) -> None:
-        # override and extend read_from_dict not this function
-        with open(json_file_name, 'r') as fl:
-            self.read_from_dict(json.load(fl))
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Point]:
         """iterate over all or a part of the objects

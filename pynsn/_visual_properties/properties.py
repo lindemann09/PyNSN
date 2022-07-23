@@ -219,6 +219,9 @@ class ArrayProperties(object):
         elif property_flag == VisualPropertyFlag.COVERAGE:
             return self.converage
 
+        elif property_flag == VisualPropertyFlag.NUMEROSITY:
+            return self.numerosity
+
         else:
             raise ValueError("{} is a unknown visual feature".format(property_flag))
 

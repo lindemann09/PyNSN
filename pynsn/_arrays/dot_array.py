@@ -5,6 +5,7 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+import json
 import numpy as np
 
 from .abc_object_array import ABCObjectArray
@@ -97,10 +98,26 @@ class DotArray(ABCObjectArray):
         d.update({"diameter": self._diameter.tolist()})
         return d
 
-    def read_from_dict(self, the_dict: dict) -> None:
+    @staticmethod
+    def read_from_dict(the_dict: dict) -> DotArray:
         """read Dot collection from dict"""
-        super().read_from_dict(the_dict)
-        self._diameter = np.array(the_dict["diameter"])
+        rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
+                         min_dist_between=the_dict["min_dist_between"],
+                         min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+        rtn._append_xy_attribute(xy=the_dict["xy"],
+                                 attributes=the_dict["attributes"])
+        rtn._diameter = np.array(the_dict["diameter"])
+        if len(rtn.diameter) != len(rtn.xy):
+            raise RuntimeError("Badly shaped data: diameter have not " +
+                               "the same length as the coordinates")
+        return rtn
+
+    @staticmethod
+    def load(json_file_name: str) -> DotArray:
+        # override and extend read_from_dict not this function
+        with open(json_file_name, 'r') as fl:
+            return DotArray.read_from_dict(json.load(fl))
+
 
     def clear(self) -> None:
         super().clear()

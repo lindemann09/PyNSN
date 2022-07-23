@@ -11,7 +11,7 @@ class RectanglesSmall(DotsSmall):
             width=distr.Normal(min_max=(10, 40), mu=20, sigma=10),
             height=distr.Normal(min_max=(10, 40), mu=20, sigma=10))
 
-    def test_match_av_size(self):
+    def test_fit_av_size(self):
         first = 0.8
         second = 1.15
         scale_factor = 1.1

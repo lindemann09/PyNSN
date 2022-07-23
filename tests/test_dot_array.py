@@ -41,41 +41,41 @@ class DotsSmall(unittest.TestCase):
         self.assertAlmostEqual(stim.properties.get(prop), new_value,
                                places=places)
 
-    def test_match_av_surface_area(self):
+    def test_fit_av_surface_area(self):
         # decrease
         self.change_prop(prop=fit.flags.AV_SURFACE_AREA)
 
-    def test_match_av_size(self):
+    def test_fit_av_size(self):
         # decrease
         self.change_prop(prop=fit.flags.AV_DOT_DIAMETER)
 
-    def test_match_av_perimeter(self):
+    def test_fit_av_perimeter(self):
         # decrease
         self.change_prop(prop=fit.flags.AV_PERIMETER)
 
-    def test_match_total_surface_area(self):
+    def test_fit_total_surface_area(self):
         # decrease
         self.change_prop(prop=fit.flags.TOTAL_SURFACE_AREA)
 
-    def test_match_total_perimeter(self):
+    def test_fit_total_perimeter(self):
         # decrease
         self.change_prop(prop=fit.flags.TOTAL_PERIMETER)
 
-    def test_match_field_area(self):
+    def test_fit_field_area(self):
         # decrease
         self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
-    def test_match_sparcity(self):
+    def test_fit_sparcity(self):
         # decrease
         self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
-    def test_match_log_size(self):
+    def test_fit_log_size(self):
         # decrease
         self.change_prop(prop=fit.flags.LOG_SIZE)
 
-    def test_match_log_spacing(self):
+    def test_fit_log_spacing(self):
         # decrease
         self.change_prop(prop=fit.flags.LOG_SPACING, first=1.2,
                          second=0.85)
