@@ -37,7 +37,7 @@ class _PILDraw(_array_draw.ArrayDraw):
     @staticmethod
     def scale_image(image, scaling_factor):
         im_size = int(image.size[0] / scaling_factor)
-        return image.resize((im_size, im_size), _Image.LANCZOS)
+        return image.resize((im_size, im_size), _Image.Resampling.LANCZOS)
 
     @staticmethod
     def draw_shape(img, shape, opacity, scaling_factor):

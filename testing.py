@@ -22,13 +22,13 @@ factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],
                                         exact_weighting=True) )
 
-factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
-                                        attributes=distr.Levels(["blue", "green"],
-                                        exact_weighting=True))
+#factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
+#                                        attributes=distr.Levels(["blue", "green"],
+#                                        exact_weighting=True))
 
 stimulus = factory.create_random_array(n_objects=20)
-assert isinstance(stimulus, nsn.RectangleArray)
-nsn.scale.log_size(stimulus, 1.2)
+#assert isinstance(stimulus, nsn.RectangleArray)
+#nsn.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")

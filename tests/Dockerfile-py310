@@ -1,0 +1,14 @@
+FROM python:3.10
+
+WORKDIR /home
+
+RUN pip install tox pip -U
+
+COPY pynsn/ pynsn/
+COPY tests/ tests/
+COPY README.md .
+COPY setup.py .
+COPY tox.ini .
+
+CMD tox
+
