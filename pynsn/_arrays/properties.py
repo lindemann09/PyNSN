@@ -5,7 +5,7 @@ from math import log2
 import numpy as np
 
 from .. import _arrays
-from .._lib.lib_typing import Any, Optional, NumPair, OptFloat
+from .._lib.lib_typing import Any, Optional, NumPair, OptFloat, NDArray
 from .._lib import rng
 from .._lib import constants
 from .._lib.constants import VisualPropertyFlags
@@ -51,7 +51,7 @@ class ArrayProperties(object):
             return float(np.mean(self.oa.diameter))
 
     @property
-    def average_rectangle_size(self) -> Optional[NumPair]:
+    def average_rectangle_size(self) -> Optional[NDArray[float]]:
         if not isinstance(self.oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:

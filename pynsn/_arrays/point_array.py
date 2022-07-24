@@ -81,40 +81,57 @@ class PointArray(ArrayParameter):
 
     @property
     def xy(self) -> np.ndarray:
+        """Numpy array of the object locations
+
+        The two dimensional array (shape=[2, `n`]) represents the locations of the center of
+        the `n` objects in this array
+        """
         return self._xy
 
     @property
-    def xy_rounded_integer(self) -> np.ndarray:
-        """rounded to integer"""
-        return np.round(self._xy)
-
-    @property
     def attributes(self) -> np.ndarray:
+        """Numpy vector of the object attributes
+        """
         return self._attributes
 
     @property
     def properties(self) -> ArrayProperties:
+        """Properties of the object array.
+
+        ``ArrayProperties`` represents and handles (fitting, scaling) visual
+        properties of the object like
+
+        * numerosity
+        * average_dot_diameter or average_rectangle_size
+        * total_surface_area
+        * average_surface_area
+        * total_perimeter
+        * average_perimeter
+        * field_area
+        * field_area_positions
+        * sparsity
+        * log_spacing
+        * log_size
+        * converage
+        """
         return self._properties
 
     @property
     def surface_areas(self) -> np.ndarray:
-        """per definition always zero"""
+        """Size of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
 
     @property
     def perimeter(self) -> np.ndarray:
-        """per definition always zero"""
+        """Perimeter of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
 
     def set_attributes(self, attributes: ArrayLike) -> None:
         """Set all attributes
 
-        Parameter
-        ---------
-        attributes:  attribute (string) or list of attributes
-
+        Args:
+            attributes: attribute (string) or list of attributes
         """
-
         if isinstance(attributes, (list, tuple)):
             if len(attributes) != self._properties.numerosity:
                 raise ValueError("Length of attribute list does not adapt the " + \
@@ -125,7 +142,14 @@ class PointArray(ArrayParameter):
 
     @property
     def hash(self) -> str:
-        """md5_hash of positions and perimeter"""
+        """Hash (MD5 hash) of the array
+
+        The hash can be used as an unique identifier of the object array.
+
+        Notes:
+            Hashing is based on the byte representations of the positions, perimeter
+            and attributes.
+        """
         m = md5()
         m.update(
             self._xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
@@ -133,7 +157,7 @@ class PointArray(ArrayParameter):
             m.update(self.perimeter.tobytes())
         except AttributeError:
             pass
-        m.update(self._attributes.tobytes())
+        m.update(self.attributes.tobytes())
         return m.hexdigest()
 
     def get_center_of_field_area(self) -> np.ndarray:

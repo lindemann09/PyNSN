@@ -27,11 +27,14 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     @property
     @abstractmethod
     def surface_areas(self):
+        """Vector with the surface areas of all objects"""
         pass
 
     @property
     @abstractmethod
     def perimeter(self):
+        """Vector with the perimeter of all objects"""
+        """Vector with the perimeter of all objects"""
         pass
 
     @abstractmethod
@@ -370,9 +373,9 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     def mod_squeeze_to_area(self, push_other: bool = True) -> None:
         """Squeeze in target area to remove all standouts
+
         Args:
             push_other: replace other object, if required to avoid overlaps
-                        (default=True)
         """
         cnt = 0
         while True:

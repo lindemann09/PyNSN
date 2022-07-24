@@ -16,8 +16,10 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                            _python_version_info[1]) +
                        "Please use Python 3.8 or later.")
 
+# FIXME PointArray not tested and not documented
 
-from ._arrays import DotArray, RectangleArray, PointArray, ArrayParameter
+from ._arrays import DotArray, RectangleArray, PointArray, ArrayParameter, \
+                ArrayProperties
 from ._shapes import Point, Dot, Rectangle, PictureFile
 from ._factory import NSNFactory
 from .image._colour import Colour, ImageColours

@@ -75,7 +75,7 @@ class DotArray(ABCObjectArray):
 
     @property
     def perimeter(self) -> np.ndarray:
-        """Perimeter of all objects
+        """Perimeter for each dot
 
         """
         return np.pi * self._diameter
@@ -129,10 +129,16 @@ class DotArray(ABCObjectArray):
 
     def copy(self, indices: OptArrayLike = None,
              deepcopy: bool = True) -> DotArray:
-        """returns a (deep) copy of the dot array.
+        """A (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
 
+        Args:
+            indices: Arrays with the indices to be be copied. If None, all
+                object will be copies
+
+        Returns:
+            a copy of the array
         """
 
         if len(self._xy) == 0:
@@ -161,14 +167,13 @@ class DotArray(ABCObjectArray):
     def get_distances(self, dot: Dot) -> np.ndarray:
         """Distances toward a single dot negative numbers indicate overlap
 
-        Parameters
-        __________
-        dot : Dot
+        Args:
+            dot: object towards the distances will be calculated
 
-        Returns
-        -------
-        distances : numpy array of distances
+        Returns: numpy array of distances
+
         """
+
         assert isinstance(dot, Dot)
         if len(self._xy) == 0:
             return np.array([])
@@ -219,12 +224,16 @@ class DotArray(ABCObjectArray):
     def csv(self, variable_names: bool = True,
             hash_column: bool = False,
             attribute_column: bool = True) -> str:
-        """Return the dot array as csv text
+        """Comma-separated table representation the dot array
 
-        Parameter
-        ---------
-        variable_names : bool, optional
-            if True variable name will be printed in the first line
+        Args:
+            variable_names: if True first line include the variable names
+            hash_column: if True hash will be included as first column
+            attribute_column: if True attributes will be included as
+                    last column
+        Returns:
+            CSV representation
+
         """
         size_dict = {"diameter": self._diameter}
         if attribute_column:

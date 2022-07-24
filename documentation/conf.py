@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../pynsn'))
+sys.path.insert(0, os.path.abspath('..'))
 import pynsn
 print("PyNSN Version: " + pynsn.__version__)
 
@@ -36,17 +36,18 @@ release = pynsn.__version__
 extensions =["sphinx.ext.autodoc",  # Core Sphinx library for auto html doc generation from docstrings
              "sphinx.ext.autosummary",  # Create neat summary tables for modules/classes/methods etc
              #"sphinx.ext.intersphinx",  # Link to other project's documentation (see mapping below)
+             "sphinx.ext.napoleon",
              "sphinx_autodoc_typehints",  # Automatically document param types (less noise in class signature)
-             "numpydoc"
-]
-
-numpydoc_show_class_members = False
+             ]
 
 # generate autosummary even if no references
 autosummary_generate = True
 autosummary_imported_members = True
-
 autodoc_inherit_docstrings = True
+autodoc_member_order = 'groupwise'
+always_document_param_types =True
+#typehints_fully_qualified=False
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

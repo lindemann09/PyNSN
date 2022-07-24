@@ -22,13 +22,36 @@ class PyNSNDistribution(object):
         self.min_max = min_max
 
     def as_dict(self):
+        """Dict representation of the distribution"""
         return {"distribution": type(self).__name__,
                 "min_max": self.min_max}
 
     def sample(self, n, round_to_decimals=False):
+        """Random sample from the distribution
+
+        Args:
+            n: number of samples
+            round_to_decimals: Set to round samples. If 0 a array of integer
+                will be return
+
+        Returns:
+            Numpy array of the sample
+
+        """
         return NotImplementedError()
 
     def pyplot_samples(self, n=100000):
+        """Creating a visualization of the distribution with ``matplotlib.pyplot``
+
+        Args:
+            n: number of sample (optional)
+
+        Returns:
+            ``pyplot.figure()``
+
+        Raises:
+            ImportError: if ``matplotlib`` is not installed
+        """
         try:
             from matplotlib.pyplot import hist, hist2d
         except:
@@ -232,7 +255,7 @@ class Normal2D(PyNSNDistribution):
         self.max_radius = max_radius
 
     def varcov(self):
-        """variance covariance matrix"""
+        """Variance covariance matrix"""
         v = self.sigma ** 2
         cov = _np.eye(2) * v
         cov[0, 1] = self.correlation * _np.sqrt(v[0] * v[1])

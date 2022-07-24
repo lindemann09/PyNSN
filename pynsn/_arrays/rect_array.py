@@ -71,6 +71,12 @@ class RectangleArray(ABCObjectArray):
 
     @property
     def sizes(self) -> np.ndarray:
+        """Numpy array of the object sizes
+
+        The two dimensional array (shape=[2, n]) represents the width and height of the `n objects in this array
+        Returns:
+
+        """
         return self._sizes
 
     @property
