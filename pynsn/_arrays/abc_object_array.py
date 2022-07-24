@@ -16,7 +16,7 @@ from .._lib import misc
 from .._lib import rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import List, Union, Tuple
+from .._lib.lib_typing import List, Union, Tuple, Sequence
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
@@ -47,7 +47,6 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     @abstractmethod
     def load(json_file_name):
         pass
-
 
     @abstractmethod
     def copy(self, indices=None, deepcopy=True):
@@ -218,7 +217,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
-        self.properties.fit_numerosity(object_array, value=new_num,
+        self.properties.fit_numerosity(value=new_num,
                                        keep_convex_hull=preserve_field_area)
         return object_array
 
@@ -309,25 +308,29 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
         return old_fa == new_ch
 
+    def mod_replace(self, xy: Sequence[float]) -> None:
+        """Replace the object array
+
+        Args:
+          xy: replacement at the x and y axis
+        """
+        self._xy = self._xy + np.asarray(xy)
+        self._properties.reset()
+
     def mod_move_object(self, object_id: int,
                         distance: float,
-                        direction: Union[float, Tuple[float, float]],
+                        direction: Union[float, Sequence[float]],
                         push_other: bool = False) -> None:
+        """Move a single object by a particular distance. The function uses
+        direction and direction
+
+        Args:
+            object_id:
+            distance:
+            direction: polar angle (float) or cartesian coordinate (tuple of two floats)
+                       to indicate the direction
+            push_other: replace other objects, if required (optional, default=False)
         """
-
-        Parameters
-        ----------
-        object_id
-        distance
-        direction: numeric (polar) or tuple, list or Coordinate (cartesian)
-            angle (numeric, polar angle coordinate) or a cartesian 2D coordinates indicating
-            the direction towards the object should be moved
-
-        Returns
-        -------
-
-        """
-
         try:
             ang = float(direction)
         except (TypeError, ValueError):
@@ -366,7 +369,11 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self.properties.reset()
 
     def mod_squeeze_to_area(self, push_other: bool = True) -> None:
-        """squeeze in target area to remove all standouts"""
+        """Squeeze in target area to remove all standouts
+        Args:
+            push_other: replace other object, if required to avoid overlaps
+                        (default=True)
+        """
         cnt = 0
         while True:
             cnt += 1

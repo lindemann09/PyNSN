@@ -13,7 +13,7 @@ DEFAULT_FIT_SPACING_PRECISION = 0.0001
 DEFAULT_FIT_FA2TA_RATIO = 0.5
 
 
-class VisualPropertyFlag(_enum.IntFlag):
+class VisualPropertyFlags(_enum.IntFlag):
     AV_DOT_DIAMETER = _enum.auto()
     AV_SURFACE_AREA = _enum.auto()
     AV_PERIMETER = _enum.auto()
@@ -37,31 +37,31 @@ class VisualPropertyFlag(_enum.IntFlag):
                (self.is_space_property() and other_property.is_space_property())
 
     def is_size_property(self) -> bool:
-        return self in (VisualPropertyFlag.LOG_SIZE,
-                        VisualPropertyFlag.TOTAL_SURFACE_AREA,
-                        VisualPropertyFlag.AV_DOT_DIAMETER,
-                        VisualPropertyFlag.AV_SURFACE_AREA,
-                        VisualPropertyFlag.AV_PERIMETER,
-                        VisualPropertyFlag.TOTAL_PERIMETER)
+        return self in (VisualPropertyFlags.LOG_SIZE,
+                        VisualPropertyFlags.TOTAL_SURFACE_AREA,
+                        VisualPropertyFlags.AV_DOT_DIAMETER,
+                        VisualPropertyFlags.AV_SURFACE_AREA,
+                        VisualPropertyFlags.AV_PERIMETER,
+                        VisualPropertyFlags.TOTAL_PERIMETER)
 
     def is_space_property(self) -> bool:
-        return self in (VisualPropertyFlag.LOG_SPACING,
-                        VisualPropertyFlag.SPARSITY,
-                        VisualPropertyFlag.FIELD_AREA)
+        return self in (VisualPropertyFlags.LOG_SPACING,
+                        VisualPropertyFlags.SPARSITY,
+                        VisualPropertyFlags.FIELD_AREA)
 
     def label(self) -> str:
         labels = {
-            VisualPropertyFlag.NUMEROSITY: "Numerosity",
-            VisualPropertyFlag.LOG_SIZE: "Log Size",
-            VisualPropertyFlag.TOTAL_SURFACE_AREA: "Total surface area",
-            VisualPropertyFlag.AV_DOT_DIAMETER: "Average dot diameter",
-            VisualPropertyFlag.AV_SURFACE_AREA: "Average surface area",
-            VisualPropertyFlag.AV_PERIMETER: "Average perimeter",
-            VisualPropertyFlag.TOTAL_PERIMETER: "Total perimeter",
-            VisualPropertyFlag.AV_RECT_SIZE: "Average Rectangle Size",
-            VisualPropertyFlag.LOG_SPACING: "Log Spacing",
-            VisualPropertyFlag.SPARSITY: "Sparsity",
-            VisualPropertyFlag.FIELD_AREA: "Field area",
-            VisualPropertyFlag.FIELD_AREA_POSITIONS: "Field area positions",
-            VisualPropertyFlag.COVERAGE: "Coverage"}
+            VisualPropertyFlags.NUMEROSITY: "Numerosity",
+            VisualPropertyFlags.LOG_SIZE: "Log Size",
+            VisualPropertyFlags.TOTAL_SURFACE_AREA: "Total surface area",
+            VisualPropertyFlags.AV_DOT_DIAMETER: "Average dot diameter",
+            VisualPropertyFlags.AV_SURFACE_AREA: "Average surface area",
+            VisualPropertyFlags.AV_PERIMETER: "Average perimeter",
+            VisualPropertyFlags.TOTAL_PERIMETER: "Total perimeter",
+            VisualPropertyFlags.AV_RECT_SIZE: "Average Rectangle Size",
+            VisualPropertyFlags.LOG_SPACING: "Log Spacing",
+            VisualPropertyFlags.SPARSITY: "Sparsity",
+            VisualPropertyFlags.FIELD_AREA: "Field area",
+            VisualPropertyFlags.FIELD_AREA_POSITIONS: "Field area positions",
+            VisualPropertyFlags.COVERAGE: "Coverage"}
         return labels[self]

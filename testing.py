@@ -1,7 +1,7 @@
 import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn.image import svg_file, pil_image, mpl_figure
-
+import numpy as np
 from random import randint
 seed = randint(0, 1000)
 seed = 991
@@ -27,6 +27,8 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
 #                                        exact_weighting=True))
 
 stimulus = factory.create_random_array(n_objects=20)
+stimulus.mod_replace()
+
 #assert isinstance(stimulus, nsn.RectangleArray)
 #nsn.scale.log_size(stimulus, 1.2)
 

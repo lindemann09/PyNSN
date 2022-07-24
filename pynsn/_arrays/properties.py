@@ -8,11 +8,10 @@ from .. import _arrays
 from .._lib.lib_typing import Any, Optional, NumPair, OptFloat
 from .._lib import rng
 from .._lib import constants
-from .._lib.constants import VisualPropertyFlag
+from .._lib.constants import VisualPropertyFlags
 from .._lib.exception import NoSolutionError
 from .convex_hull import ConvexHull, ConvexHullPositions
 from .tools import scale_field_area
-
 
 
 class ArrayProperties(object):
@@ -127,49 +126,49 @@ class ArrayProperties(object):
     def field_area(self) -> Optional[float]:
         return self.convex_hull.field_area
 
-    def get(self, property_flag: VisualPropertyFlag) -> Any:
+    def get(self, property_flag: VisualPropertyFlags) -> Any:
         """returns a visual property"""
 
-        assert isinstance(property_flag, VisualPropertyFlag)
+        assert isinstance(property_flag, VisualPropertyFlags)
 
         # Adapt
-        if property_flag == VisualPropertyFlag.AV_DOT_DIAMETER:
+        if property_flag == VisualPropertyFlags.AV_DOT_DIAMETER:
             return self.average_dot_diameter
 
-        elif property_flag == VisualPropertyFlag.AV_RECT_SIZE:
+        elif property_flag == VisualPropertyFlags.AV_RECT_SIZE:
             return self.average_rectangle_size
 
-        elif property_flag == VisualPropertyFlag.AV_PERIMETER:
+        elif property_flag == VisualPropertyFlags.AV_PERIMETER:
             return self.average_perimeter
 
-        elif property_flag == VisualPropertyFlag.TOTAL_PERIMETER:
+        elif property_flag == VisualPropertyFlags.TOTAL_PERIMETER:
             return self.total_perimeter
 
-        elif property_flag == VisualPropertyFlag.AV_SURFACE_AREA:
+        elif property_flag == VisualPropertyFlags.AV_SURFACE_AREA:
             return self.average_surface_area
 
-        elif property_flag == VisualPropertyFlag.TOTAL_SURFACE_AREA:
+        elif property_flag == VisualPropertyFlags.TOTAL_SURFACE_AREA:
             return self.total_surface_area
 
-        elif property_flag == VisualPropertyFlag.LOG_SIZE:
+        elif property_flag == VisualPropertyFlags.LOG_SIZE:
             return self.log_size
 
-        elif property_flag == VisualPropertyFlag.LOG_SPACING:
+        elif property_flag == VisualPropertyFlags.LOG_SPACING:
             return self.log_spacing
 
-        elif property_flag == VisualPropertyFlag.SPARSITY:
+        elif property_flag == VisualPropertyFlags.SPARSITY:
             return self.sparsity
 
-        elif property_flag == VisualPropertyFlag.FIELD_AREA:
+        elif property_flag == VisualPropertyFlags.FIELD_AREA:
             return self.field_area
 
-        elif property_flag == VisualPropertyFlag.FIELD_AREA_POSITIONS:
+        elif property_flag == VisualPropertyFlags.FIELD_AREA_POSITIONS:
             return self.field_area_positions
 
-        elif property_flag == VisualPropertyFlag.COVERAGE:
+        elif property_flag == VisualPropertyFlags.COVERAGE:
             return self.converage
 
-        elif property_flag == VisualPropertyFlag.NUMEROSITY:
+        elif property_flag == VisualPropertyFlags.NUMEROSITY:
             return self.numerosity
 
         else:
@@ -180,20 +179,20 @@ class ArrayProperties(object):
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
-               (VisualPropertyFlag.AV_PERIMETER.label(), self.average_perimeter),
-               (VisualPropertyFlag.AV_SURFACE_AREA.label(), self.average_surface_area),
-               (VisualPropertyFlag.TOTAL_PERIMETER.label(), self.total_perimeter),
-               (VisualPropertyFlag.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
-               (VisualPropertyFlag.FIELD_AREA.label(), self.field_area),
-               (VisualPropertyFlag.SPARSITY.label(), self.sparsity),
-               (VisualPropertyFlag.COVERAGE.label(), self.converage),
-               (VisualPropertyFlag.LOG_SIZE.label(), self.log_size),
-               (VisualPropertyFlag.LOG_SPACING.label(), self.log_spacing)]
+               (VisualPropertyFlags.AV_PERIMETER.label(), self.average_perimeter),
+               (VisualPropertyFlags.AV_SURFACE_AREA.label(), self.average_surface_area),
+               (VisualPropertyFlags.TOTAL_PERIMETER.label(), self.total_perimeter),
+               (VisualPropertyFlags.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
+               (VisualPropertyFlags.FIELD_AREA.label(), self.field_area),
+               (VisualPropertyFlags.SPARSITY.label(), self.sparsity),
+               (VisualPropertyFlags.COVERAGE.label(), self.converage),
+               (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
+               (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
         if isinstance(self.oa, _arrays.DotArray):
-            rtn[2] = (VisualPropertyFlag.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
+            rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
         elif isinstance(self.oa, _arrays.RectangleArray):
-            rtn[2] = (VisualPropertyFlag.AV_RECT_SIZE.label(), self.average_rectangle_size)
+            rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(), self.average_rectangle_size)
         else:
             rtn.pop(2)
         return OrderedDict(rtn)
@@ -360,8 +359,8 @@ class ArrayProperties(object):
         if precision is None:
             precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
-        if self.field_area is np.nan:
-            return  # not defined
+        if self.field_area is None:
+            return None  # not defined
         else:
             scale_field_area(self.oa, value=value, precision=precision)
 
@@ -497,8 +496,8 @@ class ArrayProperties(object):
         return self.fit_field_area(value=value * self.numerosity,
                                    precision=precision)
 
-    def fit(self, property_flag: VisualPropertyFlag,
-                        value: float) -> Any:
+    def fit(self, property_flag: VisualPropertyFlags,
+            value: float) -> Any:
         """
         adapt_properties: continuous property or list of continuous properties
         several properties to be adapted
@@ -512,41 +511,41 @@ class ArrayProperties(object):
         """
 
         # type check
-        if not isinstance(property_flag, VisualPropertyFlag):
+        if not isinstance(property_flag, VisualPropertyFlags):
             raise ValueError("{} is not a visual feature.".format(property_flag))
 
         # Adapt
-        if property_flag == VisualPropertyFlag.AV_DOT_DIAMETER:
+        if property_flag == VisualPropertyFlags.AV_DOT_DIAMETER:
             return self.fit_average_diameter(value=value)
 
-        elif property_flag == VisualPropertyFlag.NUMEROSITY:
+        elif property_flag == VisualPropertyFlags.NUMEROSITY:
             return self.fit_numerosity(value=int(value))
 
-        elif property_flag == VisualPropertyFlag.AV_PERIMETER:
+        elif property_flag == VisualPropertyFlags.AV_PERIMETER:
             return self.fit_average_perimeter(value=value)
 
-        elif property_flag == VisualPropertyFlag.TOTAL_PERIMETER:
+        elif property_flag == VisualPropertyFlags.TOTAL_PERIMETER:
             return self.fit_total_perimeter(value=value)
 
-        elif property_flag == VisualPropertyFlag.AV_SURFACE_AREA:
+        elif property_flag == VisualPropertyFlags.AV_SURFACE_AREA:
             return self.fit_average_surface_area(value=value)
 
-        elif property_flag == VisualPropertyFlag.TOTAL_SURFACE_AREA:
+        elif property_flag == VisualPropertyFlags.TOTAL_SURFACE_AREA:
             return self.fit_total_surface_area(value=value)
 
-        elif property_flag == VisualPropertyFlag.LOG_SIZE:
+        elif property_flag == VisualPropertyFlags.LOG_SIZE:
             return self.fit_log_size(value=value)
 
-        elif property_flag == VisualPropertyFlag.LOG_SPACING:
+        elif property_flag == VisualPropertyFlags.LOG_SPACING:
             return self.fit_log_spacing(value=value)
 
-        elif property_flag == VisualPropertyFlag.SPARSITY:
+        elif property_flag == VisualPropertyFlags.SPARSITY:
             return self.fit_sparcity(value=value)
 
-        elif property_flag == VisualPropertyFlag.FIELD_AREA:
+        elif property_flag == VisualPropertyFlags.FIELD_AREA:
             return self.fit_field_area(value=value)
 
-        elif property_flag == VisualPropertyFlag.COVERAGE:
+        elif property_flag == VisualPropertyFlags.COVERAGE:
             return self.fit_coverage(value=value)
         else:
             raise NotImplementedError("Not implemented for {}".format(
@@ -620,7 +619,7 @@ class ArrayProperties(object):
             return
         return self.fit_sparcity(self.sparsity * factor, precision=precision)
 
-    def scale(self, feature: VisualPropertyFlag, factor: float) -> None:
+    def scale(self, feature: VisualPropertyFlags, factor: float) -> None:
         if factor == 1:
             return
         return self.fit(property_flag=feature,

@@ -26,7 +26,7 @@ from ._factory import distributions
 from ._lib.rng import init_random_generator
 from ._lib import exception
 from ._lib import constants
-from ._lib.constants import VisualPropertyFlag as flags
+from ._lib.constants import VisualPropertyFlags as flags
 
 
 def _print_version_info():

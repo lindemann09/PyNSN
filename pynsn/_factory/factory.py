@@ -10,8 +10,9 @@ from .._shapes.rectangle import Rectangle
 from .._lib.misc import dict_to_text
 from .distributions import PyNSNDistribution, _round_samples, Levels
 from .._lib.exception import NoSolutionError
+from .._lib.lib_typing import Union
 
-
+# FIXME typing required
 class _Constant(object):
 
     def __init__(self, value):
@@ -185,9 +186,9 @@ class NSNFactory(ArrayParameter):
             pass
         return rtn
 
-    def create_random_array(self, n_objects,
-                            allow_overlapping=False,
-                            occupied_space=None):
+    def create_random_array(self, n_objects: int,
+                            allow_overlapping: bool =False,
+                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> Union[DotArray, RectangleArray]:
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
 
