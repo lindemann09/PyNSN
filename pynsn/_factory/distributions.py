@@ -1,5 +1,4 @@
 import numpy as _np
-import numpy as np
 
 from .._lib.misc import numpy_round2 as _numpy_round2
 from .._lib import rng as _rng
@@ -227,16 +226,16 @@ class Normal2D(PyNSNDistribution):
         if correlation < -1 or correlation > 1:
             raise ValueError("Correlations has to be between -1 and 1")
 
-        self.mu = np.array(mu)
-        self.sigma = np.abs(sigma)
+        self.mu = _np.array(mu)
+        self.sigma = _np.abs(sigma)
         self.correlation = correlation
         self.max_radius = max_radius
 
     def varcov(self):
         """variance covariance matrix"""
         v = self.sigma ** 2
-        cov = np.eye(2) * v
-        cov[0, 1] = self.correlation * np.sqrt(v[0] * v[1])
+        cov = _np.eye(2) * v
+        cov[0, 1] = self.correlation * _np.sqrt(v[0] * v[1])
         cov[1, 0] = cov[0, 1]
         return cov
 
@@ -248,7 +247,7 @@ class Normal2D(PyNSNDistribution):
                     mean=self.mu, cov=self.varcov(), size=required)
             if self.max_radius is not None:
                 # remove to large radii
-                r = np.hypot(draw[:,0], draw[:,1])
+                r = _np.hypot(draw[:,0], draw[:,1])
                 draw = _np.delete(draw, r > self.max_radius, axis=0)
 
             if len(draw) > 0:

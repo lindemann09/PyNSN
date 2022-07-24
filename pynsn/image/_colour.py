@@ -62,7 +62,7 @@ class Colour(object):
             self._colour = value._colour
         else:
             try:
-                Colour.hextriplet2rgb(value)  # check if valid hextriplet
+                Colour.convert_hextriplet_to_rgb(value)  # check if valid hextriplet
                 if value[0] != "#":
                     value = "#" + value
                 self._colour = value.upper()
@@ -71,7 +71,7 @@ class Colour(object):
                     self._colour = Colour.NAMED_COLOURS[value]
                 except:
                     try:
-                        self._colour = Colour.rgb2hextriplet(value)
+                        self._colour = Colour.convert_rgb_hextriplet(value)
                     except:
                         raise TypeError("Incorrect colour " + \
                                         "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
@@ -79,9 +79,9 @@ class Colour(object):
 
     @property
     def rgb(self) -> RGBType:
-        return Colour.hextriplet2rgb(self._colour)
+        return Colour.convert_hextriplet_to_rgb(self._colour)
 
-    def rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int]:
+    def get_rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int]:
         """if alpha can be float <= 1.0 or an integer between [0, 255]"""
 
         if isinstance(alpha, float):
@@ -95,15 +95,15 @@ class Colour(object):
             raise TypeError("If alpha has to be a float or int and not {}.".format(
                 type(alpha)))
 
-        return Colour.hextriplet2rgb(self._colour) + (alpha,)
+        return Colour.convert_hextriplet_to_rgb(self._colour) + (alpha,)
 
     @staticmethod
-    def hextriplet2rgb(hextriplet: str) -> RGBType:
+    def convert_hextriplet_to_rgb(hextriplet: str) -> RGBType:
         ht = hextriplet.lstrip("#")
         return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
 
     @staticmethod
-    def rgb2hextriplet(rgb: RGBType, uppercase: bool = True):
+    def convert_rgb_hextriplet(rgb: RGBType, uppercase: bool = True):
         if len(rgb) != 3:
             raise TypeError("rgb must be a list of three values.")
         if uppercase:
