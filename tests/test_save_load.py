@@ -5,7 +5,6 @@ import tempfile
 import pynsn
 from pynsn import NSNFactory, ImageColours
 from pynsn import distributions as distr
-from pynsn import fit
 
 TEMP_FLD = os.path.join(tempfile.gettempdir(), "pynsn_unit_test")
 print("Unittest folder {}".format(TEMP_FLD))
@@ -60,12 +59,12 @@ class SaveLoad(TestArrays):
         self.rect_stim.save(flname)
         new_rects = pynsn.RectangleArray.load(flname)
 
-        for flag in [fit.flags.TOTAL_PERIMETER,
-                     fit.flags.AV_SURFACE_AREA,
-                     fit.flags.SPARSITY,
-                     fit.flags.FIELD_AREA,
-                     fit.flags.FIELD_AREA_POSITIONS,
-                     fit.flags.NUMEROSITY]:
+        for flag in [pynsn.flags.TOTAL_PERIMETER,
+                     pynsn.flags.AV_SURFACE_AREA,
+                     pynsn.flags.SPARSITY,
+                     pynsn.flags.FIELD_AREA,
+                     pynsn.flags.FIELD_AREA_POSITIONS,
+                     pynsn.flags.NUMEROSITY]:
 
             self.assertAlmostEqual(new_dots.properties.get(flag),
                                    self.dot_stim.properties.get(flag))

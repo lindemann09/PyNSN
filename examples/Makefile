@@ -1,4 +1,4 @@
-.PHONY: clean, venv, build
+.PHONY: clean, init, build_docs
 
 init:
 	python3 -m venv venv
@@ -11,7 +11,7 @@ init:
 
 
 build_docs:
-	make venv
+	make init
 	. venv/bin/activate
 	ln -s ../pynsn ./ -f
 	make pynsn_demo.html

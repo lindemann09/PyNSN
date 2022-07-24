@@ -1,7 +1,7 @@
 import unittest
 from pynsn import NSNFactory
 from pynsn import distributions as distr
-from pynsn import fit, scale
+from pynsn import flags
 
 
 class DotsSmall(unittest.TestCase):
@@ -25,59 +25,59 @@ class DotsSmall(unittest.TestCase):
         # check scale
         stim = self.stimulus.copy()
         new_value = stim.properties.get(prop) * scale_factor
-        scale.visual_property(stim, prop, scale_factor)
+        stim.properties.scale(prop, scale_factor)
         self.assertAlmostEqual(stim.properties.get(prop),
                                new_value, places=places)
 
         #  changes two time feature (e.g. first decrease and then increase)
         # first
         new_value = stim.properties.get(prop) * first
-        fit.visual_property(stim, prop, new_value)
+        stim.properties.fit(prop, new_value)
         self.assertAlmostEqual(stim.properties.get(prop),
                                new_value, places=places)
         # second
         new_value = stim.properties.get(prop) * second
-        fit.visual_property(stim, prop, new_value)
+        stim.properties.fit(prop, new_value)
         self.assertAlmostEqual(stim.properties.get(prop), new_value,
                                places=places)
 
     def test_fit_av_surface_area(self):
         # decrease
-        self.change_prop(prop=fit.flags.AV_SURFACE_AREA)
+        self.change_prop(prop=flags.AV_SURFACE_AREA)
 
     def test_fit_av_size(self):
         # decrease
-        self.change_prop(prop=fit.flags.AV_DOT_DIAMETER)
+        self.change_prop(prop=flags.AV_DOT_DIAMETER)
 
     def test_fit_av_perimeter(self):
         # decrease
-        self.change_prop(prop=fit.flags.AV_PERIMETER)
+        self.change_prop(prop=flags.AV_PERIMETER)
 
     def test_fit_total_surface_area(self):
         # decrease
-        self.change_prop(prop=fit.flags.TOTAL_SURFACE_AREA)
+        self.change_prop(prop=flags.TOTAL_SURFACE_AREA)
 
     def test_fit_total_perimeter(self):
         # decrease
-        self.change_prop(prop=fit.flags.TOTAL_PERIMETER)
+        self.change_prop(prop=flags.TOTAL_PERIMETER)
 
     def test_fit_field_area(self):
         # decrease
-        self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
+        self.change_prop(prop=flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
     def test_fit_sparcity(self):
         # decrease
-        self.change_prop(prop=fit.flags.SPARSITY, first=1.2,
+        self.change_prop(prop=flags.SPARSITY, first=1.2,
                          second=0.85, places=4)
 
     def test_fit_log_size(self):
         # decrease
-        self.change_prop(prop=fit.flags.LOG_SIZE)
+        self.change_prop(prop=flags.LOG_SIZE)
 
     def test_fit_log_spacing(self):
         # decrease
-        self.change_prop(prop=fit.flags.LOG_SPACING, first=1.2,
+        self.change_prop(prop=flags.LOG_SPACING, first=1.2,
                          second=0.85)
 
 

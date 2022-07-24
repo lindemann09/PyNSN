@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QCheckBox, \
     QDialogButtonBox, QComboBox, QHBoxLayout
 
 from . import misc
+from .. import flags
 from .._lib import constants
-from .._visual_properties import flags, fit
 
 
 

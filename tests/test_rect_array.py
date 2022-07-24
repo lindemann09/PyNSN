@@ -1,6 +1,5 @@
 import unittest
 from pynsn import distributions as distr
-from pynsn._visual_properties import fit, scale
 from test_dot_array import DotsSmall
 
 
@@ -19,7 +18,7 @@ class RectanglesSmall(DotsSmall):
         # check scale
         stim = self.stimulus.copy()
         new_value = stim.properties.average_rectangle_size * scale_factor
-        scale.average_rectangle_size(stim, scale_factor)
+        stim.properties.fit_average_rectangle_size(new_value)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
@@ -28,14 +27,14 @@ class RectanglesSmall(DotsSmall):
         #  changes two time feature (e.g. first decrease and then increase)
         # first
         new_value = stim.properties.average_rectangle_size * first
-        fit.average_rectangle_size(stim, new_value)
+        stim.properties.fit_average_rectangle_size(new_value)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[1],
                                new_value[1], places=places)
         #second
         new_value = stim.properties.average_rectangle_size * second
-        fit.average_rectangle_size(stim, new_value)
+        stim.properties.fit_average_rectangle_size(new_value)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[0],
                                new_value[0], places=places)
         self.assertAlmostEqual(stim.properties.average_rectangle_size[1],

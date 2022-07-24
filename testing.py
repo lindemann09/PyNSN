@@ -34,7 +34,7 @@ img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
 
-nsn.fit.average_perimeter(stimulus, 130)
+stimulus.properties.fit_average_perimeter(130)
 dist = stimulus.get_distances_matrix()
 
 img = pil_image.create(stimulus, my_colours)

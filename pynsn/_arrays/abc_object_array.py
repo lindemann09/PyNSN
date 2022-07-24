@@ -20,7 +20,6 @@ from .._lib.lib_typing import List, Union, Tuple
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
-from .._visual_properties import fit
 
 
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
@@ -219,8 +218,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """
         object_array = self.copy()
         new_num = self.properties.numerosity + change_numerosity
-        fit.numerosity(object_array, value=new_num,
-                       keep_convex_hull=preserve_field_area)
+        self.properties.fit_numerosity(object_array, value=new_num,
+                                       keep_convex_hull=preserve_field_area)
         return object_array
 
     def mod_remove_overlaps(self, keep_convex_hull: bool = False,

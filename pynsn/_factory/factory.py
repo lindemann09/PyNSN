@@ -47,6 +47,8 @@ def _make_distr(value):
         return Levels(levels=copy(value))
     else:
         return _Constant(value)
+
+
 # TODO typing
 
 
@@ -73,7 +75,6 @@ class NSNFactory(ArrayParameter):
         self._distr_height = None
         self._distr_proportion = None
         self._distr_attributes = None
-
 
     @property
     def distr_diameter(self):
@@ -205,7 +206,7 @@ class NSNFactory(ArrayParameter):
         """
         if not self.is_appearance_set:
             raise RuntimeError("No appearance defined. Please use 'set_dot', 'set_rect_or' "
-                                           "'set_appearance'")
+                               "'set_appearance'")
         if self._distr_diameter is not None:
             # DotArray
             rtn = DotArray(target_area_radius=self.target_area_radius,
@@ -261,7 +262,6 @@ class NSNFactory(ArrayParameter):
                 current.join(previous)
             previous = current
             yield current
-
 
     def __str__(self):
         return dict_to_text(self.as_dict(), col_a=12, col_b=7)

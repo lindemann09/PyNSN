@@ -9,9 +9,8 @@ from . import dialogs
 from .main_widget import MainWidget
 from .sequence_display import SequenceDisplay
 from .. import NSNFactory, ImageColours
-from .. import __version__
+from .. import __version__, flags
 from .. import distributions as distr
-from .. import _visual_properties as props
 from .._lib.exception import NoSolutionError
 from ..image import _colour
 from ..image import pil_image
@@ -288,9 +287,8 @@ class GUIMainWindow(QMainWindow):
         prop = self.dot_array._properties.as_dict()
         prop, value = dialogs.AdaptPropertyDialog.get_response(self, prop)
         if prop is not None:
-            self.dot_array = props.fit.visual_property(self.dot_array,
-                                                       prop, value=value)
-            if prop in [x for x in props.flags if x.is_size_property()]:
+            self.dot_array.fit(prop, value=value)
+            if prop in [x for x in flags if x.is_size_property()]:
                 self.dot_array.center_array()
                 self.dot_array.realign()
             self.show_current_image(remake_image=True)

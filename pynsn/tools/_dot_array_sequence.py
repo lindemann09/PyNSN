@@ -11,7 +11,7 @@ import numpy as _np
 
 from .._lib import misc as _misc
 from .._arrays import DotArray
-from .._visual_properties import flags, fit
+from .. import flags
 
 
 class DASequence(object):

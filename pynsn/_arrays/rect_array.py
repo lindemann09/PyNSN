@@ -83,7 +83,7 @@ class RectangleArray(ABCObjectArray):
         return 2 * (self._sizes[:, 0] + self._sizes[:, 1])
 
     def mod_round_values(self, decimals: int = 0,
-                         int_type = np.int16) -> None:
+                         int_type=np.int16) -> None:
         """Round values of the array."""
 
         if decimals is None:
@@ -105,8 +105,8 @@ class RectangleArray(ABCObjectArray):
         """read rectangle array from dict"""
 
         rtn = RectangleArray(target_area_radius=the_dict["target_area_radius"],
-                       min_dist_between=the_dict["min_dist_between"],
-                       min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+                             min_dist_between=the_dict["min_dist_between"],
+                             min_dist_area_boarder=the_dict["min_dist_area_boarder"])
         rtn._append_xy_attribute(xy=the_dict["xy"],
                                  attributes=the_dict["attributes"])
         rtn._sizes = np.array(the_dict["sizes"])
@@ -172,7 +172,7 @@ class RectangleArray(ABCObjectArray):
             pos_dist = np.abs(self._xy - rect.xy)
             max_not_overlap_dist = (self.sizes + rect.size) / 2
             dist = pos_dist - max_not_overlap_dist
-            return dist # FIXME intensive test distance function rect (also get_distance)
+            return dist  # FIXME intensive test distance function rect (also get_distance)
 
     def get_distances(self, rect: Rectangle) -> np.ndarray:
         """Euclidean Distances toward a single Rectangle

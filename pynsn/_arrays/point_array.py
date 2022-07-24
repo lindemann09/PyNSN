@@ -15,7 +15,7 @@ from .._lib.lib_typing import OptInt, OptArrayLike, ArrayLike, Union, \
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
-from .._visual_properties.properties import ArrayProperties
+from .properties import ArrayProperties
 
 
 class PointArray(ArrayParameter):
