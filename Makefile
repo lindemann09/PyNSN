@@ -24,7 +24,6 @@ docker_unittest:
 
 apiref: venv
 	. venv/bin/activate && \
-	pip install sphinx sphinx_rtd_theme sphinx_autodoc_typehints && \
 	cd documentation && \
 	make html check_api
 
