@@ -17,7 +17,10 @@ from .._lib.coordinate import Coordinate
 
 
 class RectangleArray(ABCObjectArray):
-    """
+    """Rectangle array class
+
+    All object arrays are restricted to a certain target area. The classes are
+    optimized for numpy calculations
     """
 
     def __init__(self,

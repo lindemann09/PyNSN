@@ -19,18 +19,19 @@ from .properties import ArrayProperties
 
 
 class PointArray(ArrayParameter):
-    """Class for attributes on two dimensional space"""
+    """Point array class
 
+    All object arrays are restricted to a certain target area. The classes are
+    optimized for numpy calculations
+    """
     def __init__(self,
                  target_area_radius: int,
                  min_dist_between: OptInt = None,
                  min_dist_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  attributes: OptArrayLike = None):
-        """Numpy Position lists with attributes for optimized for numpy calculations
+        # also as parent  class for implementation of dot and rect arrays
 
-        Abstract class for implementation of dot and rect
-        """
         super().__init__(target_area_radius=target_area_radius,
                          min_dist_between=min_dist_between,
                          min_dist_area_boarder=min_dist_area_boarder)

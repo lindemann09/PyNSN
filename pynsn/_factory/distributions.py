@@ -71,10 +71,9 @@ class Uniform(PyNSNDistribution):
     def __init__(self, min_max):
         """Uniform distribution defined by the number range, min_max=(min, max)
 
-        Parameter:
-        ----------
-        min_max : tuple (numeric, numeric)
-            the range of the distribution
+        Args:
+            min_max : tuple (numeric, numeric)
+                the range of the distribution
         """
 
         super().__init__(min_max)
@@ -86,15 +85,12 @@ class Uniform(PyNSNDistribution):
 
 
 class Levels(PyNSNDistribution):
-    """
+    """Levels
     """
 
     def __init__(self, levels, weights=None, exact_weighting=False):
         """Distribution of level. Samples from a population discrete categories
          with optional weights for each level or category.
-
-        Parameter:
-        ----------
         """
         super().__init__(min_max=(None, None))
         self.levels = levels
@@ -143,7 +139,7 @@ class Levels(PyNSNDistribution):
 
 
 class Triangle(PyNSNDistribution):
-    """
+    """Triangle
     """
 
     def __init__(self, mode, min_max):
@@ -193,12 +189,11 @@ class Normal(_PyNSNDistributionMuSigma):
         Resulting distribution has the defined mean and std, only if
         cutoffs values are symmetric.
 
-        Parameter:
-        ----------
-        mu: numeric
-        sigma: numeric
-        min_max : tuple (numeric, numeric) or None
-            the range of the distribution
+        Args:
+            mu: numeric
+            sigma: numeric
+            min_max : tuple (numeric, numeric) or None
+                the range of the distribution
         """
         if min_max is None:
             min_max = (None, None)
@@ -227,14 +222,13 @@ class Normal2D(PyNSNDistribution):
         Resulting multivariate distribution has the defined means, standard
         deviations and correlation (approx.) between the two variables
 
-        Parameter:
-        ----------
-        mu:  tuple of to numbers (numeric, numeric)
-        sigma: tuple of to numbers  (numeric, numeric)
-        correlation: numeric
-            the correlation between a and b
-        max_radius: numerical (optional)
-            cut-off criterion: maximal distance from the distribution center (mu)
+        Args:
+            mu:  tuple of to numbers (numeric, numeric)
+            sigma: tuple of to numbers  (numeric, numeric)
+            correlation: numeric
+                the correlation between a and b
+            max_radius: numerical (optional)
+                cut-off criterion: maximal distance from the distribution center (mu)
         """
         super().__init__(min_max=(None, None))
 
@@ -300,22 +294,19 @@ class Beta(_PyNSNDistributionMuSigma):
 
         Resulting distribution has the defined mean and std
 
-        Parameter:
-        ----------
-        mu: numeric
-        sigma: numeric
-        min_max : tuple (numeric, numeric)
-            the range of the distribution
+        Args:
+            mu: numeric
+            sigma: numeric
+            min_max : tuple (numeric, numeric)
+                the range of the distribution
 
         Note:
-        -----
-        Depending on the position of the mean in number range the
-        distribution is left or right skewed.
+            Depending on the position of the mean in number range the
+            distribution is left or right skewed.
 
         See Also:
-        --------
-        for calculated shape parameters [alpha, beta] see property
-        `shape_parameter_beta`
+            for calculated shape parameters [alpha, beta] see property
+            `shape_parameter_beta`
         """
         if alpha is not None and beta is not None and (mu, sigma) == (None, None):
             mu, sigma = Beta._calc_mu_sigma(alpha, beta, min_max)

@@ -14,6 +14,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 import pynsn
+from pynsn import distributions
+
 print("PyNSN Version: " + pynsn.__version__)
 
 import sphinx_rtd_theme
@@ -41,15 +43,14 @@ extensions =["sphinx.ext.autodoc",  # Core Sphinx library for auto html doc gene
              ]
 
 # generate autosummary even if no references
-autosummary_generate = True
+autosummary_generate = False
 autosummary_imported_members = True
 
 autodoc_inherit_docstrings = True
 autodoc_member_order = 'groupwise'
 always_document_param_types =True
 #typehints_fully_qualified=False
-autodoc_default_flags = ['members', 'undoc-members' ]
-
+#autodoc_default_flags = ['members', 'undoc-members' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,7 +68,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 #html_theme = 'alabaster'
 
-html_theme = 'sphinx_rtd_theme'
+#html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
+
+html_theme_options = {
+    "github_url": "https://github.com/lindemann09/PyNSN",
+}
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 

@@ -1,3 +1,4 @@
+import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn.image import svg_file, pil_image, mpl_figure
@@ -17,6 +18,10 @@ my_colours = nsn.ImageColours(#target_area="#EEEEEE",
                               #center_of_mass="magenta"
                               )
 
+
+r = pynsn.Rectangle(xy=(0,0), size=(80, 80),
+                attribute=nsn.PictureFile("mypict.png"))
+print(r)
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],

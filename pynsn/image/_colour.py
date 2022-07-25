@@ -18,15 +18,51 @@ ColourType = Union[None, RGBType, List[float], str]
 
 @total_ordering
 class Colour(object):
+    """Colour Class
+
+    Args:
+        colour:
+            Hextriplet, RGB value, colour name and ``Colour``.
+
+            If colour is unknown string or ``None``, the specified default colour will be used.
+            Thus, ``Colour(variable, default="red")`` will result in 'red', if `variable`
+            is unknown or ``None``. If default is not defined the colour will be a
+            'None Colour'.
+
+        default:
+            default colour
+
+
+    Notes:
+        The following colour names are known:
+
+        .. code-block:: py
+
+            'aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque', 'black',
+            'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse',
+            'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'cyan', 'darkblue',
+            'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgreen', 'darkkhaki', 'darkmagenta',
+            'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen',
+            'darkslateblue', 'darkslategray', 'darkturquoise', 'darkviolet', 'deeppink',
+            'deepskyblue', 'dimgray', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen',
+            'fuchsia', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow',
+            'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender', 'lavenderblush',
+            'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgoldenrodyellow',
+            'lightgreen', 'lightgray', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue',
+            'lightslategray', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen', 'linen', 'magenta',
+            'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen',
+            'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue',
+            'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace', 'olive', 'olivedrab',
+            'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred',
+            'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'red', 'rosybrown',
+            'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'silver',
+            'skyblue', 'slateblue', 'slategray', 'snow', 'springgreen', 'steelblue', 'tan', 'teal',
+            'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow',
+            'yellowgreen', 'expyriment_orange', 'expyriment_purple'
+    """
 
     def __init__(self, colour: ColourType,
                  default: ColourType = None) -> None:
-        """if colour is unknown or None, default colour is used
-
-        Thus, `Colour(variable, default="red")` will result in red is variable
-        is None or Unknown. If default is not defined a `None colour` will be
-        returned.
-        """
         if colour is None:
             colour = default
 
@@ -53,9 +89,18 @@ class Colour(object):
 
     @property
     def colour(self) -> str:
+        """Hextriplet code of the colour"""
         return self._colour
 
     def set(self, value: ColourType) -> None:
+        """Set the colour values
+
+        Args:
+            value:
+
+        Returns:
+
+        """
         if value is None:
             self._colour = None
         elif isinstance(value, Colour):
@@ -79,11 +124,19 @@ class Colour(object):
 
     @property
     def rgb(self) -> RGBType:
+        """RGB code of the colour"""
         return Colour.convert_hextriplet_to_rgb(self._colour)
 
     def get_rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int]:
-        """if alpha can be float <= 1.0 or an integer between [0, 255]"""
+        """RBG with alpha values
 
+        Args:
+            alpha:
+             Alpha can be float <= 1.0 or an integer between [0, 255]
+
+        Returns:
+            tuple of four values, RGB and alpha value
+        """
         if isinstance(alpha, float):
             if alpha < 0. or alpha > 1.:
                 raise TypeError("If alpha is a float, it has to be between 0 and 1.")
@@ -99,11 +152,13 @@ class Colour(object):
 
     @staticmethod
     def convert_hextriplet_to_rgb(hextriplet: str) -> RGBType:
+        """Convert a hextriplet string to RGB values"""
         ht = hextriplet.lstrip("#")
         return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
 
     @staticmethod
     def convert_rgb_hextriplet(rgb: RGBType, uppercase: bool = True):
+        """Convert RBG values to a hextriplet string"""
         if len(rgb) != 3:
             raise TypeError("rgb must be a list of three values.")
         if uppercase:
@@ -112,8 +167,7 @@ class Colour(object):
             lettercase = 'x'
         return "#" + format(rgb[0] << 16 | rgb[1] << 8 | rgb[2], '06' + lettercase)
 
-    NAMED_COLOURS = {
-
+    NAMED_COLOURS = { # Dict with known colour names and hextriplets
         'aliceblue': '#F0F8FF',
         'antiquewhite': '#FAEBD7',
         'aqua': '#00FFFF',

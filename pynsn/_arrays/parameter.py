@@ -12,10 +12,8 @@ class ArrayParameter(object):
                  target_area_radius: int,
                  min_dist_between: OptInt = None,
                  min_dist_area_boarder: OptInt = None) -> None:
-        """Numpy Position lists with attributes for optimized for numpy calculations
+        """Array Parameter"""
 
-        Abstract class for implementation of dot and rect
-        """
         self.target_area_radius = target_area_radius
         if min_dist_between is None:
             self.min_dist_between = constants.DEFAULT_MIN_DIST_BETWEEN

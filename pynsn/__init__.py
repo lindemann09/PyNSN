@@ -18,7 +18,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
 
 # FIXME PointArray not tested and not documented
 
-from ._arrays import DotArray, RectangleArray, PointArray, ArrayParameter, \
+from ._arrays import DotArray, RectangleArray, PointArray, \
                 ArrayProperties
 from ._shapes import Point, Dot, Rectangle, PictureFile
 from ._factory import NSNFactory

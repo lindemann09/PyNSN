@@ -29,7 +29,7 @@ class Rectangle(ABCShape):
 
     def __repr__(self):
         return "Rectangle(xy={}, size={}, attribute='{}')".format(self.xy,
-                                    self.size, self.get_attribute_object())
+                                    self.size, self.attribute)
 
     @property
     def area(self):

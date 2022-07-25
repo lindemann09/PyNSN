@@ -21,10 +21,10 @@ from .._shapes.dot import Dot
 
 
 class DotArray(ABCObjectArray):
-    """Numpy Position list for optimized for numpy calculations
+    """Dot array class
 
-
-    Position + diameter
+    All object arrays are restricted to a certain target area. The classes are
+    optimized for numpy calculations
     """
 
     def __init__(self,
@@ -34,12 +34,6 @@ class DotArray(ABCObjectArray):
                  xy: OptArrayLike = None,
                  diameter: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
-        """Dot array is restricted to a certain area, it has a target area
-        and a minimum gap.
-
-        This properties allows shuffling free position and adapting
-        properties.
-        """
         super().__init__(xy=xy, attributes=attributes,
                          target_area_radius=target_area_radius,
                          min_dist_between=min_dist_between,

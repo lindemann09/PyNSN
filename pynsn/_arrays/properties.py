@@ -15,6 +15,11 @@ from .tools import scale_field_area
 
 
 class ArrayProperties(object):
+    """Visual features of each object array can be access and
+    modified via an instance of this class
+
+    """
+
 
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
@@ -31,12 +36,14 @@ class ArrayProperties(object):
 
     @property
     def convex_hull(self) -> ConvexHull:
+        """TODO """
         if self._convex_hull is None:
             self._convex_hull = ConvexHull(self.oa)
         return self._convex_hull
 
     @property
     def convex_hull_positions(self) -> ConvexHullPositions:
+        """TODO """
         if self._convex_hull_positions is None:
             self._convex_hull_positions = ConvexHullPositions(self.oa)
         return self._convex_hull_positions
