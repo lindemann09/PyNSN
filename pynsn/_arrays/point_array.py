@@ -171,6 +171,14 @@ class PointArray(ArrayParameter):
         self._properties.reset()
 
     def delete(self, index: ArrayLike) -> None:
+        """TODO delete object
+
+        Args:
+            index:
+
+        Returns:
+
+        """
         self._xy = np.delete(self._xy, index, axis=0)
         self._attributes = np.delete(self._attributes, index)
         self._properties.reset()

@@ -73,8 +73,10 @@ class RectangleArray(ABCObjectArray):
     def sizes(self) -> np.ndarray:
         """Numpy array of the object sizes
 
-        The two dimensional array (shape=[2, n]) represents the width and height of the `n objects in this array
+        The two dimensional array (shape=[2, n]) represents the width and height of the `n` objects in this array
+
         Returns:
+            the width and height
 
         """
         return self._sizes
@@ -89,9 +91,8 @@ class RectangleArray(ABCObjectArray):
         return 2 * (self._sizes[:, 0] + self._sizes[:, 1])
 
     def mod_round_values(self, decimals: int = 0,
-                         int_type=np.int16) -> None:
-        """Round values of the array."""
-
+                         int_type: type = np.int16) -> None:
+        # inherited doc
         if decimals is None:
             return
         self._xy = misc.numpy_round2(self._xy, decimals=decimals,
@@ -100,8 +101,7 @@ class RectangleArray(ABCObjectArray):
                                         int_type=int_type)
 
     def as_dict(self) -> dict:
-        """
-        """
+        # inherited doc
         d = super().as_dict()
         d.update({"sizes": self._sizes.tolist()})
         return d
@@ -181,12 +181,14 @@ class RectangleArray(ABCObjectArray):
             return dist  # FIXME intensive test distance function rect (also get_distance)
 
     def get_distances(self, rect: Rectangle) -> np.ndarray:
-        """Euclidean Distances toward a single Rectangle
-        negative numbers indicate overlap
+        """Euclidean distances toward a single rectangle
 
-        Returns
-        -------
-        distances : numpy array of distances
+        Negative numbers indicate an overlap of the objects
+
+        Args:
+            rect: object towards the distances will be calculated
+
+        Returns: numpy array of distances
         """
         assert isinstance(rect, Rectangle)
         if len(self._xy) == 0:
@@ -269,13 +271,7 @@ class RectangleArray(ABCObjectArray):
     def csv(self, variable_names: bool = True,
             hash_column: bool = False,
             attribute_column: bool = True) -> str:
-        """Return the rectangle array as csv text
-
-        Parameter
-        ---------
-        variable_names : bool, optional
-            if True variable name will be printed in the first line
-        """
+        # inherited doc
         size_dict = {"width": self._sizes[:, 0], "height": self._sizes[:, 1]}
         if attribute_column:
             attr = self.attributes

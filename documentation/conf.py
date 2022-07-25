@@ -43,10 +43,12 @@ extensions =["sphinx.ext.autodoc",  # Core Sphinx library for auto html doc gene
 # generate autosummary even if no references
 autosummary_generate = True
 autosummary_imported_members = True
+
 autodoc_inherit_docstrings = True
 autodoc_member_order = 'groupwise'
 always_document_param_types =True
 #typehints_fully_qualified=False
+autodoc_default_flags = ['members', 'undoc-members' ]
 
 
 # Add any paths that contain templates here, relative to this directory.

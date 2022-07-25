@@ -7,7 +7,6 @@ NSNFactory
 .. autoclass:: pynsn.NSNFactory
    :members:
    :show-inheritance:
-   :undoc-members:
 
 
 Random distributions
@@ -17,7 +16,6 @@ the following class members:
 
 .. autoclass:: pynsn.distributions.PyNSNDistribution
    :members:
-   :undoc-members:
 
 Categorical variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,14 +37,12 @@ Continuous variables
 
 .. autoclass:: pynsn.distributions.Beta
    :members:
-   :undoc-members:
 
 Multivariate distribution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: pynsn.distributions.Normal2D
    :members:
-   :undoc-members:
 
 Init Random Generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

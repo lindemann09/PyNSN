@@ -34,11 +34,11 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     @abstractmethod
     def perimeter(self):
         """Vector with the perimeter of all objects"""
-        """Vector with the perimeter of all objects"""
         pass
 
     @abstractmethod
     def as_dict(self):
+        """Dict representation of the array"""
         return super().as_dict()
 
     @staticmethod
@@ -69,15 +69,32 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @abstractmethod
     def get_distances(self, ref_object):
-        # override this method
         pass
 
     @abstractmethod
-    def csv(self):
+    def csv(self, variable_names: bool, hash_column: bool,
+            attribute_column: bool) -> str:
+        """Comma-separated table representation the object array
+
+        Args:
+            variable_names: if True first line include the variable names
+            hash_column: if True hash will be included as first column
+            attribute_column: if True attributes will be included as
+                    last column
+        Returns:
+            CSV representation
+
+        """
         pass
 
     @abstractmethod
-    def mod_round_values(self):
+    def mod_round_values(self, decimals: int = 0, int_type: type = np.int16) -> None:
+        """Round all values
+
+        Args:
+            decimals: number of decimal places
+            int_type: numpy int type (default=numpy.int16)
+        """
         pass
 
     def get_distances_matrix(self, between_positions: bool = False) -> np.ndarray:
