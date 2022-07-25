@@ -7,6 +7,7 @@ Welcome to PyNSN's documentation!
 
    install
    api
+   examples
 
 
 Indices and tables
