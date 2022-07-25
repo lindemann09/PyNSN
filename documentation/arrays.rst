@@ -2,7 +2,7 @@ Arrays
 ------
 
 Dot Array
-~~~~~~~~
+~~~~~~~~~~
 
 .. autoclass:: pynsn.DotArray
    :members:
