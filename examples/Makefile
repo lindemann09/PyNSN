@@ -6,6 +6,7 @@ html:
 	make pynsn_demo.html
 	make make_object_arrays_demo.html
 	make euro_flag_demo.html
+	cp *.html ../documentation/_static
 	mv *.html ../docs
 	rm -f pynsn
 
