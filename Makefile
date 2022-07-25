@@ -5,8 +5,7 @@ venv:
 	. venv/bin/activate && \
 	pip install pip -U && \
 	pip install setuptools wheel && \
-	pip install scipy numpy Pillow svgwrite && \
-	pip install matplotlib && \
+	pip install -r requirements.txt && \
 	pip list
 
 build: venv
