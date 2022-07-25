@@ -36,7 +36,7 @@ some features:
 ## Installing via `pip`
 
 ```
-python3 -m pip install pynsn
+python -m pip install pynsn
 ```
 
 ## Image formats
@@ -64,7 +64,7 @@ RUN GUI tool (beta version)
 *Note:* Using the PyNSN-GUI requires the installation of `PyQt5` 
 
 ```
-python3 -m pynsn
+python -m pynsn
 ```
 
 or if installed correctly:

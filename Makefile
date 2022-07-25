@@ -1,7 +1,7 @@
 .PHONY: install clean build
 
 venv:
-	python3 -m venv venv
+	python -m venv venv
 	. venv/bin/activate && \
 	pip install pip -U && \
 	pip install setuptools wheel && \
@@ -11,7 +11,7 @@ venv:
 
 build: venv
 	. venv/bin/activate && \
-	python3 setup.py sdist bdist_wheel
+	python setup.py sdist bdist_wheel
 
 publish:
 	twine check dist/*
@@ -27,7 +27,7 @@ apiref: venv
 	. venv/bin/activate && \
 	pip install sphinx sphinx_rtd_theme sphinx_autodoc_typehints && \
 	cd documentation && \
-	make html
+	make html check_api
 
 jupyter_examples: venv
 	. venv/bin/activate && \
@@ -37,8 +37,7 @@ jupyter_examples: venv
 
 tox: venv
 	. venv/bin/activate && \
-	python3 -m tox
-
+	python -m tox
 
 clean:
 	@rm -rf build \
@@ -47,4 +46,5 @@ clean:
 		pynsn.egg-info \
 		.tox \
 		.pytest_cache
+	cd documentation && make clean
 
