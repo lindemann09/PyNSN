@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math as _math
+from typing import Tuple
 
 
 class Coordinate(object):
@@ -52,7 +53,7 @@ class Coordinate(object):
         return self.x != other.x or self.y != other.y
 
     @property
-    def xy(self):
+    def xy(self) -> Tuple[float, float]:
         return self.x, self.y
 
     @xy.setter

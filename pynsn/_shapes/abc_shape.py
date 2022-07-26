@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
+from typing import Any
 
 from .._lib.coordinate import Coordinate
 from ..image._colour import Colour
@@ -22,7 +23,7 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         return self._attribute
 
     @attribute.setter
-    def attribute(self, attr):
+    def attribute(self, attr) -> Any:
         """set attribute 
         
         Parameters

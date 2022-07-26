@@ -10,8 +10,8 @@ import numpy as np
 
 from .._lib import misc
 from .abc_object_array import ABCObjectArray
-from .._lib.lib_typing import OptArrayLike, IntOVector, ArrayLike, Iterator, \
-    Any, Union, Sequence, Optional, NumPair
+from .._lib.lib_typing import NumSeq, OptArrayLike, IntOVector, Iterator, \
+    Any, Union, Sequence, Optional, NumPair, OptInt, NDArray
 from .._shapes.rectangle import Rectangle
 from .._lib.coordinate import Coordinate
 
@@ -25,8 +25,8 @@ class RectangleArray(ABCObjectArray):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: bool = None,
-                 min_dist_area_boarder: bool = None,
+                 min_dist_between: OptInt = None,
+                 min_dist_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  sizes: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
@@ -49,7 +49,7 @@ class RectangleArray(ABCObjectArray):
             raise ValueError("Bad shaped data: " +
                              u"xy has not the same length as sizes array")
 
-    def _append_sizes(self, sizes: ArrayLike) -> int:
+    def _append_sizes(self, sizes: NumSeq) -> int:
         """returns number of added rows"""
         sizes = misc.numpy_array_2d(sizes)
         if len(self._sizes) == 0:
@@ -59,21 +59,22 @@ class RectangleArray(ABCObjectArray):
             self._sizes = np.append(self._sizes, sizes, axis=0)
         return sizes.shape[0]
 
-    def add(self, rectangles: Union[Rectangle, Sequence[Rectangle]]) -> None:
+    def add(self, obj: Union[Rectangle, Sequence[Rectangle]]) -> None:
         """append one dot or list of dots"""
-        try:
-            rectangles = list(rectangles)
-        except TypeError:
-            rectangles = [rectangles]
+        if isinstance(obj, Rectangle):
+            obj = [obj]
+        else:
+            obj = list(obj)
 
-        for r in rectangles:
+        for r in obj:
             assert isinstance(r, Rectangle)
-            self._append_xy_attribute(xy=r.xy, attributes=r.attribute)
+            self._append_xy_attribute(xy=r.xy,
+                                      attributes=r.attribute)
             self._append_sizes((r.width, r.height))
         self.properties.reset()
 
     @property
-    def sizes(self) -> np.ndarray:
+    def sizes(self) -> NDArray:
         """Numpy array of the object sizes
 
         The two dimensional array (shape=[2, n]) represents the width and height of the `n` objects in this array
@@ -85,12 +86,12 @@ class RectangleArray(ABCObjectArray):
         return self._sizes
 
     @property
-    def surface_areas(self) -> np.ndarray:
+    def surface_areas(self) -> NDArray:
         # a = w*h
         return self._sizes[:, 0] * self._sizes[:, 1]
 
     @property
-    def perimeter(self) -> np.ndarray:
+    def perimeter(self) -> NDArray:
         return 2 * (self._sizes[:, 0] + self._sizes[:, 1])
 
     def mod_round_values(self, decimals: int = 0,
@@ -138,8 +139,8 @@ class RectangleArray(ABCObjectArray):
         super().delete(index)
         self._sizes = np.delete(self._sizes, index, axis=0)
 
-    def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> RectangleArray:
+    def copy(self, indices: Union[int, Sequence[int], None] = None,
+             deep_copy: bool = True) -> RectangleArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -154,7 +155,7 @@ class RectangleArray(ABCObjectArray):
         if indices is None:
             indices = list(range(len(self._xy)))
 
-        if deepcopy:
+        if deep_copy:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
                 min_dist_between=self.min_dist_between,
@@ -171,19 +172,19 @@ class RectangleArray(ABCObjectArray):
                 sizes=self._sizes[indices],
                 attributes=self._attributes[indices])
 
-    def _xy_distances(self, rect: Rectangle) -> np.ndarray:
+    def _xy_distances(self, rect: Rectangle) -> NDArray:
         """return distances on both axes between rectangles and reference rec.
          negative number indicates overlap edges along that dimension.
         """
         if len(self._xy) == 0:
             return np.array([])
         else:
-            pos_dist = np.abs(self._xy - rect.xy)
+            pos_dist = np.abs(self.xy - rect.xy)
             max_not_overlap_dist = (self.sizes + rect.size) / 2
             dist = pos_dist - max_not_overlap_dist
             return dist  # FIXME intensive test distance function rect (also get_distance)
 
-    def get_distances(self, rect: Rectangle) -> np.ndarray:
+    def get_distances(self, rect: Rectangle) -> NDArray:
         """Euclidean distances toward a single rectangle
 
         Negative numbers indicate an overlap of the objects

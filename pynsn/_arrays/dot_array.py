@@ -5,13 +5,15 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Dict, List
+
 import json
 import numpy as np
 
 from .abc_object_array import ABCObjectArray
 from .._lib import misc
 from .._lib.lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, OptFloat
+    Any, Union, Sequence, Optional, OptFloat, NDArray
 from .._shapes.dot import Dot
 
 
@@ -46,24 +48,25 @@ class DotArray(ABCObjectArray):
             raise ValueError("Bad shaped data: " +
                              u"xy has not the same length as item_diameter")
 
-    def add(self, dots: Union[Dot, Sequence[Dot]]) -> None:
+    def add(self, obj: Union[Dot, Sequence[Dot]]) -> None:
         """append one dot or list of dots"""
-        try:
-            dots = list(dots)
-        except TypeError:
-            dots = [dots]
-        for d in dots:
+        if isinstance(obj, Dot):
+            obj = [obj]
+        else:
+            obj = list(obj)
+
+        for d in obj:
             assert isinstance(d, Dot)
             self._append_xy_attribute(xy=d.xy, attributes=d.attribute)
             self._diameter = np.append(self._diameter, d.diameter)
         self.properties.reset()
 
     @property
-    def diameter(self) -> np.ndarray:
+    def diameter(self) -> NDArray:
         return self._diameter
 
     @property
-    def surface_areas(self) -> np.ndarray:
+    def surface_areas(self) -> NDArray:
         """TODO
 
         """
@@ -71,7 +74,7 @@ class DotArray(ABCObjectArray):
         return np.pi * (self._diameter ** 2) / 4.0
 
     @property
-    def perimeter(self) -> np.ndarray:
+    def perimeter(self) -> NDArray:
         """Perimeter for each dot
 
         """
@@ -96,14 +99,14 @@ class DotArray(ABCObjectArray):
         return d
 
     @staticmethod
-    def read_from_dict(the_dict: dict) -> DotArray:
+    def read_from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
         rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
                          min_dist_between=the_dict["min_dist_between"],
                          min_dist_area_boarder=the_dict["min_dist_area_boarder"])
-        rtn._append_xy_attribute(xy=the_dict["xy"],
-                                 attributes=the_dict["attributes"])
-        rtn._diameter = np.array(the_dict["diameter"])
+        rtn._append_xy_attribute(xy=the_dict["xy"],                                 attributes=the_dict["attributes"])
+        rtn._diameter = np.asarray(the_dict["diameter"])
+
         if len(rtn.diameter) != len(rtn.xy):
             raise RuntimeError("Badly shaped data: diameter have not " +
                                "the same length as the coordinates")
@@ -124,8 +127,8 @@ class DotArray(ABCObjectArray):
         super().delete(index)
         self._diameter = np.delete(self._diameter, index)
 
-    def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> DotArray:
+    def copy(self, indices: Union[int, Sequence[int], None] = None,
+             deep_copy: bool = True) -> DotArray:
         """A (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -146,7 +149,7 @@ class DotArray(ABCObjectArray):
         if indices is None:
             indices = list(range(len(self._xy) ))
 
-        if deepcopy:
+        if deep_copy:
             return DotArray(target_area_radius=self.target_area_radius,
                             min_dist_between=self.min_dist_between,
                             min_dist_area_boarder = self.min_dist_area_boarder,
@@ -161,7 +164,8 @@ class DotArray(ABCObjectArray):
                             diameter=self._diameter[indices],
                             attributes=self._attributes[indices])
 
-    def get_distances(self, dot: Dot) -> np.ndarray:
+
+    def get_distances(self, dot: Dot) -> NDArray:
         """Euclidean distances toward a single dot
 
         Negative numbers indicate an overlap of the objects
@@ -206,12 +210,21 @@ class DotArray(ABCObjectArray):
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
 
+
     def find_objects(self, diameter: OptFloat = None,
-                     attribute: Any = None) -> Sequence[int]:
-        """returns indices of found objects
+                     attribute: Any = None) -> List[int]:
+        """Search for an object
+
+        Args:
+            diameter: diameter to search for (optional)
+            attribute: attribute to search for (optional)
+
+        Returns:
+            indices of found objects
         """
         rtn = []
-        for i in range(len(self._diameter)):
+
+        for i, _ in enumerate(self._diameter):
             if (diameter is not None and self._diameter[i] != diameter) or \
                     (attribute is not None and self._attributes[i] != attribute):
                 continue

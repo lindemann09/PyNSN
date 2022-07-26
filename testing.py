@@ -32,9 +32,7 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
 #                                        exact_weighting=True))
 
 stimulus = factory.create_random_array(n_objects=20)
-stimulus.copy(indices=np.asarray([3,5,6]))
-stimulus.properties.fitr
-
+d = stimulus.copy(indices=1)
 
 #assert isinstance(stimulus, nsn.RectangleArray)
 #nsn.scale.log_size(stimulus, 1.2)
@@ -48,4 +46,3 @@ dist = stimulus.get_distances_matrix()
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo_scaled.png")
-

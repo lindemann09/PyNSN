@@ -7,6 +7,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from collections import OrderedDict
 import numpy as np
 import sys
+from numpy.typing import NDArray
 
 
 def make_csv(xy, size_data_dict, attributes=None,
@@ -95,7 +96,8 @@ def numpy_array_2d(two_d_data):
     return rtn
 
 
-def numpy_round2(array, decimals, int_type=np.int32):
+def numpy_round2(array: np.ndarray, decimals: int,
+                 int_type: type =np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
     array = np.round(array, decimals=decimals)
     if decimals == 0:

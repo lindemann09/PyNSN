@@ -5,11 +5,11 @@ been called
 """
 
 import numpy as np
-from .lib_typing import Union, ArrayLike
+from .lib_typing import Union, NDArray, Sequence
 generator = np.random.default_rng()
 
 
-def init_random_generator(seed: Union[int, ArrayLike, None] = None):
+def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
     """Init random generator and set random seed (optional)
 
     Parameters

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray, ArrayLike
 from scipy import spatial
 from .._lib.geometry import cartesian2polar, polar2cartesian
 from .. import _arrays
@@ -8,7 +9,8 @@ class ConvexHullBaseClass(object):
     """convenient wrapper class for calculation of convex hulls
     """
 
-    def __init__(self, xy):
+    def __init__(self, xy: ArrayLike):
+        # FIXME when to use ArrayLike and when NDArray
         try:
             self._convex_hull = spatial.ConvexHull(xy)
         except spatial.QhullError:
@@ -86,7 +88,7 @@ class ConvexHull(ConvexHullBaseClass):
         self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)
 
     @property
-    def object_indices(self):
+    def object_indices(self) -> NDArray:
         if self._is_rect_array:
             return np.int16(self._convex_hull.vertices / 4)
         else:

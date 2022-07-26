@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
+from typing import Iterator
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
 
@@ -71,21 +72,18 @@ class Rectangle(ABCShape):
     def bottom(self):
         return self.y - 0.5 * self.height
 
-    def iter_edges(self, xy_tuple=False):
+    def iter_edges(self) -> Iterator[Coordinate]:
         """iterator over all four edges
 
         Returns
         -------
         iterator over Coordinates or tuple (x,y)
         """
-        for x in [Coordinate(self.left, self.top),
-                  Coordinate(self.right, self.top),
-                  Coordinate(self.right, self.bottom),
-                  Coordinate(self.left, self.bottom)]:
-            if xy_tuple:
-                yield x.xy
-            else:
-                yield x
+
+        yield Coordinate(self.left, self.top)
+        yield Coordinate(self.right, self.top)
+        yield Coordinate(self.right, self.bottom)
+        yield Coordinate(self.left, self.bottom)
 
     @property
     def size(self):

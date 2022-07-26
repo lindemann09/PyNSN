@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
 from hashlib import md5
 
 import numpy as np
-
 from .._lib import geometry
 from .._lib import misc
 from .parameter import ArrayParameter
-from .._lib.lib_typing import OptInt, OptArrayLike, ArrayLike, Union, \
-    Sequence, Iterator, IntOVector, Optional
+from .._lib.lib_typing import OptInt, OptArrayLike, Union, \
+    Sequence, Iterator, IntOVector, Optional, NumSeq, NDArray, ArrayLike
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
@@ -48,7 +49,7 @@ class PointArray(ArrayParameter):
         """returns number of added rows"""
         xy = misc.numpy_array_2d(xy)
         if not isinstance(attributes, (tuple, list)):
-            attributes = [attributes] * xy.shape[0]
+            attributes = np.array([attributes] * xy.shape[0])
 
         if len(attributes) != xy.shape[0]:
             raise RuntimeError("Badly shaped data: attributes have not " +
@@ -63,13 +64,14 @@ class PointArray(ArrayParameter):
         self._properties.reset()
         return xy.shape[0]
 
-    def add(self, points: Union[Point, Sequence[Point]]) -> None:
+    def add(self, obj: Union[Point, Sequence[Point]]) -> None:
         """append one dot or list of dots"""
-        try:
-            points = list(points)
-        except TypeError:
-            points = [points]
-        for p in points:
+        if isinstance(obj, Point):
+            obj = [obj]
+        else:
+            obj = list(obj)
+
+        for p in obj:
             assert isinstance(p, Point)
             self._append_xy_attribute(xy=p.xy, attributes=p.attribute)
         self.properties.reset()
@@ -81,7 +83,7 @@ class PointArray(ArrayParameter):
         return rtn
 
     @property
-    def xy(self) -> np.ndarray:
+    def xy(self) -> NDArray:
         """Numpy array of the object locations
 
         The two dimensional array (shape=[2, `n`]) represents the locations of the center of
@@ -90,7 +92,7 @@ class PointArray(ArrayParameter):
         return self._xy
 
     @property
-    def attributes(self) -> np.ndarray:
+    def attributes(self) -> NDArray:
         """Numpy vector of the object attributes
         """
         return self._attributes
@@ -118,14 +120,16 @@ class PointArray(ArrayParameter):
         return self._properties
 
     @property
-    def surface_areas(self) -> np.ndarray:
+    def surface_areas(self) -> NDArray:
         """Size of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
-        
+
     @property
-    def perimeter(self) -> np.ndarray:
+    def perimeter(self) -> NDArray:
         """Perimeter of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
+
+
 
     def set_attributes(self, attributes: ArrayLike) -> None:
         """Set all attributes
@@ -161,12 +165,12 @@ class PointArray(ArrayParameter):
         m.update(self.attributes.tobytes())
         return m.hexdigest()
 
-    def get_center_of_field_area(self) -> np.ndarray:
+    def get_center_of_field_area(self) -> NDArray:
         """Center of all objects
 
         Returns:
             Coordinate of center position
-        """        
+        """
         return geometry.center_of_positions(self.properties.convex_hull.xy)
 
     def clear(self) -> None:
@@ -187,8 +191,8 @@ class PointArray(ArrayParameter):
         self._attributes = np.delete(self._attributes, index)
         self._properties.reset()
 
-    def copy(self, indices: OptArrayLike = None,
-             deepcopy: bool = True) -> PointArray:
+    def copy(self, indices: Union[int, Sequence[int], None] = None,
+             deep_copy: bool = True) -> PointArray:
         """returns a (deep) copy of the dot array.
 
         It allows to copy a subset of dot only.
@@ -203,7 +207,7 @@ class PointArray(ArrayParameter):
         if indices is None:
             indices = list(range(len(self._xy)))
 
-        if deepcopy:
+        if deep_copy:
             return PointArray(target_area_radius=self.target_area_radius,
                               min_dist_between=self.min_dist_between,
                               min_dist_area_boarder=self.min_dist_area_boarder,
