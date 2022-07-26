@@ -1,7 +1,10 @@
 .PHONY: html start_jupyter
 
-html:
+pynsn_link:
 	ln -s ../pynsn ./ -f
+
+html:
+	make pynsn_link
 	pip install jupyter
 	make pynsn_demo.html
 	make make_object_arrays_demo.html

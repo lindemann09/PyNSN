@@ -129,7 +129,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self._xy = self._xy - cxy
         self._properties.reset()
 
-    def get_free_position(self,
+    def get_free_positionNN(self,
                           ref_object: Union[Dot, Rectangle, Point],
                           in_neighborhood: bool = False,
                           allow_overlapping: bool = False,
@@ -214,7 +214,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self.clear()
         for obj in all_objects:
             try:
-                new = self.get_free_position(obj, in_neighborhood=False,
+                new = self.get_free_positionNN(obj, in_neighborhood=False,
                                              allow_overlapping=allow_overlapping)
             except NoSolutionError as e:
                 raise NoSolutionError("Can't shuffle dot array. No free positions found.")
@@ -280,7 +280,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             ch_idx = self.properties.convex_hull.object_indices_unique
 
             while len(overlaps):
-                # do not replace convexhull objects and try to
+                # do not replace convex hull objects and try to
                 # take that one not on convex hull or raise error/warning
                 if overlaps[0, 0] not in ch_idx:
                     idx = overlaps[0, 0]
@@ -303,7 +303,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                     for in_neighborhood in (True, False):
                         if found is None:
                             try:
-                                found = self.get_free_position(ref_object=obj,
+                                found = self.get_free_positionNN(ref_object=obj,
                                                                in_neighborhood=in_neighborhood,
                                                                inside_convex_hull=inside_convex_hull)
                             except NoSolutionError as e:
@@ -368,7 +368,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         if isinstance(ang, float):
             movement.polar = (distance, ang)
         else:
-            # "ang" isnot an angle it a point
+            # "ang" is not an angle it a point
             movement = ang - obj
             movement.polar_radius = distance
 

@@ -14,16 +14,18 @@ from .convex_hull import ConvexHull, ConvexHullPositions
 from .tools import scale_field_area
 
 
-class ArrayProperties(object):
-    """Visual features of each object array can be access and
+class ArrayProperties(object):    
+    """Visual properties fo an associated arrays
+    
+    Visual features of each object array can be access and
     modified via an instance of this class
-
     """
 
 
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
-        assert isinstance(object_array, (_arrays.DotArray, _arrays.RectangleArray,
+        assert isinstance(object_array, (_arrays.DotArray,
+                                         _arrays.RectangleArray,
                                          _arrays.PointArray))
         self.oa = object_array
         self._convex_hull = None
@@ -58,7 +60,7 @@ class ArrayProperties(object):
             return float(np.mean(self.oa.diameter))
 
     @property
-    def average_rectangle_size(self) -> Optional[NDArray[float]]:
+    def average_rectangle_size(self) -> Optional[NDArray]:
         if not isinstance(self.oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:
@@ -97,7 +99,7 @@ class ArrayProperties(object):
         return len(self.oa._xy)
 
     @property
-    def converage(self) -> Optional[float]:
+    def coverage(self) -> Optional[float]:
         """ percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
@@ -173,7 +175,7 @@ class ArrayProperties(object):
             return self.field_area_positions
 
         elif property_flag == VisualPropertyFlags.COVERAGE:
-            return self.converage
+            return self.coverage
 
         elif property_flag == VisualPropertyFlags.NUMEROSITY:
             return self.numerosity
@@ -192,7 +194,7 @@ class ArrayProperties(object):
                (VisualPropertyFlags.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
                (VisualPropertyFlags.FIELD_AREA.label(), self.field_area),
                (VisualPropertyFlags.SPARSITY.label(), self.sparsity),
-               (VisualPropertyFlags.COVERAGE.label(), self.converage),
+               (VisualPropertyFlags.COVERAGE.label(), self.coverage),
                (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
@@ -246,7 +248,7 @@ class ArrayProperties(object):
                 self.sparsity,
                 self.log_size,
                 self.log_spacing,
-                self.converage)
+                self.coverage)
         return rtn.rstrip()
 
     def fit_numerosity(self, value: int,
@@ -286,7 +288,7 @@ class ArrayProperties(object):
                     clone_id = rng.generator.integers(0, self.numerosity)
                     rnd_object = next(self.oa.iter_objects(clone_id))
                     try:
-                        rnd_object = self.oa.get_free_position(
+                        rnd_object = self.oa.get_free_positionNN(
                             ref_object=rnd_object, allow_overlapping=False,
                             inside_convex_hull=keep_convex_hull)
                     except NoSolutionError:
@@ -296,6 +298,14 @@ class ArrayProperties(object):
                     self.oa.add([rnd_object])
 
     def fit_average_diameter(self, value: float) -> None:
+        """Set average diameter.
+
+        Args:
+            value: diameter
+
+        Raises:
+            TypeError: if associated array is not a DotArray
+        """ 
         # changes diameter
         if not isinstance(self.oa, _arrays.DotArray):
             raise TypeError("Adapting diameter is not possible for {}.".format(
@@ -305,6 +315,14 @@ class ArrayProperties(object):
         self.reset()
 
     def fit_average_rectangle_size(self, value: NumPair) -> None:
+        """Set average rectangle size.
+
+        Args:
+            value:  (width, height)
+
+        Raises:
+            TypeError: if associated array is not a RectangleArray or values is not a tuple of two numerical values
+        """        
         # changes diameter
         if not isinstance(self.oa, _arrays.RectangleArray):
             raise TypeError("Adapting rectangle size is not possible for {}.".format(
@@ -321,16 +339,13 @@ class ArrayProperties(object):
         self.reset()
 
     def fit_total_surface_area(self, value: float) -> None:
-        """
+        """Set surface area. 
         
-        Parameters
-        ----------
-        value
+        Resize all object to fit a specific surface area
 
-        Returns
-        -------
-
-        """
+        Args:
+            value: surface area
+        """        
         a_scale = value / self.total_surface_area
         if isinstance(self.oa, _arrays.DotArray):
             self.oa._diameter = np.sqrt(
@@ -343,18 +358,7 @@ class ArrayProperties(object):
 
     def fit_field_area(self, value: float,
                        precision: OptFloat = None) -> None:
-        """
-        
-        Parameters
-        ----------
-        value
-        precision
 
-        Returns
-        -------
-
-        """
-        
         """changes the convex hull area to a desired size with certain precision
 
         uses scaling radial positions if field area has to be increased
@@ -590,7 +594,7 @@ class ArrayProperties(object):
                        FA2TA_ratio: OptFloat = None) -> None:
         if factor == 1:
             return
-        return self.fit_coverage(self.converage * factor,
+        return self.fit_coverage(self.coverage * factor,
                                  precision=precision,
                                  FA2TA_ratio=FA2TA_ratio)
 

@@ -103,7 +103,7 @@ class PointArray(ArrayParameter):
         properties of the object like
 
         * numerosity
-        * average_dot_diameter or average_rectangle_size
+        * average_dot_diameter/average_rectangle_size
         * total_surface_area
         * average_surface_area
         * total_perimeter
@@ -113,7 +113,7 @@ class PointArray(ArrayParameter):
         * sparsity
         * log_spacing
         * log_size
-        * converage
+        * coverage
         """
         return self._properties
 
@@ -121,7 +121,7 @@ class PointArray(ArrayParameter):
     def surface_areas(self) -> np.ndarray:
         """Size of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
-
+        
     @property
     def perimeter(self) -> np.ndarray:
         """Perimeter of all points is per definition always zero"""
@@ -162,8 +162,11 @@ class PointArray(ArrayParameter):
         return m.hexdigest()
 
     def get_center_of_field_area(self) -> np.ndarray:
-        """Center of all object positions
-        """
+        """Center of all objects
+
+        Returns:
+            Coordinate of center position
+        """        
         return geometry.center_of_positions(self.properties.convex_hull.xy)
 
     def clear(self) -> None:
@@ -172,7 +175,7 @@ class PointArray(ArrayParameter):
         self._properties.reset()
 
     def delete(self, index: ArrayLike) -> None:
-        """TODO delete object
+        """Delete object
 
         Args:
             index:
@@ -266,7 +269,7 @@ class PointArray(ArrayParameter):
 
         Parameters
         ----------
-        indices: int or interable of integer
+        indices: int or iterable of integer
 
         Notes
         -----

@@ -33,6 +33,7 @@ factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue
 
 stimulus = factory.create_random_array(n_objects=20)
 stimulus.copy(indices=np.asarray([3,5,6]))
+stimulus.properties.fitr
 
 
 #assert isinstance(stimulus, nsn.RectangleArray)

@@ -76,7 +76,7 @@ class DotArraySQLDB(object):
                           da._properties.sparsity,
                           da._properties.log_size,
                           da._properties.log_spacing,
-                          da._properties.converage,
+                          da._properties.coverage,
                           colour.colour)
             cur.execute(sql)
 

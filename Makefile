@@ -45,4 +45,5 @@ clean:
 		.tox \
 		.pytest_cache
 	cd documentation && make clean
+	py3clean .
 

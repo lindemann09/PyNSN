@@ -216,7 +216,7 @@ class NSNFactory(ArrayParameter):
 
             for dot in self.sample(n=n_objects):
                 try:
-                    dot = rtn.get_free_position(ref_object=dot, in_neighborhood=False,
+                    dot = rtn.get_free_positionNN(ref_object=dot, in_neighborhood=False,
                                                 occupied_space=occupied_space,
                                                 allow_overlapping=allow_overlapping)
                 except NoSolutionError:
@@ -231,7 +231,7 @@ class NSNFactory(ArrayParameter):
 
             for rect in self.sample(n=n_objects):
                 try:
-                    rect = rtn.get_free_position(ref_object=rect, in_neighborhood=False,
+                    rect = rtn.get_free_positionNN(ref_object=rect, in_neighborhood=False,
                                                  occupied_space=occupied_space,
                                                  allow_overlapping=allow_overlapping)
                 except NoSolutionError:
