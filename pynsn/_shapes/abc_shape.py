@@ -8,7 +8,7 @@ from ..image._colour import Colour
 from .picture_file import PictureFile
 
 
-# todo typing
+#FIXME typing
 
 
 class ABCShape(Coordinate, metaclass=ABCMeta):
@@ -24,8 +24,8 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
 
     @attribute.setter
     def attribute(self, attr) -> Any:
-        """set attribute 
-        
+        """set attribute
+
         Parameters
         ----------
         attr : anything
@@ -56,9 +56,8 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
             if col.colour is not None:
                 return col
             else:
-                fl_name = PictureFile.check_attribute(self._attribute)
-                if fl_name is not None:
-                    return PictureFile(fl_name)
+                if PictureFile.is_picture_attribute(self._attribute):
+                    return PictureFile(self._attribute)
 
         return self._attribute
 

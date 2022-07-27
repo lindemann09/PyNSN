@@ -25,6 +25,7 @@ class ArrayParameter(object):
             self.min_dist_area_boarder = min_dist_area_boarder
 
     def to_dict(self) -> dict:
+        """Dict representation of the parameter"""
         return {"type": type(self).__name__,
                 "target_area_radius": self.target_area_radius,
                 "min_dist_between": self.min_dist_between,

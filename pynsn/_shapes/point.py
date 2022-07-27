@@ -21,7 +21,7 @@ class Point(ABCShape):
 
         super().__init__(xy, attribute)
         if isinstance(attribute, PictureFile) or \
-                PictureFile.check_attribute(attribute) is not None:
+                PictureFile.is_picture_attribute(attribute):
             raise NotImplementedError("Point _arrays can not handle pictures.")
 
     def __repr__(self):

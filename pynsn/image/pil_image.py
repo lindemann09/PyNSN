@@ -17,7 +17,7 @@ def create(object_array, colours=None, antialiasing=True):
 
     returns pil image
 
-    antialiasing: Ture or integer
+    antialiasing: True or integer
 
     default_dot_colour: if colour is undefined in _lib
     """
@@ -36,8 +36,13 @@ class _PILDraw(_array_draw.ArrayDraw):
 
     @staticmethod
     def scale_image(image, scaling_factor):
+        try:
+            resample = _Image.Resampling.LANCZOS # type: ignore (old versions)
+        except AttributeError:
+            resample = _Image.LANCZOS
+
         im_size = int(image.size[0] / scaling_factor)
-        return image.resize((im_size, im_size), _Image.Resampling.LANCZOS)
+        return image.resize((im_size, im_size), resample=resample)
 
     @staticmethod
     def draw_shape(img, shape, opacity, scaling_factor):

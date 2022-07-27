@@ -1,30 +1,50 @@
+"""
+
+"""
+from __future__ import annotations
+
 from os import path
 
 
 class PictureFile(object):
-    PICTURE_PREFIX = "p:"
+    ATTR_PREFIX = "p:"
 
-    def __init__(self, filename):
-        self._attribute = "{}{}".format(PictureFile.PICTURE_PREFIX, filename)
+    def __init__(self, filename: str) -> None:
+        """Picture File
+
+        Args:
+            filename: filename or attribute string of a filename("p:<filename>")
+        """
+        if PictureFile.is_picture_attribute(filename):
+            self._filename = filename[len(PictureFile.ATTR_PREFIX):]
+        else:
+            self._filename = filename
 
     @property
-    def filename(self):
-        return PictureFile.check_attribute(self._attribute)
+    def filename(self) -> str:
+        """Filename (str)
+        """
+        return self._filename
 
     @property
     def attribute(self):
-        return self._attribute
+        """Attribute string of the filename
 
-    @classmethod
-    def check_attribute(cls, txt):
-        """returns filename if `txt` (str) represent a picture attribute
-        else returns None
+        which is 'p:<filename>', see ``PictureFile.ATTR_PREFIX``
         """
-        if isinstance(txt, str) and \
-                txt.startswith(PictureFile.PICTURE_PREFIX):
-            return txt[len(PictureFile.PICTURE_PREFIX):]
-        else:
-            return None
+        return "f{PictureFile.PICTURE_PREFIX}f{self._filename}"
+
+    @staticmethod
+    def is_picture_attribute(txt: str) -> bool:
+        """Check if text string is a picture attribute
+
+        Args:
+            txt: string to be checked
+        """
+        return isinstance(txt, str) and \
+                txt.startswith(PictureFile.ATTR_PREFIX)
 
     def check_file_exists(self):
+        """Checks if the file exists
+        """
         return path.isfile(self.filename)

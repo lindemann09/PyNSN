@@ -111,7 +111,7 @@ class RectangleArray(ABCObjectArray):
         return d
 
     @staticmethod
-    def read_from_dict(the_dict: dict) -> RectangleArray:
+    def from_dict(the_dict: dict) -> RectangleArray:
         """read rectangle array from dict"""
 
         rtn = RectangleArray(target_area_radius=the_dict["target_area_radius"],
@@ -127,9 +127,9 @@ class RectangleArray(ABCObjectArray):
 
     @staticmethod
     def load(json_file_name: str) -> RectangleArray:
-        # override and extend read_from_dict not this function
+        # override and extend from_dict not this function
         with open(json_file_name, 'r') as fl:
-            return RectangleArray.read_from_dict(json.load(fl))
+            return RectangleArray.from_dict(json.load(fl))
 
     def clear(self) -> None:
         super().clear()

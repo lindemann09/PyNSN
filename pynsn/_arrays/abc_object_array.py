@@ -1,4 +1,8 @@
+"""
+
+"""
 from __future__ import annotations
+
 from typing import Iterator
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
@@ -22,7 +26,6 @@ from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
 
-
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @property
@@ -43,7 +46,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def read_from_dict(the_dict):
+    def from_dict(the_dict):
         """ """
 
     @staticmethod

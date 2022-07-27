@@ -99,7 +99,7 @@ class DotArray(ABCObjectArray):
         return d
 
     @staticmethod
-    def read_from_dict(the_dict: Dict[str, Any]) -> DotArray:
+    def from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
         rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
                        min_dist_between=the_dict["min_dist_between"],
@@ -116,9 +116,9 @@ class DotArray(ABCObjectArray):
 
     @staticmethod
     def load(json_file_name: str) -> DotArray:
-        # override and extend read_from_dict not this function
+        # override and extend from_dict not this function
         with open(json_file_name, 'r') as fl:
-            return DotArray.read_from_dict(json.load(fl))
+            return DotArray.from_dict(json.load(fl))
 
 
     def clear(self) -> None:

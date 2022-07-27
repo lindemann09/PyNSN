@@ -1,3 +1,6 @@
+"""
+
+"""
 from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
@@ -28,7 +31,7 @@ class PointArray(ArrayParameter):
                  min_dist_between: OptInt = None,
                  min_dist_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
-                 attributes: OptArrayLike = None):
+                 attributes: OptArrayLike = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
         super().__init__(target_area_radius=target_area_radius,
@@ -230,7 +233,7 @@ class PointArray(ArrayParameter):
         return d
 
     @staticmethod
-    def read_from_dict(the_dict: dict) -> PointArray:
+    def from_dict(the_dict: dict) -> PointArray:
         """read dot array from dict"""
         rtn = PointArray(target_area_radius=the_dict["target_area_radius"],
                          min_dist_between=the_dict["min_dist_between"],
@@ -242,9 +245,9 @@ class PointArray(ArrayParameter):
 
     @staticmethod
     def load(json_file_name: str) -> PointArray:
-        # override and extend read_from_dict not this function
+        # override and extend from_dict not this function
         with open(json_file_name, 'r') as fl:
-            return PointArray.read_from_dict(json.load(fl))
+            return PointArray.from_dict(json.load(fl))
 
 
     def json(self, indent: Optional[int] = None,

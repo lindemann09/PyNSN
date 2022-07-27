@@ -22,7 +22,7 @@ class Dot(ABCShape):
         attribute : attribute (string, optional)
         """
         if isinstance(attribute, PictureFile) or \
-                PictureFile.check_attribute(attribute) is not None:
+                PictureFile.is_picture_attribute(attribute):
             raise NotImplementedError("Dot _arrays can not handle pictures.")
 
         super().__init__(xy, attribute)
