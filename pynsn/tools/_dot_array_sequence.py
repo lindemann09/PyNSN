@@ -65,14 +65,14 @@ class DASequence(object):
         Examples
         --------
         making a pandas dataframe with aa properties
-        >>> d = my_da_sequence.as_dict()
+        >>> d = my_da_sequence.to_dict()
         >>> array = []
         >>> for x in range(len(d["Hash"])):
         >>>    row = map(lambda k: d[k][x], d.keys())
         >>>    array.append(list(row))
         >>> return pandas.DataFrame(array, columns=list(d.keys()))
         """
-        dicts = [x._properties.as_dict() for x in self.dot_arrays]
+        dicts = [x._properties.to_dict() for x in self.dot_arrays]
         rtn = _misc.join_dict_list(dicts)
         rtn['sequence_id'] = [self.hash] * len(self.dot_arrays)  # all _arrays have the same _sequence ID
         return rtn

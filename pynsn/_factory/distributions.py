@@ -21,7 +21,7 @@ class PyNSNDistribution(object):
                             "has to be a tuple of two values (a, b) with a <= b.")
         self.min_max = min_max
 
-    def as_dict(self):
+    def to_dict(self):
         """Dict representation of the distribution"""
         return {"distribution": type(self).__name__,
                 "min_max": self.min_max}
@@ -130,8 +130,8 @@ class Levels(PyNSNDistribution):
 
         return _round_samples(dist, round_to_decimals)
 
-    def as_dict(self):
-        d = super().as_dict()
+    def to_dict(self):
+        d = super().to_dict()
         d.update({"population": self.levels,
                   "weights": self.weights,
                   "exact_weighting": self.exact_weighting})
@@ -156,8 +156,8 @@ class Triangle(PyNSNDistribution):
                                          mode=self.mode, size=n)
         return _round_samples(dist, round_to_decimals)
 
-    def as_dict(self):
-        d = super().as_dict()
+    def to_dict(self):
+        d = super().to_dict()
         d.update({"mode": self.mode})
         return d
 
@@ -174,8 +174,8 @@ class _PyNSNDistributionMuSigma(PyNSNDistribution):
                 mu, min_max)
             raise ValueError(txt)
 
-    def as_dict(self):
-        d = super().as_dict()
+    def to_dict(self):
+        d = super().to_dict()
         d.update({"mu": self.mu,
                   "sigma": self.sigma})
         return d
@@ -277,8 +277,8 @@ class Normal2D(PyNSNDistribution):
 
         return _round_samples(rtn, round_to_decimals)
 
-    def as_dict(self):
-        d = super().as_dict()
+    def to_dict(self):
+        d = super().to_dict()
         d.update({"mu": self.mu.tolist(),
                   "sigma": self.sigma.tolist(),
                   "correlation": self.correlation,

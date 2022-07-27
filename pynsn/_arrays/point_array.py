@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
@@ -12,7 +10,7 @@ from .._lib import geometry
 from .._lib import misc
 from .parameter import ArrayParameter
 from .._lib.lib_typing import OptInt, OptArrayLike, Union, \
-    Sequence, Iterator, IntOVector, Optional, NumSeq, NDArray, ArrayLike
+    Sequence, Iterator, IntOVector, Optional, NDArray, ArrayLike
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
@@ -178,7 +176,7 @@ class PointArray(ArrayParameter):
         self._attributes = np.array([])
         self._properties.reset()
 
-    def delete(self, index: ArrayLike) -> None:
+    def delete(self, index: IntOVector) -> None:
         """Delete object
 
         Args:
@@ -220,10 +218,10 @@ class PointArray(ArrayParameter):
                               xy=self._xy[indices, :],
                               attributes=self._attributes[indices])
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
+        """Convert array tp dictionary
         """
-        """
-        d = super().as_dict()
+        d = super().to_dict()
         d.update({"xy": self._xy.tolist()})
         if len(self._attributes) > 0 and misc.is_all_equal(self._attributes):
             d.update({"attributes": self._attributes[0]})
@@ -249,12 +247,12 @@ class PointArray(ArrayParameter):
             return PointArray.read_from_dict(json.load(fl))
 
 
-    def json(self, indent: int = None,
+    def json(self, indent: Optional[int] = None,
              include_hash: bool = False) -> str:
         """"""
-        # override and extend as_dict not this function
+        # override and extend to_dict not this function
 
-        d = self.as_dict()
+        d = self.to_dict()
         if include_hash:
             d.update({"hash": self.hash})
         if not indent:
@@ -262,7 +260,7 @@ class PointArray(ArrayParameter):
         return json.dumps(d, indent=indent)
 
     def save(self, json_file_name: str,
-             indent: int = None,
+             indent: Optional[int] = None,
              include_hash: bool = False) -> None:
         """"""
         with open(json_file_name, 'w') as fl:
@@ -294,7 +292,7 @@ class PointArray(ArrayParameter):
             for xy, att in data:
                 yield Point(xy=xy, attribute=att)
 
-    def get_objects(self, indices: Sequence[int] = None) \
+    def get_objects(self, indices: Optional[Sequence[int]] = None) \
             -> Sequence[Union[Dot, Rectangle, Point]]:
         return list(self.iter_objects(indices=indices))
 

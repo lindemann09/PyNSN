@@ -18,7 +18,7 @@ from .._shapes.dot import Dot
 
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
-#  introduction precision parameter that is used by as_dict and get_csv and
+#  introduction precision parameter that is used by to_dict and get_csv and
 #  hash
 
 
@@ -90,11 +90,11 @@ class DotArray(ABCObjectArray):
         self._diameter = misc.numpy_round2(self._diameter, decimals=decimals,
                                            int_type=int_type)
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
         """
 
         """
-        d = super().as_dict()
+        d = super().to_dict()
         d.update({"diameter": self._diameter.tolist()})
         return d
 
@@ -102,9 +102,11 @@ class DotArray(ABCObjectArray):
     def read_from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
         rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
-                         min_dist_between=the_dict["min_dist_between"],
-                         min_dist_area_boarder=the_dict["min_dist_area_boarder"])
-        rtn._append_xy_attribute(xy=the_dict["xy"],                                 attributes=the_dict["attributes"])
+                       min_dist_between=the_dict["min_dist_between"],
+                       min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+
+        rtn._append_xy_attribute(xy=the_dict["xy"],
+                                 attributes=the_dict["attributes"])
         rtn._diameter = np.asarray(the_dict["diameter"])
 
         if len(rtn.diameter) != len(rtn.xy):
@@ -152,14 +154,13 @@ class DotArray(ABCObjectArray):
         if deep_copy:
             return DotArray(target_area_radius=self.target_area_radius,
                             min_dist_between=self.min_dist_between,
-                            min_dist_area_boarder = self.min_dist_area_boarder,
+                            min_dist_area_boarder=self.min_dist_area_boarder,
                             xy=self._xy[indices, :].copy(),
                             diameter=self._diameter[indices].copy(),
                             attributes=self._attributes[indices].copy())
         else:
-            return DotArray(target_area_radius=self.target_area_radius,
-                            min_dist_between=self.min_dist_between,
-                            min_dist_area_boarder = self.min_dist_area_boarder,
+            return DotArray(target_area_radius=self.target_area_radius,    min_dist_between=self.min_dist_between,
+                            min_dist_area_boarder=self.min_dist_area_boarder,
                             xy=self._xy[indices, :],
                             diameter=self._diameter[indices],
                             attributes=self._attributes[indices])
@@ -205,8 +206,9 @@ class DotArray(ABCObjectArray):
             if indices is None:
                 data = zip(self._xy, self._diameter, self._attributes)
             else:
-                data = zip(self._xy[indices, :],  self._diameter[indices],
-                                    self._attributes[indices])
+                data = zip(self._xy[indices, :],
+                           self._diameter[indices],
+                           self._attributes[indices])
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
 
@@ -226,7 +228,8 @@ class DotArray(ABCObjectArray):
 
         for i, _ in enumerate(self._diameter):
             if (diameter is not None and self._diameter[i] != diameter) or \
-                    (attribute is not None and self._attributes[i] != attribute):
+                    (attribute is not None and
+                        self._attributes[i] != attribute):
                 continue
             rtn.append(i)
         return rtn

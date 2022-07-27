@@ -10,8 +10,8 @@ import numpy as np
 
 from .._lib import misc
 from .abc_object_array import ABCObjectArray
-from .._lib.lib_typing import NumSeq, OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, NumPair, OptInt, NDArray
+from .._lib.lib_typing import NumArray, OptArrayLike, IntOVector, Iterator, \
+    Any, Union, Sequence, Optional, OptInt, NDArray, ArrayLike
 from .._shapes.rectangle import Rectangle
 from .._lib.coordinate import Coordinate
 
@@ -49,7 +49,7 @@ class RectangleArray(ABCObjectArray):
             raise ValueError("Bad shaped data: " +
                              u"xy has not the same length as sizes array")
 
-    def _append_sizes(self, sizes: NumSeq) -> int:
+    def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""
         sizes = misc.numpy_array_2d(sizes)
         if len(self._sizes) == 0:
@@ -104,9 +104,9 @@ class RectangleArray(ABCObjectArray):
         self._sizes = misc.numpy_round2(self._sizes, decimals=decimals,
                                         int_type=int_type)
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
         # inherited doc
-        d = super().as_dict()
+        d = super().to_dict()
         d.update({"sizes": self._sizes.tolist()})
         return d
 
@@ -234,10 +234,6 @@ class RectangleArray(ABCObjectArray):
         if indices is None:
             data = zip(self._xy, self._sizes, self._attributes)
         else:
-            try:
-                indices = list(indices)  # check if iterable
-            except TypeError:
-                indices = [indices]
             data = zip(self._xy[indices, :], self._sizes[indices],
                        self._attributes[indices])
 
@@ -245,7 +241,7 @@ class RectangleArray(ABCObjectArray):
             rtn = Rectangle(xy=xy, size=s, attribute=att)
             yield rtn
 
-    def find_objects(self, size: Optional[NumPair] = None,
+    def find_objects(self, size: Optional[NumArray] = None,
                      attribute: Optional[Any] = None,
                      edge: Optional[Coordinate] = None) -> Sequence[int]:
         """returns indices of found objects

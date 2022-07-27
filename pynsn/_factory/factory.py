@@ -30,7 +30,7 @@ class _Constant(object):
     def sample(self, n, round_to_decimals=None):
         return _round_samples([self.value] * n, round_to_decimals)
 
-    def as_dict(self):
+    def to_dict(self):
         return {"distribution": "Constant",
                 "value": self.value}
 
@@ -162,26 +162,26 @@ class NSNFactory(ArrayParameter):
             return [Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
                     for w, h, attr in zip(width, height, attributes)]
 
-    def as_dict(self):
-        rtn = ArrayParameter.as_dict(self)
+    def to_dict(self):
+        rtn = ArrayParameter.to_dict(self)
         try:
-            rtn.update({"diameter": self._distr_diameter.as_dict()})
+            rtn.update({"diameter": self._distr_diameter.to_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"width": self._distr_width.as_dict()})
+            rtn.update({"width": self._distr_width.to_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"height": self._distr_height.as_dict()})
+            rtn.update({"height": self._distr_height.to_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"proportion": self._distr_proportion.as_dict()})
+            rtn.update({"proportion": self._distr_proportion.to_dict()})
         except AttributeError:
             pass
         try:
-            rtn.update({"attributes": self._distr_attributes.as_dict()})
+            rtn.update({"attributes": self._distr_attributes.to_dict()})
         except AttributeError:
             pass
         return rtn
@@ -265,4 +265,4 @@ class NSNFactory(ArrayParameter):
             yield current
 
     def __str__(self):
-        return dict_to_text(self.as_dict(), col_a=12, col_b=7)
+        return dict_to_text(self.to_dict(), col_a=12, col_b=7)

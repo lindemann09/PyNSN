@@ -5,7 +5,7 @@ from math import log2
 import numpy as np
 
 from .. import _arrays
-from .._lib.lib_typing import Any, Optional, NumPair, OptFloat, NDArray
+from .._lib.lib_typing import Any, NumArray, Optional, OptFloat, NDArray
 from .._lib import rng
 from .._lib import constants
 from .._lib.constants import VisualPropertyFlags
@@ -14,9 +14,9 @@ from .convex_hull import ConvexHull, ConvexHullPositions
 from .tools import scale_field_area
 
 
-class ArrayProperties(object):    
+class ArrayProperties(object):
     """Visual properties fo an associated arrays
-    
+
     Visual features of each object array can be access and
     modified via an instance of this class
     """
@@ -60,38 +60,38 @@ class ArrayProperties(object):
             return float(np.mean(self.oa.diameter))
 
     @property
-    def average_rectangle_size(self) -> Optional[NDArray]:
+    def average_rectangle_size(self) -> Optional[NumArray]:
         if not isinstance(self.oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:
-            return np.array([np.na, np.na])
+            return np.array([np.nan, np.nan])
         else:
             return np.mean(self.oa.sizes, axis=0)
 
     @property
-    def total_surface_area(self) -> Optional[float]:
+    def total_surface_area(self) -> float:
         return float(np.sum(self.oa.surface_areas))
 
     @property
-    def average_surface_area(self) -> Optional[float]:
+    def average_surface_area(self) -> float:
         if self.numerosity == 0:
-            return None
+            return 0
         return float(np.mean(self.oa.surface_areas))
 
     @property
-    def total_perimeter(self) -> Optional[float]:
+    def total_perimeter(self) -> float:
         if self.numerosity == 0:
-            return None
+            return 0
         return float(np.sum(self.oa.perimeter))
 
     @property
-    def average_perimeter(self) -> Optional[float]:
+    def average_perimeter(self) -> float:
         if self.numerosity == 0:
-            return None
+            return 0
         return float(np.mean(self.oa.perimeter))
 
     @property
-    def field_area_positions(self) -> Optional[float]:
+    def field_area_positions(self) -> float:
         return self.convex_hull_positions.field_area
 
     @property
@@ -99,7 +99,7 @@ class ArrayProperties(object):
         return len(self.oa._xy)
 
     @property
-    def coverage(self) -> Optional[float]:
+    def coverage(self) -> float:
         """ percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
@@ -107,32 +107,32 @@ class ArrayProperties(object):
         try:
             return self.total_surface_area / self.field_area
         except ZeroDivisionError:
-            return None
+            return np.nan
 
     @property
-    def log_size(self) -> Optional[float]:
+    def log_size(self) -> float:
         try:
             return log2(self.total_surface_area) + \
                    log2(self.average_surface_area)
         except ValueError:
-            return None
+            return np.nan
 
     @property
-    def log_spacing(self) -> Optional[float]:
+    def log_spacing(self) -> float:
         try:
             return log2(self.field_area) + log2(self.sparsity)
         except ValueError:
-            return None
+            return np.nan
 
     @property
-    def sparsity(self) -> Optional[float]:
+    def sparsity(self) -> float:
         try:
             return self.field_area / self.numerosity
         except ZeroDivisionError:
-            return None
+            return np.nan
 
     @property
-    def field_area(self) -> Optional[float]:
+    def field_area(self) -> float:
         return self.convex_hull.field_area
 
     def get(self, property_flag: VisualPropertyFlags) -> Any:
@@ -181,10 +181,10 @@ class ArrayProperties(object):
             return self.numerosity
 
         else:
-            raise ValueError("{} is a unknown visual feature".format(property_flag))
+            raise ValueError("f{property_flag} is a unknown visual feature")
 
-    def as_dict(self) -> dict:
-        """ordered dictionary with the most important visual properties"""
+    def to_dict(self) -> dict:
+        """Dictionary with the visual properties"""
         rtn = [("Hash", self.oa.hash),
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
@@ -214,10 +214,10 @@ class ArrayProperties(object):
                 spacing_char: str = ".") -> str:
         if extended_format:
             rtn = None
-            for k, v in self.as_dict().items():
+            for k, v in self.to_dict().items():
                 if rtn is None:
                     if with_hash:
-                        rtn = "- {}: {}\n".format(k, v)
+                        rtn = "- f{k}: f{v}\n"
                     else:
                         rtn = ""
                 else:
@@ -228,7 +228,7 @@ class ArrayProperties(object):
                     try:
                         value = "{0:.2f}\n".format(v)  # try rounding
                     except:
-                        value = "{}\n".format(v)
+                        value = "f{v}\n"
 
                     n_space = 14 - len(value)
                     if n_space < 2:
@@ -305,7 +305,7 @@ class ArrayProperties(object):
 
         Raises:
             TypeError: if associated array is not a DotArray
-        """ 
+        """
         # changes diameter
         if not isinstance(self.oa, _arrays.DotArray):
             raise TypeError("Adapting diameter is not possible for {}.".format(
@@ -314,7 +314,7 @@ class ArrayProperties(object):
         self.oa._diameter = self.oa.diameter * scale
         self.reset()
 
-    def fit_average_rectangle_size(self, value: NumPair) -> None:
+    def fit_average_rectangle_size(self, value: NumArray) -> None:
         """Set average rectangle size.
 
         Args:
@@ -322,7 +322,7 @@ class ArrayProperties(object):
 
         Raises:
             TypeError: if associated array is not a RectangleArray or values is not a tuple of two numerical values
-        """        
+        """
         # changes diameter
         if not isinstance(self.oa, _arrays.RectangleArray):
             raise TypeError("Adapting rectangle size is not possible for {}.".format(
@@ -339,13 +339,13 @@ class ArrayProperties(object):
         self.reset()
 
     def fit_total_surface_area(self, value: float) -> None:
-        """Set surface area. 
-        
+        """Set surface area.
+
         Resize all object to fit a specific surface area
 
         Args:
             value: surface area
-        """        
+        """
         a_scale = value / self.total_surface_area
         if isinstance(self.oa, _arrays.DotArray):
             self.oa._diameter = np.sqrt(
@@ -379,7 +379,7 @@ class ArrayProperties(object):
                  precision: OptFloat = None,
                  FA2TA_ratio: OptFloat = None) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -400,7 +400,7 @@ class ArrayProperties(object):
             ratio of adaptation via area or via convex_hull (between 0 and 1)
 
         """
-        
+
         print("WARNING: _adapt_coverage is a experimental ")
         # dens = convex_hull_area / total_surface_area
         if FA2TA_ratio is None:
@@ -419,7 +419,7 @@ class ArrayProperties(object):
 
     def fit_average_perimeter(self, value: float) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -432,7 +432,7 @@ class ArrayProperties(object):
 
     def fit_total_perimeter(self, value: float) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -450,7 +450,7 @@ class ArrayProperties(object):
 
     def fit_average_surface_area(self, value: float) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -464,7 +464,7 @@ class ArrayProperties(object):
     def fit_log_spacing(self, value: float,
                         precision: OptFloat = None) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -479,7 +479,7 @@ class ArrayProperties(object):
 
     def fit_log_size(self, value: float) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -494,7 +494,7 @@ class ArrayProperties(object):
     def fit_sparcity(self, value: float,
                      precision=None) -> None:
         """
-        
+
         Parameters
         ----------
         value
@@ -503,7 +503,7 @@ class ArrayProperties(object):
         Returns
         -------
 
-        """ 
+        """
         return self.fit_field_area(value=value * self.numerosity,
                                    precision=precision)
 

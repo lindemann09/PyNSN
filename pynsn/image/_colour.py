@@ -351,7 +351,7 @@ class ImageColours(object):
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
         return OrderedDict(
             {"total_area": self.target_area.colour,
              "field_area_positions": self.field_area_positions.colour,
@@ -365,4 +365,4 @@ class ImageColours(object):
              })
 
     def __str__(self) -> str:
-        return misc.dict_to_text(self.as_dict(), col_a=24, col_b=10)
+        return misc.dict_to_text(self.to_dict(), col_a=24, col_b=10)

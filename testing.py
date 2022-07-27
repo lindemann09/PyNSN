@@ -1,9 +1,18 @@
+"""_summary_"""
+
+import numpy as np
+from numpy.typing import NDArray, ArrayLike
+
 import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn.image import svg_file, pil_image, mpl_figure
-import numpy as np
+
 from random import randint
+import numpy as np
+
+
+
 seed = randint(0, 1000)
 seed = 991
 nsn.init_random_generator(seed)
@@ -24,8 +33,9 @@ r = pynsn.Rectangle(xy=(0,0), size=(80, 80),
 print(r)
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
-factory.set_appearance_dot(diameter=(40, 10, 30), attributes=distr.Levels(["blue", "green"],
-                                        exact_weighting=True) )
+factory.set_appearance_dot(diameter=(40, 10, 30),
+                           attributes=distr.Levels(["blue", "green"],
+                                                   exact_weighting=True))
 
 #factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
 #                                        attributes=distr.Levels(["blue", "green"],

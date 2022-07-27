@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable, Iterator
+from typing import Iterator
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -29,37 +29,36 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     @abstractmethod
     def surface_areas(self):
         """Vector with the surface areas of all objects"""
-        pass
+
 
     @property
     @abstractmethod
     def perimeter(self) -> NDArray:
         """Vector with the perimeter of all objects"""
-        pass
 
     @abstractmethod
-    def as_dict(self):
+    def to_dict(self):
         """Dict representation of the array"""
-        return super().as_dict()
+        return super().to_dict()
 
     @staticmethod
     @abstractmethod
     def read_from_dict(the_dict):
-        pass
+        """ """
 
     @staticmethod
     @abstractmethod
     def load(json_file_name):
-        pass
+        """ """
 
     @abstractmethod
-    def copy(self, indices: Union[int, Sequence[int], None] =None,
+    def copy(self, indices: Union[int, Sequence[int], None] = None,
              deep_copy=True) -> ABCObjectArray:
-        pass
+        """ """
 
     @abstractmethod
     def iter_objects(self, indices=None) -> Iterator:
-        pass
+        """ """
 
     @abstractmethod
     def add(self, obj):
@@ -67,15 +66,15 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @abstractmethod
     def find_objects(self, size=None, attribute=None):
-        pass
+        """ """
 
     @abstractmethod
     def get_distances(self, ref_object) -> NDArray:
-        pass
+        """get_distances """
 
     @abstractmethod
     def csv(self, variable_names: bool, hash_column: bool,
-            attribute_column: bool) -> str:
+            attribute_column: bool):
         """Comma-separated table representation the object array
 
         Args:
@@ -87,17 +86,16 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             CSV representation
 
         """
-        pass
 
     @abstractmethod
-    def mod_round_values(self, decimals: int = 0, int_type: type = np.int16) -> None:
+    def mod_round_values(self, decimals: int = 0,
+                         int_type: type = np.int16) -> None:
         """Round all values
 
         Args:
             decimals: number of decimal places
             int_type: numpy int type (default=numpy.int16)
         """
-        pass
 
     def get_distances_matrix(self, between_positions: bool = False) -> NDArray:
         """between position ignores the dot size"""
@@ -132,16 +130,17 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self._properties.reset()
 
     def get_free_positionNN(self,
-                          ref_object: Union[Dot, Rectangle, Point],
-                          in_neighborhood: bool = False,
-                          allow_overlapping: bool = False,
-                          inside_convex_hull: bool = False,
-                          occupied_space=None) -> Union[Dot, Rectangle, Point]:
+                            ref_object: Union[Dot, Rectangle, Point],
+                            in_neighborhood: bool = False,
+                            allow_overlapping: bool = False,
+                            inside_convex_hull: bool = False,
+                            occupied_space=None) -> Union[Dot, Rectangle, Point]:
         """returns the copy of object of at a random free position
 
         raise exception if not found
         occupied space: see generator generate
-        """ #TODO check for point array (point array check is anyway required)
+        """
+        #TODO check for point array (point array check is anyway required)
 
         if isinstance(ref_object, Dot):
             object_size = ref_object.diameter / 2.0
@@ -164,7 +163,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         cnt = 0
         while True:
             if cnt > constants.MAX_ITERATIONS:
-                raise NoSolutionError(u"Can't find a free position")
+                raise NoSolutionError("Can't find a free position")
             cnt += 1
 
             if in_neighborhood:
@@ -420,7 +419,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             if c is not None:
                 da = self.copy(indices=0, deep_copy=False)  # fast. shallow copy with just one object
                 da.clear()
-                da.add(self.find_objects(attribute=c))
+                da.add(self.find_objects(attribute=c))  # type: ignore
                 rtn.append(da)
         return rtn
 

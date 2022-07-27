@@ -253,10 +253,10 @@ class GUIMainWindow(QMainWindow):
 
     def action_print_para(self):
         d = {'number': self.get_number()}
-        d['image_parameter'] = self.get_image_colours().as_dict()
+        d['image_parameter'] = self.get_image_colours().to_dict()
         ref_array, size_distr = self.get_factory()
-        d['reference_array'] = ref_array.as_dict()
-        d['size_distribution'] = size_distr.as_dict()
+        d['reference_array'] = ref_array.to_dict()
+        d['size_distribution'] = size_distr.to_dict()
         self.main_widget.text_out("# parameter\n" + json.dumps(d, indent=2))
 
     def save_array(self):
@@ -284,7 +284,7 @@ class GUIMainWindow(QMainWindow):
 
     def action_adapt(self):
         """"""
-        prop = self.dot_array._properties.as_dict()
+        prop = self.dot_array._properties.to_dict()
         prop, value = dialogs.AdaptPropertyDialog.get_response(self, prop)
         if prop is not None:
             self.dot_array.fit(prop, value=value)

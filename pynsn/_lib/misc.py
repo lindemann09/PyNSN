@@ -5,9 +5,10 @@ Draw a random number from a beta dirstribution
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from collections import OrderedDict
+from tkinter import N
 import numpy as np
 import sys
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
 
 
 def make_csv(xy, size_data_dict, attributes=None,
@@ -86,7 +87,7 @@ def numpy_vector(x):
         return x.flatten()
 
 
-def numpy_array_2d(two_d_data):
+def numpy_array_2d(two_d_data: ArrayLike):
     """ensures well shaped to 2d numpy array"""
     rtn = np.asarray(two_d_data)
     if rtn.ndim == 1 and len(rtn) == 2:
@@ -96,7 +97,7 @@ def numpy_array_2d(two_d_data):
     return rtn
 
 
-def numpy_round2(array: np.ndarray, decimals: int,
+def numpy_round2(array: NDArray[np.float_], decimals: int,
                  int_type: type =np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
     array = np.round(array, decimals=decimals)
@@ -113,11 +114,11 @@ def is_all_equal(vector):
 
 def dict_to_text(the_dict, col_a=22, col_b=14,
                  spacing_char=" "):
-    rtn = None
+
+    rtn = ""
     for k, v in the_dict.items():
-        if rtn is None:
+        if len(rtn) == 0:
             key_str = "- " + k
-            rtn = ""
         else:
             key_str = "  " + k
 
@@ -127,12 +128,12 @@ def dict_to_text(the_dict, col_a=22, col_b=14,
             len_col_b = 2
         rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
                (" " * len_col_b) + value
+
     return rtn.rstrip()
 
 
 def is_interactive_mode():
-    """Returns if Python is running in interactive mode (such as IDLE or
-    IPthon)
+    """Returns if Python is running in interactive mode (such as IDLE or IPthon)
 
     Returns
     -------

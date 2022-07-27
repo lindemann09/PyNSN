@@ -1,5 +1,4 @@
-"""
-PyNSN package
+"""PyNSN package
 
 Creating Non-Symbolic Number Displays
 """

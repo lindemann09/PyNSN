@@ -54,14 +54,12 @@ class DotArraySQLDB(object):
         cur = conn.cursor()
 
         for da in dot_arrays:
-            attributes = da.as_dict()['attributes']
+            attributes = da.to_dict()['attributes']
 
             # assuming single colour dot _arrays
             # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
-            try:
-                colour = Colour(attributes[0])
-            except:
-                # if attribute is no colour, use default coolour
+            colour = Colour(attributes[0])
+            if colour.colour is None: # if attribute is no colour, use default coolour
                 colour = Colour(ImageColours.COL_DEFAULT_OBJECT)
 
             sql = "INSERT INTO ARRAYS (" + \

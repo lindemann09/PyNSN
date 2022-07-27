@@ -24,7 +24,7 @@ class ArrayParameter(object):
         else:
             self.min_dist_area_boarder = min_dist_area_boarder
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
         return {"type": type(self).__name__,
                 "target_area_radius": self.target_area_radius,
                 "min_dist_between": self.min_dist_between,

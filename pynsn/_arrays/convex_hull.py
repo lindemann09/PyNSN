@@ -26,7 +26,7 @@ class ConvexHullBaseClass(object):
     @property
     def field_area(self):
         if self._convex_hull is None:
-            return None
+            return 0
         else:
             return self._convex_hull.volume
 
