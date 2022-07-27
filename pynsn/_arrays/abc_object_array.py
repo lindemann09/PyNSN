@@ -26,13 +26,13 @@ from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
 
+
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     @property
     @abstractmethod
     def surface_areas(self):
         """Vector with the surface areas of all objects"""
-
 
     @property
     @abstractmethod
@@ -47,11 +47,6 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
     def from_dict(the_dict):
-        """ """
-
-    @staticmethod
-    @abstractmethod
-    def load(json_file_name):
         """ """
 
     @abstractmethod
@@ -132,18 +127,18 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self._xy = self._xy - cxy
         self._properties.reset()
 
-    def get_free_positionNN(self,
-                            ref_object: Union[Dot, Rectangle, Point],
-                            in_neighborhood: bool = False,
-                            allow_overlapping: bool = False,
-                            inside_convex_hull: bool = False,
-                            occupied_space=None) -> Union[Dot, Rectangle, Point]:
+    def get_free_position(self,
+                          ref_object: Union[Dot, Rectangle, Point],
+                          in_neighborhood: bool = False,
+                          allow_overlapping: bool = False,
+                          inside_convex_hull: bool = False,
+                          occupied_space=None) -> Union[Dot, Rectangle, Point]:
         """returns the copy of object of at a random free position
 
         raise exception if not found
         occupied space: see generator generate
         """
-        #TODO check for point array (point array check is anyway required)
+        # TODO check for point array (point array check is anyway required)
 
         if isinstance(ref_object, Dot):
             object_size = ref_object.diameter / 2.0
@@ -179,7 +174,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                 is_outside = area_rad <= rtn_object.polar_radius
             else:
                 # Rect: check if one edge is outside
-                assert isinstance(rtn_object, Rectangle) # should be alway
+                assert isinstance(rtn_object, Rectangle)  # should be alway
                 is_outside = False
                 for edge in rtn_object.iter_edges():
                     if edge.polar_radius >= area_rad:
@@ -192,7 +187,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                 tmp_array = self.copy(deep_copy=True)
                 tmp_array.add([rtn_object])  # type: ignore
                 is_outside = tmp_array.properties.convex_hull != \
-                             self.properties.convex_hull
+                    self.properties.convex_hull
             if is_outside:
                 if in_neighborhood:
                     random_walk.step_back()
@@ -216,22 +211,23 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         all_objects = list(self.iter_objects())
         self.clear()
         for obj in all_objects:
-            new = self.get_free_positionNN(obj, in_neighborhood=False,
-                            allow_overlapping=allow_overlapping)
+            new = self.get_free_position(obj, in_neighborhood=False,
+                                         allow_overlapping=allow_overlapping)
             self.add([new])  # type: ignore
 
     def get_outlier(self) -> Tuple[NDArray, NDArray]:
         """returns indices of object that stand out and array with the size
         of outstanding
         """
-
+        # FIXME broken method: do not use convex hull, because that only works
+        # for n>2
         xy = self.properties.convex_hull.xy
         sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
-                         (self.target_area_radius - self.min_dist_area_boarder)
+            (self.target_area_radius - self.min_dist_area_boarder)
         idx = sizes_outlying > 0
 
-        return (self.properties.convex_hull.object_indices[idx],
-                    sizes_outlying[idx])
+        return (self.properties.convex_hull._point_indices[idx],
+                sizes_outlying[idx])
 
     def get_number_deviant(self, change_numerosity: int,
                            preserve_field_area: bool = False) -> PointArray:
@@ -269,7 +265,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         if not keep_convex_hull:
             # touch convex hull objects
             ids = list(range(len(self._xy)))
-            for x in self.properties.convex_hull.object_indices_unique:
+            for x in self.properties.convex_hull.object_indices:
                 self.mod_move_object(x, 0, (0, 0), push_other=True)
                 ids.remove(x)
             # touch remaining ids
@@ -279,7 +275,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
         else:
             overlaps = self.get_overlaps()[0]
-            ch_idx = self.properties.convex_hull.object_indices_unique
+            ch_idx = self.properties.convex_hull.object_indices
 
             while len(overlaps):
                 # do not replace convex hull objects and try to
@@ -305,7 +301,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                     for in_neighborhood in (True, False):
                         if found is None:
                             try:
-                                found = self.get_free_positionNN(
+                                found = self.get_free_position(
                                     ref_object=obj,
                                     in_neighborhood=in_neighborhood,
                                     inside_convex_hull=inside_convex_hull)
@@ -355,10 +351,10 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             push_other: replace other objects, if required (optional, default=False)
         """
         try:
-            ang = float(direction) # type: ignore
+            ang = float(direction)  # type: ignore
         except (TypeError, ValueError):
             try:
-                ang = Coordinate(x=direction[0], y=direction[1]) # type: ignore
+                ang = Coordinate(x=direction[0], y=direction[1])  # type: ignore
             except IndexError:
                 ang = None
         if ang is None:
@@ -415,7 +411,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """returns a list of _arrays
         each array contains all dots of with particular colour"""
         att = self._attributes
-        att[np.where(att==None)] = "None"
+        att[np.where(att == None)] = "None"
 
         rtn = []
         for c in np.unique(att):

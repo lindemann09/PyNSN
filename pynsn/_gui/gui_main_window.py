@@ -323,7 +323,7 @@ class GUIMainWindow(QMainWindow):
         d = {"adapt range": adapt_range,
              "extra_space": extra_space}
         d["adapt_methods"] = adapt_methods
-        self.main_widget.text_out("# Sequence\n" + \
+        self.main_widget.text_out("# Sequence\n" +
                                   json.dumps(d))
         ref_array, sdr = self.get_factory()
         ref_array.min_dist_area_boarder = extra_space / 2

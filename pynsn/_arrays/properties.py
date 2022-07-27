@@ -21,13 +21,12 @@ class ArrayProperties(object):
     modified via an instance of this class
     """
 
-
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
         assert isinstance(object_array, (_arrays.DotArray,
                                          _arrays.RectangleArray,
                                          _arrays.PointArray))
-        self.oa = object_array
+        self._oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None
 
@@ -40,55 +39,55 @@ class ArrayProperties(object):
     def convex_hull(self) -> ConvexHull:
         """TODO """
         if self._convex_hull is None:
-            self._convex_hull = ConvexHull(self.oa)
+            self._convex_hull = ConvexHull(self._oa)
         return self._convex_hull
 
     @property
     def convex_hull_positions(self) -> ConvexHullPositions:
         """TODO """
         if self._convex_hull_positions is None:
-            self._convex_hull_positions = ConvexHullPositions(self.oa)
+            self._convex_hull_positions = ConvexHullPositions(self._oa)
         return self._convex_hull_positions
 
     @property
     def average_dot_diameter(self) -> Optional[float]:
-        if not isinstance(self.oa, _arrays.DotArray):
+        if not isinstance(self._oa, _arrays.DotArray):
             return None
         elif self.numerosity == 0:
-            return None
+            return 0
         else:
-            return float(np.mean(self.oa.diameter))
+            return float(np.mean(self._oa.diameter))
 
     @property
     def average_rectangle_size(self) -> Optional[NumArray]:
-        if not isinstance(self.oa, _arrays.RectangleArray):
+        if not isinstance(self._oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:
-            return np.array([np.nan, np.nan])
+            return np.array([0, 0])
         else:
-            return np.mean(self.oa.sizes, axis=0)
+            return np.mean(self._oa.sizes, axis=0)
 
     @property
     def total_surface_area(self) -> float:
-        return float(np.sum(self.oa.surface_areas))
+        return float(np.sum(self._oa.surface_areas))
 
     @property
     def average_surface_area(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.mean(self.oa.surface_areas))
+        return float(np.mean(self._oa.surface_areas))
 
     @property
     def total_perimeter(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.sum(self.oa.perimeter))
+        return float(np.sum(self._oa.perimeter))
 
     @property
     def average_perimeter(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.mean(self.oa.perimeter))
+        return float(np.mean(self._oa.perimeter))
 
     @property
     def field_area_positions(self) -> float:
@@ -96,7 +95,7 @@ class ArrayProperties(object):
 
     @property
     def numerosity(self) -> int:
-        return len(self.oa._xy)
+        return len(self._oa._xy)
 
     @property
     def coverage(self) -> float:
@@ -113,7 +112,7 @@ class ArrayProperties(object):
     def log_size(self) -> float:
         try:
             return log2(self.total_surface_area) + \
-                   log2(self.average_surface_area)
+                log2(self.average_surface_area)
         except ValueError:
             return np.nan
 
@@ -185,7 +184,7 @@ class ArrayProperties(object):
 
     def to_dict(self) -> dict:
         """Dictionary with the visual properties"""
-        rtn = [("Hash", self.oa.hash),
+        rtn = [("Hash", self._oa.hash),
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
                (VisualPropertyFlags.AV_PERIMETER.label(), self.average_perimeter),
@@ -198,9 +197,9 @@ class ArrayProperties(object):
                (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self.oa, _arrays.DotArray):
+        if isinstance(self._oa, _arrays.DotArray):
             rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
-        elif isinstance(self.oa, _arrays.RectangleArray):
+        elif isinstance(self._oa, _arrays.RectangleArray):
             rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(), self.average_rectangle_size)
         else:
             rtn.pop(2)
@@ -217,7 +216,7 @@ class ArrayProperties(object):
             for k, v in self.to_dict().items():
                 if rtn is None:
                     if with_hash:
-                        rtn = "- f{k}: f{v}\n"
+                        rtn = f"- {k}: {v}\n"
                     else:
                         rtn = ""
                 else:
@@ -226,9 +225,9 @@ class ArrayProperties(object):
                     else:
                         name = "  " + k
                     try:
-                        value = "{0:.2f}\n".format(v)  # try rounding
-                    except:
-                        value = "f{v}\n"
+                        value = f"{v:.2f}\n"  # try rounding
+                    except ValueError:
+                        value = f"{v}\n"
 
                     n_space = 14 - len(value)
                     if n_space < 2:
@@ -236,19 +235,19 @@ class ArrayProperties(object):
                     rtn += name + (spacing_char * (24 - len(name))) + (" " * n_space) + value
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self.oa.hash)
+                rtn = "ID: {} ".format(self._oa.hash)
             else:
                 rtn = ""
             rtn += "N: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: " \
                    "{:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
-                self.numerosity,
-                int(self.total_surface_area),
-                int(self.average_surface_area),
-                int(self.field_area),
-                self.sparsity,
-                self.log_size,
-                self.log_spacing,
-                self.coverage)
+                       self.numerosity,
+                       int(self.total_surface_area),
+                       int(self.average_surface_area),
+                       int(self.field_area),
+                       self.sparsity,
+                       self.log_size,
+                       self.log_spacing,
+                       self.coverage)
         return rtn.rstrip()
 
     def fit_numerosity(self, value: int,
@@ -259,7 +258,7 @@ class ArrayProperties(object):
 
         # make a copy for the deviant
         if value <= 0:
-            self.oa.clear()
+            self._oa.clear()
         else:
             # add or remove random dots
             change_numerosity = value - self.numerosity
@@ -269,7 +268,7 @@ class ArrayProperties(object):
                     if keep_convex_hull:
                         # find a random object that is not in convex hull
                         delete_id = None
-                        ch = self.convex_hull.object_indices_unique
+                        ch = self.convex_hull.object_indices
                         rnd_seq = list(range(0, self.numerosity))
                         rng.generator.shuffle(rnd_seq)
                         for x in rnd_seq:
@@ -281,21 +280,21 @@ class ArrayProperties(object):
                     else:
                         delete_id = rng.generator.integers(0, self.numerosity)
 
-                    self.oa.delete(delete_id)
+                    self._oa.delete(delete_id)
 
                 else:
                     # add dot: copy a random dot
                     clone_id = rng.generator.integers(0, self.numerosity)
-                    rnd_object = next(self.oa.iter_objects(clone_id))
+                    rnd_object = next(self._oa.iter_objects(clone_id))
                     try:
-                        rnd_object = self.oa.get_free_positionNN(
+                        rnd_object = self._oa.get_free_position(
                             ref_object=rnd_object, allow_overlapping=False,
                             inside_convex_hull=keep_convex_hull)
                     except NoSolutionError:
                         # no free position
                         raise NoSolutionError("Can't increase numerosity. No free position found.")
 
-                    self.oa.add([rnd_object])
+                    self._oa.add([rnd_object])
 
     def fit_average_diameter(self, value: float) -> None:
         """Set average diameter.
@@ -307,11 +306,11 @@ class ArrayProperties(object):
             TypeError: if associated array is not a DotArray
         """
         # changes diameter
-        if not isinstance(self.oa, _arrays.DotArray):
+        if not isinstance(self._oa, _arrays.DotArray):
             raise TypeError("Adapting diameter is not possible for {}.".format(
-                type(self.oa).__name__))
+                type(self._oa).__name__))
         scale = value / self.average_dot_diameter
-        self.oa._diameter = self.oa.diameter * scale
+        self._oa._diameter = self._oa.diameter * scale
         self.reset()
 
     def fit_average_rectangle_size(self, value: NumArray) -> None:
@@ -324,9 +323,9 @@ class ArrayProperties(object):
             TypeError: if associated array is not a RectangleArray or values is not a tuple of two numerical values
         """
         # changes diameter
-        if not isinstance(self.oa, _arrays.RectangleArray):
+        if not isinstance(self._oa, _arrays.RectangleArray):
             raise TypeError("Adapting rectangle size is not possible for {}.".format(
-                type(self.oa).__name__))
+                type(self._oa).__name__))
         try:
             width, height = value
         except TypeError:
@@ -335,7 +334,7 @@ class ArrayProperties(object):
 
         scale = np.array([width / self.average_rectangle_size[0],
                           height / self.average_rectangle_size[1]])
-        self.oa._sizes = self.oa._sizes * scale
+        self._oa._sizes = self._oa._sizes * scale
         self.reset()
 
     def fit_total_surface_area(self, value: float) -> None:
@@ -347,18 +346,17 @@ class ArrayProperties(object):
             value: surface area
         """
         a_scale = value / self.total_surface_area
-        if isinstance(self.oa, _arrays.DotArray):
-            self.oa._diameter = np.sqrt(
-                self.oa.surface_areas * a_scale) * 2 / np.sqrt(
+        if isinstance(self._oa, _arrays.DotArray):
+            self._oa._diameter = np.sqrt(
+                self._oa.surface_areas * a_scale) * 2 / np.sqrt(
                 np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
         else:  # rect
-            self.oa._sizes = self.oa._sizes * np.sqrt(a_scale)
+            self._oa._sizes = self._oa._sizes * np.sqrt(a_scale)
 
         self.reset()
 
     def fit_field_area(self, value: float,
                        precision: OptFloat = None) -> None:
-
         """changes the convex hull area to a desired size with certain precision
 
         uses scaling radial positions if field area has to be increased
@@ -373,11 +371,11 @@ class ArrayProperties(object):
         if self.field_area is None:
             return None  # not defined
         else:
-            scale_field_area(self.oa, value=value, precision=precision)
+            scale_field_area(self._oa, value=value, precision=precision)
 
     def fit_coverage(self, value: float,
-                 precision: OptFloat = None,
-                 FA2TA_ratio: OptFloat = None) -> None:
+                     precision: OptFloat = None,
+                     FA2TA_ratio: OptFloat = None) -> None:
         """
 
         Parameters
@@ -410,7 +408,7 @@ class ArrayProperties(object):
         if precision is None:
             precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
-        total_area_change100 = (value * self.field_area) -  self.total_surface_area
+        total_area_change100 = (value * self.field_area) - self.total_surface_area
         d_change_total_area = total_area_change100 * (1 - FA2TA_ratio)
         if abs(d_change_total_area) > 0:
             self.fit_total_surface_area(self.total_surface_area + d_change_total_area)
@@ -441,10 +439,10 @@ class ArrayProperties(object):
         -------
 
         """
-        if isinstance(self.oa, _arrays.DotArray):
+        if isinstance(self._oa, _arrays.DotArray):
             self.fit_average_diameter(value / (self.numerosity * np.pi))
 
-        elif isinstance(self.oa, _arrays.RectangleArray):
+        elif isinstance(self._oa, _arrays.RectangleArray):
             new_size = self.average_rectangle_size * value / self.total_perimeter
             self.fit_average_rectangle_size(new_size)
 
@@ -489,7 +487,7 @@ class ArrayProperties(object):
 
         """
         logtsa = 0.5 * value + 0.5 * np.log2(self.numerosity)
-        self.fit_total_surface_area( 2 ** logtsa)
+        self.fit_total_surface_area(2 ** logtsa)
 
     def fit_sparcity(self, value: float,
                      precision=None) -> None:
@@ -563,17 +561,17 @@ class ArrayProperties(object):
                 property_flag.label()))
 
     def scale_average_diameter(self, factor: float) -> None:
-        if not isinstance(self.oa, _arrays.DotArray):
+        if not isinstance(self._oa, _arrays.DotArray):
             raise TypeError("Scaling diameter is not possible for {}.".format(
-                type(self.oa).__name__))
+                type(self._oa).__name__))
         if factor == 1:
             return
         return self.fit_average_diameter(self.average_dot_diameter * factor)
 
     def scale_average_rectangle_size(self, factor: float) -> None:
-        if not isinstance(self.oa, _arrays.RectangleArray):
+        if not isinstance(self._oa, _arrays.RectangleArray):
             raise TypeError("Scaling rectangle size is not possible for {}.".format(
-                type(self.oa).__name__))
+                type(self._oa).__name__))
         if factor == 1:
             return
         return self.fit_average_rectangle_size(self.average_rectangle_size * factor)
@@ -634,6 +632,6 @@ class ArrayProperties(object):
         if factor == 1:
             return
         return self.fit(property_flag=feature,
-                                        value=self.get(feature) * factor)
+                        value=self.get(feature) * factor)
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays

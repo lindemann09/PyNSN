@@ -1,10 +1,14 @@
+"""
+helper functions for arrays
+"""
+
 import numpy as np
 
 from .._lib import geometry
 from .._lib import rng
 
 
-def _jitter_identical_positions(xy, jitter_size=0.1):
+def jitter_identical_positions(xy, jitter_size=0.1):
     """jitters points with identical position"""
 
     for idx, ref_object in enumerate(xy):
@@ -27,7 +31,7 @@ def radial_replacement_from_reference_dots(xy, ref_pos_id,
     # check if there is an identical position and jitter to avoid fully overlapping positions
     if np.sum(np.all(xy[neighbour_ids,] == xy[ref_pos_id, :],
                      axis=1)) > 0:
-        xy = _jitter_identical_positions(xy)
+        xy = jitter_identical_positions(xy)
 
     # relative polar positions to reference_dot
     tmp_polar = geometry.cartesian2polar(xy[neighbour_ids, :] - xy[ref_pos_id, :])

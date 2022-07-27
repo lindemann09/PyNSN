@@ -13,6 +13,8 @@ from .._lib.exception import NoSolutionError
 from .._lib.lib_typing import Union
 
 # FIXME typing required
+
+
 class _Constant(object):
 
     def __init__(self, value):
@@ -120,7 +122,7 @@ class NSNFactory(ArrayParameter):
 
     def is_appearance_set(self):
         return self._distr_diameter is not None or self._distr_width is not None or \
-               self._distr_height is not None
+            self._distr_height is not None
 
     def sample(self, n, round_to_decimals=None):
         """return list objects (Dot or Rect) with random size
@@ -187,7 +189,7 @@ class NSNFactory(ArrayParameter):
         return rtn
 
     def create_random_array(self, n_objects: int,
-                            allow_overlapping: bool =False,
+                            allow_overlapping: bool = False,
                             occupied_space: Union[None, DotArray, RectangleArray] = None) -> Union[DotArray, RectangleArray]:
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
@@ -216,7 +218,7 @@ class NSNFactory(ArrayParameter):
 
             for dot in self.sample(n=n_objects):
                 try:
-                    dot = rtn.get_free_positionNN(ref_object=dot, in_neighborhood=False,
+                    dot = rtn.get_free_position(ref_object=dot, in_neighborhood=False,
                                                 occupied_space=occupied_space,
                                                 allow_overlapping=allow_overlapping)
                 except NoSolutionError:
@@ -231,7 +233,7 @@ class NSNFactory(ArrayParameter):
 
             for rect in self.sample(n=n_objects):
                 try:
-                    rect = rtn.get_free_positionNN(ref_object=rect, in_neighborhood=False,
+                    rect = rtn.get_free_position(ref_object=rect, in_neighborhood=False,
                                                  occupied_space=occupied_space,
                                                  allow_overlapping=allow_overlapping)
                 except NoSolutionError:

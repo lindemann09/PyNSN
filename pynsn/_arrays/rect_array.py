@@ -125,11 +125,6 @@ class RectangleArray(ABCObjectArray):
                                "the same length as the coordinates")
         return rtn
 
-    @staticmethod
-    def load(json_file_name: str) -> RectangleArray:
-        # override and extend from_dict not this function
-        with open(json_file_name, 'r') as fl:
-            return RectangleArray.from_dict(json.load(fl))
 
     def clear(self) -> None:
         super().clear()

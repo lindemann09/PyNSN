@@ -19,6 +19,8 @@ from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
 from .properties import ArrayProperties
 
+# FIXME PointArray not tested and not documented
+
 
 class PointArray(ArrayParameter):
     """Point array class
@@ -26,6 +28,7 @@ class PointArray(ArrayParameter):
     All object arrays are restricted to a certain target area. The classes are
     optimized for numpy calculations
     """
+
     def __init__(self,
                  target_area_radius: int,
                  min_dist_between: OptInt = None,
@@ -130,8 +133,6 @@ class PointArray(ArrayParameter):
         """Perimeter of all points is per definition always zero"""
         return np.array([0] * len(self._xy))
 
-
-
     def set_attributes(self, attributes: ArrayLike) -> None:
         """Set all attributes
 
@@ -140,7 +141,7 @@ class PointArray(ArrayParameter):
         """
         if isinstance(attributes, (list, tuple)):
             if len(attributes) != self._properties.numerosity:
-                raise ValueError("Length of attribute list does not adapt the " + \
+                raise ValueError("Length of attribute list does not adapt the " +
                                  "size of the dot array.")
             self._attributes = np.array(attributes)
         else:
@@ -243,13 +244,6 @@ class PointArray(ArrayParameter):
 
         return rtn
 
-    @staticmethod
-    def load(json_file_name: str) -> PointArray:
-        # override and extend from_dict not this function
-        with open(json_file_name, 'r') as fl:
-            return PointArray.from_dict(json.load(fl))
-
-
     def json(self, indent: Optional[int] = None,
              include_hash: bool = False) -> str:
         """"""
@@ -285,7 +279,7 @@ class PointArray(ArrayParameter):
 
         if isinstance(indices, (int, np.integer)):
             yield Point(xy=self._xy[indices, :],
-                      attribute=self._attributes[indices])
+                        attribute=self._attributes[indices])
         else:
             if indices is None:
                 data = zip(self._xy, self._attributes)
@@ -309,4 +303,3 @@ class PointArray(ArrayParameter):
     def join(self, object_array) -> None:
         """add another object _arrays"""
         self.add(object_array.iter_objects())
-

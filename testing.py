@@ -12,37 +12,36 @@ from random import randint
 import numpy as np
 
 
-
 seed = randint(0, 1000)
 seed = 991
 nsn.init_random_generator(seed)
 
-my_colours = nsn.ImageColours(#target_area="#EEEEEE",
-                              background=None,
-                              opacity_object=0.9,
-                              default_object_colour="darkmagenta",
-                              #field_area_positions="magenta",
-                              field_area="gray",
-                              #center_of_positions="red",
-                              #center_of_mass="magenta"
-                              )
+my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
+    background=None,
+    opacity_object=0.9,
+    default_object_colour="darkmagenta",
+    # field_area_positions="magenta",
+    field_area="gray",
+    # center_of_positions="red",
+    # center_of_mass="magenta"
+)
 
 
-r = pynsn.Rectangle(xy=(0,0), size=(80, 80),
-                attribute=nsn.PictureFile("mypict.png"))
-print(r)
+r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
+                    attribute=nsn.PictureFile("mypict.png"))
+
 
 factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
 factory.set_appearance_dot(diameter=(40, 10, 30),
                            attributes=distr.Levels(["blue", "green"],
                                                    exact_weighting=True))
 
-#factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
+# factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
 #                                        attributes=distr.Levels(["blue", "green"],
 #                                        exact_weighting=True))
 
 stimulus = factory.create_random_array(n_objects=20)
-d = stimulus.copy(indices=1)
+
 
 #assert isinstance(stimulus, nsn.RectangleArray)
 #nsn.scale.log_size(stimulus, 1.2)
