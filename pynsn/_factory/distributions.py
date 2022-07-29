@@ -1,8 +1,15 @@
-import numpy as _np
+from __future__ import annotations
 
-from .._lib.misc import numpy_round2 as _numpy_round2
-from .._lib import rng as _rng
+__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+
+from abc import ABCMeta, abstractmethod
+
+import numpy as _np
+from numpy.typing import NDArray
+
 from .._lib.exception import NoSolutionError as _NoSolutionError
+from .._lib import rng as _rng
+from .._lib.misc import numpy_round2 as _numpy_round2
 
 
 def _round_samples(samples, round_to_decimals):
@@ -12,12 +19,12 @@ def _round_samples(samples, round_to_decimals):
         return _np.array(samples)
 
 
-class PyNSNDistribution(object):
+class PyNSNDistribution(metaclass=ABCMeta):
 
     def __init__(self, min_max):
         if not isinstance(min_max, (list, tuple)) or len(min_max) != 2 or \
                 (None not in min_max and min_max[0] > min_max[1]):
-            raise TypeError("min_max {} ".format(min_max) + \
+            raise TypeError("min_max {} ".format(min_max) +
                             "has to be a tuple of two values (a, b) with a <= b.")
         self.min_max = min_max
 
@@ -26,7 +33,8 @@ class PyNSNDistribution(object):
         return {"distribution": type(self).__name__,
                 "min_max": self.min_max}
 
-    def sample(self, n, round_to_decimals=False):
+    @abstractmethod
+    def sample(self, n, round_to_decimals=False) -> NDArray:
         """Random sample from the distribution
 
         Args:
@@ -38,7 +46,6 @@ class PyNSNDistribution(object):
             Numpy array of the sample
 
         """
-        return NotImplementedError()
 
     def pyplot_samples(self, n=100000):
         """Creating a visualization of the distribution with ``matplotlib.pyplot``
@@ -55,11 +62,12 @@ class PyNSNDistribution(object):
         try:
             from matplotlib.pyplot import hist, hist2d
         except:
-            raise ImportError("To use pyplot_samples, please install matplotlib.")
+            raise ImportError(
+                "To use pyplot_samples, please install matplotlib.")
 
         samples = self.sample(n=n)
         if samples.ndim == 2:
-            return hist2d(samples[:,0], samples[:,1], bins=100)[2]
+            return hist2d(samples[:, 0], samples[:, 1], bins=100)[2]
         else:
             return hist(samples, bins=100)[2]
 
@@ -97,7 +105,8 @@ class Levels(PyNSNDistribution):
         self.exact_weighting = exact_weighting
 
         if weights is not None and len(levels) != len(weights):
-            raise ValueError("Number weights does not match the number of levels")
+            raise ValueError(
+                "Number weights does not match the number of levels")
         self.weights = weights
 
     def sample(self, n, round_to_decimals=None):
@@ -114,14 +123,15 @@ class Levels(PyNSNDistribution):
             if not _np.alltrue(_np.round(n_distr) == n_distr):
                 # problem: some n are floats
                 try:
-                    gcd = _np.gcd.reduce(self.weights)  # greatest common denominator
+                    # greatest common denominator
+                    gcd = _np.gcd.reduce(self.weights)
                     info = "\nSample size has to be a multiple of {}.".format(
                         int(_np.sum(self.weights / gcd)))
                 except:
                     info = ""
                 raise _NoSolutionError(f"Can't find n={n} samples that" +
-                      f" are exactly distributed as specified by the weights (p={p}). " +
-                      info)
+                                       f" are exactly distributed as specified by the weights (p={p}). " +
+                                       info)
 
             dist = []
             for lev, n in zip(self.levels, n_distr):
@@ -203,12 +213,13 @@ class Normal(_PyNSNDistributionMuSigma):
         rtn = _np.array([])
         required = n
         while required > 0:
-            draw = _rng.generator.normal(loc=self.mu, scale=self.sigma, size=required)
+            draw = _rng.generator.normal(
+                loc=self.mu, scale=self.sigma, size=required)
             if self.min_max[0] is not None:
                 draw = _np.delete(draw, draw < self.min_max[0])
             if self.min_max[1] is not None:
                 draw = _np.delete(draw, draw > self.min_max[1])
-            if len(draw) > 0:
+            if len(draw) > 0:  # type: ignore
                 rtn = _np.append(rtn, draw)
                 required = n - len(rtn)
         return _round_samples(rtn, round_to_decimals)
@@ -261,10 +272,10 @@ class Normal2D(PyNSNDistribution):
         required = n
         while required > 0:
             draw = _rng.generator.multivariate_normal(
-                    mean=self.mu, cov=self.varcov(), size=required)
+                mean=self.mu, cov=self.varcov(), size=required)
             if self.max_radius is not None:
                 # remove to large radii
-                r = _np.hypot(draw[:,0], draw[:,1])
+                r = _np.hypot(draw[:, 0], draw[:, 1])
                 draw = _np.delete(draw, r > self.max_radius, axis=0)
 
             if len(draw) > 0:
@@ -311,7 +322,8 @@ class Beta(_PyNSNDistributionMuSigma):
         if alpha is not None and beta is not None and (mu, sigma) == (None, None):
             mu, sigma = Beta._calc_mu_sigma(alpha, beta, min_max)
         elif mu is None or sigma is None or alpha is not None or beta is not None:
-            raise TypeError("Either Mu & Sigma or Alpha & Beta have to specified.")
+            raise TypeError(
+                "Either Mu & Sigma or Alpha & Beta have to specified.")
         super().__init__(mu=mu, sigma=sigma, min_max=min_max)
 
     def sample(self, n, round_to_decimals=None):

@@ -2,8 +2,8 @@ import enum as _enum
 from .._lib import lib_typing as _tp
 
 # _arrays
-DEFAULT_MIN_DIST_BETWEEN = 2
-DEFAULT_MIN_DIST_AREA_BOARDER = 1
+DEFAULT_MIN_DISTANCE_BETWEEN_OBJECTS = 2
+DEFAULT_MIN_DISTANCE_AREA_BOARDER = 1
 
 # iterations
 MAX_ITERATIONS = 1000

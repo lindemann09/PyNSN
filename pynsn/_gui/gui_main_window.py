@@ -17,7 +17,7 @@ from ..image import pil_image
 from ..tools import _dot_array_sequence
 
 DEFAULT_ARRAY = {"num": 40,
-                 "_factory": NSNFactory(target_area_radius=200, min_dist_between=2),
+                 "_factory": NSNFactory(target_area_radius=200, min_distance_between_objects=2),
                  "dot_diameter": distr.Beta(mu=15, sigma=8, min_max=(5, 40)),
                  "col": ImageColours(target_area="#303030",
                                      field_area_positions=None,
@@ -47,7 +47,8 @@ class GUIMainWindow(QMainWindow):
 
         self._image = None
         self.dot_array = None
-        self.settings = dialogs.SettingsDialog(self, image_colours=DEFAULT_ARRAY["col"])
+        self.settings = dialogs.SettingsDialog(
+            self, image_colours=DEFAULT_ARRAY["col"])
         self.initUI()
         self.show()
 
@@ -106,7 +107,8 @@ class GUIMainWindow(QMainWindow):
                                       factory)
         self.setCentralWidget(self.main_widget)
         self.main_widget.btn_generate.clicked.connect(self.action_generate_btn)
-        self.main_widget.dot_colour.edit.editingFinished.connect(self.action_dot_colour_change)
+        self.main_widget.dot_colour.edit.editingFinished.connect(
+            self.action_dot_colour_change)
 
         self.move(300, -300)
         self.setWindowTitle('PyNSN GUI {}'.format(__version__))
@@ -139,7 +141,8 @@ class GUIMainWindow(QMainWindow):
             data_array2.set_attributes(self.main_widget.dot_colour2.text)
             self.dot_array.join(data_array2)
 
-        self.dot_array.mod_round_values(decimals=self.settings.rounding_decimals.value)
+        self.dot_array.mod_round_values(
+            decimals=self.settings.rounding_decimals.value)
         self._image = None
 
     def image(self):
@@ -169,7 +172,7 @@ class GUIMainWindow(QMainWindow):
     def get_factory(self):
         rtn = NSNFactory(
             target_area_radius=self.main_widget.target_area_radius.value,
-            min_dist_between=self.main_widget.min_dist_between.value)
+            min_distance_between_objects=self.main_widget.min_distance_between_objects.value)
         rtn.set_appearance_dot(
             diameter=distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                                 sigma=self.main_widget.item_diameter_std.value,
@@ -248,7 +251,8 @@ class GUIMainWindow(QMainWindow):
 
     def action_print_xy(self):
         """"""
-        txt = self.dot_array.csv(hash_column=False, num_idx_column=False, colour_column=True)
+        txt = self.dot_array.csv(
+            hash_column=False, num_idx_column=False, colour_column=True)
         self.main_widget.text_out(txt)
 
     def action_print_para(self):
@@ -326,8 +330,8 @@ class GUIMainWindow(QMainWindow):
         self.main_widget.text_out("# Sequence\n" +
                                   json.dumps(d))
         ref_array, sdr = self.get_factory()
-        ref_array.min_dist_area_boarder = extra_space / 2
-        ref_array.target_area_radius += ref_array.min_dist_area_boarder
+        ref_array.min_distance_area_boarder = extra_space / 2
+        ref_array.target_area_radius += ref_array.min_distance_area_boarder
 
         if adapt_methods is not None:
             sequence = _dot_array_sequence.create(

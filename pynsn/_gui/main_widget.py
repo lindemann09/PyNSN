@@ -24,18 +24,22 @@ class MainWidget(QWidget):
         self.btn_generate = QPushButton("Generate new array")
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
-        self.target_area_radius = LabeledNumberInput("Max radius", nsn_factory.target_area_radius)
+        self.target_area_radius = LabeledNumberInput(
+            "Max radius", nsn_factory.target_area_radius)
         self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.mu)
-        self.item_diameter_std = LabeledNumberInput("Diameter range std", sdr.sigma)
+        self.item_diameter_std = LabeledNumberInput(
+            "Diameter range std", sdr.sigma)
         self.item_diameter_range = LabeledNumberInputTwoValues("Diameter range from",
                                                                value1=sdr.min_max[0],
                                                                value2=sdr.min_max[1])
 
-        self.min_dist_between = LabeledNumberInput("Minimum gap", nsn_factory.min_dist_between)
+        self.min_distance_between_objects = LabeledNumberInput(
+            "Minimum gap", nsn_factory.min_distance_between_objects)
 
         self.dot_colour = LabeledInput("Colour", text=self.settings.default_object_colour,
                                        case_sensitive=False)
-        self.dot_colour2 = LabeledInput("Colour 2", text="expyriment_orange", case_sensitive=False)
+        self.dot_colour2 = LabeledInput(
+            "Colour 2", text="expyriment_orange", case_sensitive=False)
 
         ctrl = QVBoxLayout()
         ctrl.addWidget(self.btn_generate)
@@ -52,7 +56,7 @@ class MainWidget(QWidget):
 
         ctrl.addWidget(heading("Array"))
         ctrl.addLayout(self.target_area_radius.layout())
-        ctrl.addLayout(self.min_dist_between.layout())
+        ctrl.addLayout(self.min_distance_between_objects.layout())
         ctrl.addStretch(1)
 
         # Add text field
@@ -97,4 +101,3 @@ class MainWidget(QWidget):
         txt = '<span style=\" color: #ff0000;\">%s</span>' % str(error)
         self.text_out(txt)
         self.updateUI()
-

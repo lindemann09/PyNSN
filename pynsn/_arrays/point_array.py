@@ -11,7 +11,7 @@ from hashlib import md5
 import numpy as np
 from .._lib import geometry
 from .._lib import misc
-from .parameter import ArrayParameter
+from .target_area import TargetArea
 from .._lib.lib_typing import OptInt, OptArrayLike, Union, \
     Sequence, Iterator, IntOVector, Optional, NDArray, ArrayLike
 from .._shapes.dot import Dot
@@ -22,7 +22,7 @@ from .properties import ArrayProperties
 # FIXME PointArray not tested and not documented
 
 
-class PointArray(ArrayParameter):
+class PointArray(TargetArea):
     """Point array class
 
     All object arrays are restricted to a certain target area. The classes are
@@ -31,15 +31,15 @@ class PointArray(ArrayParameter):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: OptInt = None,
-                 min_dist_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptInt = None,
+                 min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
         super().__init__(target_area_radius=target_area_radius,
-                         min_dist_between=min_dist_between,
-                         min_dist_area_boarder=min_dist_area_boarder)
+                         min_distance_between_objects=min_distance_between_objects,
+                         min_distance_area_boarder=min_distance_area_boarder)
 
         self._xy = np.array([])
         self._attributes = np.array([])
@@ -61,7 +61,8 @@ class PointArray(ArrayParameter):
 
         self._attributes = np.append(self._attributes, attributes)
         if len(self._xy) == 0:
-            empty = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
+            # ensure good shape of self.xy
+            empty = np.array([]).reshape((0, 2))
             self._xy = np.append(empty, xy, axis=0)
         else:
             self._xy = np.append(self._xy, xy, axis=0)
@@ -145,7 +146,8 @@ class PointArray(ArrayParameter):
                                  "size of the dot array.")
             self._attributes = np.array(attributes)
         else:
-            self._attributes = np.array([attributes] * self._properties.numerosity)
+            self._attributes = np.array(
+                [attributes] * self._properties.numerosity)
 
     @property
     def hash(self) -> str:
@@ -203,22 +205,22 @@ class PointArray(ArrayParameter):
 
         if len(self._xy) == 0:
             return PointArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between,
-                              min_dist_area_boarder=self.min_dist_area_boarder)
+                              min_distance_between_objects=self.min_distance_between_objects,
+                              min_distance_area_boarder=self.min_distance_area_boarder)
 
         if indices is None:
             indices = list(range(len(self._xy)))
 
         if deep_copy:
             return PointArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between,
-                              min_dist_area_boarder=self.min_dist_area_boarder,
+                              min_distance_between_objects=self.min_distance_between_objects,
+                              min_distance_area_boarder=self.min_distance_area_boarder,
                               xy=self._xy[indices, :].copy(),
                               attributes=self._attributes[indices].copy())
         else:
             return PointArray(target_area_radius=self.target_area_radius,
-                              min_dist_between=self.min_dist_between,
-                              min_dist_area_boarder=self.min_dist_area_boarder,
+                              min_distance_between_objects=self.min_distance_between_objects,
+                              min_distance_area_boarder=self.min_distance_area_boarder,
                               xy=self._xy[indices, :],
                               attributes=self._attributes[indices])
 
@@ -237,8 +239,8 @@ class PointArray(ArrayParameter):
     def from_dict(the_dict: dict) -> PointArray:
         """read dot array from dict"""
         rtn = PointArray(target_area_radius=the_dict["target_area_radius"],
-                         min_dist_between=the_dict["min_dist_between"],
-                         min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+                         min_distance_between_objects=the_dict["min_distance_between_objects"],
+                         min_distance_area_boarder=the_dict["min_distance_area_boarder"])
         rtn._append_xy_attribute(xy=the_dict["xy"],
                                  attributes=the_dict["attributes"])
 

@@ -106,12 +106,12 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
     def get_overlaps(self) -> Tuple[np.ndarray, np.ndarray]:
         """return pairs of indices of overlapping of objects and an array of the
         amount of overlap
-        takes into account min_dist_between property
+        takes into account min_distance_between_objects property
 
         """
         dist = misc.triu_nan(self.get_distances_matrix(between_positions=False),
                              k=1)
-        overlap = np.where(dist < self.min_dist_between)
+        overlap = np.where(dist < self.min_distance_between_objects)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
     def get_center_of_mass(self) -> NDArray:
@@ -151,9 +151,10 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                 type(ref_object).__name__))
         if occupied_space is not None and \
                 not isinstance(occupied_space, ABCObjectArray):
-            raise TypeError("Occupied_space has to be a Dot or Rectangle Array or None.")
+            raise TypeError(
+                "Occupied_space has to be a Dot or Rectangle Array or None.")
 
-        area_rad = self.target_area_radius - self.min_dist_area_boarder - object_size
+        area_rad = self.target_area_radius - self.min_distance_area_boarder - object_size
         rtn_object = deepcopy(ref_object)
 
         random_walk = BrownianMotion(ref_object.xy, delta=2)
@@ -167,7 +168,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             if in_neighborhood:
                 rtn_object.xy = random_walk.next()
             else:
-                rtn_object.xy = rng.generator.random(size=2) * 2 * area_rad - area_rad
+                rtn_object.xy = rng.generator.random(
+                    size=2) * 2 * area_rad - area_rad
 
             # is outside area
             if isinstance(ref_object, (Dot, Point)):
@@ -199,7 +201,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                 if isinstance(occupied_space, ABCObjectArray):
                     dist = np.append(dist,
                                      occupied_space.get_distances(rtn_object))
-                if sum(dist < self.min_dist_between) > 0:  # at least one is overlapping
+                if sum(dist < self.min_distance_between_objects) > 0:  # at least one is overlapping
                     continue
             return rtn_object
 
@@ -223,7 +225,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         # for n>2
         xy = self.properties.convex_hull.xy
         sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
-            (self.target_area_radius - self.min_dist_area_boarder)
+            (self.target_area_radius - self.min_distance_area_boarder)
         idx = sizes_outlying > 0
 
         return (self.properties.convex_hull._point_indices[idx],
@@ -310,7 +312,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
                 if found is None:
                     self.add([obj])
-                    raise NoSolutionError("Can't find a solution for remove overlap")
+                    raise NoSolutionError(
+                        "Can't find a solution for remove overlap")
                 else:
                     self.add([found])
                     overlaps = self.get_overlaps()[0]
@@ -354,7 +357,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             ang = float(direction)  # type: ignore
         except (TypeError, ValueError):
             try:
-                ang = Coordinate(x=direction[0], y=direction[1])  # type: ignore
+                # type: ignore
+                ang = Coordinate(x=direction[0], y=direction[1])
             except IndexError:
                 ang = None
         if ang is None:
@@ -379,10 +383,12 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             dist = self.get_distances(obj)
             for other_id in np.flatnonzero(dist < 0):
                 if other_id != object_id:
-                    movement.xy = self._xy[other_id, :] - self._xy[object_id, :]
+                    movement.xy = self._xy[other_id,
+                                           :] - self._xy[object_id, :]
                     self.mod_move_object(other_id,
                                          direction=movement.polar_angle,
-                                         distance=abs(dist[other_id]) + self.min_dist_between,
+                                         distance=abs(
+                                             dist[other_id]) + self.min_distance_between_objects,
                                          push_other=True)
 
         self.properties.reset()
@@ -416,7 +422,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         rtn = []
         for c in np.unique(att):
             if c is not None:
-                da = self.copy(indices=0, deep_copy=False)  # fast. shallow copy with just one object
+                # fast. shallow copy with just one object
+                da = self.copy(indices=0, deep_copy=False)
                 da.clear()
                 da.add(self.find_objects(attribute=c))  # type: ignore
                 rtn.append(da)

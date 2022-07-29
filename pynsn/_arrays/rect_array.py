@@ -25,8 +25,8 @@ class RectangleArray(ABCObjectArray):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: OptInt = None,
-                 min_dist_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptInt = None,
+                 min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  sizes: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
@@ -39,8 +39,8 @@ class RectangleArray(ABCObjectArray):
         """
         super().__init__(xy=xy, attributes=attributes,
                          target_area_radius=target_area_radius,
-                         min_dist_between=min_dist_between,
-                         min_dist_area_boarder=min_dist_area_boarder)
+                         min_distance_between_objects=min_distance_between_objects,
+                         min_distance_area_boarder=min_distance_area_boarder)
         self._sizes = np.array([])
         if sizes is not None:
             self._append_sizes(sizes)
@@ -53,7 +53,8 @@ class RectangleArray(ABCObjectArray):
         """returns number of added rows"""
         sizes = misc.numpy_array_2d(sizes)
         if len(self._sizes) == 0:
-            empty = np.array([]).reshape((0, 2))  # ensure good shape of self.xy
+            # ensure good shape of self.xy
+            empty = np.array([]).reshape((0, 2))
             self._sizes = np.append(empty, sizes, axis=0)
         else:
             self._sizes = np.append(self._sizes, sizes, axis=0)
@@ -115,8 +116,8 @@ class RectangleArray(ABCObjectArray):
         """read rectangle array from dict"""
 
         rtn = RectangleArray(target_area_radius=the_dict["target_area_radius"],
-                             min_dist_between=the_dict["min_dist_between"],
-                             min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+                             min_distance_between_objects=the_dict["min_distance_between_objects"],
+                             min_distance_area_boarder=the_dict["min_distance_area_boarder"])
         rtn._append_xy_attribute(xy=the_dict["xy"],
                                  attributes=the_dict["attributes"])
         rtn._sizes = np.array(the_dict["sizes"])
@@ -124,7 +125,6 @@ class RectangleArray(ABCObjectArray):
             raise RuntimeError("Badly shaped data: size data have not " +
                                "the same length as the coordinates")
         return rtn
-
 
     def clear(self) -> None:
         super().clear()
@@ -145,24 +145,24 @@ class RectangleArray(ABCObjectArray):
         if len(self._xy) == 0:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
-                min_dist_area_boarder=self.min_dist_area_boarder,
-                min_dist_between=self.min_dist_between)
+                min_distance_area_boarder=self.min_distance_area_boarder,
+                min_distance_between_objects=self.min_distance_between_objects)
         if indices is None:
             indices = list(range(len(self._xy)))
 
         if deep_copy:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
-                min_dist_between=self.min_dist_between,
-                min_dist_area_boarder=self.min_dist_area_boarder,
+                min_distance_between_objects=self.min_distance_between_objects,
+                min_distance_area_boarder=self.min_distance_area_boarder,
                 xy=self._xy[indices, :].copy(),
                 sizes=self._sizes[indices].copy(),
                 attributes=self._attributes[indices].copy())
         else:
             return RectangleArray(
                 target_area_radius=self.target_area_radius,
-                min_dist_between=self.min_dist_between,
-                min_dist_area_boarder=self.min_dist_area_boarder,
+                min_distance_between_objects=self.min_distance_between_objects,
+                min_distance_area_boarder=self.min_distance_area_boarder,
                 xy=self._xy[indices, :],
                 sizes=self._sizes[indices],
                 attributes=self._attributes[indices])
@@ -177,7 +177,8 @@ class RectangleArray(ABCObjectArray):
             pos_dist = np.abs(self.xy - rect.xy)
             max_not_overlap_dist = (self.sizes + rect.size) / 2
             dist = pos_dist - max_not_overlap_dist
-            return dist  # FIXME intensive test distance function rect (also get_distance)
+            # FIXME intensive test distance function rect (also get_distance)
+            return dist
 
     def get_distances(self, rect: Rectangle) -> NDArray:
         """Euclidean distances toward a single rectangle

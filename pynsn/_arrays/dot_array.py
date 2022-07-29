@@ -31,15 +31,15 @@ class DotArray(ABCObjectArray):
 
     def __init__(self,
                  target_area_radius: int,
-                 min_dist_between: OptInt = None,
-                 min_dist_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptInt = None,
+                 min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  diameter: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
         super().__init__(xy=xy, attributes=attributes,
                          target_area_radius=target_area_radius,
-                         min_dist_between=min_dist_between,
-                         min_dist_area_boarder=min_dist_area_boarder)
+                         min_distance_between_objects=min_distance_between_objects,
+                         min_distance_area_boarder=min_distance_area_boarder)
         if diameter is None:
             self._diameter = np.array([])
         else:
@@ -102,8 +102,8 @@ class DotArray(ABCObjectArray):
     def from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
         rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
-                       min_dist_between=the_dict["min_dist_between"],
-                       min_dist_area_boarder=the_dict["min_dist_area_boarder"])
+                       min_distance_between_objects=the_dict["min_distance_between_objects"],
+                       min_distance_area_boarder=the_dict["min_distance_area_boarder"])
 
         rtn._append_xy_attribute(xy=the_dict["xy"],
                                  attributes=the_dict["attributes"])
@@ -113,7 +113,6 @@ class DotArray(ABCObjectArray):
             raise RuntimeError("Badly shaped data: diameter have not " +
                                "the same length as the coordinates")
         return rtn
-
 
     def clear(self) -> None:
         super().clear()
@@ -139,26 +138,25 @@ class DotArray(ABCObjectArray):
 
         if len(self._xy) == 0:
             return DotArray(target_area_radius=self.target_area_radius,
-                            min_dist_between=self.min_dist_between,
-                            min_dist_area_boarder=self.min_dist_area_boarder)
+                            min_distance_between_objects=self.min_distance_between_objects,
+                            min_distance_area_boarder=self.min_distance_area_boarder)
 
         if indices is None:
-            indices = list(range(len(self._xy) ))
+            indices = list(range(len(self._xy)))
 
         if deep_copy:
             return DotArray(target_area_radius=self.target_area_radius,
-                            min_dist_between=self.min_dist_between,
-                            min_dist_area_boarder=self.min_dist_area_boarder,
+                            min_distance_between_objects=self.min_distance_between_objects,
+                            min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._xy[indices, :].copy(),
                             diameter=self._diameter[indices].copy(),
                             attributes=self._attributes[indices].copy())
         else:
-            return DotArray(target_area_radius=self.target_area_radius,    min_dist_between=self.min_dist_between,
-                            min_dist_area_boarder=self.min_dist_area_boarder,
+            return DotArray(target_area_radius=self.target_area_radius,    min_distance_between_objects=self.min_distance_between_objects,
+                            min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._xy[indices, :],
                             diameter=self._diameter[indices],
                             attributes=self._attributes[indices])
-
 
     def get_distances(self, dot: Dot) -> NDArray:
         """Euclidean distances toward a single dot
@@ -175,7 +173,7 @@ class DotArray(ABCObjectArray):
             return np.array([])
         else:
             rtn = np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
-                   ((self._diameter + dot.diameter) / 2.0)
+                ((self._diameter + dot.diameter) / 2.0)
             return rtn
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
@@ -205,7 +203,6 @@ class DotArray(ABCObjectArray):
                            self._attributes[indices])
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
-
 
     def find_objects(self, diameter: OptFloat = None,
                      attribute: Any = None) -> List[int]:

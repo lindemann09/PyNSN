@@ -26,12 +26,15 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
     # center_of_mass="magenta"
 )
 
+n = pynsn.distributions.Normal(0, 1)
+
 
 r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
                     attribute=nsn.PictureFile("mypict.png"))
 
 
-factory = nsn.NSNFactory(target_area_radius=200, min_dist_between=2)
+factory = nsn.NSNFactory(target_area_radius=200,
+                         min_distance_between_objects=2)
 factory.set_appearance_dot(diameter=(40, 10, 30),
                            attributes=distr.Levels(["blue", "green"],
                                                    exact_weighting=True))

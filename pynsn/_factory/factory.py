@@ -3,14 +3,14 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy
 
 from .._arrays.dot_array import DotArray
-from .._arrays.parameter import ArrayParameter
+from .._arrays.target_area import TargetArea
 from .._arrays.rect_array import RectangleArray
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from .._lib.misc import dict_to_text
 from .distributions import PyNSNDistribution, _round_samples, Levels
 from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import Union
+from .._lib.lib_typing import Union, Sequence, NDArray
 
 # FIXME typing required
 
@@ -29,10 +29,10 @@ class _Constant(object):
 
         self.value = value
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n, round_to_decimals=None) -> NDArray:
         return _round_samples([self.value] * n, round_to_decimals)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"distribution": "Constant",
                 "value": self.value}
 
@@ -55,24 +55,24 @@ def _make_distr(value):
 # TODO typing
 
 
-class NSNFactory(ArrayParameter):
+class NSNFactory(TargetArea):
 
     def __init__(self, target_area_radius,
-                 min_dist_between=None,
-                 min_dist_area_boarder=None):
+                 min_distance_between_objects=None,
+                 min_distance_area_boarder=None):
         """
 
         Parameters
         ----------
         target_area_radius
-        min_dist_between
-        min_dist_area_boarder
+        min_distance_between_objects
+        min_distance_area_boarder
         """
 
-        ArrayParameter.__init__(self,
-                                target_area_radius=target_area_radius,
-                                min_dist_between=min_dist_between,
-                                min_dist_area_boarder=min_dist_area_boarder)
+        TargetArea.__init__(self,
+                            target_area_radius=target_area_radius,
+                            min_distance_between_objects=min_distance_between_objects,
+                            min_distance_area_boarder=min_distance_area_boarder)
         self._distr_diameter = None
         self._distr_width = None
         self._distr_height = None
@@ -124,7 +124,7 @@ class NSNFactory(ArrayParameter):
         return self._distr_diameter is not None or self._distr_width is not None or \
             self._distr_height is not None
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n, round_to_decimals=None) -> Sequence[Union[Dot, Rectangle]]:
         """return list objects (Dot or Rect) with random size
         all positions = (0,0)
         """
@@ -136,54 +136,62 @@ class NSNFactory(ArrayParameter):
             diameter = self._distr_diameter.sample(n)
 
             return [Dot(xy=(0, 0), diameter=dia, attribute=attr)
-                    for dia, attr in zip(diameter, attributes)]
+                    for dia, attr in zip(diameter, attributes)]  # type: ignore
         else:
             # Rect
-            try:
+            if self._distr_width is not None:
                 width = self._distr_width.sample(n)
-            except AttributeError:
+            else:
                 width = None
-            try:
+            if self._distr_height is not None:
                 height = self._distr_height.sample(n)
-            except AttributeError:
+            else:
                 height = None
-            try:
+            if self._distr_proportion is not None:
                 proportion = self._distr_proportion.sample(n)
-            except AttributeError:
+            else:
                 proportion = None
 
             if height is None:
-                height = width * proportion
+                height = width * proportion  # type: ignore
             elif width is None:
-                width = height / proportion
+                width = height / proportion  # type: ignore
 
             if round_to_decimals is not None:
-                width = _round_samples(width, round_to_decimals=round_to_decimals)
-                height = _round_samples(width, round_to_decimals=round_to_decimals)
+                width = _round_samples(
+                    width, round_to_decimals=round_to_decimals)
+                height = _round_samples(
+                    width, round_to_decimals=round_to_decimals)
 
             return [Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
-                    for w, h, attr in zip(width, height, attributes)]
+                    for w, h, attr in zip(width, height, attributes)]  # type: ignore
 
     def to_dict(self):
-        rtn = ArrayParameter.to_dict(self)
+        rtn = TargetArea.to_dict(self)
         try:
-            rtn.update({"diameter": self._distr_diameter.to_dict()})
+            rtn.update({"diameter":
+                        self._distr_diameter.to_dict()})  # type: ignore
         except AttributeError:
             pass
         try:
-            rtn.update({"width": self._distr_width.to_dict()})
+            rtn.update({"width": self._distr_width.to_dict()})  # type: ignore
         except AttributeError:
             pass
         try:
-            rtn.update({"height": self._distr_height.to_dict()})
+
+            rtn.update({"height":
+                        self._distr_height.to_dict()})  # type: ignore
         except AttributeError:
             pass
         try:
-            rtn.update({"proportion": self._distr_proportion.to_dict()})
+            # type: ignore
+            rtn.update({"proportion":
+                        self._distr_proportion.to_dict()})  # type: ignore
         except AttributeError:
             pass
         try:
-            rtn.update({"attributes": self._distr_attributes.to_dict()})
+            rtn.update({"attributes":
+                        self._distr_attributes.to_dict()})  # type: ignore
         except AttributeError:
             pass
         return rtn
@@ -213,8 +221,8 @@ class NSNFactory(ArrayParameter):
         if self._distr_diameter is not None:
             # DotArray
             rtn = DotArray(target_area_radius=self.target_area_radius,
-                           min_dist_between=self.min_dist_between,
-                           min_dist_area_boarder=self.min_dist_area_boarder)
+                           min_distance_between_objects=self.min_distance_between_objects,
+                           min_distance_area_boarder=self.min_distance_area_boarder)
 
             for dot in self.sample(n=n_objects):
                 try:
@@ -222,14 +230,15 @@ class NSNFactory(ArrayParameter):
                                                 occupied_space=occupied_space,
                                                 allow_overlapping=allow_overlapping)
                 except NoSolutionError:
-                    raise NoSolutionError("Can't find a solution for {} items in this array".format(n_objects))
-                rtn.add([dot])
+                    raise NoSolutionError(
+                        "Can't find a solution for {} items in this array".format(n_objects))
+                rtn.add([dot])  # type: ignore
 
         else:
             # RectArray
             rtn = RectangleArray(target_area_radius=self.target_area_radius,
-                                 min_dist_between=self.min_dist_between,
-                                 min_dist_area_boarder=self.min_dist_area_boarder)
+                                 min_distance_between_objects=self.min_distance_between_objects,
+                                 min_distance_area_boarder=self.min_distance_area_boarder)
 
             for rect in self.sample(n=n_objects):
                 try:
@@ -240,7 +249,7 @@ class NSNFactory(ArrayParameter):
                     raise NoSolutionError("Can't find a solution for {} ".format(n_objects) +
                                           "items in this array.")
 
-                rtn.add([rect])
+                rtn.add([rect])  # type: ignore
         return rtn
 
     def create_incremental_random_array(self, n_objects,
