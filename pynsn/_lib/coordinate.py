@@ -24,7 +24,7 @@ class Coordinate(object):
 
     def __div__(self, other):
         return Coordinate(self.x / other if other else self.x,
-                     self.y / other if other else self.y)
+                          self.y / other if other else self.y)
 
     def __iadd__(self, other):
         self.x += other.x
@@ -90,19 +90,7 @@ class Coordinate(object):
         self.y = rad_ang[0] * _math.sin(rad_ang[1])
 
     def distance(self, other):
-        """Returns Euclidean distance to the another Coordinate. The function
-        does not takes the size of an object into account.
-
-        Parameters
-        ----------
-        other : Coordinate
-
-        Returns
-        -------
-        distance : float
-
-        """
-
+        """Euclidean distance to the another Coordinate."""
         return _math.hypot(self.x - other.x, self.y - other.y)
 
 # todo typing

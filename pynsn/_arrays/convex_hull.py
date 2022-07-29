@@ -22,7 +22,7 @@ class ConvexHullPositions(object):
 
     def _try_convex_hull(self, xy):
         try:
-            self._convex_hull = spatial.ConvexHull(xy)
+            self._convex_hull = spatial.ConvexHull(xy)  # type: ignore
         except spatial.QhullError:
             self._convex_hull = None
 
@@ -97,7 +97,8 @@ class ConvexHull(ConvexHullPositions):
             xy_centered = object_array.xy - center
             # outer positions
             polar_centered = cartesian2polar(xy_centered)
-            polar_centered[:, 0] = polar_centered[:, 0] + (object_array.diameter / 2)
+            polar_centered[:, 0] = polar_centered[:, 0] + \
+                (object_array.diameter / 2)
             outer_xy = polar2cartesian(polar_centered) + center
 
         elif isinstance(object_array, _arrays.RectangleArray):

@@ -25,6 +25,7 @@ from .._lib.lib_typing import List, Union, Tuple, Sequence, NDArray
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
+from .._shapes import ShapeType
 
 
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
@@ -128,7 +129,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self._properties.reset()
 
     def get_free_position(self,
-                          ref_object: Union[Dot, Rectangle, Point],
+                          ref_object: ShapeType,
                           in_neighborhood: bool = False,
                           allow_overlapping: bool = False,
                           inside_convex_hull: bool = False,

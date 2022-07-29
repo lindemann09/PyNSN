@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
@@ -5,6 +7,7 @@ import math
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
 from .._lib.coordinate import Coordinate
+from .. import _shapes
 
 
 class Dot(ABCShape):
@@ -32,29 +35,41 @@ class Dot(ABCShape):
         return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
                                                                 self.diameter, self.attribute)
 
-    def distance(self, other):
-        """Return Euclidean distance to the dot d. The function takes the
-        diameter of the points into account.
+    def distance(self, other: _shapes.ShapeType) -> float:
+        # inherited doc
 
-        Parameters
-        ----------
-        other : Dot
+        if isinstance(other, _shapes.Dot):
+            return Coordinate.distance(self, other) \
+                - ((self.diameter + other.diameter) / 2.0)
 
-        Returns
-        -------
-        distance : float
+        elif isinstance(other, _shapes.Rectangle):
+            return other.distance(self)
 
-        """
+        elif isinstance(other, _shapes.Point):
+            return Coordinate.distance(self, other) \
+                - (self.diameter / 2.0)
 
-        return Coordinate.distance(self, other) - \
-               ((self.diameter + other.diameter) / 2.0)
+        raise NotImplementedError(f"distance to {type(other)} "
+                                  + "is implemented.")
 
-    @property
+    @ property
     def area(self):
         return math.pi * (self.diameter ** 2) / 4.0
 
-    @property
+    @ property
     def perimeter(self):
         return math.pi * self.diameter
 
+    def is_inside(self, other: _shapes.ShapeType) -> bool:
+        # inherited doc
+        if isinstance(other, _shapes.Dot):
+            pass
 
+        elif isinstance(other, _shapes.Rectangle):
+            pass
+
+        elif isinstance(other, _shapes.Point):
+            return False
+
+        raise NotImplementedError("is_inside is not "
+                                  "implemented for {}.".format(type(other)))

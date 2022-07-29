@@ -1,6 +1,11 @@
-from .target_area import TargetArea
-from .point_array import PointArray
-from .dot_array import DotArray
-from .rect_array import RectangleArray
-from .properties import ArrayProperties
+import typing as _tp
+
 from .load_array import load_array
+from .properties import ArrayProperties
+from .rect_array import RectangleArray
+from .dot_array import DotArray
+from .point_array import PointArray
+from .target_area import TargetArea
+
+# TODO not yet used
+NSNArrayType = _tp.Union[DotArray, RectangleArray, PointArray]

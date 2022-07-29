@@ -11,7 +11,7 @@ from hashlib import md5
 import numpy as np
 from .._lib import geometry
 from .._lib import misc
-from .target_area import TargetArea
+from .._arrays.target_area import TargetArea
 from .._lib.lib_typing import OptInt, OptArrayLike, Union, \
     Sequence, Iterator, IntOVector, Optional, NDArray, ArrayLike
 from .._shapes.dot import Dot

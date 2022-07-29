@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
 from .._lib.coordinate import Coordinate
+from .. import _shapes
 
 
 class Point(ABCShape):
@@ -27,9 +30,6 @@ class Point(ABCShape):
     def __repr__(self):
         return "Point(xy={}, attribute='{}')".format(self.xy, self.attribute)
 
-    def distance(self, other):
-        Coordinate.distance(self, other)
-
     @property
     def area(self):
         return 0
@@ -37,3 +37,28 @@ class Point(ABCShape):
     @property
     def perimeter(self):
         return 0
+
+    def distance(self, other: _shapes.ShapeType) -> float:
+        # inherited doc
+
+        if isinstance(other, _shapes.Point):
+            return Coordinate.distance(self, other)
+        elif isinstance(other, (_shapes.Dot, _shapes.Rectangle)):
+            return other.distance(self)
+
+        raise NotImplementedError(f"distance to {type(other)} "
+                                  + "is implemented.")
+
+    def is_inside(self, other: _shapes.ShapeType) -> bool:
+        # inherited doc
+        if isinstance(other, _shapes.Dot):
+            pass
+
+        elif isinstance(other, _shapes.Rectangle):
+            pass
+
+        elif isinstance(other, _shapes.Point):
+            pass
+
+        raise NotImplementedError("is_inside is not "
+                                  "implemented for {}.".format(type(other)))

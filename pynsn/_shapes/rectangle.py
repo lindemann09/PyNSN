@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
 from typing import Iterator
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
+from .. import _shapes
 
 
 class Rectangle(ABCShape):
@@ -30,7 +33,7 @@ class Rectangle(ABCShape):
 
     def __repr__(self):
         return "Rectangle(xy={}, size={}, attribute='{}')".format(self.xy,
-                                    self.size, self.attribute)
+                                                                  self.size, self.attribute)
 
     @property
     def area(self):
@@ -40,21 +43,18 @@ class Rectangle(ABCShape):
     def perimeter(self):
         return 2 * (self.width + self.height)
 
-    def distance(self, other):
-        """Return Euclidean distance to the dot d. The function takes the
-        size of the rectangles into account.
+    def distance(self, other: _shapes.ShapeType) -> float:
+        # inherited doc
+        if isinstance(other, _shapes.Dot):
+            dist = self.distance(_shapes.Point(xy=other.xy))
+            return dist - other.diameter / 2.0
 
-        Parameters
-        ----------
-        other : Rectangle
+        elif isinstance(other, (_shapes.Rectangle, _shapes.Point)):
+            d_xy = self.xy_distances(other=other)
+            return math.hypot(d_xy[0], d_xy[1])  # TODO distance to point
 
-        Returns
-        -------
-        distance : float
-
-        """
-        dx, dy = self.xy_distances(other=other)
-        return math.hypot(dx, dy)
+        raise NotImplementedError(f"distance to {type(other)} "
+                                  + "is implemented.")
 
     @property
     def left(self):
@@ -93,14 +93,6 @@ class Rectangle(ABCShape):
     def size(self, size):
         self.width, self.height = size
 
-    def is_point_inside_rect(self, xy):
-        return (self.left <= xy[0] <= self.right and
-                self.top <= xy[1] <= self.bottom)
-
-    def overlaps_with(self, rect):
-        d = self.xy_distances(rect)
-        return not (d[0] > 0 or d[1] > 0)
-
     @property
     def proportion(self):
         """Proportion of the rectangle (width/height)"""
@@ -114,10 +106,17 @@ class Rectangle(ABCShape):
         """return distances on both axes between rectangles. 0 indicates
         overlap off edges along that dimension.
         """
-        assert isinstance(other, Rectangle)
+        if isinstance(other, _shapes.Rectangle):
+            max_overlap_dist = (self.width + other.width) / 2,\
+                (self.height + other.height) / 2
+        elif isinstance(other, _shapes.Point):
+            max_overlap_dist = self.width / 2, self.height / 2
+        else:
+            raise NotImplementedError(f"xy_distances to {type(other)} "
+                                      + "is implemented.")
+
         # overlaps in x or y
         pos_dist = abs(self.x - other.x), abs(self.y - other.y)
-        max_overlap_dist = (self.width + other.width) / 2, (self.height + other.height) / 2
         if pos_dist[0] <= max_overlap_dist[0]:
             dx = 0
         else:
@@ -129,3 +128,21 @@ class Rectangle(ABCShape):
             dy = pos_dist[1] - max_overlap_dist[1]
 
         return dx, dy
+
+    def is_inside(self, other: _shapes.ShapeType) -> bool:
+        # inherited doc
+        if isinstance(other, _shapes.Dot):
+            pass
+
+        elif isinstance(other, _shapes.Rectangle):
+            pass
+
+        elif isinstance(other, _shapes.Point):
+            return False
+
+        raise NotImplementedError("is_inside is not "
+                                  "implemented for {}.".format(type(other)))
+
+#    def is_point_inside_rect(self, xy):
+#        return (other.left <= self.xy[0] <= other.right and
+#                    other.top <= self.xy[1] <= other.bottom)

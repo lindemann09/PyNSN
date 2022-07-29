@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
@@ -8,9 +10,7 @@ from ..image._colour import Colour
 from .picture_file import PictureFile
 
 
-#FIXME typing
-
-
+# FIXME typing
 class ABCShape(Coordinate, metaclass=ABCMeta):
 
     def __init__(self, xy, attribute):
@@ -63,18 +63,27 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
 
     @abstractmethod
     def __repr__(self):
-        pass
+        """"""
 
     @abstractmethod
-    def distance(self, other):
-        pass
+    def distance(self, other: ABCShape) -> float:
+        """Euclidean distance to another shape.
+
+        Notes:
+            Negative distance indicate overlap and the minimum distance
+            between outer shape boarders
+        """
 
     @property
     @abstractmethod
     def area(self):
-        pass
+        """area of the object/shape"""
 
     @property
     @abstractmethod
     def perimeter(self):
-        pass
+        """"""
+
+    @abstractmethod
+    def is_inside(self, other: ABCShape) -> bool:
+        """True if shape is fully inside another shape"""
