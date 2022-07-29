@@ -67,10 +67,10 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
 
     @abstractmethod
     def distance(self, other: ABCShape) -> float:
-        """Euclidean distance to another shape.
+        """Euclidean distance to another shapes
 
         Notes:
-            Negative distance indicate overlap and the minimum distance
+            Negative distances indicate an overlap and represent minimum distance
             between outer shape boarders
         """
 
