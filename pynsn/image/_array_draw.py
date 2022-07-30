@@ -108,23 +108,26 @@ class ArrayDraw(metaclass=ABCMeta):
 
         # prepare the pil image, make target area if required
         if isinstance(object_array.target_area, Dot):
-            image_width = object_array.target_area.diameter
+            tmp = int(_np.ceil(object_array.target_area.diameter) * aaf)
+            target_area_shape = Dot(diameter=tmp,
+                                    attribute=colours.target_area.colour)
+            image_size = _np.ones(2) * tmp
+
         elif isinstance(object_array.target_area, Rectangle):
-            # FIXME only squared target area are correctly plotted
-            image_width = max(object_array.target_area.size)
+            tmp = _np.int16(_np.ceil(object_array.target_area.size) * aaf)
+            target_area_shape = Rectangle(size=tmp,
+                                          attribute=colours.target_area.colour)
+            image_size = target_area_shape.size
         else:
             raise NotImplementedError()  # should never happen
 
-        image_width = int(_np.ceil(image_width) * aaf)
-        img = self.get_squared_image(image_width=image_width,
+        img = self.get_squared_image(image_width=max(image_size),  # FIXME only squared image size
                                      background_colour=colours.background.colour,
                                      **kwargs)
 
         if colours.target_area.colour is not None:
-            obj = Dot(xy=(0, 0), diameter=image_width,
-                      attribute=colours.target_area.colour)
-            self.draw_shape(img, obj, opacity=1,
-                            scaling_factor=1)
+            self.draw_shape(img, target_area_shape,
+                            opacity=1, scaling_factor=1)
 
         if object_array.properties.numerosity > 0:
 

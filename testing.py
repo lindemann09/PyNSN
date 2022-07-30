@@ -31,7 +31,7 @@ r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
 
 
 factory = nsn.NSNFactory(min_distance_between_objects=2,
-                         target_area=pynsn.Rectangle(size=(200, 400)),
+                         target_area=pynsn.Rectangle(size=(400, 200)),
                          # starget_area=pynsn.Dot(diameter=400),
                          min_distance_area_boarder=2)
 factory.set_appearance_dot(diameter=(10, 10, 10),
