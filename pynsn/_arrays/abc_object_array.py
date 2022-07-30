@@ -141,23 +141,29 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """
         # TODO check for point array (point array check is anyway required)
 
-        if isinstance(ref_object, Dot):
-            object_size = ref_object.diameter / 2.0
-        elif isinstance(ref_object, Rectangle):
-            object_size = max(ref_object.size)
-        elif isinstance(ref_object, Point):
-            object_size = 0
-        else:
+        if not isinstance(ref_object, (Dot, Rectangle, Point)):
             raise NotImplementedError("Not implemented for {}".format(
                 type(ref_object).__name__))
+
         if occupied_space is not None and \
                 not isinstance(occupied_space, ABCObjectArray):
             raise TypeError(
                 "Occupied_space has to be a Dot or Rectangle Array or None.")
 
-        area_rad = self.target_area_radius - self.min_distance_area_boarder - object_size
-        rtn_object = deepcopy(ref_object)
+        if isinstance(self.target_area, Dot):
+            tmp = self.target_area.diameter/2.0 \
+                - self.min_distance_area_boarder
+            search_area = Dot(diameter=tmp*2)
+            half_search_area_size = np.array([tmp, tmp])
+        elif isinstance(self.target_area, Rectangle):
+            tmp = (self.target_area.width - 2 * self.min_distance_area_boarder,
+                   self.target_area.height - 2 * self.min_distance_area_boarder)
+            search_area = Rectangle(size=tmp)
+            half_search_area_size = np.asarray(search_area.size) / 2.0
+        else:
+            raise NotImplementedError()
 
+        rtn_object = deepcopy(ref_object)
         random_walk = BrownianMotion(ref_object.xy, delta=2)
 
         cnt = 0
@@ -169,32 +175,23 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             if in_neighborhood:
                 rtn_object.xy = random_walk.next()
             else:
-                rtn_object.xy = rng.generator.random(
-                    size=2) * 2 * area_rad - area_rad
+                rtn_object.xy = rng.generator.random(size=2) * 2 \
+                    * half_search_area_size - half_search_area_size
 
             # is outside area
-            if isinstance(ref_object, (Dot, Point)):
-                is_outside = area_rad <= rtn_object.polar_radius
-            else:
-                # Rect: check if one edge is outside
-                assert isinstance(rtn_object, Rectangle)  # should be alway
-                is_outside = False
-                for edge in rtn_object.iter_edges():
-                    if edge.polar_radius >= area_rad:
-                        is_outside = True
-                        break
-
+            is_inside = rtn_object.is_inside(search_area)
             # check convex hull is not already outside
-            if not is_outside and inside_convex_hull:
+            if is_inside and inside_convex_hull:
                 # use only those that do not change the convex hull
                 tmp_array = self.copy(deep_copy=True)
                 tmp_array.add([rtn_object])  # type: ignore
-                is_outside = tmp_array.properties.convex_hull != \
+                is_inside = tmp_array.properties.convex_hull == \
                     self.properties.convex_hull
-            if is_outside:
+
+            if not is_inside:
                 if in_neighborhood:
                     random_walk.step_back()
-                continue
+                continue  # try another position
 
             if not allow_overlapping:
                 # find overlap (and lower minimum distance)
@@ -203,7 +200,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                     dist = np.append(dist,
                                      occupied_space.get_distances(rtn_object))
                 if sum(dist < self.min_distance_between_objects) > 0:  # at least one is overlapping
-                    continue
+                    continue  # try another position
             return rtn_object
 
     def mod_shuffle_positions(self, allow_overlapping: bool = False) -> None:
@@ -224,13 +221,14 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """
         # FIXME broken method: do not use convex hull, because that only works
         # for n>2
-        xy = self.properties.convex_hull.xy
-        sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
-            (self.target_area_radius - self.min_distance_area_boarder)
-        idx = sizes_outlying > 0
-
-        return (self.properties.convex_hull._point_indices[idx],
-                sizes_outlying[idx])
+        raise NotImplementedError()
+        #xy = self.properties.convex_hull.xy
+        # sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
+        #    (self.target_area_radius - self.min_distance_area_boarder)
+        #idx = sizes_outlying > 0
+        #
+        # return (self.properties.convex_hull._point_indices[idx],
+        #        sizes_outlying[idx])
 
     def get_number_deviant(self, change_numerosity: int,
                            preserve_field_area: bool = False) -> PointArray:
@@ -358,8 +356,8 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             ang = float(direction)  # type: ignore
         except (TypeError, ValueError):
             try:
-                # type: ignore
-                ang = Coordinate(x=direction[0], y=direction[1])
+                ang = Coordinate(x=direction[0],  # type: ignore
+                                 y=direction[1])  # type: ignore
             except IndexError:
                 ang = None
         if ang is None:

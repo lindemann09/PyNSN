@@ -12,13 +12,6 @@ from random import randint
 import numpy as np
 
 
-a = pynsn.Dot(xy=(42, 0), diameter=100)
-b = pynsn.Rectangle(xy=(0, 0), size=(10, 10))
-print(b.is_inside(a))
-#print(isinstance(d, pynsn.Dot))
-exit()
-
-seed = randint(0, 1000)
 seed = 991
 nsn.init_random_generator(seed)
 
@@ -32,31 +25,31 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
     # center_of_mass="magenta"
 )
 
-n = pynsn.distributions.Normal(0, 1)
-
 
 r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
                     attribute=nsn.PictureFile("mypict.png"))
 
 
-factory = nsn.NSNFactory(target_area_radius=200,
-                         min_distance_between_objects=2)
-factory.set_appearance_dot(diameter=(40, 10, 30),
+factory = nsn.NSNFactory(min_distance_between_objects=2,
+                         target_area=pynsn.Rectangle(size=(200, 400)),
+                         # starget_area=pynsn.Dot(diameter=400),
+                         min_distance_area_boarder=2)
+factory.set_appearance_dot(diameter=(10, 10, 10),
                            attributes=distr.Levels(["blue", "green"],
                                                    exact_weighting=True))
 
-# factory.set_appearance_rectangle(width=(40, 10, 30), proportion=0.5,
-#                                        attributes=distr.Levels(["blue", "green"],
-#                                        exact_weighting=True))
+# factory.set_appearance_rectangle(width=(10, 10, 10), proportion=0.5,
+#                                 attributes=distr.Levels(["blue", "green"],
+#                                                         exact_weighting=True))
 
-stimulus = factory.create_random_array(n_objects=20)
-
-
+stimulus = factory.create_random_array(n_objects=190)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
+
+exit()
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
 
 stimulus.properties.fit_average_perimeter(130)

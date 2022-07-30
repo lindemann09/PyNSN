@@ -5,14 +5,15 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import json
 import numpy as np
+from copy import deepcopy
 
 from .._lib import misc
 from .abc_object_array import ABCObjectArray
 from .._lib.lib_typing import NumArray, OptArrayLike, IntOVector, Iterator, \
     Any, Union, Sequence, Optional, OptInt, NDArray, ArrayLike
 from .._shapes.rectangle import Rectangle
+from .._shapes.dot import Dot
 from .._lib.coordinate import Coordinate
 
 
@@ -24,7 +25,7 @@ class RectangleArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area_radius: int,
+                 target_area: Union[Dot, Rectangle],
                  min_distance_between_objects: OptInt = None,
                  min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
@@ -38,7 +39,7 @@ class RectangleArray(ABCObjectArray):
 
         """
         super().__init__(xy=xy, attributes=attributes,
-                         target_area_radius=target_area_radius,
+                         target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
         self._sizes = np.array([])
@@ -115,7 +116,7 @@ class RectangleArray(ABCObjectArray):
     def from_dict(the_dict: dict) -> RectangleArray:
         """read rectangle array from dict"""
 
-        rtn = RectangleArray(target_area_radius=the_dict["target_area_radius"],
+        rtn = RectangleArray(target_area=RectangleArray._target_area_from_dict(the_dict),
                              min_distance_between_objects=the_dict["min_distance_between_objects"],
                              min_distance_area_boarder=the_dict["min_distance_area_boarder"])
         rtn._append_xy_attribute(xy=the_dict["xy"],
@@ -144,7 +145,7 @@ class RectangleArray(ABCObjectArray):
 
         if len(self._xy) == 0:
             return RectangleArray(
-                target_area_radius=self.target_area_radius,
+                target_area=deepcopy(self.target_area),
                 min_distance_area_boarder=self.min_distance_area_boarder,
                 min_distance_between_objects=self.min_distance_between_objects)
         if indices is None:
@@ -152,7 +153,7 @@ class RectangleArray(ABCObjectArray):
 
         if deep_copy:
             return RectangleArray(
-                target_area_radius=self.target_area_radius,
+                target_area=deepcopy(self.target_area),
                 min_distance_between_objects=self.min_distance_between_objects,
                 min_distance_area_boarder=self.min_distance_area_boarder,
                 xy=self._xy[indices, :].copy(),
@@ -160,7 +161,7 @@ class RectangleArray(ABCObjectArray):
                 attributes=self._attributes[indices].copy())
         else:
             return RectangleArray(
-                target_area_radius=self.target_area_radius,
+                target_area=deepcopy(self.target_area),
                 min_distance_between_objects=self.min_distance_between_objects,
                 min_distance_area_boarder=self.min_distance_area_boarder,
                 xy=self._xy[indices, :],

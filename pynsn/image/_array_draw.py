@@ -3,11 +3,15 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from abc import ABCMeta, abstractmethod
 
 import numpy as _np
+
+from pynsn._shapes.rectangle import Rectangle
 from . import _colour
 from .. import _arrays
 from .._shapes import Dot, PictureFile
 
 # helper for type checking and error raising error
+
+
 def _check_object_array(obj):
     if not isinstance(obj, (_arrays.DotArray, _arrays.RectangleArray)):
         raise TypeError("DotArray or RectangleArray expected, but not {}".format(
@@ -67,7 +71,6 @@ class ArrayDraw(metaclass=ABCMeta):
         """
         pass
 
-
     def create_image(self, object_array, colours, antialiasing=None, **kwargs):
         """create image
 
@@ -99,19 +102,27 @@ class ArrayDraw(metaclass=ABCMeta):
                 aaf = 1
         else:
             try:
-                aaf = int(antialiasing)
+                aaf = int(antialiasing)  # type: ignore
             except (ValueError, TypeError):
                 aaf = 1
 
         # prepare the pil image, make target area if required
-        image_width = int(_np.ceil(object_array.target_area_radius) * 2) * aaf
+        if isinstance(object_array.target_area, Dot):
+            image_width = object_array.target_area.diameter
+        elif isinstance(object_array.target_area, Rectangle):
+            # FIXME only squared target area are correctly plotted
+            image_width = max(object_array.target_area.size)
+        else:
+            raise NotImplementedError()  # should never happen
+
+        image_width = int(_np.ceil(image_width) * aaf)
         img = self.get_squared_image(image_width=image_width,
                                      background_colour=colours.background.colour,
                                      **kwargs)
 
         if colours.target_area.colour is not None:
             obj = Dot(xy=(0, 0), diameter=image_width,
-                           attribute=colours.target_area.colour)
+                      attribute=colours.target_area.colour)
             self.draw_shape(img, obj, opacity=1,
                             scaling_factor=1)
 
@@ -123,7 +134,8 @@ class ArrayDraw(metaclass=ABCMeta):
                 if isinstance(att, PictureFile):
                     pass
                 else:  # dot or rect: force colour, set default colour if no colour
-                    obj.attribute = _colour.Colour(att, colours.default_object_colour)
+                    obj.attribute = _colour.Colour(
+                        att, colours.default_object_colour.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_object,
                                 scaling_factor=aaf)
 
@@ -145,14 +157,14 @@ class ArrayDraw(metaclass=ABCMeta):
             #  and center of mass
             if colours.center_of_field_area.colour is not None:
                 obj = Dot(xy=object_array.get_center_of_field_area(),
-                               diameter=10,
-                               attribute=colours.center_of_field_area.colour)
+                          diameter=10,
+                          attribute=colours.center_of_field_area.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
             if colours.center_of_mass.colour is not None:
                 obj = Dot(xy=object_array.get_center_of_mass(),
-                               diameter=10,
-                               attribute=colours.center_of_mass.colour)
+                          diameter=10,
+                          attribute=colours.center_of_mass.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
 

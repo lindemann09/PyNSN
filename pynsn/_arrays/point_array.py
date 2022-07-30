@@ -7,6 +7,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
 from hashlib import md5
+from copy import deepcopy
 
 import numpy as np
 from .._lib import geometry
@@ -30,14 +31,14 @@ class PointArray(TargetArea):
     """
 
     def __init__(self,
-                 target_area_radius: int,
+                 target_area: Union[Dot, Rectangle],
                  min_distance_between_objects: OptInt = None,
                  min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
-        super().__init__(target_area_radius=target_area_radius,
+        super().__init__(target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
 
@@ -204,7 +205,7 @@ class PointArray(TargetArea):
         """
 
         if len(self._xy) == 0:
-            return PointArray(target_area_radius=self.target_area_radius,
+            return PointArray(target_area=deepcopy(self.target_area),
                               min_distance_between_objects=self.min_distance_between_objects,
                               min_distance_area_boarder=self.min_distance_area_boarder)
 
@@ -212,13 +213,13 @@ class PointArray(TargetArea):
             indices = list(range(len(self._xy)))
 
         if deep_copy:
-            return PointArray(target_area_radius=self.target_area_radius,
+            return PointArray(target_area=deepcopy(self.target_area),
                               min_distance_between_objects=self.min_distance_between_objects,
                               min_distance_area_boarder=self.min_distance_area_boarder,
                               xy=self._xy[indices, :].copy(),
                               attributes=self._attributes[indices].copy())
         else:
-            return PointArray(target_area_radius=self.target_area_radius,
+            return PointArray(target_area=deepcopy(self.target_area),
                               min_distance_between_objects=self.min_distance_between_objects,
                               min_distance_area_boarder=self.min_distance_area_boarder,
                               xy=self._xy[indices, :],
@@ -238,7 +239,7 @@ class PointArray(TargetArea):
     @staticmethod
     def from_dict(the_dict: dict) -> PointArray:
         """read dot array from dict"""
-        rtn = PointArray(target_area_radius=the_dict["target_area_radius"],
+        rtn = PointArray(target_area=PointArray._target_area_from_dict(the_dict),
                          min_distance_between_objects=the_dict["min_distance_between_objects"],
                          min_distance_area_boarder=the_dict["min_distance_area_boarder"])
         rtn._append_xy_attribute(xy=the_dict["xy"],

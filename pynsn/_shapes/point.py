@@ -13,7 +13,7 @@ from .. import _shapes
 
 class Point(ABCShape):
 
-    def __init__(self, xy, attribute=None):
+    def __init__(self, xy=(0, 0), attribute=None):
         """Initialize a point
 
         Handles polar and cartesian representation (optimised processing, i.e.,

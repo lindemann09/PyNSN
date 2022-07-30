@@ -25,7 +25,7 @@ class MainWidget(QWidget):
         self.number = LabeledNumberInput("Number", number)
         self.number2 = LabeledNumberInput("Number 2", 5)
         self.target_area_radius = LabeledNumberInput(
-            "Max radius", nsn_factory.target_area_radius)
+            "Max radius", nsn_factory.target_area_radius) # FIXME not working
         self.item_diameter_mean = LabeledNumberInput("Mean diameter", sdr.mu)
         self.item_diameter_std = LabeledNumberInput(
             "Diameter range std", sdr.sigma)

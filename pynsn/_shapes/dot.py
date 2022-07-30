@@ -13,7 +13,7 @@ from .. import _shapes
 
 class Dot(ABCShape):
 
-    def __init__(self, xy, diameter, attribute=None):
+    def __init__(self, xy=(0, 0), diameter=1, attribute=None):
         """Initialize a dot
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -65,18 +65,12 @@ class Dot(ABCShape):
 
     def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc
-        r_self = self.diameter/2.0
         if isinstance(other, _shapes.Dot):
-            r_other = other.diameter/2.0
-            if self.x-r_self < other.x-r_other \
-                    or self.x+r_self > other.x+r_other \
-                    or self.y-r_self < other.y-r_other \
-                    or self.y+r_self > other.y+r_other:
-                return False
-            else:
-                return True
+            return Coordinate.distance(self, other) \
+                < (other.diameter - self.diameter)/2.0
 
         elif isinstance(other, _shapes.Rectangle):
+            r_self = self.diameter/2.0
             if self.x-r_self < other.left \
                     or self.x+r_self > other.right \
                     or self.y-r_self < other.bottom \

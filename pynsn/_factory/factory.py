@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from copy import copy
+from copy import copy, deepcopy
 
 from .._arrays.dot_array import DotArray
 from .._arrays.target_area import TargetArea
@@ -57,7 +57,7 @@ def _make_distr(value):
 
 class NSNFactory(TargetArea):
 
-    def __init__(self, target_area_radius,
+    def __init__(self, target_area,
                  min_distance_between_objects=None,
                  min_distance_area_boarder=None):
         """
@@ -70,7 +70,7 @@ class NSNFactory(TargetArea):
         """
 
         TargetArea.__init__(self,
-                            target_area_radius=target_area_radius,
+                            target_area=target_area,
                             min_distance_between_objects=min_distance_between_objects,
                             min_distance_area_boarder=min_distance_area_boarder)
         self._distr_diameter = None
@@ -220,7 +220,7 @@ class NSNFactory(TargetArea):
                                "'set_appearance'")
         if self._distr_diameter is not None:
             # DotArray
-            rtn = DotArray(target_area_radius=self.target_area_radius,
+            rtn = DotArray(target_area=deepcopy(self.target_area),
                            min_distance_between_objects=self.min_distance_between_objects,
                            min_distance_area_boarder=self.min_distance_area_boarder)
 
@@ -231,12 +231,12 @@ class NSNFactory(TargetArea):
                                                 allow_overlapping=allow_overlapping)
                 except NoSolutionError:
                     raise NoSolutionError(
-                        "Can't find a solution for {} items in this array".format(n_objects))
+                        f"Can't find a solution for {n_objects} items in this array")
                 rtn.add([dot])  # type: ignore
 
         else:
             # RectArray
-            rtn = RectangleArray(target_area_radius=self.target_area_radius,
+            rtn = RectangleArray(target_area=deepcopy(self.target_area),
                                  min_distance_between_objects=self.min_distance_between_objects,
                                  min_distance_area_boarder=self.min_distance_area_boarder)
 
@@ -246,7 +246,7 @@ class NSNFactory(TargetArea):
                                                  occupied_space=occupied_space,
                                                  allow_overlapping=allow_overlapping)
                 except NoSolutionError:
-                    raise NoSolutionError("Can't find a solution for {} ".format(n_objects) +
+                    raise NoSolutionError(f"Can't find a solution for {n_objects} " +
                                           "items in this array.")
 
                 rtn.add([rect])  # type: ignore

@@ -3,7 +3,7 @@ import unittest
 import tempfile
 
 import pynsn
-from pynsn import NSNFactory, ImageColours
+from pynsn import NSNFactory, ImageColours, Dot
 from pynsn import distributions as distr
 
 TEMP_FLD = os.path.join(tempfile.gettempdir(), "pynsn_unit_test")
@@ -27,7 +27,7 @@ class TestArrays(unittest.TestCase):
                                        center_of_mass="magenta"
                                        )  # FIXME test opacity
 
-        factory = NSNFactory(target_area_radius=200)
+        factory = NSNFactory(target_area=Dot(diameter=400))
         factory.set_appearance_dot(diameter=(40, 10, 30),
                                    attributes=distr.Levels(["blue", "green"],
                                                            exact_weighting=True))

@@ -3,18 +3,19 @@ Dot Array
 """
 from __future__ import annotations
 
+from pynsn._arrays.target_area import TargetArea
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from typing import Dict, List
-
-import json
+from copy import deepcopy
 import numpy as np
 
 from .abc_object_array import ABCObjectArray
 from .._lib import misc
 from .._lib.lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
     Any, Union, Sequence, Optional, OptFloat, NDArray
-from .._shapes.dot import Dot
+from .._shapes import Dot, Rectangle
 
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
@@ -30,16 +31,18 @@ class DotArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area_radius: int,
+                 target_area: Union[Dot, Rectangle],
                  min_distance_between_objects: OptInt = None,
                  min_distance_area_boarder: OptInt = None,
                  xy: OptArrayLike = None,
                  diameter: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
-        super().__init__(xy=xy, attributes=attributes,
-                         target_area_radius=target_area_radius,
+        super().__init__(xy=xy,
+                         attributes=attributes,
+                         target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
+
         if diameter is None:
             self._diameter = np.array([])
         else:
@@ -101,7 +104,7 @@ class DotArray(ABCObjectArray):
     @staticmethod
     def from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
-        rtn = DotArray(target_area_radius=the_dict["target_area_radius"],
+        rtn = DotArray(target_area=DotArray._target_area_from_dict(the_dict),
                        min_distance_between_objects=the_dict["min_distance_between_objects"],
                        min_distance_area_boarder=the_dict["min_distance_area_boarder"])
 
@@ -137,7 +140,7 @@ class DotArray(ABCObjectArray):
         """
 
         if len(self._xy) == 0:
-            return DotArray(target_area_radius=self.target_area_radius,
+            return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder)
 
@@ -145,14 +148,15 @@ class DotArray(ABCObjectArray):
             indices = list(range(len(self._xy)))
 
         if deep_copy:
-            return DotArray(target_area_radius=self.target_area_radius,
+            return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._xy[indices, :].copy(),
                             diameter=self._diameter[indices].copy(),
                             attributes=self._attributes[indices].copy())
         else:
-            return DotArray(target_area_radius=self.target_area_radius,    min_distance_between_objects=self.min_distance_between_objects,
+            return DotArray(target_area=deepcopy(self.target_area),
+                            min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._xy[indices, :],
                             diameter=self._diameter[indices],

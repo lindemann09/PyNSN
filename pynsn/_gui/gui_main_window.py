@@ -16,7 +16,7 @@ from ..image import _colour
 from ..image import pil_image
 from ..tools import _dot_array_sequence
 
-DEFAULT_ARRAY = {"num": 40,
+DEFAULT_ARRAY = {"num": 40,  # FIXME new factory with new target area
                  "_factory": NSNFactory(target_area_radius=200, min_distance_between_objects=2),
                  "dot_diameter": distr.Beta(mu=15, sigma=8, min_max=(5, 40)),
                  "col": ImageColours(target_area="#303030",

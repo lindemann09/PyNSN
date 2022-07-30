@@ -11,7 +11,7 @@ from .. import _shapes
 
 class Rectangle(ABCShape):
 
-    def __init__(self, xy, size, attribute=None):
+    def __init__(self, xy=(0, 0), size=(1, 1), attribute=None):
         """Initialize a Rectangle
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -155,6 +155,4 @@ class Rectangle(ABCShape):
         raise NotImplementedError("is_inside is not "
                                   f"implemented for {type(other)}.")
 
-#    def is_point_inside_rect(self, xy):
-#        return (other.left <= self.xy[0] <= other.right and
-#                    other.top <= self.xy[1] <= other.bottom)
+# TODO doc "basic properities" is all classes (like width)

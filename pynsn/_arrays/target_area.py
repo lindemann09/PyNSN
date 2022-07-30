@@ -2,19 +2,22 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from .._lib.lib_typing import OptInt
+from .._lib.lib_typing import OptInt, Union
 from .._lib import constants
+from .._shapes import Dot, Rectangle
 
 
 class TargetArea(object):
 
     def __init__(self,
-                 target_area_radius: int,
+                 target_area: Union[Dot, Rectangle],
                  min_distance_between_objects: OptInt = None,
                  min_distance_area_boarder: OptInt = None) -> None:
         """TargetArea Parameter"""
 
-        self.target_area_radius = target_area_radius
+        if not isinstance(target_area, (Dot, Rectangle)):
+            raise ValueError("Area shape has to be a Dot or Rectangle")
+        self.target_area = target_area
         if min_distance_between_objects is None:
             self.min_distance_between_objects = constants.DEFAULT_MIN_DISTANCE_BETWEEN_OBJECTS
         else:
@@ -26,10 +29,25 @@ class TargetArea(object):
 
     def to_dict(self) -> dict:
         """Dict representation of the target area"""
+        if isinstance(self.target_area, Dot):
+            area_size = self.target_area.diameter
+        else:
+            area_size = self.target_area.size
         return {"type": type(self).__name__,
-                "target_area_radius": self.target_area_radius,
+                "target_area": type(self.target_area).__name__,
+                "target_area_size": area_size,
                 "min_distance_between_objects": self.min_distance_between_objects,
                 "min_distance_area_boarder": self.min_distance_area_boarder}
+
+    @staticmethod
+    def _target_area_from_dict(dict_) -> Union[Dot, Rectangle]:
+        # helper function
+        if dict_["target_area"] == "Dot":
+            return Dot(diameter=dict_["target_area_size"])
+        elif dict_["target_area"] == "Rectangle":
+            return Rectangle(size=dict_["target_area_size"])
+        else:
+            raise NotImplementedError()  # should never happen
 
 
 # FIXME rectangular Target arrays
