@@ -4,7 +4,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.13.0'
+__version__ = '0.14.0'
 
 from sys import version_info as _python_version_info
 
