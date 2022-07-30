@@ -3,7 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from typing import Iterator
+from typing import Iterator, Union
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
 from .. import _shapes
@@ -43,13 +43,14 @@ class Rectangle(ABCShape):
     def perimeter(self):
         return 2 * (self.width + self.height)
 
-    def distance(self, other: _shapes.ShapeType) -> float:
+    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
         # inherited doc
         if isinstance(other, _shapes.Dot):
             dist = self.distance(_shapes.Point(xy=other.xy))
             return dist - other.diameter / 2.0
 
-        elif isinstance(other, (_shapes.Rectangle, _shapes.Point)):
+        elif isinstance(other, (_shapes.Rectangle, _shapes.Point)) \
+                or other.__class__ == Coordinate:
             d_xy = self.xy_distances(other=other)
             return math.hypot(d_xy[0], d_xy[1])  # TODO distance to point
 
@@ -109,7 +110,7 @@ class Rectangle(ABCShape):
         if isinstance(other, _shapes.Rectangle):
             max_overlap_dist = (self.width + other.width) / 2,\
                 (self.height + other.height) / 2
-        elif isinstance(other, _shapes.Point):
+        elif isinstance(other, _shapes.Point) or type(other) == Coordinate:
             max_overlap_dist = self.width / 2, self.height / 2
         else:
             raise NotImplementedError(f"xy_distances to {type(other)} "
@@ -129,19 +130,30 @@ class Rectangle(ABCShape):
 
         return dx, dy
 
-    def is_inside(self, other: _shapes.ShapeType) -> bool:
+    def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
-            pass
+            r_other = other.diameter / 2.0
+            for edge in self.iter_edges():
+                # distance between other center & edge > radius
+                if Coordinate.distance(other, edge) > r_other:
+                    return False
+            return True
 
         elif isinstance(other, _shapes.Rectangle):
-            pass
+            if self.left < other.left \
+                    or self.right > other.right \
+                    or self.bottom < other.bottom \
+                    or self.top > other.top:
+                return False
+            else:
+                return True
 
-        elif isinstance(other, _shapes.Point):
+        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
             return False
 
         raise NotImplementedError("is_inside is not "
-                                  "implemented for {}.".format(type(other)))
+                                  f"implemented for {type(other)}.")
 
 #    def is_point_inside_rect(self, xy):
 #        return (other.left <= self.xy[0] <= other.right and

@@ -17,7 +17,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
 
 
 from ._arrays import DotArray, RectangleArray, PointArray, \
-                ArrayProperties, load_array
+    ArrayProperties, load_array
 from ._shapes import Point, Dot, Rectangle, PictureFile
 from ._factory import NSNFactory
 from .image._colour import Colour, ImageColours
@@ -27,6 +27,7 @@ from ._lib.rng import init_random_generator
 from ._lib import exception
 from ._lib import constants
 from ._lib.constants import VisualPropertyFlags as flags
+from ._lib.coordinate import Coordinate
 
 
 def _print_version_info():

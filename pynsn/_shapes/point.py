@@ -2,6 +2,9 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Union
+
+
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
 from .._lib.coordinate import Coordinate
@@ -38,10 +41,11 @@ class Point(ABCShape):
     def perimeter(self):
         return 0
 
-    def distance(self, other: _shapes.ShapeType) -> float:
+    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
         # inherited doc
 
-        if isinstance(other, _shapes.Point):
+        # unidiomatic-typecheck: ignore
+        if isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
             return Coordinate.distance(self, other)
         elif isinstance(other, (_shapes.Dot, _shapes.Rectangle)):
             return other.distance(self)
@@ -49,16 +53,17 @@ class Point(ABCShape):
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")
 
-    def is_inside(self, other: _shapes.ShapeType) -> bool:
+    def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
-            pass
+            return Coordinate.distance(self, other) <= other.diameter/2.0
 
         elif isinstance(other, _shapes.Rectangle):
-            pass
+            return (other.left <= self.xy[0] <= other.right and
+                    other.top <= self.xy[1] <= other.bottom)
 
-        elif isinstance(other, _shapes.Point):
-            pass
+        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
+            return self.xy == other.xy
 
         raise NotImplementedError("is_inside is not "
-                                  "implemented for {}.".format(type(other)))
+                                  f"implemented for {type(other)}.")

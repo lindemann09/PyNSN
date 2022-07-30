@@ -93,4 +93,4 @@ class Coordinate(object):
         """Euclidean distance to the another Coordinate."""
         return _math.hypot(self.x - other.x, self.y - other.y)
 
-# todo typing
+# TODO typing

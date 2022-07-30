@@ -82,7 +82,7 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
     @property
     @abstractmethod
     def perimeter(self):
-        """"""
+        """perimeter"""
 
     @abstractmethod
     def is_inside(self, other: ABCShape) -> bool:

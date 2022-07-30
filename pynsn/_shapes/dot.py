@@ -3,6 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
+from typing import Union
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
@@ -35,17 +36,19 @@ class Dot(ABCShape):
         return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
                                                                 self.diameter, self.attribute)
 
-    def distance(self, other: _shapes.ShapeType) -> float:
+    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
         # inherited doc
 
         if isinstance(other, _shapes.Dot):
+            # distance between centers - radii
             return Coordinate.distance(self, other) \
                 - ((self.diameter + other.diameter) / 2.0)
 
         elif isinstance(other, _shapes.Rectangle):
             return other.distance(self)
 
-        elif isinstance(other, _shapes.Point):
+        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
+            # distance between centers - radius
             return Coordinate.distance(self, other) \
                 - (self.diameter / 2.0)
 
@@ -60,16 +63,30 @@ class Dot(ABCShape):
     def perimeter(self):
         return math.pi * self.diameter
 
-    def is_inside(self, other: _shapes.ShapeType) -> bool:
+    def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc
+        r_self = self.diameter/2.0
         if isinstance(other, _shapes.Dot):
-            pass
+            r_other = other.diameter/2.0
+            if self.x-r_self < other.x-r_other \
+                    or self.x+r_self > other.x+r_other \
+                    or self.y-r_self < other.y-r_other \
+                    or self.y+r_self > other.y+r_other:
+                return False
+            else:
+                return True
 
         elif isinstance(other, _shapes.Rectangle):
-            pass
+            if self.x-r_self < other.left \
+                    or self.x+r_self > other.right \
+                    or self.y-r_self < other.bottom \
+                    or self.y+r_self > other.top:
+                return False
+            else:
+                return True
 
-        elif isinstance(other, _shapes.Point):
+        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
             return False
 
         raise NotImplementedError("is_inside is not "
-                                  "implemented for {}.".format(type(other)))
+                                  f"implemented for {type(other)}.")
