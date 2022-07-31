@@ -124,12 +124,13 @@ def dict_to_text(the_dict, col_a=22, col_b=14,
         else:
             key_str = "  " + k
 
-        value = "{}\n".format(v)
+        value = f"{v}\n"
         len_col_b = col_b - len(value)
         if len_col_b < 2:
             len_col_b = 2
-        rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
-            (" " * len_col_b) + value
+        rtn += key_str \
+            + (spacing_char * (col_a - len(key_str))) \
+            + (" " * len_col_b) + value
 
     return rtn.rstrip()
 
