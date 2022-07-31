@@ -99,6 +99,7 @@ class NSNFactory(TargetArea):
     def distr_attributes(self):
         return self._distr_attributes
 
+    # FIXME overingenieerd, allow both settings rect and dot
     def set_appearance_dot(self, diameter, attributes=None):
         self._distr_width = None
         self._distr_height = None
@@ -184,7 +185,6 @@ class NSNFactory(TargetArea):
         except AttributeError:
             pass
         try:
-            # type: ignore
             rtn.update({"proportion":
                         self._distr_proportion.to_dict()})  # type: ignore
         except AttributeError:
@@ -196,6 +196,7 @@ class NSNFactory(TargetArea):
             pass
         return rtn
 
+    # FIXME random_dot_array and random_rect_array (separate methods)
     def create_random_array(self, n_objects: int,
                             allow_overlapping: bool = False,
                             occupied_space: Union[None, DotArray, RectangleArray] = None) -> Union[DotArray, RectangleArray]:
@@ -252,6 +253,7 @@ class NSNFactory(TargetArea):
                 rtn.add([rect])  # type: ignore
         return rtn
 
+    # FIXME random_dot_array and random_rect_array (separate methods)
     def create_incremental_random_array(self, n_objects,
                                         allow_overlapping=False):
         """

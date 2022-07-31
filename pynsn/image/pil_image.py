@@ -30,25 +30,27 @@ def create(object_array, colours=None, antialiasing=True):
 class _PILDraw(_array_draw.ArrayDraw):
 
     @staticmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour, **kwargs):
         # filename not used for pil images
-        return _Image.new("RGBA", (image_width, image_width), color=background_colour)
+        return _Image.new("RGBA", image_size, color=background_colour)
 
     @staticmethod
     def scale_image(image, scaling_factor):
         try:
-            resample = _Image.Resampling.LANCZOS # type: ignore (old versions)
+            resample = _Image.Resampling.LANCZOS  # type: ignore (old versions)
         except AttributeError:
             resample = _Image.LANCZOS
 
-        im_size = int(image.size[0] / scaling_factor)
-        return image.resize((im_size, im_size), resample=resample)
+        im_size = (int(image.size[0] / scaling_factor),
+                   int(image.size[1] / scaling_factor))
+        return image.resize(im_size, resample=resample)
 
     @staticmethod
     def draw_shape(img, shape, opacity, scaling_factor):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        shape.xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size[0]).tolist()
+        shape.xy = _c2i_coord(_np.asarray(shape.xy) *
+                              scaling_factor, img.size).tolist()
         attr = shape.get_attribute_object()
 
         if isinstance(shape, _shapes.Dot):
@@ -80,13 +82,14 @@ class _PILDraw(_array_draw.ArrayDraw):
                                                fill=attr.colour)  # FIXME decentral _shapes seems to be bit larger than with pyplot
 
         else:
-            raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+            raise NotImplementedError(
+                "Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
     @staticmethod
     def draw_convex_hull(img, points, convex_hull_colour,  opacity,
                          scaling_factor):
         # FIXME opacity is ignored (not yet supported)
-        points = _c2i_coord(points * scaling_factor, img.size[0])
+        points = _c2i_coord(points * scaling_factor, img.size)
         last = None
         draw = _ImageDraw.Draw(img)
         for p in _np.append(points, [points[0]], axis=0):

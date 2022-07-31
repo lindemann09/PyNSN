@@ -23,7 +23,7 @@ class ArrayDraw(metaclass=ABCMeta):
 
     To develop a plotter for other graphic system, inherit the abstract class
     and define you own drawing class (MyDraw())
-        'get_squared_image', 'scale_image', 'draw_shape', 'draw_convex_hull'
+        'get_image', 'scale_image', 'draw_shape', 'draw_convex_hull'
 
     Image can be then generated via
     >>> MyDraw()().create_image(object_array=object_array, colours=colours)
@@ -31,7 +31,7 @@ class ArrayDraw(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour, **kwargs):
         """
         -------
         rtn : should return image
@@ -121,9 +121,9 @@ class ArrayDraw(metaclass=ABCMeta):
         else:
             raise NotImplementedError()  # should never happen
 
-        img = self.get_squared_image(image_width=max(image_size),  # FIXME only squared image size
-                                     background_colour=colours.background.colour,
-                                     **kwargs)
+        img = self.get_image(image_size=image_size,  # FIXME only squared image size
+                             background_colour=colours.background.colour,
+                             **kwargs)
 
         if colours.target_area.colour is not None:
             self.draw_shape(img, target_area_shape,

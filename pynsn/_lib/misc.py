@@ -82,7 +82,8 @@ def numpy_vector(x):
     if x.ndim == 1:
         return x
     elif x.ndim == 0:
-        return x.reshape(1)  # if one element only, make a array with one element
+        # if one element only, make a array with one element
+        return x.reshape(1)
     else:
         return x.flatten()
 
@@ -93,12 +94,13 @@ def numpy_array_2d(two_d_data: ArrayLike):
     if rtn.ndim == 1 and len(rtn) == 2:
         rtn = rtn.reshape((1, 2))
     if rtn.ndim != 2:
-        raise ValueError("Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+        raise ValueError(
+            "Bad shaped data: xy must be pair of xy-values or a list of xy-values")
     return rtn
 
 
 def numpy_round2(array: NDArray[np.float_], decimals: int,
-                 int_type: type =np.int32) -> NDArray:
+                 int_type: type = np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
     array = np.round(array, decimals=decimals)
     if decimals == 0:
@@ -127,7 +129,7 @@ def dict_to_text(the_dict, col_a=22, col_b=14,
         if len_col_b < 2:
             len_col_b = 2
         rtn += key_str + (spacing_char * (col_a - len(key_str))) + \
-               (" " * len_col_b) + value
+            (" " * len_col_b) + value
 
     return rtn.rstrip()
 
@@ -142,7 +144,7 @@ def is_interactive_mode():
     """
     # ipython?
     try:
-        __IPYTHON__
+        __IPYTHON__   # type: ignore
         return True
     except NameError:
         pass
