@@ -128,6 +128,28 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         self._xy = self._xy - cxy
         self._properties.reset()
 
+    def _search_area_parameter(self):
+        """helper function that returns
+            the area of possible object location and
+
+        It takes into account to minimum distance to area boarder
+        """
+        if isinstance(self.target_area, Dot):
+            tmp = self.target_area.diameter/2.0 \
+                - self.min_distance_area_boarder
+            search_area = Dot(diameter=tmp*2)
+            half_search_area_size = np.array([tmp, tmp])
+
+        elif isinstance(self.target_area, Rectangle):
+            tmp = (self.target_area.width - 2 * self.min_distance_area_boarder,
+                   self.target_area.height - 2 * self.min_distance_area_boarder)
+            search_area = Rectangle(size=tmp)
+            half_search_area_size = np.asarray(search_area.size) / 2.0
+        else:
+            raise NotImplementedError()
+
+        return search_area, half_search_area_size
+
     def get_free_position(self,
                           ref_object: ShapeType,
                           in_neighborhood: bool = False,
@@ -150,19 +172,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             raise TypeError(
                 "Occupied_space has to be a Dot or Rectangle Array or None.")
 
-        if isinstance(self.target_area, Dot):
-            tmp = self.target_area.diameter/2.0 \
-                - self.min_distance_area_boarder
-            search_area = Dot(diameter=tmp*2)
-            half_search_area_size = np.array([tmp, tmp])
-        elif isinstance(self.target_area, Rectangle):
-            tmp = (self.target_area.width - 2 * self.min_distance_area_boarder,
-                   self.target_area.height - 2 * self.min_distance_area_boarder)
-            search_area = Rectangle(size=tmp)
-            half_search_area_size = np.asarray(search_area.size) / 2.0
-        else:
-            raise NotImplementedError()
-
+        search_area, half_search_area_size = self._search_area_parameter()
         rtn_object = deepcopy(ref_object)
         random_walk = BrownianMotion(ref_object.xy, delta=2)
 
@@ -215,20 +225,16 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                                          allow_overlapping=allow_overlapping)
             self.add([new])  # type: ignore
 
-    def get_outlier(self) -> Tuple[NDArray, NDArray]:
-        """returns indices of object that stand out and array with the size
-        of outstanding
-        """
-        # FIXME broken method: do not use convex hull, because that only works
-        # for n>2
-        raise NotImplementedError()
-        #xy = self.properties.convex_hull.xy
-        # sizes_outlying = np.hypot(xy[:, 0], xy[:, 1]) - \
-        #    (self.target_area_radius - self.min_distance_area_boarder)
-        #idx = sizes_outlying > 0
-        #
-        # return (self.properties.convex_hull._point_indices[idx],
-        #        sizes_outlying[idx])
+    def get_outlier(self) -> List[int]:
+        """Indices of object that are not fully inside the target area"""
+        #TODO test me
+        indices = []
+        search_area, _ = self._search_area_parameter()
+
+        for cnt, obj in enumerate(self.iter_objects()):
+            if obj.is_inside(search_area):
+                indices.append(cnt)
+        return indices
 
     def get_number_deviant(self, change_numerosity: int,
                            preserve_field_area: bool = False) -> PointArray:
