@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import copy, deepcopy
+from typing import Iterator, Any
 
 from .._arrays.dot_array import DotArray
 from .._arrays.target_area import TargetArea
@@ -17,7 +18,7 @@ from .._lib.lib_typing import Union, Sequence, NDArray
 
 class _Constant(object):
 
-    def __init__(self, value):
+    def __init__(self, value: Any) -> None:
         """Helper class to "sample" constance.
 
         Looks like a PyNSNDistribution, but sample returns just the constant
@@ -77,7 +78,8 @@ class NSNFactory(TargetArea):
         self._distr_width = None
         self._distr_height = None
         self._distr_proportion = None
-        self._distr_attributes = None
+        self._distr_dot_attributes = None
+        self._distr_rect_attributes = None
 
     @property
     def distr_diameter(self):
@@ -96,76 +98,77 @@ class NSNFactory(TargetArea):
         return self._distr_proportion
 
     @property
-    def distr_attributes(self):
-        return self._distr_attributes
+    def distr_dot_attributes(self):
+        return self._distr_dot_attributes
 
-    # FIXME overingenieerd, allow both settings rect and dot
-    def set_appearance_dot(self, diameter, attributes=None):
-        self._distr_width = None
-        self._distr_height = None
-        self._distr_proportion = None
+    @property
+    def distr_rectangle_attributes(self):
+        return self._distr_dot_attributes
+
+    def set_appearance_dots(self, diameter, attributes=None):
         self._distr_diameter = _make_distr(diameter)
-        self._distr_attributes = _make_distr(attributes)
+        self._distr_dot_attributes = _make_distr(attributes)
 
-    def set_appearance_rectangle(self, width=None, height=None,
+    def set_appearance_rectangles(self, width=None, height=None,
                                  proportion=None, attributes=None):
 
         n_rect_parameter = sum([width is not None, height is not None,
                                 proportion is not None])
-        if n_rect_parameter == 1:
+        if n_rect_parameter != 2:
             raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
                             "either width or height.")
-        self._distr_diameter = None
         self._distr_width = _make_distr(width)
         self._distr_height = _make_distr(height)
         self._distr_proportion = _make_distr(proportion)
-        self._distr_attributes = _make_distr(attributes)
+        self._distr_rect_attributes = _make_distr(attributes)
 
-    def is_appearance_set(self):
-        return self._distr_diameter is not None or self._distr_width is not None or \
-            self._distr_height is not None
-
-    def sample(self, n, round_to_decimals=None) -> Sequence[Union[Dot, Rectangle]]:
-        """return list objects (Dot or Rect) with random size
+    def _sample_dots(self, n) -> Sequence[Dot]:
+        """return list of dots with random size
         all positions = (0,0)
         """
-        if self._distr_attributes is not None:
-            attributes = self._distr_attributes.sample(n)
+        if self._distr_diameter is None:
+            raise RuntimeError("Dot appearance is not defined; please use set_dot_appearance.")
+        diameter = self._distr_diameter.sample(n)
+        if self._distr_dot_attributes is not None:
+            attributes = self._distr_dot_attributes.sample(n)
         else:
             attributes = [None] * n
-        if self._distr_diameter is not None:
-            diameter = self._distr_diameter.sample(n)
 
-            return [Dot(xy=(0, 0), diameter=dia, attribute=attr)
-                    for dia, attr in zip(diameter, attributes)]  # type: ignore
+        return [Dot(xy=(0, 0), diameter=dia, attribute=attr)
+                for dia, attr in zip(diameter, attributes)]  # type: ignore
+
+    def _sample_rectangles(self, n) -> Sequence[Rectangle]:
+        """return list of rectangles with random size
+        all positions = (0,0)
+        """
+        if self._distr_width is None and self._distr_height is None:
+            raise RuntimeError("Rectangle appearance is not  defined; please use set_rectangle_appearance.")
+        if self._distr_width is not None:
+            width = self._distr_width.sample(n)
         else:
-            # Rect
-            if self._distr_width is not None:
-                width = self._distr_width.sample(n)
-            else:
-                width = None
-            if self._distr_height is not None:
-                height = self._distr_height.sample(n)
-            else:
-                height = None
-            if self._distr_proportion is not None:
-                proportion = self._distr_proportion.sample(n)
-            else:
-                proportion = None
+            width = None
+        if self._distr_height is not None:
+            height = self._distr_height.sample(n)
+        else:
+            height = None
+        if self._distr_proportion is not None:
+            proportion = self._distr_proportion.sample(n)
+        else:
+            proportion = None
 
-            if height is None:
-                height = width * proportion  # type: ignore
-            elif width is None:
-                width = height / proportion  # type: ignore
+        if height is None:
+            height = width * proportion  # type: ignore
+        elif width is None:
+            width = height / proportion  # type: ignore
 
-            if round_to_decimals is not None:
-                width = _round_samples(
-                    width, round_to_decimals=round_to_decimals)
-                height = _round_samples(
-                    width, round_to_decimals=round_to_decimals)
+        if self._distr_dot_attributes is not None:
+            attributes = self._distr_dot_attributes.sample(n)
+        else:
+            attributes = [None] * n
 
-            return [Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
-                    for w, h, attr in zip(width, height, attributes)]  # type: ignore
+        return [Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
+                for w, h, attr in zip(width, height, attributes)]  # type: ignore
+
 
     def to_dict(self):
         rtn = TargetArea.to_dict(self)
@@ -196,10 +199,10 @@ class NSNFactory(TargetArea):
             pass
         return rtn
 
-    # FIXME random_dot_array and random_rect_array (separate methods)
-    def create_random_array(self, n_objects: int,
+    def add_random_dots(self, dot_array: DotArray,
+                            n_objects: int = 1,
                             allow_overlapping: bool = False,
-                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> Union[DotArray, RectangleArray]:
+                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
 
@@ -216,46 +219,122 @@ class NSNFactory(TargetArea):
         -------
         rtn : object array
         """
-        if not self.is_appearance_set:
-            raise RuntimeError("No appearance defined. Please use 'set_dot', 'set_rect_or' "
-                               "'set_appearance'")
-        if self._distr_diameter is not None:
-            # DotArray
-            rtn = DotArray(target_area=deepcopy(self.target_area),
-                           min_distance_between_objects=self.min_distance_between_objects,
-                           min_distance_area_boarder=self.min_distance_area_boarder)
+        if not isinstance(dot_array, DotArray):
+            raise ValueError("Dot array has to be a DotArray and not "
+                             f" {type(dot_array).__name__}")
+        for dot in self._sample_dots(n=n_objects):
+            try:
+                dot = dot_array.get_free_position(ref_object=dot, in_neighborhood=False,
 
-            for dot in self.sample(n=n_objects):
-                try:
-                    dot = rtn.get_free_position(ref_object=dot, in_neighborhood=False,
+                                            occupied_space=occupied_space,
+                                            allow_overlapping=allow_overlapping)
+            except NoSolutionError:
+                raise NoSolutionError(
+                    f"Can't find a solution for {n_objects} items in this array")
+            dot_array.add([dot])  # type: ignore
+
+        return dot_array
+
+    def random_dot_array(self, n_objects: int,
+                            allow_overlapping: bool = False,
+                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
+        """Create a new random dot array
+        occupied_space is a dot array (used for multicolour dot array (join after)
+
+        attribute is an array, _arrays are assigned randomly.
+
+
+        Parameters
+        ----------
+        n_objects
+        allow_overlapping
+        occupied_space
+
+        Returns
+        -------
+        rtn : object array
+        """
+        rtn = DotArray(target_area=deepcopy(self.target_area),
+                        min_distance_between_objects=self.min_distance_between_objects,
+                        min_distance_area_boarder=self.min_distance_area_boarder)
+        return self.add_random_dots(dot_array=rtn,
+                                    n_objects=n_objects,
+                                    allow_overlapping=allow_overlapping,
+                                    occupied_space=occupied_space)
+
+    def add_random_rectangles(self,
+                             rectangle_array : RectangleArray,
+                             n_objects: int = 1,
+                            allow_overlapping: bool = False,
+                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+
+        if not isinstance(rectangle_array, RectangleArray):
+            raise ValueError("Dot array has to be a DotArray and not "
+                             f" {type(rectangle_array).__name__}")
+        for rect in self._sample_rectangles(n=n_objects):
+            try:
+                rect = rectangle_array.get_free_position(ref_object=rect, in_neighborhood=False,
                                                 occupied_space=occupied_space,
                                                 allow_overlapping=allow_overlapping)
-                except NoSolutionError:
-                    raise NoSolutionError(
-                        f"Can't find a solution for {n_objects} items in this array")
-                rtn.add([dot])  # type: ignore
+            except NoSolutionError:
+                raise NoSolutionError(f"Can't find a solution for {n_objects} " +
+                                        "items in this array.")
+            rectangle_array.add([rect]) # type:ignore
 
-        else:
-            # RectArray
-            rtn = RectangleArray(target_area=deepcopy(self.target_area),
-                                 min_distance_between_objects=self.min_distance_between_objects,
-                                 min_distance_area_boarder=self.min_distance_area_boarder)
+        return rectangle_array
 
-            for rect in self.sample(n=n_objects):
-                try:
-                    rect = rtn.get_free_position(ref_object=rect, in_neighborhood=False,
-                                                 occupied_space=occupied_space,
-                                                 allow_overlapping=allow_overlapping)
-                except NoSolutionError:
-                    raise NoSolutionError(f"Can't find a solution for {n_objects} " +
-                                          "items in this array.")
+    def random_rectangle_array(self, n_objects: int,
+                            allow_overlapping: bool = False,
+                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+        """
+        occupied_space is a dot array (used for multicolour dot array (join after)
 
-                rtn.add([rect])  # type: ignore
-        return rtn
+        attribute is an array, _arrays are assigned randomly.
 
-    # FIXME random_dot_array and random_rect_array (separate methods)
-    def create_incremental_random_array(self, n_objects,
-                                        allow_overlapping=False):
+
+        Parameters
+        ----------
+        n_objects
+        allow_overlapping
+        occupied_space
+
+        Returns
+        -------
+        rtn : object array
+        """
+        rtn = RectangleArray(target_area=deepcopy(self.target_area),
+                                min_distance_between_objects=self.min_distance_between_objects,
+                                min_distance_area_boarder=self.min_distance_area_boarder)
+        return self.add_random_rectangles(rectangle_array=rtn,
+                                          n_objects=n_objects,
+                                          allow_overlapping=allow_overlapping,
+                                          occupied_space=occupied_space)
+
+    def incremental_random_dot_array(self, n_objects,
+                                        allow_overlapping=False) -> Iterator[DotArray]:
+        """
+
+        Parameters
+        ----------
+        n_objects
+        allow_overlapping
+
+        Returns
+        -------
+        rtn : iterator of object _arrays
+        """
+        previous = None
+        for _ in range(n_objects):
+            current = self.random_dot_array(n_objects=1,
+                                               allow_overlapping=allow_overlapping,
+                                               occupied_space=previous)
+            if previous is not None:
+                current.join(previous)
+            previous = current
+            yield current
+
+    def incremental_random_rectangle_array(self, n_objects,
+                                        allow_overlapping=False) -> Iterator[RectangleArray]:
         """
 
         Parameters
@@ -269,7 +348,7 @@ class NSNFactory(TargetArea):
         """
         previous = None
         for n in range(n_objects):
-            current = self.create_random_array(n_objects=1,
+            current = self.random_rectangle_array(n_objects=1,
                                                allow_overlapping=allow_overlapping,
                                                occupied_space=previous)
             if previous is not None:

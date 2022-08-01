@@ -173,7 +173,7 @@ class GUIMainWindow(QMainWindow):
         rtn = NSNFactory(
             target_area_radius=self.main_widget.target_area_radius.value,
             min_distance_between_objects=self.main_widget.min_distance_between_objects.value)
-        rtn.set_appearance_dot(
+        rtn.set_appearance_dots(
             diameter=distr.Beta(mu=self.main_widget.item_diameter_mean.value,
                                 sigma=self.main_widget.item_diameter_std.value,
                                 min_max=[self.main_widget.item_diameter_range.value1,

@@ -35,15 +35,16 @@ factory = nsn.NSNFactory(min_distance_between_objects=2,
                          # starget_area=pynsn.Dot(diameter=400),
                          min_distance_area_boarder=2)
 
-factory.set_appearance_dot(diameter=(10, 10, 10),
+factory.set_appearance_dots(diameter=(10, 10, 10),
                            attributes=distr.Levels(["blue", "green"],
                                                    exact_weighting=True))
 
-# factory.set_appearance_rectangle(width=(10, 10, 10), proportion=0.5,
-#                                 attributes=distr.Levels(["blue", "green"],
-#                                                         exact_weighting=True))
+factory.set_appearance_rectangles(width=(10, 10, 10), proportion=0.5,
+                                 attributes=distr.Levels(["blue", "green"],
+                                                         exact_weighting=True))
+print(factory)
 
-stimulus = factory.create_random_array(n_objects=190)
+stimulus = factory.random_rectangle_array(n_objects=190)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
