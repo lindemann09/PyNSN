@@ -13,7 +13,7 @@ import numpy as np
 from .._lib import geometry
 from .._lib import misc
 from .._arrays.target_area import TargetArea
-from .._lib.lib_typing import OptInt, OptArrayLike, Union, \
+from .._lib.lib_typing import OptArrayLike, Union, OptFloat, \
     Sequence, Iterator, IntOVector, Optional, NDArray, ArrayLike
 from .._shapes.dot import Dot
 from .._shapes.point import Point
@@ -32,8 +32,8 @@ class PointArray(TargetArea):
 
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
-                 min_distance_between_objects: OptInt = None,
-                 min_distance_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptFloat = None,
+                 min_distance_area_boarder: OptFloat  = None,
                  xy: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
         # also as parent  class for implementation of dot and rect arrays

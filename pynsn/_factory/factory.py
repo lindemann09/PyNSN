@@ -1,7 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import copy, deepcopy
-from typing import Iterator, Any
+from typing import Iterator, Any, Optional
 
 from .._arrays.dot_array import DotArray
 from .._arrays.target_area import TargetArea
@@ -11,14 +11,13 @@ from .._shapes.rectangle import Rectangle
 from .._lib.misc import dict_to_text
 from .distributions import PyNSNDistribution, _round_samples, Levels
 from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import Union, Sequence, NDArray
+from .._lib.lib_typing import Union, Sequence, NDArray, OptFloat
 
-# FIXME typing required
+ParameterDistributionTypes = Union[PyNSNDistribution, float, int, Sequence[Any], None]
 
+class _Constant(PyNSNDistribution):
 
-class _Constant(object):
-
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: float) -> None:
         """Helper class to "sample" constance.
 
         Looks like a PyNSNDistribution, but sample returns just the constant
@@ -28,17 +27,17 @@ class _Constant(object):
         constant : numeric
         """
 
-        self.value = value
+        super().__init__(min_max = (value, value))
 
     def sample(self, n, round_to_decimals=None) -> NDArray:
-        return _round_samples([self.value] * n, round_to_decimals)
+        return _round_samples([self.min_max[0]] * n, round_to_decimals)
 
     def to_dict(self) -> dict:
         return {"distribution": "Constant",
-                "value": self.value}
+                "value": self.min_max[0]}
 
 
-def _make_distr(value):
+def _make_distr(value: ParameterDistributionTypes) -> Union[PyNSNDistribution, None]:
     """helper
     returns a distribution or None, if None
     """
@@ -49,18 +48,19 @@ def _make_distr(value):
         return value
     elif isinstance(value, (list, tuple)):
         return Levels(levels=copy(value))
-    else:
+    elif isinstance(value, (float, int)):
         return _Constant(value)
-
-
-# TODO typing
+    else:
+        raise RuntimeError("Can't make distribution from"
+                           f" {type(value).__name__}")
 
 
 class NSNFactory(TargetArea):
 
-    def __init__(self, target_area,
-                 min_distance_between_objects=None,
-                 min_distance_area_boarder=None):
+    def __init__(self,
+                 target_area: Union[Dot, Rectangle],
+                 min_distance_between_objects: OptFloat =None,
+                 min_distance_area_boarder: OptFloat = None):
         """
 
         Parameters
@@ -82,36 +82,67 @@ class NSNFactory(TargetArea):
         self._distr_rect_attributes = None
 
     @property
-    def distr_diameter(self):
+    def distr_diameter(self) -> Optional[PyNSNDistribution]:
+        """Distribution of diameter parameter"""
         return self._distr_diameter
 
     @property
-    def distr_width(self):
+    def distr_width(self) -> Optional[PyNSNDistribution]:
+        """Distribution of width parameter"""
         return self._distr_width
 
     @property
-    def distr_height(self):
+    def distr_height(self) -> Optional[PyNSNDistribution]:
+        """Distribution of height parameter"""
         return self._distr_height
 
     @property
-    def distr_proportion(self):
+    def distr_proportion(self) -> Optional[PyNSNDistribution]:
+        """Distribution of proportion parameter"""
         return self._distr_proportion
 
     @property
-    def distr_dot_attributes(self):
+    def distr_dot_attributes(self) -> Optional[PyNSNDistribution]:
+        """Distribution of attributes for dots"""
         return self._distr_dot_attributes
 
     @property
-    def distr_rectangle_attributes(self):
+    def distr_rectangle_attributes(self) -> Optional[PyNSNDistribution]:
+        """Distribution of attributes for rectangles"""
         return self._distr_dot_attributes
 
-    def set_appearance_dots(self, diameter, attributes=None):
+    def set_appearance_dots(self,
+                            diameter: ParameterDistributionTypes,
+                            attributes=None):
+        """Set distributions of the parameter for random dot arrays
+
+        Args:
+            diameter: distribution of diameter
+            attributes: distribution of attributes (Optional)
+        """
         self._distr_diameter = _make_distr(diameter)
         self._distr_dot_attributes = _make_distr(attributes)
 
-    def set_appearance_rectangles(self, width=None, height=None,
-                                 proportion=None, attributes=None):
+    def set_appearance_rectangles(self,
+                                  width: ParameterDistributionTypes = None,
+                                  height: ParameterDistributionTypes = None,
+                                  proportion: ParameterDistributionTypes = None,
+                                  attributes: ParameterDistributionTypes = None):
+        """Set distributions of the parameter for random rectangle arrays
 
+        Args:
+            width: distribution of width (Optional)
+            height: distribution of height (Optional)
+            proportion: distribution of proportions (Optional)
+            attributes: distribution of attributes (Optional)
+
+        Notes:
+            Define either rectangle width and height or rectangle proportion together
+            with either width or height.
+
+        Raises:
+            TypeError: if not two of the three rectangle parameter are defined
+        """
         n_rect_parameter = sum([width is not None, height is not None,
                                 proportion is not None])
         if n_rect_parameter != 2:
@@ -122,10 +153,8 @@ class NSNFactory(TargetArea):
         self._distr_proportion = _make_distr(proportion)
         self._distr_rect_attributes = _make_distr(attributes)
 
-    def _sample_dots(self, n) -> Sequence[Dot]:
-        """return list of dots with random size
-        all positions = (0,0)
-        """
+    def _sample_dots(self, n: int) -> Sequence[Dot]:
+        """return list of dots with random size all positions = (0,0)"""
         if self._distr_diameter is None:
             raise RuntimeError("Dot appearance is not defined; please use set_dot_appearance.")
         diameter = self._distr_diameter.sample(n)
@@ -137,10 +166,8 @@ class NSNFactory(TargetArea):
         return [Dot(xy=(0, 0), diameter=dia, attribute=attr)
                 for dia, attr in zip(diameter, attributes)]  # type: ignore
 
-    def _sample_rectangles(self, n) -> Sequence[Rectangle]:
-        """return list of rectangles with random size
-        all positions = (0,0)
-        """
+    def _sample_rectangles(self, n: int) -> Sequence[Rectangle]:
+        """return list of rectangles with random size all positions = (0,0)"""
         if self._distr_width is None and self._distr_height is None:
             raise RuntimeError("Rectangle appearance is not  defined; please use set_rectangle_appearance.")
         if self._distr_width is not None:
@@ -170,7 +197,8 @@ class NSNFactory(TargetArea):
                 for w, h, attr in zip(width, height, attributes)]  # type: ignore
 
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
+        """Dict representation of the NSNFactory instance"""
         rtn = TargetArea.to_dict(self)
         try:
             rtn.update({"diameter":
@@ -310,8 +338,8 @@ class NSNFactory(TargetArea):
                                           allow_overlapping=allow_overlapping,
                                           occupied_space=occupied_space)
 
-    def incremental_random_dot_array(self, n_objects,
-                                        allow_overlapping=False) -> Iterator[DotArray]:
+    def incremental_random_dot_array(self, n_objects: int,
+                                        allow_overlapping: bool = False) -> Iterator[DotArray]:
         """
 
         Parameters
@@ -333,8 +361,8 @@ class NSNFactory(TargetArea):
             previous = current
             yield current
 
-    def incremental_random_rectangle_array(self, n_objects,
-                                        allow_overlapping=False) -> Iterator[RectangleArray]:
+    def incremental_random_rectangle_array(self, n_objects: int,
+                                        allow_overlapping: bool = False) -> Iterator[RectangleArray]:
         """
 
         Parameters
@@ -356,5 +384,5 @@ class NSNFactory(TargetArea):
             previous = current
             yield current
 
-    def __str__(self):
+    def __str__(self) -> str:
         return dict_to_text(self.to_dict(), col_a=12, col_b=7)

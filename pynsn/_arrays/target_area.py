@@ -2,7 +2,7 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from .._lib.lib_typing import OptInt, Union
+from .._lib.lib_typing import OptFloat, Union
 from .._lib import constants
 from .._shapes import Dot, Rectangle
 
@@ -11,8 +11,8 @@ class TargetArea(object):
 
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
-                 min_distance_between_objects: OptInt = None,
-                 min_distance_area_boarder: OptInt = None) -> None:
+                 min_distance_between_objects: OptFloat = None,
+                 min_distance_area_boarder: OptFloat = None) -> None:
         """TargetArea Parameter"""
 
         if not isinstance(target_area, (Dot, Rectangle)):
@@ -48,6 +48,3 @@ class TargetArea(object):
             return Rectangle(size=dict_["target_area_size"])
         else:
             raise NotImplementedError()  # should never happen
-
-
-# FIXME rectangular Target arrays

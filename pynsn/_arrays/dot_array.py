@@ -13,8 +13,8 @@ import numpy as np
 
 from .abc_object_array import ABCObjectArray
 from .._lib import misc
-from .._lib.lib_typing import OptInt, OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, OptFloat, NDArray
+from .._lib.lib_typing import OptArrayLike, IntOVector, Iterator, \
+    Any, Union, Sequence, Optional, OptFloat, NDArray, OptFloat
 from .._shapes import Dot, Rectangle
 
 
@@ -32,8 +32,8 @@ class DotArray(ABCObjectArray):
 
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
-                 min_distance_between_objects: OptInt = None,
-                 min_distance_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptFloat = None,
+                 min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,
                  diameter: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:

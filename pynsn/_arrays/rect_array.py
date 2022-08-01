@@ -11,7 +11,7 @@ from copy import deepcopy
 from .._lib import misc
 from .abc_object_array import ABCObjectArray
 from .._lib.lib_typing import NumArray, OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, OptInt, NDArray, ArrayLike
+    Any, Union, Sequence, Optional, OptFloat, NDArray, ArrayLike
 from .._shapes.rectangle import Rectangle
 from .._shapes.dot import Dot
 from .._lib.coordinate import Coordinate
@@ -26,8 +26,8 @@ class RectangleArray(ABCObjectArray):
 
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
-                 min_distance_between_objects: OptInt = None,
-                 min_distance_area_boarder: OptInt = None,
+                 min_distance_between_objects: OptFloat = None,
+                 min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,
                  sizes: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
