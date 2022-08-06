@@ -8,6 +8,7 @@ from pynsn._shapes.rectangle import Rectangle
 from . import _colour
 from .. import _arrays
 from .._shapes import Dot, PictureFile
+from .._lib.misc import numpy_round2
 
 # helper for type checking and error raising error
 
@@ -121,7 +122,8 @@ class ArrayDraw(metaclass=ABCMeta):
         else:
             raise NotImplementedError()  # should never happen
 
-        img = self.get_image(image_size=image_size,  # FIXME only squared image size
+        image_size = (round(image_size[0]), round(image_size[1]))
+        img = self.get_image(image_size=image_size,
                              background_colour=colours.background.colour,
                              **kwargs)
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from typing import Iterator, Union
+from typing import Iterator, Tuple, Union
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
 from .. import _shapes
@@ -58,19 +58,19 @@ class Rectangle(ABCShape):
                                   + "is implemented.")
 
     @property
-    def left(self):
+    def left(self) -> float:
         return self.x - 0.5 * self.width
 
     @property
-    def top(self):
+    def top(self) -> float:
         return self.y + 0.5 * self.height
 
     @property
-    def right(self):
+    def right(self) -> float:
         return self.x + 0.5 * self.width
 
     @property
-    def bottom(self):
+    def bottom(self) -> float:
         return self.y - 0.5 * self.height
 
     def iter_edges(self) -> Iterator[Coordinate]:
@@ -87,11 +87,11 @@ class Rectangle(ABCShape):
         yield Coordinate(self.left, self.bottom)
 
     @property
-    def size(self):
+    def size(self) -> Tuple[float, float]:
         return self.width, self.height
 
     @size.setter
-    def size(self, size):
+    def size(self, size: Tuple[float, float]):
         self.width, self.height = size
 
     @property

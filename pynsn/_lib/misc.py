@@ -99,7 +99,7 @@ def numpy_array_2d(two_d_data: ArrayLike):
     return rtn
 
 
-def numpy_round2(array: NDArray[np.float_], decimals: int,
+def numpy_round2(array: NDArray, decimals: int,
                  int_type: type = np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
     array = np.round(array, decimals=decimals)
