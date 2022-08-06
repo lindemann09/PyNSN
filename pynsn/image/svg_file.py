@@ -2,6 +2,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as _np
 import svgwrite as _svg
+
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
 from . import _array_draw
@@ -24,14 +25,20 @@ def create(object_array, colours, filename):
                                    filename=filename)
 
 
-class _SVGDraw(_array_draw.ArrayDraw):
+class _SVGDraw(_array_draw.ABCArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour:str, **kwargs): # FIXME background colour not used
         """"""
-        px = "{}px".format(image_width)
-        return _svg.Drawing(size=(px, px), filename=kwargs['filename'])
+        size = (f"{image_size[0]}px", f"{image_size[1]}px")
+        image = _svg.Drawing(size=size, filename=kwargs['filename'])
+        if background_colour is not None:
+            bkg_rect = _shapes.Rectangle(size=image_size,
+                                  attribute=background_colour)
+            _SVGDraw.draw_shape(image=image, shape=bkg_rect, opacity=100,
+                                scaling_factor=None)
+        return image
 
     @staticmethod
     def scale_image(image, scaling_factor):
@@ -42,10 +49,8 @@ class _SVGDraw(_array_draw.ArrayDraw):
     def draw_shape(image, shape, opacity, scaling_factor):
         """"""
         assert isinstance(image, _svg.Drawing)
-        width = int(image.attribs['width'][:-2]) # string "300px" --> 300
-        shape.xy = _c2i_coord(_np.asarray(shape.xy), width).tolist()
+        shape.xy = _c2i_coord(_np.asarray(shape.xy), svg_image_size(image)).tolist()
         attr = shape.get_attribute_object()
-
         if isinstance(attr, _shapes.PictureFile):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
@@ -56,8 +61,9 @@ class _SVGDraw(_array_draw.ArrayDraw):
                                        fill=attr.colour,
                                        opacity=opacity))
         elif isinstance(shape, _shapes.Rectangle):
+            size = (float(shape.width), float(shape.height))
             image.add(image.rect(insert=(shape.left, shape.bottom),
-                                     size=shape.size,
+                                     size=size,
                                      fill=attr.colour,
                                      opacity=opacity))
         else:
@@ -67,8 +73,8 @@ class _SVGDraw(_array_draw.ArrayDraw):
     def draw_convex_hull(image, points, convex_hull_colour, opacity,
                          scaling_factor):
         """"""
-        width = int(image.attribs['width'][:-2]) # string "300px" --> 300
-        points = _c2i_coord(points, width)
+
+        points = _c2i_coord(points, svg_image_size(image))
 
         last = None
         for p in _np.append(points, [points[0]], axis=0):
@@ -77,3 +83,7 @@ class _SVGDraw(_array_draw.ArrayDraw):
                     width=1, color=convex_hull_colour.colour, opacity=opacity)
                 image.add(l)
             last = p
+
+def svg_image_size(image):
+    return (int(image.attribs['width'][:-2]), # string "300px" --> 300
+            int(image.attribs['height'][:-2]))

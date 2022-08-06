@@ -23,7 +23,7 @@ def create(object_array, colours=None, dpi=100):
                                           dpi=dpi)
 
 
-class _MatplotlibDraw(_array_draw.ArrayDraw):
+class _MatplotlibDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
     def get_squared_image(image_width, background_colour, **kwargs):

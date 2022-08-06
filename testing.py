@@ -43,18 +43,17 @@ factory.set_appearance_rectangles(width=(10, 10, 10), proportion=0.5,
                                  attributes=distr.Levels(["blue", "green"],
                                                          exact_weighting=True))
 
-stimulus = factory.random_dot_array(n_objects=190)
+stimulus = factory.random_rectangle_array(n_objects=190)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
-exit()
-stimulus.mod_realign(keep_convex_hull=False, strict=False)
+#stimulus.mod_realign(keep_convex_hull=False, strict=False)
+#stimulus.properties.fit_average_perimeter(130)
 
-stimulus.properties.fit_average_perimeter(130)
-dist = stimulus.get_distances_matrix()
+img = svg_file.create(stimulus, my_colours, filename="demo.svg")
+img.save()
 
-img = pil_image.create(stimulus, my_colours)
-img.save("demo_scaled.png")
+

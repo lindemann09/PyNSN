@@ -3,7 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from typing import Union
+from typing import Tuple, Union, Any
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
@@ -13,7 +13,9 @@ from .. import _shapes
 
 class Dot(ABCShape):
 
-    def __init__(self, xy=(0, 0), diameter=1, attribute=None):
+    def __init__(self, xy: Tuple[float, float] =(0, 0),
+                 diameter: float=1,
+                 attribute: Any =None):
         """Initialize a dot
 
         Handles polar and cartesian representation (optimised processing, i.e.,

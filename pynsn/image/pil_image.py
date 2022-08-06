@@ -27,10 +27,10 @@ def create(object_array, colours=None, antialiasing=True):
                                    antialiasing=antialiasing)
 
 
-class _PILDraw(_array_draw.ArrayDraw):
+class _PILDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
-    def get_image(image_size, background_colour, **kwargs):
+    def get_image(image_size, background_colour:str, **kwargs):
         # filename not used for pil images
         return _Image.new("RGBA", image_size, color=background_colour)
 

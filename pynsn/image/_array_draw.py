@@ -19,7 +19,7 @@ def _check_object_array(obj):
             type(obj).__name__))
 
 
-class ArrayDraw(metaclass=ABCMeta):
+class ABCArrayDraw(metaclass=ABCMeta):
     """Generic array draw with abstract static methods
 
     To develop a plotter for other graphic system, inherit the abstract class
@@ -107,7 +107,7 @@ class ArrayDraw(metaclass=ABCMeta):
             except (ValueError, TypeError):
                 aaf = 1
 
-        # prepare the pil image, make target area if required
+        # prepare the image, make target area if required
         if isinstance(object_array.target_area, Dot):
             tmp = int(_np.ceil(object_array.target_area.diameter) * aaf)
             target_area_shape = Dot(diameter=tmp,

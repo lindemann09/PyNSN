@@ -3,7 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import math
-from typing import Iterator, Tuple, Union
+from typing import Iterator, Tuple, Union, Any
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
 from .. import _shapes
@@ -11,7 +11,9 @@ from .. import _shapes
 
 class Rectangle(ABCShape):
 
-    def __init__(self, xy=(0, 0), size=(1, 1), attribute=None):
+    def __init__(self, xy:Tuple[float, float] =(0, 0), # TODO numpy data types?
+                 size:Tuple[float, float] =(1, 1),
+                 attribute:Any=None):
         """Initialize a Rectangle
 
         Handles polar and cartesian representation (optimised processing, i.e.,
