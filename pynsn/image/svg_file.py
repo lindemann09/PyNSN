@@ -1,14 +1,22 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+import typing
+
+
+from typing import Optional
 import numpy as _np
 import svgwrite as _svg
 
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
+from .. import _arrays
 from . import _array_draw
+from . import _colour
 
 
-def create(object_array, colours, filename):
+def create(filename: str,
+           object_array: _arrays.ObjectArrayType,
+           colours: Optional[_colour.ImageColours] = None) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters
@@ -29,7 +37,7 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
-    def get_image(image_size, background_colour:str, **kwargs): # FIXME background colour not used
+    def get_image(image_size, background_colour:str, **kwargs) -> _svg.Drawing:
         """"""
         size = (f"{image_size[0]}px", f"{image_size[1]}px")
         image = _svg.Drawing(size=size, filename=kwargs['filename'])

@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
+from typing import Optional, Any
 
 import numpy as _np
 
@@ -8,7 +9,6 @@ from pynsn._shapes.rectangle import Rectangle
 from . import _colour
 from .. import _arrays
 from .._shapes import Dot, PictureFile
-from .._lib.misc import numpy_round2
 
 # helper for type checking and error raising error
 
@@ -32,7 +32,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def get_image(image_size, background_colour, **kwargs):
+    def get_image(image_size, background_colour, **kwargs) -> Any:
         """
         -------
         rtn : should return image
@@ -72,7 +72,9 @@ class ABCArrayDraw(metaclass=ABCMeta):
         """
         pass
 
-    def create_image(self, object_array, colours, antialiasing=None, **kwargs):
+    def create_image(self, object_array: _arrays.ObjectArrayType,
+                     colours: Optional[_colour.ImageColours],
+                     antialiasing: Optional[float] = None, **kwargs) -> Any:
         """create image
 
         Parameters

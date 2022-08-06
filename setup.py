@@ -15,10 +15,10 @@ if _vi.major < 3 or _vi.minor < 8:
 
 install_requires = ["numpy>=1.20",
                     "scipy>=1.5",
-                    "Pillow>=8.4",
-                    "svgwrite>=1.4"]
+                    "Pillow>=8.4"]
 
 extras_require = {
+    'svg':                ["svgwrite>=1.4"],
     'gui':                ["PyQt5>=5.14"],
     'pygame':             ["pygame>=1.9"],
     'expyriment':         ["expyriment>=0.9"],

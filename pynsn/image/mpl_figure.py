@@ -1,12 +1,20 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Optional
+
 import numpy as _np
 from matplotlib import pyplot as _plt
+from matplotlib.figure import Figure as _Figure
+
+from .. import _arrays
 from .. import _shapes
 from . import _array_draw
+from . import _colour
 
 
-def create(object_array, colours=None, dpi=100):
+def create(object_array: _arrays.ObjectArrayType,
+           colours: Optional[_colour.ImageColours] = None,
+           dpi: float = 100) -> _Figure:
     """Matplotlib figure
 
     Parameters
@@ -26,7 +34,7 @@ def create(object_array, colours=None, dpi=100):
 class _MatplotlibDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
-    def get_image(image_size, background_colour, **kwargs):
+    def get_image(image_size, background_colour, **kwargs) -> _Figure:
         dpi = kwargs["dpi"]
         image_size = _np.asarray(image_size)
         figure = _plt.figure(figsize=image_size / dpi,

@@ -1,17 +1,24 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Optional, Union
+
+import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
-import numpy as _np
+
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
 from . import _array_draw
+from .. import _arrays
+from . import _colour
 
 
 # TODO pillow supports no alpha/opacity
 
 
-def create(object_array, colours=None, antialiasing=True):
+def create(object_array: _arrays.ObjectArrayType,
+           colours: Optional[_colour.ImageColours] = None,
+           antialiasing: Union[bool, int] = True) -> _Image.Image:
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
@@ -30,7 +37,7 @@ def create(object_array, colours=None, antialiasing=True):
 class _PILDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
-    def get_image(image_size, background_colour:str, **kwargs):
+    def get_image(image_size, background_colour:str, **kwargs) -> _Image.Image:
         # filename not used for pil images
         return _Image.new("RGBA", image_size, color=background_colour)
 

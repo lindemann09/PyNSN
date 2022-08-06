@@ -20,14 +20,14 @@ Project homepage: https://github.com/lindemann09/PyNSN
 * numpy (>=1.20)
 * scipy (>=1.0)
 * Pillow (>=5.0)
-* svgwrite (>=1.4)
 
 ### Optional requirements
 
-Additional Python packages, which are optional and required only for 
+Additional Python packages, which are optional and required only for
 some features:
 
 * matplotlib (>=3.2)
+* svgwrite (>=1.4)
 * pygame (>=1.9)
 * expyriment (>=0.9)
 * PyQT5 (>=5.14)
@@ -41,10 +41,10 @@ python -m pip install pynsn
 
 ## Image formats
 
-By default, PyNSN is able to write [SVG](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics) 
-or [Pillow](https://pillow.readthedocs.io/en/stable/) images. 
+By default, PyNSN is able to write [SVG](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics)
+or [Pillow](https://pillow.readthedocs.io/en/stable/) images.
 To generate [Pygame](https://www.pygame.org/news) or
-[Matplotlib](https://matplotlib.org/stable/index.html) images or stimuli 
+[Matplotlib](https://matplotlib.org/stable/index.html) images or stimuli
 for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
@@ -61,7 +61,7 @@ packages.
 RUN GUI tool (beta version)
 --------------------------
 
-*Note:* Using the PyNSN-GUI requires the installation of `PyQt5` 
+*Note:* Using the PyNSN-GUI requires the installation of `PyQt5`
 
 ```
 python -m pynsn

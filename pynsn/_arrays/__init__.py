@@ -8,4 +8,4 @@ from .point_array import PointArray
 from .target_area import TargetArea
 
 # TODO not yet used
-NSNArrayType = _tp.Union[DotArray, RectangleArray, PointArray]
+ObjectArrayType = _tp.Union[DotArray, RectangleArray]
