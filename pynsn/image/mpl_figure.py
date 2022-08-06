@@ -26,19 +26,20 @@ def create(object_array, colours=None, dpi=100):
 class _MatplotlibDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour, **kwargs):
         dpi = kwargs["dpi"]
-        figure = _plt.figure(figsize=_np.array([image_width, image_width]) / dpi,
+        image_size = _np.asarray(image_size)
+        figure = _plt.figure(figsize=image_size / dpi,
                              dpi=dpi)
         if background_colour is None:
             figure.patch.set_facecolor((0, 0, 0, 0))
         else:
             figure.patch.set_facecolor(background_colour)
-        axes = _plt.Axes(figure, [0., 0., 1, 1])
+        axes = _plt.Axes(figure, (0, 0, 1, 1))
         axes.set_aspect('equal')  # squared
         axes.set_axis_off()
-        r = image_width / 2
-        axes.set(xlim=[-1 * r, r], ylim=[-1 * r, r])
+        lims = _np.transpose(image_size/2* _np.array([[-1, -1], [1, 1]]))
+        axes.set(xlim=lims[0], ylim=lims[1])
         figure.add_axes(axes)
         return figure
 
