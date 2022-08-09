@@ -1,96 +1,95 @@
+from __future__ import annotations
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import math as _math
-from typing import Tuple
+from typing import Iterable
+from numpy.typing import NDArray
+import numpy as np
 
 
 class Coordinate(object):
+    __slots__ = ("_xy", )
 
-    def __init__(self, x:float =0, y:float =0):
-        self.x = x
-        self.y = y
+    def __init__(self, xy: Iterable) -> None:
+        self.xy = xy # call setter
 
-    def __repr__(self):
-        return "Coordinate(xy={})".format(self.xy)
+    def __repr__(self) -> str:
+        return f"Coordinate(xy={self._xy})"
 
-    def __add__(self, other):
-        return Coordinate(self.x + other.x, self.y + other.y)
+    def __add__(self, other: Coordinate) -> Coordinate:
+        return Coordinate(self._xy + other._xy)
 
-    def __sub__(self, other):
-        return Coordinate(self.x - other.x, self.y - other.y)
+    def __sub__(self, other: Coordinate) -> Coordinate:
+        return Coordinate(self._xy - other._xy)
 
-    def __mul__(self, other):
-        return Coordinate(self.x * other, self.y * other)
+    def __mul__(self, other: Coordinate) -> Coordinate:
+        return Coordinate(np.multiply(self._xy, other._xy))
 
-    def __div__(self, other):
-        return Coordinate(self.x / other if other else self.x,
-                          self.y / other if other else self.y)
+    def __div__(self, other: Coordinate) -> Coordinate:
+        return Coordinate(np.divide(self._xy, other._xy))
 
-    def __iadd__(self, other):
-        self.x += other.x
-        self.y += other.y
+    def __iadd__(self, other: Coordinate) -> Coordinate:
+        self._xy = self._xy + other._xy
         return self
 
-    def __isub__(self, other):
-        self.x -= other.x
-        self.y -= other.y
+    def __isub__(self, other: Coordinate) -> Coordinate:
+        self._xy = self.xy - other.xy
         return self
 
-    def __imul__(self, other):
-        self.x *= other
-        self.y *= other
+    def __imul__(self, other: Coordinate) -> Coordinate:
+        self._xy = np.multiply(self._xy, other._xy)
         return self
 
-    def __idiv__(self, other):
-        self.x /= other
-        self.y /= other
+    def __idiv__(self, other: Coordinate) -> Coordinate:
+        self._xy = np.divide(self._xy, other._xy)
         return self
 
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
+    def __eq__(self, other: Coordinate) -> bool:
+        return np.array_equal(self._xy, other._xy, equal_nan=True)
 
-    def __ne__(self, other):
-        return self.x != other.x or self.y != other.y
+    def __ne__(self, other: Coordinate) -> bool:
+        return not np.array_equal(self._xy, other._xy, equal_nan=True)
 
     @property
-    def xy(self) -> Tuple[float, float]:
-        return self.x, self.y
+    def xy(self) -> NDArray:
+        return self._xy
 
     @xy.setter
-    def xy(self, xy_tuple):
-        self.x = xy_tuple[0]
-        self.y = xy_tuple[1]
+    def xy(self, value) -> None:
+        value = np.asarray(value)
+        if value.shape != (2,):
+            raise ValueError("xy has be an iterable object with two elements")
+        self._xy = value
 
     @property
-    def polar_radius(self):
-        return _math.hypot(self.x, self.y)
+    def polar_radius(self) -> float:
+        return np.hypot(self._xy[0], self._xy[1])
 
     @polar_radius.setter
-    def polar_radius(self, value):
+    def polar_radius(self, value) -> None:
         self.polar = (value, self.polar_angle)
 
     @property
-    def polar_angle(self):
-        return _math.atan2(self.y, self.x)
+    def polar_angle(self) -> float:
+        return np.arctan2(self._xy[0], self._xy[1])
 
     @polar_angle.setter
-    def polar_angle(self, value):
+    def polar_angle(self, value) -> None:
         self.polar = (self.polar_radius, value)
 
     @property
-    def polar(self):
+    def polar(self) -> NDArray:
         """polar coordinate (radius, pos_angle) """
-        return self.polar_radius, self.polar_angle
+        return np.array([self.polar_radius, self.polar_angle])
 
     @polar.setter
-    def polar(self, rad_ang):
+    def polar(self, rad_ang) -> None:
         """polar coordinate (radius, angle) """
 
-        self.x = rad_ang[0] * _math.cos(rad_ang[1])
-        self.y = rad_ang[0] * _math.sin(rad_ang[1])
+        self._xy = np.array([rad_ang[0] * np.cos(rad_ang[1]),
+                            rad_ang[0] * np.sin(rad_ang[1])])
 
-    def distance(self, other):
+    def distance(self, other: Coordinate) -> float:
         """Euclidean distance to the another Coordinate."""
-        return _math.hypot(self.x - other.x, self.y - other.y)
-
-# TODO typing
+        d = self._xy - other._xy
+        return np.hypot(d[0], d[1])

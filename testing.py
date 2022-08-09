@@ -12,11 +12,18 @@ from random import randint
 import numpy as np
 
 
+
+d = pynsn.Rectangle()
+
+print(d)
+print(d.__dict__)
+#exit()
+
 seed = 991
 nsn.init_random_generator(seed)
 
 my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
-    background="red",
+    background="",
     opacity_object=0.9,
     default_object_colour="darkmagenta",
     # field_area_positions="magenta",
