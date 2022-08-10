@@ -1,14 +1,16 @@
 # calculates visual properties of a dot array/ dot cloud
 
 from collections import OrderedDict
+from typing import Any
+
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from .. import _arrays
-from .._lib.lib_typing import Any, NumArray, Optional, OptFloat, NDArray, Union
-from .._lib import rng
-from .._lib import constants
+from .._lib import constants, rng
 from .._lib.constants import VisualPropertyFlags
 from .._lib.exception import NoSolutionError
+from .._lib.lib_typing import OptFloat
 from .convex_hull import ConvexHull, ConvexHullPositions
 from .tools import scale_field_area
 
@@ -49,20 +51,17 @@ class ArrayProperties(object):
         return self._convex_hull_positions
 
     @property
-    def average_dot_diameter(self) -> Union[float, np.floating, None]:
-        if not isinstance(self._oa, _arrays.DotArray):
-            return None
-        elif self.numerosity == 0:
-            return 0
+    def average_dot_diameter(self) -> float:
+        if not isinstance(self._oa, _arrays.DotArray) or self.numerosity == 0:
+            return np.nan
         else:
-            return np.mean(self._oa.diameter)
+            return float(np.mean(self._oa.diameter))
 
     @property
-    def average_rectangle_size(self) -> Union[NDArray, None]:
-        if not isinstance(self._oa, _arrays.RectangleArray):
-            return None
-        elif self.numerosity == 0:
-            return np.array([0, 0])
+    def average_rectangle_size(self) -> NDArray:
+        if not isinstance(self._oa, _arrays.RectangleArray) \
+                or self.numerosity == 0:
+            return np.array([np.nan, np.nan])
         else:
             return np.mean(self._oa.sizes, axis=0)
 
@@ -85,7 +84,7 @@ class ArrayProperties(object):
     @property
     def average_perimeter(self) -> float:
         if self.numerosity == 0:
-            return 0
+            return np.nan
         return float(np.mean(self._oa.perimeter))
 
     @property
@@ -203,7 +202,7 @@ class ArrayProperties(object):
                       self.average_dot_diameter)
         elif isinstance(self._oa, _arrays.RectangleArray):
             rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(),
-                      self.average_rectangle_size)
+                      self.average_rectangle_size.tolist())
         else:
             rtn.pop(2)
         return OrderedDict(rtn)
@@ -237,21 +236,22 @@ class ArrayProperties(object):
                         n_space = 2
                     rtn += name + (spacing_char * (24 - len(name))
                                    ) + (" " * n_space) + value
+            if rtn is None:
+                rtn = ""
         else:
             if with_hash:
                 rtn = "ID: {} ".format(self._oa.hash)
             else:
                 rtn = ""
-            rtn += "N: {}, TSA: {}, ISA: {}, FA: {}, SPAR: {:.3f}, logSIZE: " \
-                   "{:.2f}, logSPACE: {:.2f} COV: {:.2f}".format(
-                       self.numerosity,
-                       int(self.total_surface_area),
-                       int(self.average_surface_area),
-                       int(self.field_area),
-                       self.sparsity,
-                       self.log_size,
-                       self.log_spacing,
-                       self.coverage)
+            rtn += f"N: {self.numerosity}, " \
+                + f"TSA: {int(self.total_surface_area)}, " \
+                + f"ISA: {int(self.average_surface_area)}, "\
+                + f"FA: {int(self.field_area)}, "\
+                + f"SPAR: {self.sparsity:.3f}, "\
+                + f"logSIZE: {self.log_size:.2f}, "\
+                + f"logSPACE: {self.log_spacing:.2f}, "\
+                + f"COV: {self.coverage:.2f}"
+
         return rtn.rstrip()
 
     def fit_numerosity(self, value: int,
@@ -288,17 +288,17 @@ class ArrayProperties(object):
                     self._oa.delete(delete_id)
 
                 else:
-                    # add dot: copy a random dot
+                    # add object: copy a random dot
                     clone_id = rng.generator.integers(0, self.numerosity)
                     rnd_object = next(self._oa.iter_objects(clone_id))
                     try:
                         rnd_object = self._oa.get_free_position(
                             ref_object=rnd_object, allow_overlapping=False,
                             inside_convex_hull=keep_convex_hull)
-                    except NoSolutionError:
+                    except NoSolutionError as err:
                         # no free position
                         raise NoSolutionError(
-                            "Can't increase numerosity. No free position found.")
+                            "Can't increase numerosity. No free position found.") from err
 
                     self._oa.add([rnd_object])
 
@@ -313,13 +313,13 @@ class ArrayProperties(object):
         """
         # changes diameter
         if not isinstance(self._oa, _arrays.DotArray):
-            raise TypeError("Adapting diameter is not possible for {}.".format(
-                type(self._oa).__name__))
+            raise TypeError("Adapting diameter is not possible "
+                            + f"for {type(self._oa).__name__}.")
         scale = value / self.average_dot_diameter
-        self._oa._diameter = self._oa.diameter * scale
+        self._oa._diameter = self._oa.diameter * scale  # pylint: disable=W0212
         self.reset()
 
-    def fit_average_rectangle_size(self, value: NumArray) -> None:
+    def fit_average_rectangle_size(self, value: ArrayLike) -> None:
         """Set average rectangle size.
 
         Args:
@@ -330,17 +330,19 @@ class ArrayProperties(object):
         """
         # changes diameter
         if not isinstance(self._oa, _arrays.RectangleArray):
-            raise TypeError("Adapting rectangle size is not possible for {}.".format(
-                type(self._oa).__name__))
-        try:
-            width, height = value
-        except TypeError:
-            raise TypeError("Value ({}) has to tuple of 2 numerical (width, height).".format(
-                value))
+            raise RuntimeError("Adapting rectangle size is not possible for "
+                               + f"{type(self._oa).__name__}.")
+        new_size = np.asarray(value)
+        if new_size.shape != (2,):
+            raise ValueError(f"Value ({value}) has to tuple of 2 numerical "
+                             + "(width, height).")
 
-        scale = np.array([width / self.average_rectangle_size[0],
-                          height / self.average_rectangle_size[1]])
-        self._oa._sizes = self._oa._sizes * scale
+        av_size = self.average_rectangle_size
+        if not np.all(av_size > 0):
+            raise RuntimeError(
+                "Numerosity, width or hight is zero or not defined.")
+        scale = np.divide(new_size, av_size)
+        self._oa._sizes = self._oa._sizes * scale  # pylint: disable=W0212
         self.reset()
 
     def fit_total_surface_area(self, value: float) -> None:
@@ -352,11 +354,12 @@ class ArrayProperties(object):
             value: surface area
         """
         a_scale = value / self.total_surface_area
+        # pylint: disable=W0212
         if isinstance(self._oa, _arrays.DotArray):
-            self._oa._diameter = np.sqrt(
-                self._oa.surface_areas * a_scale) * 2 / np.sqrt(
-                np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        else:  # rect
+            self._oa._diameter = np.sqrt(self._oa.surface_areas * a_scale) \
+                * 2 / np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
+        elif isinstance(self._oa, _arrays.RectangleArray):
+            # rect
             self._oa._sizes = self._oa._sizes * np.sqrt(a_scale)
 
         self.reset()
@@ -381,42 +384,40 @@ class ArrayProperties(object):
 
     def fit_coverage(self, value: float,
                      precision: OptFloat = None,
-                     FA2TA_ratio: OptFloat = None) -> None:
+                     fa2ta_ratio: OptFloat = None) -> None:
         """
 
         Parameters
         ----------
         value
         precision
-        FA2TA_ratio
+        fa2ta_ratio
 
         Returns
         -------
 
         """
 
-        # FIXME check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
+        # TODO check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
         # when to realign, realignment changes field_area!
-        """this function changes the area and remixes to get a desired density
-        precision in percent between 1 < 0
-
-        ratio_area_convex_hull_adaptation:
-            ratio of adaptation via area or via convex_hull (between 0 and 1)
-
-        """
+        # """this function changes the area and remixes to get a desired density
+        # precision in percent between 1 < 0
+        #
+        # ratio_area_convex_hull_adaptation:
+        #    ratio of adaptation via area or via convex_hull (between 0 and 1)
 
         print("WARNING: _adapt_coverage is a experimental ")
         # dens = convex_hull_area / total_surface_area
-        if FA2TA_ratio is None:
-            FA2TA_ratio = constants.DEFAULT_FIT_FA2TA_RATIO
-        elif FA2TA_ratio < 0 or FA2TA_ratio > 1:
-            FA2TA_ratio = 0.5
+        if fa2ta_ratio is None:
+            fa2ta_ratio = constants.DEFAULT_FIT_FA2TA_RATIO
+        elif fa2ta_ratio < 0 or fa2ta_ratio > 1:
+            fa2ta_ratio = 0.5
         if precision is None:
             precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
         total_area_change100 = (value * self.field_area) - \
             self.total_surface_area
-        d_change_total_area = total_area_change100 * (1 - FA2TA_ratio)
+        d_change_total_area = total_area_change100 * (1 - fa2ta_ratio)
         if abs(d_change_total_area) > 0:
             self.fit_total_surface_area(
                 self.total_surface_area + d_change_total_area)
@@ -453,6 +454,7 @@ class ArrayProperties(object):
 
         elif isinstance(self._oa, _arrays.RectangleArray):
             new_size = self.average_rectangle_size * value / self.total_perimeter
+
             self.fit_average_rectangle_size(new_size)
 
     def fit_average_surface_area(self, value: float) -> None:
@@ -604,7 +606,7 @@ class ArrayProperties(object):
             return
         return self.fit_coverage(self.coverage * factor,
                                  precision=precision,
-                                 FA2TA_ratio=FA2TA_ratio)
+                                 fa2ta_ratio=FA2TA_ratio)
 
     def scale_average_perimeter(self, factor: float) -> None:
         if factor == 1:
