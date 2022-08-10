@@ -112,13 +112,13 @@ class ABCArrayDraw(metaclass=ABCMeta):
         # prepare the image, make target area if required
         if isinstance(object_array.target_area, Dot):
             tmp = int(_np.ceil(object_array.target_area.diameter) * aaf)
-            target_area_shape = Dot(diameter=tmp,
+            target_area_shape = Dot(xy=(0, 0), diameter=tmp,
                                     attribute=colours.target_area.colour)
             image_size = _np.ones(2) * tmp
 
         elif isinstance(object_array.target_area, Rectangle):
             tmp = _np.int16(_np.ceil(object_array.target_area.size) * aaf)
-            target_area_shape = Rectangle(size=tmp,
+            target_area_shape = Rectangle(xy=(0, 0), size=tmp,
                                           attribute=colours.target_area.colour)
             image_size = target_area_shape.size
         else:

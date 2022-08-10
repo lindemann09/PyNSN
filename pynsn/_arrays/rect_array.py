@@ -38,7 +38,8 @@ class RectangleArray(ABCObjectArray):
         properties.
 
         """
-        super().__init__(xy=xy, attributes=attributes,
+        super().__init__(xy=xy,
+                         attributes=attributes,
                          target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
@@ -48,7 +49,7 @@ class RectangleArray(ABCObjectArray):
 
         if self._xy.shape[0] != self._sizes.shape[0]:
             raise ValueError("Bad shaped data: " +
-                             u"xy has not the same length as sizes array")
+                             "xy has not the same length as sizes array")
 
     def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""

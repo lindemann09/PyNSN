@@ -7,16 +7,16 @@ from pynsn._arrays.target_area import TargetArea
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Dict, List
 from copy import deepcopy
+from typing import Dict, List
+
 import numpy as np
 
-from .abc_object_array import ABCObjectArray
 from .._lib import misc
-from .._lib.lib_typing import OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, OptFloat, NDArray, OptFloat
+from .._lib.lib_typing import (Any, IntOVector, Iterator, NDArray, OptFloat,
+                               OptArrayLike, Optional, Sequence, Union)
 from .._shapes import Dot, Rectangle
-
+from .abc_object_array import ABCObjectArray
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by to_dict and get_csv and

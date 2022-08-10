@@ -43,8 +43,8 @@ class TargetArea(object):
     def _target_area_from_dict(dict_) -> Union[Dot, Rectangle]:
         # helper function
         if dict_["target_area"] == "Dot":
-            return Dot(diameter=dict_["target_area_size"])
+            return Dot(xy=(0, 0), diameter=dict_["target_area_size"])
         elif dict_["target_area"] == "Rectangle":
-            return Rectangle(size=dict_["target_area_size"])
+            return Rectangle(xy=(0, 0), size=dict_["target_area_size"])
         else:
             raise NotImplementedError()  # should never happen

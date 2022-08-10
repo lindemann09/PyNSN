@@ -137,13 +137,13 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         if isinstance(self.target_area, Dot):
             tmp = self.target_area.diameter/2.0 \
                 - self.min_distance_area_boarder
-            search_area = Dot(diameter=tmp*2)
+            search_area = Dot(xy=(0, 0), diameter=tmp*2)
             half_search_area_size = np.array([tmp, tmp])
 
         elif isinstance(self.target_area, Rectangle):
             tmp = (self.target_area.width - 2 * self.min_distance_area_boarder,
                    self.target_area.height - 2 * self.min_distance_area_boarder)
-            search_area = Rectangle(size=tmp)
+            search_area = Rectangle(xy=(0, 0), size=tmp)
             half_search_area_size = np.asarray(search_area.size) / 2.0
         else:
             raise NotImplementedError()
@@ -227,7 +227,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     def get_outlier(self) -> List[int]:
         """Indices of object that are not fully inside the target area"""
-        #TODO test me
+        # TODO test me
         indices = []
         search_area, _ = self._search_area_parameter()
 

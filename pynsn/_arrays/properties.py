@@ -1,11 +1,10 @@
 # calculates visual properties of a dot array/ dot cloud
 
 from collections import OrderedDict
-from math import log2
 import numpy as np
 
 from .. import _arrays
-from .._lib.lib_typing import Any, NumArray, Optional, OptFloat, NDArray
+from .._lib.lib_typing import Any, NumArray, Optional, OptFloat, NDArray, Union
 from .._lib import rng
 from .._lib import constants
 from .._lib.constants import VisualPropertyFlags
@@ -50,16 +49,16 @@ class ArrayProperties(object):
         return self._convex_hull_positions
 
     @property
-    def average_dot_diameter(self) -> Optional[float]:
+    def average_dot_diameter(self) -> Union[float, np.floating, None]:
         if not isinstance(self._oa, _arrays.DotArray):
             return None
         elif self.numerosity == 0:
             return 0
         else:
-            return float(np.mean(self._oa.diameter))
+            return np.mean(self._oa.diameter)
 
     @property
-    def average_rectangle_size(self) -> Optional[NumArray]:
+    def average_rectangle_size(self) -> Union[NDArray, None]:
         if not isinstance(self._oa, _arrays.RectangleArray):
             return None
         elif self.numerosity == 0:
@@ -95,7 +94,7 @@ class ArrayProperties(object):
 
     @property
     def numerosity(self) -> int:
-        return len(self._oa._xy)
+        return len(self._oa.xy)
 
     @property
     def coverage(self) -> float:
@@ -111,15 +110,15 @@ class ArrayProperties(object):
     @property
     def log_size(self) -> float:
         try:
-            return log2(self.total_surface_area) + \
-                log2(self.average_surface_area)
+            return np.log2(self.total_surface_area) + \
+                np.log2(self.average_surface_area)
         except ValueError:
             return np.nan
 
     @property
     def log_spacing(self) -> float:
         try:
-            return log2(self.field_area) + log2(self.sparsity)
+            return np.log2(self.field_area) + np.log2(self.sparsity)
         except ValueError:
             return np.nan
 
@@ -188,9 +187,11 @@ class ArrayProperties(object):
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
                (VisualPropertyFlags.AV_PERIMETER.label(), self.average_perimeter),
-               (VisualPropertyFlags.AV_SURFACE_AREA.label(), self.average_surface_area),
+               (VisualPropertyFlags.AV_SURFACE_AREA.label(),
+                self.average_surface_area),
                (VisualPropertyFlags.TOTAL_PERIMETER.label(), self.total_perimeter),
-               (VisualPropertyFlags.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
+               (VisualPropertyFlags.TOTAL_SURFACE_AREA.label(),
+                self.total_surface_area),
                (VisualPropertyFlags.FIELD_AREA.label(), self.field_area),
                (VisualPropertyFlags.SPARSITY.label(), self.sparsity),
                (VisualPropertyFlags.COVERAGE.label(), self.coverage),
@@ -198,9 +199,11 @@ class ArrayProperties(object):
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
         if isinstance(self._oa, _arrays.DotArray):
-            rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(), self.average_dot_diameter)
+            rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(),
+                      self.average_dot_diameter)
         elif isinstance(self._oa, _arrays.RectangleArray):
-            rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(), self.average_rectangle_size)
+            rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(),
+                      self.average_rectangle_size)
         else:
             rtn.pop(2)
         return OrderedDict(rtn)
@@ -232,7 +235,8 @@ class ArrayProperties(object):
                     n_space = 14 - len(value)
                     if n_space < 2:
                         n_space = 2
-                    rtn += name + (spacing_char * (24 - len(name))) + (" " * n_space) + value
+                    rtn += name + (spacing_char * (24 - len(name))
+                                   ) + (" " * n_space) + value
         else:
             if with_hash:
                 rtn = "ID: {} ".format(self._oa.hash)
@@ -276,7 +280,8 @@ class ArrayProperties(object):
                                 delete_id = x
                                 break
                         if delete_id is None:
-                            raise NoSolutionError("Can't increase numeroisty, while keeping field area.")
+                            raise NoSolutionError(
+                                "Can't increase numeroisty, while keeping field area.")
                     else:
                         delete_id = rng.generator.integers(0, self.numerosity)
 
@@ -292,7 +297,8 @@ class ArrayProperties(object):
                             inside_convex_hull=keep_convex_hull)
                     except NoSolutionError:
                         # no free position
-                        raise NoSolutionError("Can't increase numerosity. No free position found.")
+                        raise NoSolutionError(
+                            "Can't increase numerosity. No free position found.")
 
                     self._oa.add([rnd_object])
 
@@ -408,12 +414,15 @@ class ArrayProperties(object):
         if precision is None:
             precision = constants.DEFAULT_FIT_SPACING_PRECISION
 
-        total_area_change100 = (value * self.field_area) - self.total_surface_area
+        total_area_change100 = (value * self.field_area) - \
+            self.total_surface_area
         d_change_total_area = total_area_change100 * (1 - FA2TA_ratio)
         if abs(d_change_total_area) > 0:
-            self.fit_total_surface_area(self.total_surface_area + d_change_total_area)
+            self.fit_total_surface_area(
+                self.total_surface_area + d_change_total_area)
 
-        self.fit_field_area(self.total_surface_area / value, precision=precision)
+        self.fit_field_area(self.total_surface_area /
+                            value, precision=precision)
 
     def fit_average_perimeter(self, value: float) -> None:
         """
@@ -521,7 +530,8 @@ class ArrayProperties(object):
 
         # type check
         if not isinstance(property_flag, VisualPropertyFlags):
-            raise ValueError("{} is not a visual feature.".format(property_flag))
+            raise ValueError(
+                "{} is not a visual feature.".format(property_flag))
 
         # Adapt
         if property_flag == VisualPropertyFlags.AV_DOT_DIAMETER:

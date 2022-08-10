@@ -2,8 +2,9 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import math
-from typing import Tuple, Union, Any
+from typing import Union, Any
+import numpy as np
+from numpy.typing import ArrayLike
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
@@ -12,10 +13,11 @@ from .. import _shapes
 
 
 class Dot(ABCShape):
+    __slots__ = ("diameter", )
 
-    def __init__(self, xy: Tuple[float, float] =(0, 0),
-                 diameter: float=1,
-                 attribute: Any =None):
+    def __init__(self, xy: ArrayLike = (0, 0),
+                 diameter: float = 0,
+                 attribute: Any = None) -> None:
         """Initialize a dot
 
         Handles polar and cartesian representation (optimised processing, i.e.,
@@ -23,20 +25,20 @@ class Dot(ABCShape):
 
         Parameters
         ----------
-        xy : tuple of two numeric
-        diameter : numeric
+        xy : tuple of two numeric (default=(0,0))
+        diameter : numeric (default=(0,0))
         attribute : attribute (string, optional)
         """
         if isinstance(attribute, PictureFile) or \
                 PictureFile.is_picture_attribute(attribute):
-            raise NotImplementedError("Dot _arrays can not handle pictures.")
+            raise NotImplementedError("Dot_arrays can not handle pictures.")
 
         super().__init__(xy, attribute)
         self.diameter = diameter
 
     def __repr__(self):
-        return "Dot(xy={}, diameter={}, attribute='{}')".format(self.xy,
-                                                                self.diameter, self.attribute)
+        return f"Dot(xy={self.xy}, diameter={self.diameter}, " \
+            + "attribute = '{self.attribute}')"
 
     def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
         # inherited doc
@@ -58,12 +60,12 @@ class Dot(ABCShape):
                                   + "is implemented.")
 
     @ property
-    def area(self):
-        return math.pi * (self.diameter ** 2) / 4.0
+    def area(self) -> float:
+        return np.pi * (self.diameter ** 2) / 4.0
 
     @ property
-    def perimeter(self):
-        return math.pi * self.diameter
+    def perimeter(self) -> float:
+        return np.pi * self.diameter
 
     def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc

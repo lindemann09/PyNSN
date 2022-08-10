@@ -3,7 +3,9 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Union
+
+from numpy.typing import ArrayLike
 
 from .._lib.coordinate import Coordinate
 from ..image._colour import Colour
@@ -12,18 +14,20 @@ from .picture_file import PictureFile
 
 # FIXME typing
 class ABCShape(Coordinate, metaclass=ABCMeta):
+    __slots__ = ("_attribute",)
 
-    def __init__(self, xy, attribute):
-        Coordinate.__init__(self, x=xy[0], y=xy[1])
+    def __init__(self, xy: ArrayLike,
+                 attribute: Any) -> None:
+        Coordinate.__init__(self, xy=xy)
         self._attribute = None
         self.attribute = attribute  # call setter
 
     @property
-    def attribute(self):
+    def attribute(self) -> Any:
         return self._attribute
 
     @attribute.setter
-    def attribute(self, attr) -> Any:
+    def attribute(self, attr: Any) -> None:
         """set attribute
 
         Parameters
@@ -40,14 +44,14 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         else:
             self._attribute = attr
 
-    def get_attribute_object(self):
+    def get_attribute_object(self) -> Union[Colour, PictureFile, None]:
         """Class instance of the attribute, if possible
 
         Returns
         -------
         rtn : attribute
             If attribute represents Colour or PictureFile it returns the instance
-            of the respective class otherwise the previously defined  attribute
+            of the respective class otherwise None
         """
 
         if isinstance(self._attribute, str):
@@ -59,10 +63,10 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
                 if PictureFile.is_picture_attribute(self._attribute):
                     return PictureFile(self._attribute)
 
-        return self._attribute
+        return None
 
     @abstractmethod
-    def __repr__(self):
+    def __repr__(self) -> str:
         """"""
 
     @abstractmethod
@@ -76,12 +80,12 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def area(self):
+    def area(self) -> float:
         """area of the object/shape"""
 
     @property
     @abstractmethod
-    def perimeter(self):
+    def perimeter(self) -> float:
         """perimeter"""
 
     @abstractmethod

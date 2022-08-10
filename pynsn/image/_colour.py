@@ -4,16 +4,17 @@ The named colour are the 140 HTML colour names:
 """
 from collections import OrderedDict
 from functools import total_ordering
+from typing import Sequence, Optional, Union, Tuple
 
 from .._lib import misc
-from .._lib.lib_typing import Union, Tuple, List
 
 _NUMERALS = '0123456789abcdefABCDEF'
-_HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
+_HEXDEC = {v: int(v, 16)
+           for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
 
 RGBType = Tuple[int, int, int]
-ColourType = Union[None, RGBType, List[float], str]
+ColourType = Union[None, RGBType, Sequence[float], str]
 
 
 @total_ordering
@@ -61,8 +62,9 @@ class Colour(object):
             'yellowgreen', 'expyriment_orange', 'expyriment_purple'
     """
 
-    def __init__(self, colour: ColourType,
-                 default: ColourType = None) -> None:
+    def __init__(self,
+                 colour: Optional[ColourType],
+                 default: Optional[ColourType] = None) -> None:
         if colour is None:
             colour = default
 
@@ -72,10 +74,10 @@ class Colour(object):
         except TypeError:  # colour is not a valid colour
             self.set(default)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Colour({})".format(self.colour)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._colour)
 
     def __lt__(self, other):
@@ -88,8 +90,8 @@ class Colour(object):
         return self._colour != other._colour
 
     @property
-    def colour(self) -> str:
-        """Hextriplet code of the colour"""
+    def colour(self) -> Union[str, None]:
+        """Hextriplet code of the colour or None"""
         return self._colour
 
     def set(self, value: ColourType) -> None:
@@ -101,33 +103,39 @@ class Colour(object):
         Returns:
 
         """
+        error_txt = "Incorrect colour ('{}')!\n Use RGB tuple, " +\
+                    "hex triplet or a colour name from Colour.NAMED_COLOURS."
+
         if value is None:
             self._colour = None
         elif isinstance(value, Colour):
-            self._colour = value._colour
-        else:
+            self._colour = value.colour
+
+        elif isinstance(value, str):
             try:
-                Colour.convert_hextriplet_to_rgb(value)  # check if valid hextriplet
+                # check if valid hextriplet
+                Colour.convert_hextriplet_to_rgb(value)
                 if value[0] != "#":
                     value = "#" + value
                 self._colour = value.upper()
-            except:
+            except ValueError:
                 try:
                     self._colour = Colour.NAMED_COLOURS[value]
-                except:
-                    try:
-                        self._colour = Colour.convert_rgb_hextriplet(value)
-                    except:
-                        raise TypeError("Incorrect colour " + \
-                                        "('{}')!\n Use RGB tuple, hex triplet or a colour name from Colour.NAMED_COLOURS.".format(
-                                            value))
+                except KeyError as err:
+                    raise TypeError(error_txt.format(value)) from err
+        else:
+            try:
+                self._colour = Colour.convert_rgb_hextriplet(value)
+            except TypeError as err:
+                raise TypeError(error_txt.format(value)) from err
 
     @property
-    def rgb(self) -> RGBType:
+    def rgb(self) -> Union[RGBType, None]:
         """RGB code of the colour"""
-        return Colour.convert_hextriplet_to_rgb(self._colour)
+        if self._colour is not None:
+            return Colour.convert_hextriplet_to_rgb(self._colour)
 
-    def get_rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int]:
+    def get_rgb_alpha(self, alpha: float) -> Union[Tuple[int, int, int, int], None]:
         """RBG with alpha values
 
         Args:
@@ -137,27 +145,37 @@ class Colour(object):
         Returns:
             tuple of four values, RGB and alpha value
         """
+
+        if self.rgb is None:
+            return None
+
         if isinstance(alpha, float):
             if alpha < 0. or alpha > 1.:
-                raise TypeError("If alpha is a float, it has to be between 0 and 1.")
+                raise TypeError(
+                    "If alpha is a float, it has to be between 0 and 1.")
             alpha = round(alpha * 255)
         elif isinstance(alpha, int):
             if alpha < 0 or alpha > 255:
-                raise TypeError("If alpha is an int, it has to be between 0 and 255.")
+                raise TypeError(
+                    "If alpha is an int, it has to be between 0 and 255.")
         else:
             raise TypeError("If alpha has to be a float or int and not {}.".format(
                 type(alpha)))
 
-        return Colour.convert_hextriplet_to_rgb(self._colour) + (alpha,)
+        return self.rgb + (alpha,)
 
     @staticmethod
     def convert_hextriplet_to_rgb(hextriplet: str) -> RGBType:
         """Convert a hextriplet string to RGB values"""
         ht = hextriplet.lstrip("#")
-        return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
+        try:
+            return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
+        except KeyError as err:
+            raise ValueError(
+                f"Can't convert {hextriplet} to rgb value") from err
 
     @staticmethod
-    def convert_rgb_hextriplet(rgb: RGBType, uppercase: bool = True):
+    def convert_rgb_hextriplet(rgb: Sequence, uppercase: bool = True):
         """Convert RBG values to a hextriplet string"""
         if len(rgb) != 3:
             raise TypeError("rgb must be a list of three values.")
@@ -165,9 +183,10 @@ class Colour(object):
             lettercase = 'X'
         else:
             lettercase = 'x'
+
         return "#" + format(rgb[0] << 16 | rgb[1] << 8 | rgb[2], '06' + lettercase)
 
-    NAMED_COLOURS = { # Dict with known colour names and hextriplets
+    NAMED_COLOURS = {  # Dict with known colour names and hextriplets
         'aliceblue': '#F0F8FF',
         'antiquewhite': '#FAEBD7',
         'aqua': '#00FFFF',
@@ -327,8 +346,8 @@ class ImageColours(object):
                  center_of_mass: ColourType = None,
                  background: ColourType = None,
                  default_object_colour: ColourType = None,
-                 opacity_object: float = None,
-                 opacity_guides: float = None
+                 opacity_object: Optional[float] = None,
+                 opacity_guides: Optional[float] = None
                  ):
 
         self.target_area = Colour(target_area,
@@ -343,11 +362,13 @@ class ImageColours(object):
         if opacity_guides is None:
             opacity_guides = ImageColours.OPACITY_GUIDES
         if opacity_guides < 0 or opacity_guides > 1:
-            raise ValueError(f"opacity_guides ({opacity_guides}) has to be between 0 and 1")
+            raise ValueError(
+                f"opacity_guides ({opacity_guides}) has to be between 0 and 1")
         if opacity_object is None:
             opacity_object = ImageColours.OPACITY_OBJECT
         if opacity_object < 0 or opacity_object > 1:
-            raise ValueError(f"opacity_object ({opacity_object}) has to be between 0 and 1")
+            raise ValueError(
+                f"opacity_object ({opacity_object}) has to be between 0 and 1")
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 

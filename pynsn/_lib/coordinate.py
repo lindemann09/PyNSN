@@ -2,16 +2,16 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Iterable
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
 import numpy as np
 
 
 class Coordinate(object):
     __slots__ = ("_xy", )
 
-    def __init__(self, xy: Iterable) -> None:
-        self.xy = xy # call setter
+    def __init__(self, xy: ArrayLike) -> None:
+        self._xy = np.empty(2)
+        self.xy = xy  # call setter
 
     def __repr__(self) -> str:
         return f"Coordinate(xy={self._xy})"
@@ -33,7 +33,7 @@ class Coordinate(object):
         return self
 
     def __isub__(self, other: Coordinate) -> Coordinate:
-        self._xy = self.xy - other.xy
+        self._xy = self.xy - other.xy  # type: ignore
         return self
 
     def __imul__(self, other: Coordinate) -> Coordinate:
@@ -41,7 +41,7 @@ class Coordinate(object):
         return self
 
     def __idiv__(self, other: Coordinate) -> Coordinate:
-        self._xy = np.divide(self._xy, other._xy)
+        self._xy = np.divide(self._xy, other.xy)
         return self
 
     def __eq__(self, other: Coordinate) -> bool:
@@ -60,6 +60,14 @@ class Coordinate(object):
         if value.shape != (2,):
             raise ValueError("xy has be an iterable object with two elements")
         self._xy = value
+
+    @property
+    def x(self):
+        return self._xy[0]
+
+    @property
+    def y(self):
+        return self._xy[1]
 
     @property
     def polar_radius(self) -> float:
@@ -91,5 +99,5 @@ class Coordinate(object):
 
     def distance(self, other: Coordinate) -> float:
         """Euclidean distance to the another Coordinate."""
-        d = self._xy - other._xy
-        return np.hypot(d[0], d[1])
+        d_xy = self._xy - other.xy
+        return np.hypot(d_xy[0], d_xy[1])

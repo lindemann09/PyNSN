@@ -78,7 +78,7 @@ def numpy_vector(x):
     make an numpy vector from any element (list, _arrays, and single data (str, numeric))
     """
 
-    x = np.array(x)
+    x = np.asarray(x)
     if x.ndim == 1:
         return x
     elif x.ndim == 0:

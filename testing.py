@@ -1,5 +1,6 @@
 """_summary_"""
 
+from matplotlib import pyplot as pp
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
 
@@ -12,14 +13,7 @@ from random import randint
 import numpy as np
 
 
-
-d = pynsn.Rectangle()
-
-print(d)
-print(d.__dict__)
-#exit()
-
-seed = 991
+seed = 921
 nsn.init_random_generator(seed)
 
 my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
@@ -38,19 +32,19 @@ r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
 
 
 factory = nsn.NSNFactory(min_distance_between_objects=2,
-                         #target_area=pynsn.Rectangle(size=(200, 400)),
-                         target_area=pynsn.Dot(diameter=400),
+                         target_area=pynsn.Rectangle(size=(200, 400)),
+                         # target_area=pynsn.Dot(diameter=400),
                          min_distance_area_boarder=2)
 
 factory.set_appearance_dots(diameter=(10, 10, 10),
-                           attributes=distr.Levels(["blue", "green"],
-                                                   exact_weighting=True))
+                            attributes=distr.Levels(["blue", "green"],
+                                                    exact_weighting=True))
 
 factory.set_appearance_rectangles(width=(10, 10, 10), proportion=0.5,
-                                 attributes=distr.Levels(["blue", "green"],
-                                                         exact_weighting=True))
+                                  attributes=distr.Levels(["blue", "green"],
+                                                          exact_weighting=True))
 
-stimulus = factory.random_dot_array(n_objects=190)
+stimulus = factory.random_rectangle_array(n_objects=190)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
@@ -58,10 +52,7 @@ img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
 #stimulus.mod_realign(keep_convex_hull=False, strict=False)
-#stimulus.properties.fit_average_perimeter(130)
+# stimulus.properties.fit_average_perimeter(130)
 
-from matplotlib import pyplot as pp
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")
-
-
