@@ -47,7 +47,7 @@ def dist_coordinates(a_xy: ArrayLike,
                      b_xy: ArrayLike) -> NDArray:
     """Euclidean distances between coordinates (a and b)
 
-    Note: At least one xy parameter has to a 2D array
+    Note: At least one xy parameter has to be a 2D array
     """
     d_xy = np.asarray(a_xy) - np.asarray(b_xy)  # type: ignore
     return np.hypot(d_xy[:, 0], d_xy[:, 1])
@@ -57,11 +57,11 @@ def dist_dots(a_xy: ArrayLike, a_diameter: ArrayLike,
               b_xy: ArrayLike, b_diameter: ArrayLike) -> NDArray:
     """Euclidean distances between dots (a and b)
 
-    Note: At least one xy parameter has to a 2D array
+    Note: At least one xy parameter has to be a 2D array
     """
     # distance between centers minus the radii
-    return dist_coordinates(a_xy, b_xy) \
-        - (np.asarray(a_diameter) + np.asarray(b_diameter)) / 2
+    object_expension = (np.asarray(a_diameter) + np.asarray(b_diameter)) / 2
+    return dist_coordinates(a_xy, b_xy) - object_expension
 
 
 def xy_dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
@@ -69,12 +69,12 @@ def xy_dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
     """return distances on both axes between rectangles.
     negative numbers indicate overlap of edges along that dimension.
 
-    Note: At least one xy  parameter has to a 2D array
+    Note: At least one xy  parameter has to be a 2D array
     """
 
-    max_overlap_dist = (np.asarray(a_sizes) + np.asarray(b_sizes)) / 2
+    object_expension = (np.asarray(a_sizes) + np.asarray(b_sizes)) / 2
     diff = np.asarray(a_xy) - np.asarray(b_xy)  # type: ignore
-    return np.abs(diff) - max_overlap_dist
+    return np.abs(diff) - object_expension
 
 
 def dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
@@ -83,7 +83,7 @@ def dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
 
     negative distances indicate overlap and represent the
     size of the minimum overlap
-    Note: At least one xy parameter has to a 2D array
+    Note: At least one xy parameter has to be a 2D array
     """
     d_xy = xy_dist_rectangles(a_xy, a_sizes, b_xy, b_sizes)
     # columns both negative -
@@ -101,6 +101,17 @@ def dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
     # set overlaps negative
     rtn[both_neg] = -1 * rtn[both_neg]
     return rtn
+
+
+def overlap_rects(a_xy: ArrayLike, a_sizes: ArrayLike,
+                  b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
+    """True if rectangles overlap
+
+    Note: At least one xy parameter has to be a 2D array
+    """
+    d_xy = xy_dist_rectangles(a_xy, a_sizes, b_xy, b_sizes)
+    # columns both negative -
+    return np.all(d_xy < 0, axis=1)
 
 
 def center_of_positions(xy):

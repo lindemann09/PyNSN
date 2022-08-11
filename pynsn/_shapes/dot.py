@@ -80,7 +80,7 @@ class Dot(ABCShape):
     def perimeter(self) -> float:
         return np.pi * self._diameter
 
-    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> bool:
+    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
             return Coordinate.distance(self, other) \
@@ -97,9 +97,6 @@ class Dot(ABCShape):
                 return False
             else:
                 return True
-
-        elif other.__class__ == Coordinate:
-            return False
 
         raise NotImplementedError("is_inside is not "
                                   f"implemented for {type(other)}.")

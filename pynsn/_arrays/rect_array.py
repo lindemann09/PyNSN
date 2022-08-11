@@ -3,6 +3,8 @@ Rectangle Array
 """
 from __future__ import annotations
 
+from pynsn._lib import geometry
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
@@ -169,19 +171,6 @@ class RectangleArray(ABCObjectArray):
                 sizes=self._sizes[indices],
                 attributes=self._attributes[indices])
 
-    def _xy_distances(self, rect: Rectangle) -> NDArray:
-        """return distances on both axes between rectangles and reference rec.
-         negative number indicates overlap edges along that dimension.
-        """
-        if len(self._xy) == 0:
-            return np.array([])
-        else:
-            pos_dist = np.abs(self._xy - rect.xy)
-            max_not_overlap_dist = (self._sizes + rect.size) / 2
-            dist = pos_dist - max_not_overlap_dist
-            # FIXME intensive test distance function rect (also get_distance)
-            return dist
-
     def get_distances(self, rect: Rectangle) -> NDArray:
         """Euclidean distances toward a single rectangle
 
@@ -192,29 +181,15 @@ class RectangleArray(ABCObjectArray):
 
         Returns: numpy array of distances
         """
+
         assert isinstance(rect, Rectangle)
         if len(self._xy) == 0:
             return np.array([])
         else:
-            d_xy = self._xy_distances(rect)
-            eucl_dist = np.hypot(d_xy[:, 0], d_xy[:, 1])
-            for i, n_neg in enumerate(np.sum(d_xy < 0, axis=1)):
-                if n_neg == 2:
-                    # two dimensions overlap -> calc distance and make negative
-                    eucl_dist[i] = -1 * eucl_dist[i]
-                elif n_neg == 1:
-                    # one dimension overlaps -> set to zero
-                    if d_xy[i, 0] < 0:
-                        x = 0
-                    else:
-                        x = d_xy[i, 0]
-                    if d_xy[i, 1] < 0:
-                        y = 0
-                    else:
-                        y = d_xy[i, 1]
-                    eucl_dist[i] = np.hypot(x, y)
-
-            return eucl_dist
+            return geometry.dist_rectangles(a_xy=self._xy,
+                                            a_sizes=self._sizes,
+                                            b_xy=rect.xy,
+                                            b_sizes=rect.size)
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:
         """iterate over all or a part of the objects

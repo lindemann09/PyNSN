@@ -47,13 +47,13 @@ stimulus = factory.random_rectangle_array(n_objects=10)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
-r = Rectangle(xy=(0, -30), size=(20, 20), attribute="blue")
+r = Rectangle(xy=(0, -40), size=(20, 20), attribute="blue")
 r2 = Rectangle(xy=(-5, 50), size=(90, 160), attribute="red")
 
-res = geometry.dist_rectangles(a_xy=numpy_array_2d(r2.xy),
-                               a_sizes=r2.size,
-                               b_xy=r.xy,
-                               b_sizes=r.size)
+res = geometry.overlap_rects(a_xy=numpy_array_2d(r2.xy),
+                             a_sizes=r2.size,
+                             b_xy=r.xy,
+                             b_sizes=r.size)
 print(res)
 
 stim = pynsn.RectangleArray(target_area=pynsn.Dot(diameter=300))

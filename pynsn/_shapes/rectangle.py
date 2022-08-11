@@ -151,7 +151,7 @@ class Rectangle(ABCShape):
         '''size of the diagonal'''
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
 
-    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> bool:
+    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
             r_other = other.diameter / 2.0
@@ -170,9 +170,6 @@ class Rectangle(ABCShape):
                 return False
             else:
                 return True
-
-        elif other.__class__ == Coordinate:
-            return False
 
         raise NotImplementedError("is_inside is not "
                                   f"implemented for {type(other)}.")
