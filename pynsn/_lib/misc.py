@@ -6,6 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import sys
 from collections import OrderedDict
+from itertools import combinations
 from typing import Tuple
 
 import numpy as np
@@ -160,3 +161,26 @@ def triu_nan(m, k=0):
     see docu numpy.triu)
     """
     return m + np.tril(np.full(m.shape, np.nan), k=k-1)
+
+
+class CombinationMatrx(object):
+    """Symmetric combination matrix
+    helper class"""
+
+    def __init__(self, n_items: int) -> None:
+        idx = np.array(list(combinations(range(n_items), r=2)))
+        self.idx_a = idx[:, 0]
+        self.idx_b = idx[:, 1]
+        self.matrix = np.full((n_items, n_items), np.nan)
+
+    @property
+    def n_combinations(self) -> float:
+        return len(self.idx_a)
+
+    def fill(self, values) -> NDArray:
+        """returns combination matrix with values
+
+        """
+        self.matrix[self.idx_a, self.idx_b] = values
+        self.matrix[self.idx_b, self.idx_a] = values
+        return self.matrix
