@@ -1,11 +1,34 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
-from .misc import numpy_array_2d
+import itertools
 from typing import Union
 from numpy.typing import ArrayLike, NDArray
 
 # all functions are 2D arrays (at least) as fist arguments
+
+
+class _CombinationMatrx(object):
+    """Symmetric combination matrix
+    helper class"""
+
+    def __init__(self, n_items: int) -> None:
+        idx = np.array(list(itertools.combinations(range(n_items), r=2)))
+        self.idx_a = idx[:, 0]
+        self.idx_b = idx[:, 1]
+        self.matrix = np.full((n_items, n_items), np.nan)
+
+    @property
+    def n_combinations(self) -> float:
+        return len(self.idx_a)
+
+    def fill(self, values) -> NDArray:
+        """returns combination matrix with values
+
+        """
+        self.matrix[self.idx_a, self.idx_b] = values
+        self.matrix[self.idx_b, self.idx_a] = values
+        return self.matrix
 
 
 def polar2cartesian(polar: ArrayLike) -> NDArray:
@@ -43,8 +66,8 @@ def cartesian2image_coordinates(xy: ArrayLike,
     return (np.asarray(xy) * [1, -1]) + np.asarray(image_size) / 2
 
 
-def dist_coordinates(a_xy: ArrayLike,
-                     b_xy: ArrayLike) -> NDArray:
+def coordinates_distances(a_xy: ArrayLike,
+                          b_xy: ArrayLike) -> NDArray:
     """Euclidean distances between coordinates (a and b)
 
     Note: At least one xy parameter has to be a 2D array
@@ -53,19 +76,19 @@ def dist_coordinates(a_xy: ArrayLike,
     return np.hypot(d_xy[:, 0], d_xy[:, 1])
 
 
-def dist_dots(a_xy: ArrayLike, a_diameter: ArrayLike,
-              b_xy: ArrayLike, b_diameter: ArrayLike) -> NDArray:
+def dots_distances(a_xy: ArrayLike, a_diameter: ArrayLike,
+                   b_xy: ArrayLike, b_diameter: ArrayLike) -> NDArray:
     """Euclidean distances between dots (a and b)
 
     Note: At least one xy parameter has to be a 2D array
     """
     # distance between centers minus the radii
     object_expension = (np.asarray(a_diameter) + np.asarray(b_diameter)) / 2
-    return dist_coordinates(a_xy, b_xy) - object_expension
+    return coordinates_distances(a_xy, b_xy) - object_expension
 
 
-def xy_dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
-                       b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
+def rectangles_xy_distances(a_xy: ArrayLike, a_sizes: ArrayLike,
+                            b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
     """return distances on both axes between rectangles.
     negative numbers indicate overlap of edges along that dimension.
 
@@ -77,15 +100,15 @@ def xy_dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
     return np.abs(diff) - object_expension
 
 
-def dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
-                    b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
+def rectangles_distances(a_xy: ArrayLike, a_sizes: ArrayLike,
+                         b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
     """Distance between rectangles
 
     negative distances indicate overlap and represent the
     size of the minimum overlap
     Note: At least one xy parameter has to be a 2D array
     """
-    d_xy = xy_dist_rectangles(a_xy, a_sizes, b_xy, b_sizes)
+    d_xy = rectangles_xy_distances(a_xy, a_sizes, b_xy, b_sizes)
     # columns both negative -
     both_neg = np.flatnonzero(np.all(d_xy < 0, axis=1))
     # set make largest neg number positive for later dist calculation
@@ -103,15 +126,61 @@ def dist_rectangles(a_xy: ArrayLike, a_sizes: ArrayLike,
     return rtn
 
 
-def overlap_rects(a_xy: ArrayLike, a_sizes: ArrayLike,
-                  b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
+def rectangles_overlap(a_xy: ArrayLike, a_sizes: ArrayLike,
+                       b_xy: ArrayLike, b_sizes: ArrayLike) -> NDArray:
     """True if rectangles overlap
 
     Note: At least one xy parameter has to be a 2D array
     """
-    d_xy = xy_dist_rectangles(a_xy, a_sizes, b_xy, b_sizes)
+    d_xy = rectangles_xy_distances(a_xy, a_sizes, b_xy, b_sizes)
     # columns both negative -
     return np.all(d_xy < 0, axis=1)
+
+
+def rectangles_distance_matrix(xy: ArrayLike, sizes: ArrayLike) -> NDArray:
+    """Return matrix with distance between the rectangles"""
+    xy = np.array(xy)
+    size = np.array(sizes)
+    mtx = _CombinationMatrx(xy.shape[0])
+    dist = rectangles_distances(a_xy=xy[mtx.idx_a, :],
+                                a_sizes=size[mtx.idx_a, :],
+                                b_xy=xy[mtx.idx_b, :],
+                                b_sizes=size[mtx.idx_b, :])
+    return mtx.fill(values=dist)
+
+
+def rectangles_overlap_matrix(xy: ArrayLike, sizes: ArrayLike) -> NDArray:
+    """Return matrix with overlaps (True/False) between the rectangles"""
+    xy = np.array(xy)
+    size = np.array(sizes)
+    mtx = _CombinationMatrx(xy.shape[0])
+    dist = rectangles_overlap(a_xy=xy[mtx.idx_a, :],
+                              a_sizes=size[mtx.idx_a, :],
+                              b_xy=xy[mtx.idx_b, :],
+                              b_sizes=size[mtx.idx_b, :])
+    return mtx.fill(values=dist)
+
+
+def dots_distance_matrix(xy: ArrayLike, diameter: ArrayLike) -> NDArray:
+    """Return matrix with distance between the dots"""
+    xy = np.array(xy)
+    diameter = np.array(diameter)
+    mtx = _CombinationMatrx(xy.shape[0])
+    dist = dots_distances(a_xy=xy[mtx.idx_a, :],
+                          a_diameter=diameter[mtx.idx_a],
+                          b_xy=xy[mtx.idx_b, :],
+                          b_diameter=diameter[mtx.idx_b])
+    return mtx.fill(values=dist)
+
+
+def coordinates_distance_matrix(xy: ArrayLike) -> NDArray:
+    """Return matrix with distance between the dots"""
+    xy = np.array(xy)
+    n = xy.shape[0]
+    mtx = _CombinationMatrx(xy.shape[0])
+    dist = coordinates_distances(a_xy=xy[mtx.idx_a, :],
+                                 b_xy=xy[mtx.idx_b, :])
+    return mtx.fill(values=dist)
 
 
 def center_of_positions(xy):

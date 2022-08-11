@@ -159,4 +159,4 @@ def triu_nan(m, k=0):
     upper triangular but nan instead of zeros (as in numpy's original function,
     see docu numpy.triu)
     """
-    return m + np.tril(np.full(m.shape, np.nan), k=k - 1)
+    return m + np.tril(np.full(m.shape, np.nan), k=k-1)

@@ -13,7 +13,9 @@ from .distributions import PyNSNDistribution, _round_samples, Levels
 from .._lib.exception import NoSolutionError
 from .._lib.lib_typing import Union, Sequence, NDArray, OptFloat
 
-ParameterDistributionTypes = Union[PyNSNDistribution, float, int, Sequence[Any], None]
+ParameterDistributionTypes = Union[PyNSNDistribution,
+                                   float, int, Sequence[Any], None]
+
 
 class _Constant(PyNSNDistribution):
 
@@ -27,7 +29,7 @@ class _Constant(PyNSNDistribution):
         constant : numeric
         """
 
-        super().__init__(min_max = (value, value))
+        super().__init__(min_max=(value, value))
 
     def sample(self, n, round_to_decimals=None) -> NDArray:
         return _round_samples([self.min_max[0]] * n, round_to_decimals)
@@ -59,7 +61,7 @@ class NSNFactory(TargetArea):
 
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
-                 min_distance_between_objects: OptFloat =None,
+                 min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None):
         """
 
@@ -156,7 +158,8 @@ class NSNFactory(TargetArea):
     def _sample_dots(self, n: int) -> Sequence[Dot]:
         """return list of dots with random size all positions = (0,0)"""
         if self._distr_diameter is None:
-            raise RuntimeError("Dot appearance is not defined; please use set_dot_appearance.")
+            raise RuntimeError(
+                "Dot appearance is not defined; please use set_dot_appearance.")
         diameter = self._distr_diameter.sample(n)
         if self._distr_dot_attributes is not None:
             attributes = self._distr_dot_attributes.sample(n)
@@ -169,7 +172,8 @@ class NSNFactory(TargetArea):
     def _sample_rectangles(self, n: int) -> Sequence[Rectangle]:
         """return list of rectangles with random size all positions = (0,0)"""
         if self._distr_width is None and self._distr_height is None:
-            raise RuntimeError("Rectangle appearance is not  defined; please use set_rectangle_appearance.")
+            raise RuntimeError(
+                "Rectangle appearance is not  defined; please use set_rectangle_appearance.")
         if self._distr_width is not None:
             width = self._distr_width.sample(n)
         else:
@@ -195,7 +199,6 @@ class NSNFactory(TargetArea):
 
         return [Rectangle(xy=(0, 0), size=(w, h), attribute=attr)
                 for w, h, attr in zip(width, height, attributes)]  # type: ignore
-
 
     def to_dict(self) -> dict:
         """Dict representation of the NSNFactory instance"""
@@ -228,9 +231,9 @@ class NSNFactory(TargetArea):
         return rtn
 
     def add_random_dots(self, dot_array: DotArray,
-                            n_objects: int = 1,
-                            allow_overlapping: bool = False,
-                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
+                        n_objects: int = 1,
+                        allow_overlapping: bool = False,
+                        occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
 
@@ -253,19 +256,18 @@ class NSNFactory(TargetArea):
         for dot in self._sample_dots(n=n_objects):
             try:
                 dot = dot_array.get_free_position(ref_object=dot, in_neighborhood=False,
-
-                                            occupied_space=occupied_space,
-                                            allow_overlapping=allow_overlapping)
-            except NoSolutionError:
-                raise NoSolutionError(
-                    f"Can't find a solution for {n_objects} items in this array")
+                                                  occupied_space=occupied_space,
+                                                  allow_overlapping=allow_overlapping)
+            except NoSolutionError as err:
+                raise NoSolutionError(f"Can't find a solution for {n_objects} "
+                                      + "items in this array") from err
             dot_array.add([dot])  # type: ignore
 
         return dot_array
 
     def random_dot_array(self, n_objects: int,
-                            allow_overlapping: bool = False,
-                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
+                         allow_overlapping: bool = False,
+                         occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
         """Create a new random dot array
         occupied_space is a dot array (used for multicolour dot array (join after)
 
@@ -283,18 +285,18 @@ class NSNFactory(TargetArea):
         rtn : object array
         """
         rtn = DotArray(target_area=deepcopy(self.target_area),
-                        min_distance_between_objects=self.min_distance_between_objects,
-                        min_distance_area_boarder=self.min_distance_area_boarder)
+                       min_distance_between_objects=self.min_distance_between_objects,
+                       min_distance_area_boarder=self.min_distance_area_boarder)
         return self.add_random_dots(dot_array=rtn,
                                     n_objects=n_objects,
                                     allow_overlapping=allow_overlapping,
                                     occupied_space=occupied_space)
 
     def add_random_rectangles(self,
-                             rectangle_array : RectangleArray,
-                             n_objects: int = 1,
-                            allow_overlapping: bool = False,
-                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+                              rectangle_array: RectangleArray,
+                              n_objects: int = 1,
+                              allow_overlapping: bool = False,
+                              occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
 
         if not isinstance(rectangle_array, RectangleArray):
             raise ValueError("Dot array has to be a DotArray and not "
@@ -302,18 +304,18 @@ class NSNFactory(TargetArea):
         for rect in self._sample_rectangles(n=n_objects):
             try:
                 rect = rectangle_array.get_free_position(ref_object=rect, in_neighborhood=False,
-                                                occupied_space=occupied_space,
-                                                allow_overlapping=allow_overlapping)
-            except NoSolutionError:
-                raise NoSolutionError(f"Can't find a solution for {n_objects} " +
-                                        "items in this array.")
-            rectangle_array.add([rect]) # type:ignore
+                                                         occupied_space=occupied_space,
+                                                         allow_overlapping=allow_overlapping)
+            except NoSolutionError as err:
+                raise NoSolutionError(f"Can't find a solution for {n_objects} "
+                                      + f"items in this array.") from err
+            rectangle_array.add([rect])  # type:ignore
 
         return rectangle_array
 
     def random_rectangle_array(self, n_objects: int,
-                            allow_overlapping: bool = False,
-                            occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+                               allow_overlapping: bool = False,
+                               occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
         """
         occupied_space is a dot array (used for multicolour dot array (join after)
 
@@ -331,15 +333,15 @@ class NSNFactory(TargetArea):
         rtn : object array
         """
         rtn = RectangleArray(target_area=deepcopy(self.target_area),
-                                min_distance_between_objects=self.min_distance_between_objects,
-                                min_distance_area_boarder=self.min_distance_area_boarder)
+                             min_distance_between_objects=self.min_distance_between_objects,
+                             min_distance_area_boarder=self.min_distance_area_boarder)
         return self.add_random_rectangles(rectangle_array=rtn,
                                           n_objects=n_objects,
                                           allow_overlapping=allow_overlapping,
                                           occupied_space=occupied_space)
 
     def incremental_random_dot_array(self, n_objects: int,
-                                        allow_overlapping: bool = False) -> Iterator[DotArray]:
+                                     allow_overlapping: bool = False) -> Iterator[DotArray]:
         """
 
         Parameters
@@ -354,15 +356,15 @@ class NSNFactory(TargetArea):
         previous = None
         for _ in range(n_objects):
             current = self.random_dot_array(n_objects=1,
-                                               allow_overlapping=allow_overlapping,
-                                               occupied_space=previous)
+                                            allow_overlapping=allow_overlapping,
+                                            occupied_space=previous)
             if previous is not None:
                 current.join(previous)
             previous = current
             yield current
 
     def incremental_random_rectangle_array(self, n_objects: int,
-                                        allow_overlapping: bool = False) -> Iterator[RectangleArray]:
+                                           allow_overlapping: bool = False) -> Iterator[RectangleArray]:
         """
 
         Parameters
@@ -377,8 +379,8 @@ class NSNFactory(TargetArea):
         previous = None
         for n in range(n_objects):
             current = self.random_rectangle_array(n_objects=1,
-                                               allow_overlapping=allow_overlapping,
-                                               occupied_space=previous)
+                                                  allow_overlapping=allow_overlapping,
+                                                  occupied_space=previous)
             if previous is not None:
                 current.join(previous)
             previous = current

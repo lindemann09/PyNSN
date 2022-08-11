@@ -374,7 +374,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         cnt = 0
         while True:
             if cnt > constants.MAX_ITERATIONS:
-                raise NoSolutionError("Can't find a free position")
+                raise NoSolutionError("Can't find a free position: "
+                                      + f"Current n={len(self.xy)}")
             cnt += 1
 
             if in_neighborhood:

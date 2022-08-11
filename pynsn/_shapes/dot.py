@@ -10,7 +10,7 @@ from .abc_shape import ABCShape
 from .picture_file import PictureFile
 from .._lib.coordinate import Coordinate
 from .. import _shapes
-from .._lib.geometry import dist_dots
+from .._lib.geometry import dots_distances
 from .._lib.misc import numpy_array_2d
 
 
@@ -54,19 +54,19 @@ class Dot(ABCShape):
         # inherited doc
 
         if isinstance(other, _shapes.Dot):
-            rtn = dist_dots(a_xy=numpy_array_2d(self.xy),  # dist-functions required 2D data
-                            a_diameter=self._diameter,
-                            b_xy=other.xy, b_diameter=other.diameter)
+            rtn = dots_distances(a_xy=numpy_array_2d(self.xy),  # dist-functions required 2D data
+                                 a_diameter=self._diameter,
+                                 b_xy=other.xy, b_diameter=other.diameter)
             return rtn[0]
 
         elif isinstance(other, _shapes.Rectangle):
             return other.distance(self)
 
         elif other.__class__ == Coordinate:
-            rtn = dist_dots(a_xy=numpy_array_2d(self.xy),
-                            a_diameter=self._diameter,
-                            b_xy=other.xy,
-                            b_diameter=0)
+            rtn = dots_distances(a_xy=numpy_array_2d(self.xy),
+                                 a_diameter=self._diameter,
+                                 b_xy=other.xy,
+                                 b_diameter=0)
             return rtn[0]
 
         raise NotImplementedError(f"distance to {type(other)} "

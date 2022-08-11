@@ -1,5 +1,6 @@
 """_summary_"""
 
+import time
 from matplotlib import pyplot as pp
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
@@ -26,40 +27,31 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
 )
 
 
-r = pynsn.Rectangle(xy=(0, 0), size=(80, 80),
-                    attribute=nsn.PictureFile("mypict.png"))
-
-
 factory = nsn.NSNFactory(min_distance_between_objects=2,
                          #target_area=pynsn.Rectangle(size=(200, 400)),
                          target_area=pynsn.Dot(diameter=400),
                          min_distance_area_boarder=2)
 
-factory.set_appearance_dots(diameter=(10, 10, 10),
+factory.set_appearance_dots(diameter=(2, 3, 4),
                             attributes=distr.Levels(["blue", "green"],
                                                     exact_weighting=True))
 
-factory.set_appearance_rectangles(width=(10, 10, 10), proportion=0.5,
+factory.set_appearance_rectangles(width=(2, 3, 4), proportion=1,
                                   attributes=distr.Levels(["blue", "green"],
                                                           exact_weighting=True))
-
-stimulus = factory.random_rectangle_array(n_objects=10)
+start = time.time()
+stimulus = factory.random_rectangle_array(n_objects=800)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
+print(time.time()-start)
 
 r = Rectangle(xy=(0, -40), size=(20, 20), attribute="blue")
 r2 = Rectangle(xy=(-5, 50), size=(90, 160), attribute="red")
 
-res = geometry.overlap_rects(a_xy=numpy_array_2d(r2.xy),
-                             a_sizes=r2.size,
-                             b_xy=r.xy,
-                             b_sizes=r.size)
-print(res)
-
 stim = pynsn.RectangleArray(target_area=pynsn.Dot(diameter=300))
 stim.add([r2, r])
 
-img = pil_image.create(stim, my_colours)
+img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
 exit()

@@ -12,11 +12,12 @@ from typing import Dict, List
 
 import numpy as np
 
-from .._lib import misc
+from .._lib import misc, geometry
 from .._lib.lib_typing import (Any, IntOVector, Iterator, NDArray, OptFloat,
                                OptArrayLike, Optional, Sequence, Union)
 from .._shapes import Dot, Rectangle
 from .abc_object_array import ABCObjectArray
+
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
 #  introduction precision parameter that is used by to_dict and get_csv and
@@ -176,9 +177,8 @@ class DotArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            rtn = np.hypot(self._xy[:, 0] - dot.x, self._xy[:, 1] - dot.y) - \
-                ((self._diameter + dot.diameter) / 2.0)
-            return rtn
+            return geometry.dots_distances(a_xy=self._xy, a_diameter=self._diameter,
+                                           b_xy=dot.xy, b_diameter=dot.diameter)
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
         """iterate over all or a part of the objects
