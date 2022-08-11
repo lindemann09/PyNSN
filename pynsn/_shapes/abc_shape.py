@@ -12,7 +12,6 @@ from ..image._colour import Colour
 from .picture_file import PictureFile
 
 
-# FIXME typing
 class ABCShape(Coordinate, metaclass=ABCMeta):
     __slots__ = ("_attribute",)
 

@@ -25,8 +25,7 @@ class ArrayProperties(object):
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
         assert isinstance(object_array, (_arrays.DotArray,
-                                         _arrays.RectangleArray,
-                                         _arrays.PointArray))
+                                         _arrays.RectangleArray))
         self._oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None

@@ -4,21 +4,21 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.14.0'
+__version__ = '0.15.0'
 
 from sys import version_info as _python_version_info
 
+# pylint: disable=C0209
 if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
     raise RuntimeError("PyNSN {0} ".format(__version__) +
                        "is not compatible with Python {0}.{1}. ".format(
                            _python_version_info[0],
                            _python_version_info[1]) +
                        "Please use Python 3.8 or later.")
-
-
-from ._arrays import DotArray, RectangleArray, PointArray, \
+# pylint: disable=C0413
+from ._arrays import DotArray, RectangleArray, \
     ArrayProperties, load_array
-from ._shapes import Point, Dot, Rectangle, PictureFile
+from ._shapes import Dot, Rectangle, PictureFile
 from ._factory import NSNFactory
 from .image._colour import Colour, ImageColours
 

@@ -15,14 +15,15 @@ class ConvexHullPositions(object):
     """
 
     def __init__(self, object_array) -> None:
-        assert isinstance(object_array, (_arrays.PointArray, _arrays.DotArray,
+        assert isinstance(object_array, (_arrays.DotArray,
                                          _arrays.RectangleArray))
         self._convex_hull = None
         self._try_convex_hull(xy=object_array.xy)
 
     def _try_convex_hull(self, xy):
+        # pylint: disable=E1101
         try:
-            self._convex_hull = spatial.ConvexHull(xy)  # type: ignore
+            self._convex_hull = spatial.ConvexHull(xy)
         except spatial.QhullError:
             self._convex_hull = None
 
@@ -74,7 +75,7 @@ class ConvexHull(ConvexHullPositions):
 
     def __init__(self, object_array) -> None:
 
-        assert isinstance(object_array, (_arrays.PointArray, _arrays.DotArray,
+        assert isinstance(object_array, (_arrays.DotArray,
                                          _arrays.RectangleArray))
         self._convex_hull = None
         self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)

@@ -40,7 +40,7 @@ class Dot(ABCShape):
         return f"Dot(xy={self.xy}, diameter={self.diameter}, " \
             + "attribute = '{self.attribute}')"
 
-    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
+    def distance(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> float:
         # inherited doc
 
         if isinstance(other, _shapes.Dot):
@@ -51,7 +51,7 @@ class Dot(ABCShape):
         elif isinstance(other, _shapes.Rectangle):
             return other.distance(self)
 
-        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
+        elif other.__class__ == Coordinate:
             # distance between centers - radius
             return Coordinate.distance(self, other) \
                 - (self.diameter / 2.0)
@@ -67,7 +67,7 @@ class Dot(ABCShape):
     def perimeter(self) -> float:
         return np.pi * self.diameter
 
-    def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
+    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
             return Coordinate.distance(self, other) \
@@ -85,7 +85,7 @@ class Dot(ABCShape):
             else:
                 return True
 
-        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
+        elif other.__class__ == Coordinate:
             return False
 
         raise NotImplementedError("is_inside is not "

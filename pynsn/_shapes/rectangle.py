@@ -58,13 +58,13 @@ class Rectangle(ABCShape):
     def perimeter(self) -> float:
         return 2 * (self.width + self.height)
 
-    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
+    def distance(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> float:
         # inherited doc
         if isinstance(other, _shapes.Dot):
-            dist = self.distance(_shapes.Point(xy=other.xy))
+            dist = self.distance(Coordinate(xy=other.xy))
             return dist - other.diameter / 2.0
 
-        elif isinstance(other, (_shapes.Rectangle, _shapes.Point)) \
+        elif isinstance(other, _shapes.Rectangle) \
                 or other.__class__ == Coordinate:
             d_xy = self._xy_distances(other=other)
             d_xy[np.where(d_xy < 0)] = 0
@@ -141,7 +141,7 @@ class Rectangle(ABCShape):
         '''size of the diagonal'''
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
 
-    def _xy_distances(self, other: Union[_shapes.ShapeType, Coordinate]) -> NDArray:
+    def _xy_distances(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> NDArray:
         """return distances on both axes between rectangles.
         negative numbers indicate overlap of edges along that dimension.
         """
@@ -150,8 +150,7 @@ class Rectangle(ABCShape):
 
         if isinstance(other, _shapes.Rectangle):
             max_overlap_dist = (self._size + other.size) / 2
-        elif isinstance(other, _shapes.Point) \
-                or other.__class__ == Coordinate:
+        elif other.__class__ == Coordinate:
             max_overlap_dist = self._size / 2
         else:
             raise NotImplementedError(f"xy_distances to {type(other)} "
@@ -159,7 +158,7 @@ class Rectangle(ABCShape):
         # overlaps in x or y
         return np.abs(self._xy - other.xy) - max_overlap_dist
 
-    def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
+    def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> bool:
         # inherited doc
         if isinstance(other, _shapes.Dot):
             r_other = other.diameter / 2.0
@@ -179,7 +178,7 @@ class Rectangle(ABCShape):
             else:
                 return True
 
-        elif isinstance(other, _shapes.Point) or other.__class__ == Coordinate:
+        elif other.__class__ == Coordinate:
             return False
 
         raise NotImplementedError("is_inside is not "
