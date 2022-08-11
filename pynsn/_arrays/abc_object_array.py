@@ -5,27 +5,27 @@ from __future__ import annotations
 
 from typing import Iterator
 
+from pynsn._arrays import target_area
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
-from .point_array import PointArray
-from .tools import BrownianMotion
-from .._lib import constants
-from .._lib import geometry
-from .._lib import misc
-from .._lib import rng
+from .._lib import constants, geometry, misc, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import List, Union, Tuple, Sequence, NDArray
+from .._lib.lib_typing import List, NDArray, Sequence, Tuple, Union
+from .._shapes import ShapeType
 from .._shapes.dot import Dot
 from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
-from .._shapes import ShapeType
+from .point_array import PointArray
+from .tools import BrownianMotion
 
 
 class ABCObjectArray(PointArray, metaclass=ABCMeta):
@@ -56,12 +56,12 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         """ """
 
     @abstractmethod
-    def iter_objects(self, indices=None) -> Iterator:
+    def iter_objects(self, indices=None) -> Iterator[Union[Dot, Rectangle, Point]]:
         """ """
 
     @abstractmethod
     def add(self, obj):
-        return super().add(obj)
+        """ """
 
     @abstractmethod
     def find_objects(self, size=None, attribute=None):
@@ -104,11 +104,10 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
         dist = np.asarray([self.get_distances(d) for d in self.iter_objects()])
         return dist
 
-    def get_overlaps(self) -> Tuple[np.ndarray, np.ndarray]:
+    def get_overlaps(self) -> Tuple[NDArray, NDArray]:
         """return pairs of indices of overlapping of objects and an array of the
         amount of overlap
         takes into account min_distance_between_objects property
-
         """
         dist = misc.triu_nan(self.get_distances_matrix(between_positions=False),
                              k=1)
@@ -316,7 +315,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                                 found = None
 
                 if found is None:
-                    self.add([obj])
+                    self.add([obj])  # put back
                     raise NoSolutionError(
                         "Can't find a solution for remove overlap")
                 else:
@@ -335,7 +334,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
         return old_fa == new_ch
 
-    def mod_replace(self, xy: Sequence[float]) -> None:
+    def mod_replace(self, xy: ArrayLike) -> None:
         """Replace the object array
 
         Args:
@@ -346,7 +345,7 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
 
     def mod_move_object(self, object_id: int,
                         distance: float,
-                        direction: Union[float, Sequence[float]],
+                        direction: Union[float, ArrayLike],
                         push_other: bool = False) -> None:
         """Move a single object by a particular distance. The function uses
         direction and direction
@@ -358,21 +357,20 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
                        to indicate the direction
             push_other: replace other objects, if required (optional, default=False)
         """
-        try:
-            ang = float(direction)  # type: ignore
-        except (TypeError, ValueError):
+        if isinstance(direction, float):
+            ang = direction
+        else:
             try:
-                ang = Coordinate(x=direction[0],  # type: ignore
-                                 y=direction[1])  # type: ignore
+                ang = Coordinate(xy=direction)
             except IndexError:
                 ang = None
         if ang is None:
-            raise TypeError("Direction has to be float or a 2D Coordinate "
-                            "or a tuple/list of two elements.")
+            raise ValueError("Direction has to be float or a 2D Coordinate "
+                             ", thus, an ArrayLike with two elements.")
 
         obj = next(self.iter_objects(indices=object_id))
 
-        movement = Coordinate()
+        movement = Coordinate(xy=(0, 0))
         if isinstance(ang, float):
             movement.polar = (distance, ang)
         else:
@@ -388,12 +386,12 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             dist = self.get_distances(obj)
             for other_id in np.flatnonzero(dist < 0):
                 if other_id != object_id:
-                    movement.xy = self._xy[other_id,
-                                           :] - self._xy[object_id, :]
+                    movement.xy = self._xy[other_id, :] \
+                        - self._xy[object_id, :]
                     self.mod_move_object(other_id,
                                          direction=movement.polar_angle,
-                                         distance=abs(
-                                             dist[other_id]) + self.min_distance_between_objects,
+                                         distance=abs(dist[other_id])
+                                         + self.min_distance_between_objects,
                                          push_other=True)
 
         self.properties.reset()
@@ -410,13 +408,23 @@ class ABCObjectArray(PointArray, metaclass=ABCMeta):
             if cnt > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a solution for squeezing")
 
-            idx, size = self.get_outlier()
+            idx = self.get_outlier()
             if len(idx) == 0:
                 return
-            for object_id, size in zip(idx, size):
-                self.mod_move_object(object_id, distance=size,
-                                     direction=(0, 0),
-                                     push_other=push_other)
+            for object_id in idx:
+                obj = self.get_object(index=object_id)
+                if isinstance(self.target_area, Dot):
+                    mv_dist = obj.distance(self.target_area)  # type: ignore
+                    self.mod_move_object(object_id,
+                                         distance=abs(mv_dist),
+                                         direction=(0, 0),
+                                         push_other=push_other)
+                else:
+                    # target area is rect
+                    # should be always this case
+                    assert isinstance(target_area, Rectangle)
+
+                    raise NotImplementedError()  # FIXME
 
     def get_split_arrays(self) -> List[PointArray]:
         """returns a list of _arrays

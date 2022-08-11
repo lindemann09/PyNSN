@@ -74,11 +74,13 @@ class Dot(ABCShape):
                 < (other.diameter - self.diameter)/2.0
 
         elif isinstance(other, _shapes.Rectangle):
-            r_self = self.diameter/2.0
-            if self.x-r_self < other.left \
-                    or self.x+r_self > other.right \
-                    or self.y-r_self < other.bottom \
-                    or self.y+r_self > other.top:
+            left_buttom = self._xy - self.diameter / 2
+            right_top = self._xy + self.diameter / 2
+            ltrb = other.get_ltrb().flatten()
+            if left_buttom[0] < ltrb[0] \
+                    or right_top[1] > ltrb[1] \
+                    or right_top[0] > ltrb[2] \
+                    or left_buttom[1] < ltrb[3]:
                 return False
             else:
                 return True

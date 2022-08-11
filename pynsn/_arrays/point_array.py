@@ -20,7 +20,7 @@ from .._shapes.point import Point
 from .._shapes.rectangle import Rectangle
 from .properties import ArrayProperties
 
-# FIXME PointArray not tested and not documented
+# TODO PointArray not tested and not documented
 
 
 class PointArray(TargetArea):
@@ -33,7 +33,7 @@ class PointArray(TargetArea):
     def __init__(self,
                  target_area: Union[Dot, Rectangle],
                  min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat  = None,
+                 min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,
                  attributes: OptArrayLike = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
@@ -242,6 +242,7 @@ class PointArray(TargetArea):
         rtn = PointArray(target_area=PointArray._target_area_from_dict(the_dict),
                          min_distance_between_objects=the_dict["min_distance_between_objects"],
                          min_distance_area_boarder=the_dict["min_distance_area_boarder"])
+        # pylint: disable=W0212
         rtn._append_xy_attribute(xy=the_dict["xy"],
                                  attributes=the_dict["attributes"])
 
@@ -263,7 +264,7 @@ class PointArray(TargetArea):
              indent: Optional[int] = None,
              include_hash: bool = False) -> None:
         """"""
-        with open(json_file_name, 'w') as fl:
+        with open(json_file_name, 'w', encoding="utf-8") as fl:
             fl.write(self.json(indent=indent, include_hash=include_hash))
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Point]:

@@ -67,6 +67,7 @@ class Rectangle(ABCShape):
         elif isinstance(other, (_shapes.Rectangle, _shapes.Point)) \
                 or other.__class__ == Coordinate:
             d_xy = self._xy_distances(other=other)
+            d_xy[np.where(d_xy < 0)] = 0
             return np.hypot(d_xy[0], d_xy[1])
 
         raise NotImplementedError(f"distance to {type(other)} "
@@ -141,9 +142,12 @@ class Rectangle(ABCShape):
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
 
     def _xy_distances(self, other: Union[_shapes.ShapeType, Coordinate]) -> NDArray:
-        """return distances on both axes between rectangles. 0 indicates
-        overlap of edges along that dimension.
+        """return distances on both axes between rectangles.
+        negative numbers indicate overlap of edges along that dimension.
         """
+        if isinstance(other, _shapes.Dot):
+            raise NotImplementedError()
+
         if isinstance(other, _shapes.Rectangle):
             max_overlap_dist = (self._size + other.size) / 2
         elif isinstance(other, _shapes.Point) \
@@ -153,9 +157,7 @@ class Rectangle(ABCShape):
             raise NotImplementedError(f"xy_distances to {type(other)} "
                                       + "is implemented.")
         # overlaps in x or y
-        pos_dist = np.abs(self._xy - other.xy) - max_overlap_dist
-        pos_dist[np.where(pos_dist < 0)] = 0
-        return pos_dist
+        return np.abs(self._xy - other.xy) - max_overlap_dist
 
     def is_inside(self, other: Union[_shapes.ShapeType, Coordinate]) -> bool:
         # inherited doc
