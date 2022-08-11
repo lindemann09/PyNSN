@@ -176,8 +176,8 @@ class RectangleArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            pos_dist = np.abs(self.xy - rect.xy)
-            max_not_overlap_dist = (self.sizes + rect.size) / 2
+            pos_dist = np.abs(self._xy - rect.xy)
+            max_not_overlap_dist = (self._sizes + rect.size) / 2
             dist = pos_dist - max_not_overlap_dist
             # FIXME intensive test distance function rect (also get_distance)
             return dist

@@ -4,11 +4,12 @@ Draw a random number from a beta dirstribution
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from collections import OrderedDict
-from tkinter import N
-import numpy as np
 import sys
-from numpy.typing import NDArray, ArrayLike
+from collections import OrderedDict
+from typing import Tuple
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 
 def make_csv(xy, size_data_dict, attributes=None,
@@ -88,14 +89,12 @@ def numpy_vector(x):
         return x.flatten()
 
 
-def numpy_array_2d(two_d_data: ArrayLike):
-    """ensures well shaped to 2d numpy array"""
-    rtn = np.asarray(two_d_data)
-    if rtn.ndim == 1 and len(rtn) == 2:
-        rtn = rtn.reshape((1, 2))
-    if rtn.ndim != 2:
-        raise ValueError(
-            "Bad shaped data: xy must be pair of xy-values or a list of xy-values")
+def numpy_array_2d(data: ArrayLike) -> NDArray[np.floating]:
+    """converts a simple 1D array to 2D with only row.
+    It just insures a multi-dimensional array"""
+    rtn = np.asarray(data)
+    if rtn.ndim == 1:
+        return rtn.reshape((1, rtn.shape[0]))
     return rtn
 
 

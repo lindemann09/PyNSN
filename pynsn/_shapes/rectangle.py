@@ -10,6 +10,8 @@ from numpy.typing import ArrayLike, NDArray
 from .. import _shapes
 from .._lib.coordinate import Coordinate
 from .abc_shape import ABCShape
+from .._lib.geometry import dist_rectangles
+from .._lib.misc import numpy_array_2d
 
 
 class Rectangle(ABCShape):
@@ -64,28 +66,36 @@ class Rectangle(ABCShape):
             dist = self.distance(Coordinate(xy=other.xy))
             return dist - other.diameter / 2.0
 
-        elif isinstance(other, _shapes.Rectangle) \
-                or other.__class__ == Coordinate:
-            d_xy = self._xy_distances(other=other)
-            d_xy[np.where(d_xy < 0)] = 0
-            return np.hypot(d_xy[0], d_xy[1])
+        elif isinstance(other, _shapes.Rectangle):
+            dist = dist_rectangles(a_xy=numpy_array_2d(self._xy),
+                                   a_sizes=self._size,
+                                   b_xy=other.xy,
+                                   b_sizes=other.size)
+            return dist[0]
+
+        elif other.__class__ == Coordinate:
+            dist = dist_rectangles(a_xy=numpy_array_2d(self._xy),
+                                   a_sizes=self._size,
+                                   b_xy=other.xy,
+                                   b_sizes=0)
+            return dist[0]
 
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")
 
-    @property
+    @ property
     def left(self) -> float:
         return self._xy[0] - 0.5 * self._size[0]
 
-    @property
+    @ property
     def top(self) -> float:
         return self._xy[1] + 0.5 * self._size[1]
 
-    @property
+    @ property
     def right(self) -> float:
         return self._xy[0] + 0.5 * self._size[0]
 
-    @property
+    @ property
     def bottom(self) -> float:
         return self._xy[1] - 0.5 * self._size[1]
 
@@ -119,11 +129,11 @@ class Rectangle(ABCShape):
         # left bottom
         yield Coordinate(xy=edges.diagonal())
 
-    @property
+    @ property
     def size(self) -> NDArray:
         return self._size
 
-    @size.setter
+    @ size.setter
     def size(self, values: ArrayLike) -> None:
         values = np.asarray(values)
         if values.shape != (2,):
@@ -131,32 +141,15 @@ class Rectangle(ABCShape):
                 "size has be an iterable object with two elements (width, height)")
         self._size = values
 
-    @property
+    @ property
     def proportion(self) -> float:
         """Proportion of the rectangle (width/height)"""
         return self._size[0] / self._size[1]
 
-    @property
+    @ property
     def diagonal(self) -> None:
         '''size of the diagonal'''
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
-
-    def _xy_distances(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> NDArray:
-        """return distances on both axes between rectangles.
-        negative numbers indicate overlap of edges along that dimension.
-        """
-        if isinstance(other, _shapes.Dot):
-            raise NotImplementedError()
-
-        if isinstance(other, _shapes.Rectangle):
-            max_overlap_dist = (self._size + other.size) / 2
-        elif other.__class__ == Coordinate:
-            max_overlap_dist = self._size / 2
-        else:
-            raise NotImplementedError(f"xy_distances to {type(other)} "
-                                      + "is implemented.")
-        # overlaps in x or y
-        return np.abs(self._xy - other.xy) - max_overlap_dist
 
     def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle, Coordinate]) -> bool:
         # inherited doc

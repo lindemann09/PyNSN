@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Sequence
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -51,11 +52,11 @@ class Coordinate(object):
         return not np.array_equal(self._xy, other._xy, equal_nan=True)
 
     @property
-    def xy(self) -> NDArray:
-        return self._xy
+    def xy(self) -> NDArray[np.floating]:
+        return self._xy  # type: ignore
 
     @xy.setter
-    def xy(self, value) -> None:
+    def xy(self, value: ArrayLike) -> None:
         value = np.asarray(value)
         if value.shape != (2,):
             raise ValueError("xy has be an iterable object with two elements")

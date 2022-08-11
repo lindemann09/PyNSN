@@ -7,11 +7,10 @@ from numpy.typing import NDArray, ArrayLike
 import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
+from pynsn._lib.misc import numpy_array_2d
+from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
-
-from random import randint
-import numpy as np
-
+from pynsn._lib import geometry
 
 seed = 921
 nsn.init_random_generator(seed)
@@ -21,7 +20,7 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
     opacity_object=0.9,
     default_object_colour="darkmagenta",
     # field_area_positions="magenta",
-    field_area="gray",
+    # field_area="gray",
     # center_of_positions="red",
     # center_of_mass="magenta"
 )
@@ -44,14 +43,28 @@ factory.set_appearance_rectangles(width=(10, 10, 10), proportion=0.5,
                                   attributes=distr.Levels(["blue", "green"],
                                                           exact_weighting=True))
 
-stimulus = factory.random_dot_array(n_objects=190)
+stimulus = factory.random_rectangle_array(n_objects=10)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 
-img = pil_image.create(stimulus, my_colours)
+r = Rectangle(xy=(0, -30), size=(20, 20), attribute="blue")
+r2 = Rectangle(xy=(-5, 50), size=(90, 160), attribute="red")
+
+res = geometry.dist_rectangles(a_xy=numpy_array_2d(r2.xy),
+                               a_sizes=r2.size,
+                               b_xy=r.xy,
+                               b_sizes=r.size)
+print(res)
+
+stim = pynsn.RectangleArray(target_area=pynsn.Dot(diameter=300))
+stim.add([r2, r])
+
+img = pil_image.create(stim, my_colours)
 img.save("demo.png")
 
-#stimulus.mod_realign(keep_convex_hull=False, strict=False)
+exit()
+
+stimulus.mod_realign(keep_convex_hull=False, strict=False)
 # stimulus.properties.fit_average_perimeter(130)
 
 img = mpl_figure.create(stimulus, my_colours)

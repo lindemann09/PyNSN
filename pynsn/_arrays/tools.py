@@ -4,8 +4,7 @@ helper functions for arrays
 
 import numpy as np
 
-from .._lib import geometry
-from .._lib import rng
+from .._lib import geometry, rng
 
 
 def jitter_identical_positions(xy, jitter_size=0.1):
