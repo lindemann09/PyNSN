@@ -59,14 +59,11 @@ img.save("demo.png")
 # print(stimulus)
 
 
-x = pynsn.Coordinate(xy=(-900, 0))
-print(x)
-print(x.polar)
-
-
 idx = stimulus.get_outlier()
 
-stimulus.mod_move_object(np.array(range(20)), 51, direction=(0, 0))
+tmp = np.array([11, 12], dtype=np.int16)
+stimulus.mod_move_object(list(range(5)), 51, direction=(0, 0),
+                         push_other=True)
 
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")

@@ -572,7 +572,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         if ang is None:
             raise ValueError("Direction has to be float or a 2D Coordinate "
                              ", thus, an ArrayLike with two elements.")
-        if isinstance(object_ids, int):
+        if isinstance(object_ids, (int, np.integer)):
             object_ids = [object_ids]
         movement = Coordinate(xy=(0, 0))
 
@@ -584,8 +584,6 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 # "ang" is not an angle it an object
                 movement.xy = ang.xy - obj.xy
                 movement.rho = distance
-                print(obj.xy)
-                print(movement.xy)
 
             self._xy[id_, :] = self._xy[id_, :] + movement.xy
 
@@ -593,7 +591,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 # push overlapping object
                 obj.xy += movement.xy
                 dist = self.get_distances(obj)
-                for other_id in np.flatnonzero(dist < 0):
+                for other_id in np.flatnonzero(dist < self.min_distance_between_objects):
                     if other_id != id_:
                         movement.xy = self._xy[other_id, :] \
                             - self._xy[id_, :]
