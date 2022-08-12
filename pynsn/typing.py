@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Sequence, Union, Any
+from typing import Optional, Sequence, Union
 
 from numpy import float_
 from numpy.typing import ArrayLike, NDArray

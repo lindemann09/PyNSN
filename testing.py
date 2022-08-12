@@ -1,6 +1,7 @@
 """_summary_"""
 
 from operator import ge
+from re import I
 import time
 from matplotlib import pyplot as pp
 import numpy as np
@@ -32,30 +33,26 @@ factory = nsn.NSNFactory(min_distance_between_objects=2,
                          target_area=pynsn.Dot(diameter=400),
                          min_distance_area_boarder=2)
 
-factory.set_appearance_dots(diameter=(2, 3, 4),
+factory.set_appearance_dots(diameter=(20, 30, 40),
                             attributes=distr.Levels(["blue", "green"],
                                                     exact_weighting=True))
 
-factory.set_appearance_rectangles(width=(2, 3, 4), proportion=1,
+factory.set_appearance_rectangles(width=(20, 30, 40), proportion=1,
                                   attributes=distr.Levels(["blue", "green"],
                                                           exact_weighting=True))
 
 
 #start = time.time()
-stimulus = factory.random_dot_array(n_objects=8)
+stimulus = factory.random_rectangle_array(n_objects=8)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 # print(time.time()-start)
 
-r = Rectangle(xy=(0, -40), size=(800, 800), attribute="blue")
-
-x = np_rectangles.overlap_with_dots(rect_xy=(0, 40), rect_sizes=(200, 200),
-                                    dot_xy=stimulus.xy, dot_diameter=stimulus.diameter)
-print(x)
-
-
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
+
+print(stimulus)
+exit()
 
 
 stimulus.mod_realign(keep_convex_hull=False, strict=False)

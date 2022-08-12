@@ -207,11 +207,11 @@ class ArrayProperties(object):
         return OrderedDict(rtn)
 
     def __str__(self) -> str:
-        return self.as_text()
+        return self.as_text(extended_format=True)
 
     def as_text(self, with_hash: bool = True,
                 extended_format: bool = False,
-                spacing_char: str = ".") -> str:
+                spacing_char: str = " ") -> str:
         if extended_format:
             rtn = None
             for k, v in self.to_dict().items():
@@ -227,7 +227,7 @@ class ArrayProperties(object):
                         name = "  " + k
                     try:
                         value = f"{v:.2f}\n"  # try rounding
-                    except ValueError:
+                    except (ValueError, TypeError):
                         value = f"{v}\n"
 
                     n_space = 14 - len(value)

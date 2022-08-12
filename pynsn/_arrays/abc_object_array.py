@@ -19,6 +19,7 @@ from .._arrays.target_area import TargetArea
 from .._lib import constants, np_coordinates, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
+from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
@@ -63,15 +64,16 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """Vector with the perimeter of all objects"""
 
     @abstractmethod
-    def to_dict(self):
+    def to_dict(self, omit_objects: bool = False) -> dict:
         """Convert array tp dictionary
         """
         d = super().to_dict()
-        d.update({"xy": self._xy.tolist()})
-        if len(self._attributes) > 0 and np_tools.is_all_equal(self._attributes):
-            d.update({"attributes": self._attributes[0]})
-        else:
-            d.update({"attributes": self._attributes.tolist()})
+        if not omit_objects:
+            d.update({"xy": self._xy.tolist()})
+            if len(self._attributes) > 0 and np_tools.is_all_equal(self._attributes):
+                d.update({"attributes": self._attributes[0]})
+            else:
+                d.update({"attributes": self._attributes.tolist()})
         return d
 
     @staticmethod
@@ -135,6 +137,11 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             decimals: number of decimal places
             int_type: numpy int type (default=numpy.int16)
         """
+
+    def __str__(self) -> str:
+        d = self.to_dict(omit_objects=True)
+        prop = self.properties.as_text(extended_format=True)
+        return dict_to_text(d, col_a=30, col_b=7) + "\n " + prop[1:]
 
     @property
     def xy(self) -> NDArray:

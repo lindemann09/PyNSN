@@ -94,12 +94,13 @@ class DotArray(ABCObjectArray):
         self._diameter = np_tools.round2(self._diameter, decimals=decimals,
                                          int_type=int_type)
 
-    def to_dict(self) -> dict:
+    def to_dict(self, omit_objects: bool = False) -> dict:
         """
 
         """
-        d = super().to_dict()
-        d.update({"diameter": self._diameter.tolist()})
+        d = super().to_dict(omit_objects=omit_objects)
+        if not omit_objects:
+            d.update({"diameter": self._diameter.tolist()})
         return d
 
     @staticmethod

@@ -112,10 +112,11 @@ class RectangleArray(ABCObjectArray):
         self._sizes = np_tools.round2(self._sizes, decimals=decimals,
                                       int_type=int_type)
 
-    def to_dict(self) -> dict:
+    def to_dict(self, omit_objects: bool = False) -> dict:
         # inherited doc
-        d = super().to_dict()
-        d.update({"sizes": self._sizes.tolist()})
+        d = super().to_dict(omit_objects=omit_objects)
+        if not omit_objects:
+            d.update({"sizes": self._sizes.tolist()})
         return d
 
     @staticmethod
