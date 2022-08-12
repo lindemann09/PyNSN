@@ -58,7 +58,8 @@ class Coordinate(object):
     def xy(self, value: ArrayLike) -> None:
         value = np.asarray(value)
         if value.shape != (2,):
-            raise ValueError("xy has be an iterable object with two elements")
+            raise ValueError("xy has be an iterable object with two elements"
+                             f" and not {type(value)}")
         self._xy = value
 
     @property

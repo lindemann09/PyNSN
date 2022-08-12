@@ -208,15 +208,22 @@ class RectangleArray(ABCObjectArray):
         >>> for obj in my_array:
         >>>    print(obj)
         """
-        if indices is None:
-            data = zip(self._xy, self._sizes, self._attributes)
-        else:
-            data = zip(self._xy[indices, :], self._sizes[indices, :],
-                       self._attributes[indices])
 
-        for xy, s, att in data:
-            rtn = Rectangle(xy=xy, size=s, attribute=att)
-            yield rtn
+        if isinstance(indices, (int, np.integer)):
+            yield Rectangle(xy=self._xy[indices, :],
+                            size=self._sizes[indices],
+                            attribute=self._attributes[indices])
+        else:
+            if indices is None:
+                data = zip(self._xy, self._sizes, self._attributes)
+            else:
+                data = zip(self._xy[indices, :],
+                           self._sizes[indices, :],
+                           self._attributes[indices])
+
+            for xy, s, att in data:
+                rtn = Rectangle(xy=xy, size=s, attribute=att)
+                yield rtn
 
     def find_objects(self, size: Union[Sequence[float], NDArray[np.float_], None] = None,
                      attribute: Optional[Any] = None,

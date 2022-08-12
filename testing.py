@@ -55,15 +55,12 @@ img.save("demo.png")
 
 
 # stimulus.mod_realign(keep_convex_hull=False, strict=False)
-# stimulus.properties.fit_field_area(98000)
-# print(stimulus)
 
+stimulus.properties.fit_field_area(99000)
+# print(stimulus)
+# stimulus.mod_squeeze_to_area()  # FIXME squeed too much, because incorrect distance calulations
 
 idx = stimulus.get_outlier()
-
-tmp = np.array([11, 12], dtype=np.int16)
-stimulus.mod_move_object(list(range(5)), 51, direction=(0, 0),
-                         push_other=True)
 
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")

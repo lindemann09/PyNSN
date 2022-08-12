@@ -630,7 +630,6 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                     # target area is rect
                     # should be always this case
                     assert isinstance(self.target_area, Rectangle)
-
                     raise NotImplementedError()  # FIXME
 
     def get_split_arrays(self) -> List[ABCObjectArray]:
