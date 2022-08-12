@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Sequence
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 

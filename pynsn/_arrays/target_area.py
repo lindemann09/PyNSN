@@ -2,9 +2,11 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from .._lib.lib_typing import OptFloat, Union
+from typing import Union
+
 from .._lib import constants
 from .._shapes import Dot, Rectangle
+from ..typing import OptFloat
 
 
 class TargetArea(object):

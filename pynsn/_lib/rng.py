@@ -4,9 +4,12 @@ access of the newly initialized random generator if  `init_random_generator` has
 been called
 """
 
+from typing import Sequence, Union
+
 import numpy as np
-from .lib_typing import Union, NDArray, Sequence
-generator = np.random.default_rng()
+from numpy.typing import NDArray
+
+GENERATOR = np.random.default_rng()
 
 
 def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
@@ -21,7 +24,9 @@ def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
     -----
     see documentation of `numpy.random.default_rng()` of Python standard library
     """
-    global generator
-    generator = np.random.default_rng(seed=seed)
+
+    # pylint:disable = W0603
+    global GENERATOR
+    GENERATOR = np.random.default_rng(seed=seed)
     if seed is not None:
-        print("PyNSN seed: {}".format(seed))
+        print(f"PyNSN seed: {seed}")

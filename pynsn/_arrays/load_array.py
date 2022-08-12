@@ -7,7 +7,7 @@ from .dot_array import DotArray
 from .rect_array import RectangleArray
 
 
-def load_array(filename: str) -> Union[DotArray, RectangleArray, None]:
+def load_array(filename: str) -> Union[DotArray, RectangleArray]:
     """Loading json array file
 
     Args:
@@ -17,7 +17,7 @@ def load_array(filename: str) -> Union[DotArray, RectangleArray, None]:
         Object Array
     """
 
-    with open(filename, 'r') as fl:
+    with open(filename, 'r', encoding="utf-8") as fl:
         d = json.load(fl)
 
     arr_type = d["type"]

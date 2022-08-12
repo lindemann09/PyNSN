@@ -5,8 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from . import geometry_coordinates as geo_coord
-from .misc import CombinationMatrx
+from .np_tools import CombinationMatrx
 
 # all functions are 2D arrays (at least) as fist arguments
 
@@ -102,8 +101,7 @@ def overlap_with_dots(rect_xy: ArrayLike, rect_sizes: ArrayLike,
 
     dist_lbrt = np.append(dist_left_bottom, dist_right_top, axis=1)
     # if dot is overlapping -> all distances negative
-    overlaps = np.all(dist_lbrt < 0, axis=1)
-    return overlaps
+    return np.all(dist_lbrt < 0, axis=1)
 
 
 def inside_rectangle(xy: ArrayLike, sizes: ArrayLike) -> NDArray:
@@ -114,6 +112,3 @@ def inside_rectangle(xy: ArrayLike, sizes: ArrayLike) -> NDArray:
 def inside_dots(xy: ArrayLike, sizes: ArrayLike) -> NDArray:
     """bool array indicates with rectangles are fully inside the dot/dots"""
     raise NotImplementedError()
-
-
-WIETER CHECK ALL gemortry imports

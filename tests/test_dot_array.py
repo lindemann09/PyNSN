@@ -14,7 +14,7 @@ class DotsSmall(unittest.TestCase):
 
     def setUp(self):
         self.settings()
-        self.stimulus = self.factory.create_random_array(n_objects=self.n_dots)
+        self.stimulus = self.factory.random_dot_array(n_objects=self.n_dots)
 
     def test_numerosity(self):
         self.assertEqual(self.stimulus.properties.numerosity, self.n_dots)

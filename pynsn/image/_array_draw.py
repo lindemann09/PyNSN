@@ -5,10 +5,9 @@ from typing import Optional, Any
 
 import numpy as _np
 
-from pynsn._shapes.rectangle import Rectangle
 from . import _colour
 from .. import _arrays
-from .._shapes import Dot, PictureFile
+from .._shapes import Dot, PictureFile, Rectangle
 
 # helper for type checking and error raising error
 
@@ -42,7 +41,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
     def scale_image(image, scaling_factor):
-        pass
+        """ """
 
     @staticmethod
     @abstractmethod
@@ -54,7 +53,6 @@ class ABCArrayDraw(metaclass=ABCMeta):
         image :  handler of plotter in the respective framework
                     (e.g. pillow image, axes (matplotlib) or svrdraw object)
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -70,7 +68,6 @@ class ABCArrayDraw(metaclass=ABCMeta):
         image :  handler of plotter in the respective framework
                     (e.g. pillow image, axes (matplotlib) or svrdraw object)
         """
-        pass
 
     def create_image(self, object_array: _arrays.ObjectArrayType,
                      colours: Optional[_colour.ImageColours],
@@ -140,9 +137,12 @@ class ABCArrayDraw(metaclass=ABCMeta):
                 att = obj.get_attribute_object()
                 if isinstance(att, PictureFile):
                     pass
-                else:  # dot or rect: force colour, set default colour if no colour
+                elif isinstance(att, _colour.Colour):
+                    obj.attribute = att
+                else:
+                    # dot or rect: force colour, set default colour if no colour
                     obj.attribute = _colour.Colour(
-                        att, colours.default_object_colour.colour)
+                        None, colours.default_object_colour.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_object,
                                 scaling_factor=aaf)
 

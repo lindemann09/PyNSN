@@ -6,7 +6,7 @@ import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
+from .._lib.np_coordinates import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
 from . import _array_draw
 from .. import _arrays
@@ -37,7 +37,7 @@ def create(object_array: _arrays.ObjectArrayType,
 class _PILDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
-    def get_image(image_size, background_colour:str, **kwargs) -> _Image.Image:
+    def get_image(image_size, background_colour: str, **kwargs) -> _Image.Image:
         # filename not used for pil images
         return _Image.new("RGBA", image_size, color=background_colour)
 

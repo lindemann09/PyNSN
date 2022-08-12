@@ -29,14 +29,14 @@ class TestArrays(unittest.TestCase):
 
         factory = NSNFactory(target_area=Dot(diameter=400))
         factory.set_appearance_dots(diameter=(40, 10, 30),
-                                   attributes=distr.Levels(["blue", "green"],
-                                                           exact_weighting=True))
-        self.dot_stim = factory.create_random_array(n_objects=N)
+                                    attributes=distr.Levels(["blue", "green"],
+                                                            exact_weighting=True))
+        self.dot_stim = factory.random_dot_array(n_objects=N)
 
         factory.set_appearance_rectangles(width=(40, 10, 30), proportion=0.5,
-                                         attributes=distr.Levels(["blue", "green"],
-                                                                 exact_weighting=True))
-        self.rect_stim = factory.create_random_array(n_objects=N)
+                                          attributes=distr.Levels(["blue", "green"],
+                                                                  exact_weighting=True))
+        self.rect_stim = factory.random_dot_array(n_objects=N)
 
         try:
             os.mkdir(TEMP_FLD)

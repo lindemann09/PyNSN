@@ -6,5 +6,4 @@ from .rect_array import RectangleArray
 from .dot_array import DotArray
 from .target_area import TargetArea
 
-# TODO not yet used
 ObjectArrayType = _tp.Union[DotArray, RectangleArray]

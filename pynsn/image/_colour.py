@@ -14,10 +14,10 @@ _HEXDEC = {v: int(v, 16)
 
 
 RGBType = Tuple[int, int, int]
-ColourType = Union[None, RGBType, Sequence[float], str]
+ColourType = Union[str, RGBType, Sequence[float], None]
 
 
-@total_ordering
+@ total_ordering
 class Colour(object):
     """Colour Class
 
@@ -63,8 +63,8 @@ class Colour(object):
     """
 
     def __init__(self,
-                 colour: Optional[ColourType],
-                 default: Optional[ColourType] = None) -> None:
+                 colour: ColourType,
+                 default: ColourType = None) -> None:
         if colour is None:
             colour = default
 
@@ -89,7 +89,7 @@ class Colour(object):
     def __ne__(self, other):
         return self._colour != other._colour
 
-    @property
+    @ property
     def colour(self) -> Union[str, None]:
         """Hextriplet code of the colour or None"""
         return self._colour
@@ -129,7 +129,7 @@ class Colour(object):
             except TypeError as err:
                 raise TypeError(error_txt.format(value)) from err
 
-    @property
+    @ property
     def rgb(self) -> Union[RGBType, None]:
         """RGB code of the colour"""
         if self._colour is not None:
@@ -164,7 +164,7 @@ class Colour(object):
 
         return self.rgb + (alpha,)
 
-    @staticmethod
+    @ staticmethod
     def convert_hextriplet_to_rgb(hextriplet: str) -> RGBType:
         """Convert a hextriplet string to RGB values"""
         ht = hextriplet.lstrip("#")
@@ -174,7 +174,7 @@ class Colour(object):
             raise ValueError(
                 f"Can't convert {hextriplet} to rgb value") from err
 
-    @staticmethod
+    @ staticmethod
     def convert_rgb_hextriplet(rgb: Sequence, uppercase: bool = True):
         """Convert RBG values to a hextriplet string"""
         if len(rgb) != 3:

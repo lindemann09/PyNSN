@@ -46,7 +46,7 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         axes = _plt.Axes(figure, (0, 0, 1, 1))
         axes.set_aspect('equal')  # squared
         axes.set_axis_off()
-        lims = _np.transpose(image_size/2* _np.array([[-1, -1], [1, 1]]))
+        lims = _np.transpose(image_size/2 * _np.array([[-1, -1], [1, 1]]))
         axes.set(xlim=lims[0], ylim=lims[1])
         figure.add_axes(axes)
         return figure
@@ -61,7 +61,8 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         attr = shape.get_attribute_object()
 
         if isinstance(attr, _shapes.PictureFile):
-            raise RuntimeError("Pictures are not supported for matplotlib files.")
+            raise RuntimeError(
+                "Pictures are not supported for matplotlib files.")
 
         if isinstance(shape, _shapes.Dot):
             r = shape.diameter / 2
@@ -74,7 +75,8 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
                                        height=shape.height,
                                        color=attr.colour, lw=0)
         else:
-            raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+            raise NotImplementedError(
+                "Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
         plt_shape.set_alpha(opacity)
         img.axes[0].add_artist(plt_shape)

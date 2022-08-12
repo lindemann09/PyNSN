@@ -3,20 +3,23 @@ Rectangle Array
 """
 from __future__ import annotations
 
-from pynsn._lib import geometry
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import numpy as np
 from copy import deepcopy
+from typing import Any, Iterator, Optional, Sequence, Union
 
-from .._lib import misc
-from .abc_object_array import ABCObjectArray
-from .._lib.lib_typing import NumArray, OptArrayLike, IntOVector, Iterator, \
-    Any, Union, Sequence, Optional, OptFloat, NDArray, ArrayLike
-from .._shapes.rectangle import Rectangle
-from .._shapes.dot import Dot
+import numpy as np
+
+from .._lib import np_rectangles, np_tools
 from .._lib.coordinate import Coordinate
+from .._shapes.dot import Dot
+from .._shapes.rectangle import Rectangle
+from ..typing import (ArrayLike, IntOVector, NDArray, NumArray, OptArrayLike,
+                      OptFloat)
+from .abc_object_array import ABCObjectArray
+from .tools import make_csv
+
+# pylint: disable=W0237:arguments-renamed
 
 
 class RectangleArray(ABCObjectArray):
@@ -55,7 +58,7 @@ class RectangleArray(ABCObjectArray):
 
     def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""
-        sizes = misc.numpy_array_2d(sizes)
+        sizes = np_tools.as_array2d(sizes)
         if len(self._sizes) == 0:
             # ensure good shape of self.xy
             empty = np.array([]).reshape((0, 2))
@@ -104,10 +107,10 @@ class RectangleArray(ABCObjectArray):
         # inherited doc
         if decimals is None:
             return
-        self._xy = misc.numpy_round2(self._xy, decimals=decimals,
-                                     int_type=int_type)
-        self._sizes = misc.numpy_round2(self._sizes, decimals=decimals,
-                                        int_type=int_type)
+        self._xy = np_tools.round2(self._xy, decimals=decimals,
+                                   int_type=int_type)
+        self._sizes = np_tools.round2(self._sizes, decimals=decimals,
+                                      int_type=int_type)
 
     def to_dict(self) -> dict:
         # inherited doc
@@ -186,10 +189,10 @@ class RectangleArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            return geometry.rectangles_distances(a_xy=self._xy,
-                                                 a_sizes=self._sizes,
-                                                 b_xy=rect.xy,
-                                                 b_sizes=rect.size)
+            return np_rectangles.distances(a_xy=self._xy,
+                                           a_sizes=self._sizes,
+                                           b_xy=rect.xy,
+                                           b_sizes=rect.size)
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:
         """iterate over all or a part of the objects
@@ -254,7 +257,7 @@ class RectangleArray(ABCObjectArray):
             array_hash = self.hash
         else:
             array_hash = None
-        return misc.make_csv(xy=self._xy,
-                             size_data_dict=size_dict,
-                             attributes=attr, array_hash=array_hash,
-                             make_variable_names=variable_names)
+        return make_csv(xy=self._xy,
+                        size_data_dict=size_dict,
+                        attributes=attr, array_hash=array_hash,
+                        make_variable_names=variable_names)

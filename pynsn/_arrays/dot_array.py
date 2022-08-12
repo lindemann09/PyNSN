@@ -3,20 +3,20 @@ Dot Array
 """
 from __future__ import annotations
 
-from pynsn._arrays.target_area import TargetArea
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
-from typing import Dict, List
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 
-from .._lib import misc, geometry
-from .._lib.lib_typing import (Any, IntOVector, Iterator, NDArray, OptFloat,
-                               OptArrayLike, Optional, Sequence, Union)
+from .._lib import np_dots, np_tools
 from .._shapes import Dot, Rectangle
+from ..typing import IntOVector, NDArray, OptArrayLike, OptFloat
 from .abc_object_array import ABCObjectArray
+from .tools import make_csv
+
+# pylint: disable=W0237:arguments-renamed
 
 
 # TODO: How to deal with rounding? Is saving to precises? Suggestion:
@@ -47,10 +47,10 @@ class DotArray(ABCObjectArray):
         if diameter is None:
             self._diameter = np.array([])
         else:
-            self._diameter = misc.numpy_vector(diameter)
+            self._diameter = np_tools.as_vector(diameter)
         if self._xy.shape[0] != len(self._diameter):
             raise ValueError("Bad shaped data: " +
-                             u"xy has not the same length as item_diameter")
+                             "xy has not the same length as item_diameter")
 
     def add(self, obj: Union[Dot, Sequence[Dot]]) -> None:
         """append one dot or list of dots"""
@@ -89,10 +89,10 @@ class DotArray(ABCObjectArray):
         # inherited doc
         if decimals is None:
             return
-        self._xy = misc.numpy_round2(self._xy, decimals=decimals,
-                                     int_type=int_type)
-        self._diameter = misc.numpy_round2(self._diameter, decimals=decimals,
-                                           int_type=int_type)
+        self._xy = np_tools.round2(self._xy, decimals=decimals,
+                                   int_type=int_type)
+        self._diameter = np_tools.round2(self._diameter, decimals=decimals,
+                                         int_type=int_type)
 
     def to_dict(self) -> dict:
         """
@@ -177,8 +177,8 @@ class DotArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            return geometry.dots_distances(a_xy=self._xy, a_diameter=self._diameter,
-                                           b_xy=dot.xy, b_diameter=dot.diameter)
+            return np_dots.distances(a_xy=self._xy, a_diameter=self._diameter,
+                                     b_xy=dot.xy, b_diameter=dot.diameter)
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
         """iterate over all or a part of the objects
@@ -242,7 +242,7 @@ class DotArray(ABCObjectArray):
             array_hash = self.hash
         else:
             array_hash = None
-        return misc.make_csv(xy=self._xy,
-                             size_data_dict=size_dict,
-                             attributes=attr, array_hash=array_hash,
-                             make_variable_names=variable_names)
+        return make_csv(xy=self._xy,
+                        size_data_dict=size_dict,
+                        attributes=attr, array_hash=array_hash,
+                        make_variable_names=variable_names)

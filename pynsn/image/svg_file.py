@@ -1,17 +1,13 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import typing
-
-
 from typing import Optional
+
 import numpy as _np
 import svgwrite as _svg
 
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import _shapes
-from .. import _arrays
-from . import _array_draw
-from . import _colour
+from .. import _arrays, _shapes
+from .._lib.np_coordinates import cartesian2image_coordinates as _c2i_coord
+from . import _array_draw, _colour
 
 
 def create(filename: str,

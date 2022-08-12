@@ -1,5 +1,5 @@
 import enum as _enum
-from .._lib import lib_typing as _tp
+import typing as _tp
 
 # _arrays
 DEFAULT_MIN_DISTANCE_BETWEEN_OBJECTS = 2

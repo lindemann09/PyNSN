@@ -8,10 +8,9 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
+from .._lib import np_rectangles, np_tools
 from .._lib.coordinate import Coordinate
 from .abc_shape import ABCShape
-from .._lib.geometry import rectangles_distances
-from .._lib.misc import numpy_array_2d
 
 
 class Rectangle(ABCShape):
@@ -67,17 +66,17 @@ class Rectangle(ABCShape):
             return dist - other.diameter / 2.0
 
         elif isinstance(other, _shapes.Rectangle):
-            dist = rectangles_distances(a_xy=numpy_array_2d(self._xy),
-                                        a_sizes=self._size,
-                                        b_xy=other.xy,
-                                        b_sizes=other.size)
+            dist = np_rectangles.distances(a_xy=np_tools.as_array2d(self._xy),
+                                           a_sizes=self._size,
+                                           b_xy=other.xy,
+                                           b_sizes=other.size)
             return dist[0]
 
         elif other.__class__ == Coordinate:
-            dist = rectangles_distances(a_xy=numpy_array_2d(self._xy),
-                                        a_sizes=self._size,
-                                        b_xy=other.xy,
-                                        b_sizes=0)
+            dist = np_rectangles.distances(a_xy=np_tools.as_array2d(self._xy),
+                                           a_sizes=self._size,
+                                           b_xy=other.xy,
+                                           b_sizes=0)
             return dist[0]
 
         raise NotImplementedError(f"distance to {type(other)} "
@@ -173,5 +172,4 @@ class Rectangle(ABCShape):
 
         raise NotImplementedError("is_inside is not "
                                   f"implemented for {type(other)}.")
-
 # TODO doc "basic properities" is all classes (like width)

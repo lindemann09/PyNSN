@@ -33,9 +33,8 @@ jupyter_examples: venv
 	cd examples && \
 	make html
 
-tox: venv
-	. venv/bin/activate && \
-	python -m tox
+unittest:
+	python -m unittest discover tests/
 
 clean:
 	@rm -rf build \

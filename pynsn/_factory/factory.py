@@ -1,17 +1,18 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import copy, deepcopy
-from typing import Iterator, Any, Optional
+from typing import Any, Iterator, Optional, Sequence, Union
 
 from .._arrays.dot_array import DotArray
-from .._arrays.target_area import TargetArea
 from .._arrays.rect_array import RectangleArray
+from .._arrays.target_area import TargetArea
+from .._lib.exception import NoSolutionError
+from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
-from .._lib.misc import dict_to_text
-from .distributions import PyNSNDistribution, _round_samples, Levels
-from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import Union, Sequence, NDArray, OptFloat
+from ..typing import NDArray, OptFloat
+from .distributions import Levels, PyNSNDistribution, _round_samples
+
 
 ParameterDistributionTypes = Union[PyNSNDistribution,
                                    float, int, Sequence[Any], None]

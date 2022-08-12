@@ -9,10 +9,9 @@ from numpy.typing import NDArray, ArrayLike
 import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
-from pynsn._lib.misc import numpy_array_2d
 from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn._lib import geometry
+from pynsn._lib import np_rectangles, np_dots
 
 seed = 921
 nsn.init_random_generator(seed)
@@ -50,15 +49,14 @@ stimulus = factory.random_dot_array(n_objects=8)
 
 r = Rectangle(xy=(0, -40), size=(800, 800), attribute="blue")
 
-x = geometry.rectangles_dots_overlap(rect_xy=(0, 40), rect_sizes=(200, 200),
-                                     dot_xy=stimulus.xy, dot_diameter=stimulus.diameter)
+x = np_rectangles.overlap_with_dots(rect_xy=(0, 40), rect_sizes=(200, 200),
+                                    dot_xy=stimulus.xy, dot_diameter=stimulus.diameter)
 print(x)
 
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
-exit()
 
 stimulus.mod_realign(keep_convex_hull=False, strict=False)
 # stimulus.properties.fit_average_perimeter(130)

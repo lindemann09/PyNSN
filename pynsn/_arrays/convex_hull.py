@@ -4,8 +4,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import spatial
 
-from .._lib.geometry import cartesian2polar, polar2cartesian
 from .. import _arrays
+from .._lib.np_coordinates import cartesian2polar, polar2cartesian
 
 
 class ConvexHullPositions(object):
@@ -77,6 +77,8 @@ class ConvexHull(ConvexHullPositions):
 
         assert isinstance(object_array, (_arrays.DotArray,
                                          _arrays.RectangleArray))
+
+        super().__init__(object_array=object_array)
         self._convex_hull = None
         self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)
         if self._is_rect_array:

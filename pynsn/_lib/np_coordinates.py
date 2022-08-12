@@ -5,7 +5,9 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .misc import CombinationMatrx
+from .._lib import rng
+
+from .np_tools import CombinationMatrx, as_array2d
 
 # all functions are 2D arrays (at least) as fist arguments
 
@@ -13,7 +15,6 @@ from .misc import CombinationMatrx
 def distance_matrix(xy: ArrayLike) -> NDArray:
     """Return matrix with distance between the dots"""
     xy = np.array(xy)
-    n = xy.shape[0]
     mtx = CombinationMatrx(xy.shape[0])
     dist = distances(a_xy=xy[mtx.idx_a, :],
                      b_xy=xy[mtx.idx_b, :])
@@ -69,3 +70,19 @@ def distances(a_xy: ArrayLike,
     """
     d_xy = np.asarray(a_xy) - np.asarray(b_xy)  # type: ignore
     return np.hypot(d_xy[:, 0], d_xy[:, 1])
+
+
+def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArray:
+    """jitters points with identical position"""
+
+    for idx, ref_object in enumerate(xy):
+        # find identical positions
+        identical = np.flatnonzero(np.all(np.equal(xy, ref_object), axis=1))
+        if len(identical) > 1:
+            for x in identical:  # jitter all identical positions
+                if x != idx:
+                    r = as_array2d((jitter_size,
+                                    rng.GENERATOR.random() * 2 * np.pi))
+                    xy[x, :] = xy[x, :] - polar2cartesian(r)[0]
+
+    return xy

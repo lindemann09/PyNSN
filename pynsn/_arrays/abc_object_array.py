@@ -9,21 +9,19 @@ import json
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from hashlib import md5
-from typing import Iterator, Union
+from typing import Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
 from .._arrays.target_area import TargetArea
-from .._lib import constants, geometry, misc, rng
+from .._lib import constants, np_coordinates, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
-from .._lib.lib_typing import (ArrayLike, IntOVector, Iterator, List, NDArray,
-                               OptArrayLike, OptFloat, Optional, Sequence,
-                               Tuple, Union)
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
+from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
 from .properties import ArrayProperties
 from .tools import BrownianMotion
 
@@ -70,7 +68,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
         d = super().to_dict()
         d.update({"xy": self._xy.tolist()})
-        if len(self._attributes) > 0 and misc.is_all_equal(self._attributes):
+        if len(self._attributes) > 0 and np_tools.is_all_equal(self._attributes):
             d.update({"attributes": self._attributes[0]})
         else:
             d.update({"attributes": self._attributes.tolist()})
@@ -171,7 +169,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def _append_xy_attribute(self, xy: ArrayLike,
                              attributes: OptArrayLike = None) -> int:
         """returns number of added rows"""
-        xy = misc.numpy_array_2d(xy)
+        xy = np_tools.as_array2d(xy)
         if not isinstance(attributes, (tuple, list)):
             attributes = np.array([attributes] * xy.shape[0])
 
@@ -298,8 +296,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         amount of overlap
         takes into account min_distance_between_objects property
         """
-        dist = misc.triu_nan(self.get_distances_matrix(between_positions=False),
-                             k=1)
+        dist = np_tools.triu_nan(self.get_distances_matrix(between_positions=False),
+                                 k=1)
         overlap = np.where(dist < self.min_distance_between_objects)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
@@ -313,15 +311,16 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Returns:
             Coordinate of center position
         """
-        return geometry.center_of_positions(self.properties.convex_hull.xy)
+        return np_coordinates.center_of_coordinates(self.properties.convex_hull.xy)
 
     def mod_center_array_mass(self) -> None:
         self._xy = self._xy - self.get_center_of_mass()
         self._properties.reset()
 
     def mod_center_field_area(self) -> None:
-        cxy = geometry.center_of_positions(self.properties.convex_hull.xy)
-        self._xy = self._xy - cxy
+        cxy = np_coordinates.center_of_coordinates(
+            self.properties.convex_hull.xy)
+        self._xy = self._xy - cxy  # type: ignore
         self._properties.reset()
 
     def _search_area_parameter(self):
@@ -381,7 +380,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             if in_neighborhood:
                 rtn_object.xy = random_walk.next()
             else:
-                rtn_object.xy = rng.generator.random(size=2) * 2 \
+                rtn_object.xy = rng.GENERATOR.random(size=2) * 2 \
                     * half_search_area_size - half_search_area_size
 
             # is outside area
