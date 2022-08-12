@@ -86,47 +86,6 @@ def remove_overlap_from_inner_to_outer(xy, min_distance_between_objects, distanc
     return replacement_required
 
 
-def scale_field_area(object_array, value: float, precision: float) -> None:
-    """change the convex hull area to a desired size by scale the polar
-    positions with certain precision
-
-    iterative method can takes some time.
-
-    Note: see doc string `field_area`
-    """
-    current = object_array.properties.field_area
-
-    if current is None:
-        return  # not defined
-
-    scale = 1  # find good scale
-    step = 0.1
-    if value < current:  # current too larger
-        step *= -1
-
-    # centered points
-    old_center = object_array.get_center_of_field_area()
-    object_array._xy = object_array.xy - old_center
-    centered_polar = np_coordinates.cartesian2polar(object_array.xy)
-
-    # iteratively determine scale
-    while abs(current - value) > precision:
-
-        scale += step
-
-        object_array._xy = np_coordinates.polar2cartesian(
-            centered_polar * [scale, 1])
-        object_array.properties.reset()  # required at this point to recalc convex hull
-        current = object_array.properties.field_area
-
-        if (current < value and step < 0) or \
-                (current > value and step > 0):
-            step *= -0.2  # change direction and finer grain
-
-    object_array._xy = object_array.xy + old_center
-    object_array.properties.reset()
-
-
 class BrownianMotion(object):
 
     def __init__(self, start_pos, delta=2, search_area_radius=None, bounce_boarder=True):

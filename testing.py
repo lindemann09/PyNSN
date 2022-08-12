@@ -41,9 +41,16 @@ factory.set_appearance_rectangles(width=(20, 30, 40), proportion=1,
                                   attributes=distr.Levels(["blue", "green"],
                                                           exact_weighting=True))
 
+r = pynsn.Rectangle(xy=(100, 100), size=(1101, 80))
+
+print(list(r.iter_edges()))
+
+print([r.left, r.top, r.right, r.bottom])
+print(r.get_ltrb())
+
 
 #start = time.time()
-stimulus = factory.random_rectangle_array(n_objects=8)
+stimulus = factory.random_rectangle_array(n_objects=20)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 # print(time.time()-start)
@@ -51,12 +58,13 @@ stimulus = factory.random_rectangle_array(n_objects=8)
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
-print(stimulus)
-exit()
+# print(stimulus)
 
 
-stimulus.mod_realign(keep_convex_hull=False, strict=False)
-# stimulus.properties.fit_average_perimeter(130)
+#stimulus.mod_realign(keep_convex_hull=False, strict=False)
+stimulus.properties.fit_field_area(98000)
+# print(stimulus)
+
 
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")

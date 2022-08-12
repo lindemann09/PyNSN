@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import ABCMeta, abstractmethod
+
 import numpy as np
 from numpy.typing import NDArray
 from scipy import spatial
@@ -8,17 +10,15 @@ from .. import _arrays
 from .._lib.np_coordinates import cartesian2polar, polar2cartesian
 
 
-class ConvexHullPositions(object):
+class ABCConvexHull(metaclass=ABCMeta):
     """convenient wrapper class for calculating of convex hulls
 
     using just the positions (ignores the object size"
     """
 
+    @abstractmethod
     def __init__(self, object_array) -> None:
-        assert isinstance(object_array, (_arrays.DotArray,
-                                         _arrays.RectangleArray))
         self._convex_hull = None
-        self._try_convex_hull(xy=object_array.xy)
 
     def _try_convex_hull(self, xy):
         # pylint: disable=E1101
@@ -67,7 +67,14 @@ class ConvexHullPositions(object):
             self.field_area == other.field_area
 
 
-class ConvexHull(ConvexHullPositions):
+class ConvexHullPositions(ABCConvexHull):
+
+    def __init__(self, object_array) -> None:
+        super().__init__(object_array=object_array)
+        self._try_convex_hull(xy=object_array.xy)
+
+
+class ConvexHull(ABCConvexHull):
     """convenient wrapper class for calculation of convex hulls
 
     using outer positions, able to handle rects
@@ -75,11 +82,7 @@ class ConvexHull(ConvexHullPositions):
 
     def __init__(self, object_array) -> None:
 
-        assert isinstance(object_array, (_arrays.DotArray,
-                                         _arrays.RectangleArray))
-
         super().__init__(object_array=object_array)
-        self._convex_hull = None
         self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)
         if self._is_rect_array:
             if len(object_array.xy) < 2:

@@ -119,20 +119,20 @@ class Rectangle(ABCShape):
         """
 
         edges = self.get_ltrb()
-        # left top
+        # left left, top
         yield Coordinate(xy=edges[0, :])
-        # right top
-        yield Coordinate(xy=np.array((edges[0, 1], edges[1, 0])))
-        # right bottom
+        # right, top
+        yield Coordinate(xy=np.array((edges[1, 0], edges[0, 1])))
+        # right, bottom
         yield Coordinate(xy=edges[1, :])
-        # left bottom
+        #  left, bottom
         yield Coordinate(xy=edges.diagonal())
 
-    @ property
+    @property
     def size(self) -> NDArray:
         return self._size
 
-    @ size.setter
+    @size.setter
     def size(self, values: ArrayLike) -> None:
         values = np.asarray(values)
         if values.shape != (2,):
@@ -140,7 +140,7 @@ class Rectangle(ABCShape):
                 "size has be an iterable object with two elements (width, height)")
         self._size = values
 
-    @ property
+    @property
     def proportion(self) -> float:
         """Proportion of the rectangle (width/height)"""
         return self._size[0] / self._size[1]

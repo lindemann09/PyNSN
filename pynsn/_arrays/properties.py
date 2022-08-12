@@ -7,12 +7,11 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .. import _arrays
-from .._lib import constants, rng
+from .._lib import constants, rng, np_coordinates
 from .._lib.constants import VisualPropertyFlags
 from .._lib.exception import NoSolutionError
 from ..typing import OptFloat
 from .convex_hull import ConvexHull, ConvexHullPositions
-from .tools import scale_field_area
 
 
 class ArrayProperties(object):
@@ -379,7 +378,7 @@ class ArrayProperties(object):
         if self.field_area is None:
             return None  # not defined
         else:
-            scale_field_area(self._oa, value=value, precision=precision)
+            _match_field_area(self._oa, value=value, precision=precision)
 
     def fit_coverage(self, value: float,
                      precision: OptFloat = None,
@@ -644,5 +643,47 @@ class ArrayProperties(object):
             return
         return self.fit(property_flag=feature,
                         value=self.get(feature) * factor)
+
+
+def _match_field_area(object_array,
+                      value: float,
+                      precision: float) -> None:
+    """change the convex hull area to a desired size by scale the polar
+    positions with certain precision
+
+    iterative method can takes some time.
+
+    Note: see doc string `field_area`
+    """
+    current = object_array.properties.field_area
+
+    if current is None:
+        return  # not defined
+
+    scale = 1  # find good scale
+    step = 0.1
+    if value < current:  # current too larger
+        step *= -1
+
+    # centered points
+    old_center = object_array.get_center_of_field_area()
+    object_array._xy = object_array.xy - old_center
+    centered_polar = np_coordinates.cartesian2polar(object_array.xy)
+
+    # iteratively determine scale
+    while abs(current - value) > precision:
+        scale += step
+
+        object_array._xy = np_coordinates.polar2cartesian(
+            centered_polar * [scale, 1])
+        object_array.properties.reset()  # required at this point to recalc convex hull
+        current = object_array.properties.field_area
+
+        if (current < value and step < 0) or \
+                (current > value and step > 0):
+            step *= -0.2  # change direction and finer grain
+
+    object_array._xy = object_array.xy + old_center
+    object_array.properties.reset()
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays

@@ -211,7 +211,7 @@ class RectangleArray(ABCObjectArray):
         if indices is None:
             data = zip(self._xy, self._sizes, self._attributes)
         else:
-            data = zip(self._xy[indices, :], self._sizes[indices],
+            data = zip(self._xy[indices, :], self._sizes[indices, :],
                        self._attributes[indices])
 
         for xy, s, att in data:
