@@ -1,5 +1,5 @@
 """NOTE:
-import always ethe ntire module and call `rng.generate` to ensure always the
+import always entire module and call `rng.generator` to ensure always the
 access of the newly initialized random generator if  `init_random_generator` has
 been called
 """
@@ -9,7 +9,7 @@ from typing import Sequence, Union
 import numpy as np
 from numpy.typing import NDArray
 
-GENERATOR = np.random.default_rng()
+generator = np.random.default_rng()
 
 
 def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
@@ -26,7 +26,7 @@ def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
     """
 
     # pylint:disable = W0603
-    global GENERATOR
-    GENERATOR = np.random.default_rng(seed=seed)
+    global generator
+    generator = np.random.default_rng(seed=seed)
     if seed is not None:
         print(f"PyNSN seed: {seed}")

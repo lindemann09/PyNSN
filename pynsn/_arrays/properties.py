@@ -272,7 +272,7 @@ class ArrayProperties(object):
                         delete_id = None
                         ch = self.convex_hull.object_indices
                         rnd_seq = list(range(0, self.numerosity))
-                        rng.GENERATOR.shuffle(rnd_seq)
+                        rng.generator.shuffle(rnd_seq)
                         for x in rnd_seq:
                             if x not in ch:
                                 delete_id = x
@@ -281,13 +281,13 @@ class ArrayProperties(object):
                             raise NoSolutionError(
                                 "Can't increase numeroisty, while keeping field area.")
                     else:
-                        delete_id = rng.GENERATOR.integers(0, self.numerosity)
+                        delete_id = rng.generator.integers(0, self.numerosity)
 
                     self._oa.delete(delete_id)
 
                 else:
                     # add object: copy a random dot
-                    clone_id = rng.GENERATOR.integers(0, self.numerosity)
+                    clone_id = rng.generator.integers(0, self.numerosity)
                     rnd_object = next(self._oa.iter_objects(clone_id))
                     try:
                         rnd_object = self._oa.get_free_position(

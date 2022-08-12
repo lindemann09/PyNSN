@@ -82,7 +82,7 @@ def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArr
             for x in identical:  # jitter all identical positions
                 if x != idx:
                     r = as_array2d((jitter_size,
-                                    rng.GENERATOR.random() * 2 * np.pi))
+                                    rng.generator.random() * 2 * np.pi))
                     xy[x, :] = xy[x, :] - polar2cartesian(r)[0]
 
     return xy

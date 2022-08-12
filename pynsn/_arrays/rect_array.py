@@ -14,7 +14,7 @@ from .._lib import np_rectangles, np_tools
 from .._lib.coordinate import Coordinate
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
-from ..typing import (ArrayLike, IntOVector, NDArray, NumArray, OptArrayLike,
+from ..typing import (ArrayLike, IntOVector, NDArray, OptArrayLike,
                       OptFloat)
 from .abc_object_array import ABCObjectArray
 from .tools import make_csv
@@ -218,7 +218,7 @@ class RectangleArray(ABCObjectArray):
             rtn = Rectangle(xy=xy, size=s, attribute=att)
             yield rtn
 
-    def find_objects(self, size: Optional[NumArray] = None,
+    def find_objects(self, size: Union[Sequence[float], NDArray[np.float_], None] = None,
                      attribute: Optional[Any] = None,
                      edge: Optional[Coordinate] = None) -> Sequence[int]:
         """returns indices of found objects

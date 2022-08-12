@@ -129,7 +129,7 @@ class BrownianMotion(object):
 
     def next(self, dt=1):
         while True:
-            new = rng.GENERATOR.normal(loc=0, scale=self.scale * dt,
+            new = rng.generator.normal(loc=0, scale=self.scale * dt,
                                        size=2) + self.current
             if self.area_radius is None or \
                     np.hypot(new[0], new[1]) <= self.area_radius:

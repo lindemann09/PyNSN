@@ -70,30 +70,30 @@ class Coordinate(object):
         return self._xy[1]
 
     @property
-    def polar_radius(self) -> float:
+    def rho(self) -> float:
+        """rho (i.e., the radius) of the polar coordinate"""
         return np.hypot(self._xy[0], self._xy[1])
 
-    @polar_radius.setter
-    def polar_radius(self, value) -> None:
-        self.polar = (value, self.polar_angle)
+    @rho.setter
+    def rho(self, value) -> None:
+        self.polar = (value, self.theta)
 
     @property
-    def polar_angle(self) -> float:
-        return np.arctan2(self._xy[0], self._xy[1])
+    def theta(self) -> float:
+        """theta (i.e., the angle) of the polar coordinate"""
+        return np.arctan2(self._xy[1], self._xy[0])
 
-    @polar_angle.setter
-    def polar_angle(self, value) -> None:
-        self.polar = (self.polar_radius, value)
+    @theta.setter
+    def theta(self, value) -> None:
+        self.polar = (self.rho, value)
 
     @property
     def polar(self) -> NDArray:
-        """polar coordinate (radius, pos_angle) """
-        return np.array([self.polar_radius, self.polar_angle])
+        """Polar coordinate: rho (radius), theta (angle)"""
+        return np.array([self.rho, self.theta])
 
     @polar.setter
     def polar(self, rad_ang) -> None:
-        """polar coordinate (radius, angle) """
-
         self._xy = np.array([rad_ang[0] * np.cos(rad_ang[1]),
                             rad_ang[0] * np.sin(rad_ang[1])])
 

@@ -87,7 +87,7 @@ class Uniform(PyNSNDistribution):
         super().__init__(min_max)
 
     def sample(self, n, round_to_decimals=None):
-        dist = _rng.GENERATOR.random(size=n)
+        dist = _rng.generator.random(size=n)
         rtn = self.min_max[0] + dist * float(self.min_max[1] - self.min_max[0])
         return _round_samples(rtn, round_to_decimals)
 
@@ -117,7 +117,7 @@ class Levels(PyNSNDistribution):
             p = p / _np.sum(p)
 
         if not self.exact_weighting:
-            dist = _rng.GENERATOR.choice(a=self.levels, p=p, size=n)
+            dist = _rng.generator.choice(a=self.levels, p=p, size=n)
         else:
             n_distr = n * p
             if not _np.alltrue(_np.round(n_distr) == n_distr):
@@ -137,7 +137,7 @@ class Levels(PyNSNDistribution):
             dist = []
             for lev, n in zip(self.levels, n_distr):
                 dist.extend([lev] * int(n))
-            _rng.GENERATOR.shuffle(dist)
+            _rng.generator.shuffle(dist)
 
         return _round_samples(dist, round_to_decimals)
 
@@ -163,7 +163,7 @@ class Triangle(PyNSNDistribution):
             raise ValueError(txt)
 
     def sample(self, n, round_to_decimals=None):
-        dist = _rng.GENERATOR.triangular(left=self.min_max[0], right=self.min_max[1],
+        dist = _rng.generator.triangular(left=self.min_max[0], right=self.min_max[1],
                                          mode=self.mode, size=n)
         return _round_samples(dist, round_to_decimals)
 
@@ -214,7 +214,7 @@ class Normal(_PyNSNDistributionMuSigma):
         rtn = _np.array([])
         required = n
         while required > 0:
-            draw = _rng.GENERATOR.normal(
+            draw = _rng.generator.normal(
                 loc=self.mu, scale=self.sigma, size=required)
             if self.min_max[0] is not None:
                 draw = _np.delete(draw, draw < self.min_max[0])
@@ -272,7 +272,7 @@ class Normal2D(PyNSNDistribution):
         rtn = None
         required = n
         while required > 0:
-            draw = _rng.GENERATOR.multivariate_normal(
+            draw = _rng.generator.multivariate_normal(
                 mean=self.mu, cov=self.varcov(), size=required)
             if self.max_radius is not None:
                 # remove to large radii
@@ -332,7 +332,7 @@ class Beta(_PyNSNDistributionMuSigma):
             return _np.array([self.mu] * n)
 
         alpha, beta = self.shape_parameter
-        dist = _rng.GENERATOR.beta(a=alpha, b=beta, size=n)
+        dist = _rng.generator.beta(a=alpha, b=beta, size=n)
         dist = (dist - _np.mean(dist)) / _np.std(dist)  # z values
         rtn = dist * self.sigma + self.mu
         return _round_samples(rtn, round_to_decimals)

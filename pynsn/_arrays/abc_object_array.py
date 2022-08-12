@@ -87,7 +87,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """ """
 
     @abstractmethod
-    def iter_objects(self, indices=None) -> Iterator[Union[Dot, Rectangle]]:
+    def iter_objects(self, indices: Optional[IntOVector] = None) \
+            -> Iterator[Union[Dot, Rectangle]]:
         """iterate over all or a part of the objects
 
         Parameters
@@ -387,7 +388,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             if in_neighborhood:
                 rtn_object.xy = random_walk.next()
             else:
-                rtn_object.xy = rng.GENERATOR.random(size=2) * 2 \
+                rtn_object.xy = rng.generator.random(size=2) * 2 \
                     * half_search_area_size - half_search_area_size
 
             # is outside area
@@ -434,7 +435,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         search_area, _ = self._search_area_parameter()
 
         for cnt, obj in enumerate(self.iter_objects()):
-            if obj.is_inside(search_area):
+            if not obj.is_inside(search_area):
                 indices.append(cnt)
         return indices
 
@@ -546,7 +547,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         self._xy = self._xy + np.asarray(xy)
         self._properties.reset()
 
-    def mod_move_object(self, object_id: int,
+    def mod_move_object(self, object_ids: IntOVector,
                         distance: float,
                         direction: Union[float, ArrayLike],
                         push_other: bool = False) -> None:
@@ -554,10 +555,11 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         direction and direction
 
         Args:
-            object_id:
-            distance:
+            object_id: the object to be moved
+            distance: replacement distance
             direction: polar angle (float) or cartesian coordinate (tuple of two floats)
-                       to indicate the direction
+                       toward all objects should be moved. In the last case, the movement
+                       direction differs for each object.
             push_other: replace other objects, if required (optional, default=False)
         """
         if isinstance(direction, float):
@@ -570,32 +572,36 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         if ang is None:
             raise ValueError("Direction has to be float or a 2D Coordinate "
                              ", thus, an ArrayLike with two elements.")
-
-        obj = next(self.iter_objects(indices=object_id))
-
+        if isinstance(object_ids, int):
+            object_ids = [object_ids]
         movement = Coordinate(xy=(0, 0))
-        if isinstance(ang, float):
-            movement.polar = (distance, ang)
-        else:
-            # "ang" is not an angle it an object
-            movement = ang - obj
-            movement.polar_radius = distance
 
-        self._xy[object_id, :] = self._xy[object_id, :] + movement.xy
+        for id_, obj in zip(object_ids, self.iter_objects(indices=object_ids)):
 
-        if push_other:
-            # push overlapping object
-            obj = next(self.iter_objects(indices=object_id))
-            dist = self.get_distances(obj)
-            for other_id in np.flatnonzero(dist < 0):
-                if other_id != object_id:
-                    movement.xy = self._xy[other_id, :] \
-                        - self._xy[object_id, :]
-                    self.mod_move_object(other_id,
-                                         direction=movement.polar_angle,
-                                         distance=abs(dist[other_id])
-                                         + self.min_distance_between_objects,
-                                         push_other=True)
+            if isinstance(ang, float):
+                movement.polar = (distance, ang)
+            else:
+                # "ang" is not an angle it an object
+                movement.xy = ang.xy - obj.xy
+                movement.rho = distance
+                print(obj.xy)
+                print(movement.xy)
+
+            self._xy[id_, :] = self._xy[id_, :] + movement.xy
+
+            if push_other:
+                # push overlapping object
+                obj.xy += movement.xy
+                dist = self.get_distances(obj)
+                for other_id in np.flatnonzero(dist < 0):
+                    if other_id != id_:
+                        movement.xy = self._xy[other_id, :] \
+                            - self._xy[id_, :]
+                        self.mod_move_object(other_id,
+                                             direction=movement.theta,
+                                             distance=abs(dist[other_id])
+                                             + self.min_distance_between_objects,
+                                             push_other=True)
 
         self.properties.reset()
 

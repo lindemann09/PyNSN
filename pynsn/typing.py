@@ -1,15 +1,13 @@
-from __future__ import annotations
+from typing import Optional, Union, List
 
-from typing import Optional, Sequence, Union
-
-from numpy import float_
+from numpy import float_, int_, str_
 from numpy.typing import ArrayLike, NDArray
 
-IntOVector = Union[int, Sequence[int]]
-StrOVector = Union[str, Sequence[str]]
-FloatOVector = Union[float, Sequence[float], NDArray[float_]]
-NumArray = NDArray[float_]
 OptArrayLike = Optional[ArrayLike]
 OptInt = Optional[int]
 OptStr = Optional[str]
 OptFloat = Optional[float]
+
+IntOVector = Union[int, List[int], NDArray[int_]]
+StrOVector = Union[str, List[str], NDArray[str_]]
+FloatOVector = Union[float, List[float], NDArray[float_]]
