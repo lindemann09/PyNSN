@@ -108,11 +108,11 @@ class ConvexHull(ABCConvexHull):
             outer_xy = polar2cartesian(polar_centered) + center
 
         elif isinstance(object_array, _arrays.RectangleArray):
-            # simple solution: get all edges
-            edges = []
+            # simple solution: get all corners
+            corners = []
             for rect in object_array.iter_objects():
-                edges.extend([e.xy for e in rect.iter_edges()])
-            outer_xy = np.array(edges)
+                corners.extend([e.xy for e in rect.iter_corners()])
+            outer_xy = np.array(corners)
 
         else:  # generic attribute array
             outer_xy = object_array.xy

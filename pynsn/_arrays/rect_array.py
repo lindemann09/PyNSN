@@ -227,7 +227,7 @@ class RectangleArray(ABCObjectArray):
 
     def find_objects(self, size: Union[Sequence[float], NDArray[np.float_], None] = None,
                      attribute: Optional[Any] = None,
-                     edge: Optional[Coordinate] = None) -> Sequence[int]:
+                     corner: Optional[Coordinate] = None) -> Sequence[int]:
         """returns indices of found objects
 
         2D-tuple
@@ -240,17 +240,17 @@ class RectangleArray(ABCObjectArray):
                 continue
             rtn.append(i)
 
-        if edge is None:
+        if corner is None:
             return rtn
-        elif isinstance(edge, Coordinate):
+        elif isinstance(corner, Coordinate):
             new_rtn = []
             for i, rect in zip(rtn, self.iter_objects(indices=rtn)):
-                if edge in list(rect.iter_edges()):
+                if corner in list(rect.iter_corners()):
                     new_rtn.append(i)
             return new_rtn
         else:
-            raise TypeError("edge has to be a Coordinate and not {}.".format(
-                type(edge)))
+            raise TypeError("corner has to be a Coordinate and not {}.".format(
+                type(corner)))
 
     def csv(self, variable_names: bool = True,
             hash_column: bool = False,

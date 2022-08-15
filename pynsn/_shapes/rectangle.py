@@ -99,7 +99,7 @@ class Rectangle(ABCShape):
         return self._xy[1] - 0.5 * self._size[1]
 
     def get_ltrb(self) -> NDArray:
-        '''returns coordinates of Left-Top and Right-Bottom edges
+        '''returns coordinates of Left-Top and Right-Bottom corners
 
         Returns:
             NDArray with coordinates [[left, top],
@@ -110,23 +110,23 @@ class Rectangle(ABCShape):
         rtn[:, 1] = np.flip(rtn[:, 1])
         return rtn
 
-    def iter_edges(self) -> Iterator[Coordinate]:
-        """iterator over all four edges
+    def iter_corners(self) -> Iterator[Coordinate]:
+        """iterator over all four corners
 
         Returns
         -------
         iterator over Coordinates or tuple (x,y)
         """
 
-        edges = self.get_ltrb()
+        corners = self.get_ltrb()
         # left left, top
-        yield Coordinate(xy=edges[0, :])
+        yield Coordinate(xy=corners[0, :])
         # right, top
-        yield Coordinate(xy=np.array((edges[1, 0], edges[0, 1])))
+        yield Coordinate(xy=np.array((corners[1, 0], corners[0, 1])))
         # right, bottom
-        yield Coordinate(xy=edges[1, :])
+        yield Coordinate(xy=corners[1, :])
         #  left, bottom
-        yield Coordinate(xy=edges.diagonal())
+        yield Coordinate(xy=corners.diagonal())
 
     @property
     def size(self) -> NDArray:
@@ -154,9 +154,9 @@ class Rectangle(ABCShape):
         # inherited doc
         if isinstance(other, _shapes.Dot):
             r_other = other.diameter / 2.0
-            for edge in self.iter_edges():
-                # distance between other center & edge > radius
-                if Coordinate.distance(other, edge) > r_other:
+            for corner in self.iter_corners():
+                # distance between other center & corner > radius
+                if Coordinate.distance(other, corner) > r_other:
                     return False
             return True
 

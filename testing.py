@@ -1,5 +1,6 @@
 """_summary_"""
 
+from distutils import extension
 from operator import ge
 from re import I
 import time
@@ -12,7 +13,7 @@ import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn._lib import np_rectangles, np_dots
+from pynsn._lib import np_rectangles, np_dots, np_coordinates
 
 seed = 921
 nsn.init_random_generator(seed)
@@ -27,6 +28,19 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
     # center_of_mass="magenta"
 )
 
+
+a = np.array((0, 0))
+b = np.array(((-10, -10), (-100, 0), (103, 303)))
+s = np.array([100, 100])
+
+polar = np_coordinates.cartesian2polar(
+    np.asarray(b) - np.asarray(a))  # type: ignore
+
+x = np_rectangles.center_edge_distance(polar[:, 1], s)
+#x = required_displacement(a, s, b, s)
+print(x)
+
+exit()
 
 factory = nsn.NSNFactory(min_distance_between_objects=2,
                          # target_area=pynsn.Rectangle(size=(200, 400)),

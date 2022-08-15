@@ -54,7 +54,7 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
         """"""
         assert isinstance(image, _svg.Drawing)
         shape.xy = _c2i_coord(_np.asarray(shape.xy),
-                              svg_image_size(image)).tolist()
+                              _np.array(svg_image_size(image))).tolist()
         attr = shape.get_attribute_object()
         if isinstance(attr, _shapes.PictureFile):
             raise RuntimeError("Pictures are not supported for SVG file.")
@@ -80,7 +80,8 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
                          scaling_factor):
         """"""
 
-        points = _c2i_coord(points, svg_image_size(image))
+        points = _c2i_coord(_np.asarray(points),
+                            _np.array(svg_image_size(image)))
 
         last = None
         for p in _np.append(points, [points[0]], axis=0):
