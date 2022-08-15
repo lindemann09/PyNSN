@@ -1,8 +1,5 @@
 """_summary_"""
 
-from distutils import extension
-from operator import ge
-from re import I
 import time
 from matplotlib import pyplot as pp
 import numpy as np
@@ -13,7 +10,7 @@ import pynsn as nsn
 from pynsn import distributions as distr
 from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn._lib import np_rectangles, np_dots, np_coordinates
+from pynsn._lib import np_rectangles, np_dots, np_coordinates, np_tools
 
 seed = 921
 nsn.init_random_generator(seed)
@@ -37,7 +34,7 @@ polar = np_coordinates.cartesian2polar(
     np.asarray(b) - np.asarray(a))  # type: ignore
 
 x = np_rectangles.center_edge_distance(polar[:, 1], s)
-#x = required_displacement(a, s, b, s)
+# x = required_displacement(a, s, b, s)
 print(x)
 
 exit()

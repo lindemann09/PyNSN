@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 from numpy.typing import NDArray
 
-from .np_tools import CombinationMatrx
+from .np_tools import CombinationMatrx, as_vector, make_array2d
 from .np_coordinates import cartesian2polar
 
 # all functions are 2D arrays (at least) as fist arguments
@@ -114,7 +114,7 @@ def inside_dots(xy: NDArray, sizes: NDArray) -> NDArray:
     raise NotImplementedError()
 
 
-def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray:
+def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
     """Distance between rectangle center and rectangle edge along the  line
     in direction of `angle`.
     """
@@ -126,79 +126,172 @@ def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray:
     # find vertical relations
     v_rel = (np.pi-np.pi/4 >= abs(angle)) & (abs(angle) > np.pi/4)
     # vertical relation: in case line cut rectangle at the top or bottom corner
-    idx = np.flatnonzero(v_rel)
-    l_inside[idx] = rect_sizes[idx, 1] / 2 * np.cos(np.pi/2 - angle[idx])
+    i = np.flatnonzero(v_rel)
+    l_inside[i] = rect_sizes[i, 1] / 2 * np.cos(np.pi/2 - angle[i])
     # horizontal relation: in case line cut rectangle at the left or right corner
-    idx = np.flatnonzero(~v_rel)
-    l_inside[idx] = rect_sizes[idx, 0] / 2 * np.cos(angle[idx])
+    i = np.flatnonzero(~v_rel)
+    l_inside[i] = rect_sizes[i, 0] / 2 * np.cos(angle[i])
 
     return l_inside
 
 
-def required_displacement(a_xy: NDArray, a_sizes: NDArray,
-                          b_xy: NDArray, b_sizes: NDArray,
-                          minimum_distance: float = 0) -> NDArray:
-    """Minimum required displacement of object B to have no overlap with
-    Object A
+GO ON HERE: TEST THESE FUNCTIONS
 
-    If 0, there is no overlap.
 
-    Movement direction is always along the line of the two object center
+def required_displacement_with_rects(rects_a_xy: NDArray,
+                                     rects_a_sizes: NDArray,
+                                     rects_b_xy: NDArray,
+                                     rects_b_sizes: NDArray,
+                                     minimum_distance: float = 0) -> NDArray:
+    """Minimum required displacement of rectangle B to have no overlap with
+     rectangle A. Array with replacement vectors in polar coordinates.
+
+    Two objects do not overlap if replacements[:, 0] == 0.
+
+    Returns:
+        replacements as array of vectors in polar coordinates
+        if distance (replacements[:, 0]) is 0, no replacement required.
+
+        Calculated movement direction (replacements[:, 0]) is always along the
+        line between the two object center.
     """
 
-    assert (a_xy.shape == a_sizes.shape ==
-            b_xy.shape == b_sizes.shape)  # TODO could me more flecible
+    #
+    # all arrays are 2D and have the same n_rows
+    #
+    # fjnd two 2d array with more than one row
+    n_rows = 1
+    for arr in (rects_a_xy, rects_a_sizes, rects_b_xy, rects_b_sizes):
+        if arr.ndim > 1 and arr.shape[0] > 1:
+            n_rows = arr.shape[0]
+            break
+    rects_a_xy = make_array2d(rects_a_xy, n_rows=n_rows)
+    rects_a_sizes = make_array2d(rects_a_sizes, n_rows=n_rows)
+    rects_b_xy = make_array2d(rects_b_xy, n_rows=n_rows)
+    rects_b_sizes = make_array2d(rects_b_sizes, n_rows=n_rows)
 
-    xy_diff = a_xy - b_xy  # xy distance between object center
-    min_xy_dist = ((a_sizes + b_sizes) / 2) + minimum_distance
-    overlaps = np.all(np.abs(xy_diff) - min_xy_dist < 0, axis=1)
+    #
+    # find overlapping objects
+    #
+    xy_dist = rects_b_xy - rects_a_xy  # type: ignore
+    min_xy_dist = ((rects_a_sizes + rects_b_sizes) / 2) + minimum_distance
+    overlapping = np.all(np.abs(xy_dist) - min_xy_dist < 0, axis=1)
+    i_over = np.flatnonzero(overlapping)
 
-    rtn = np.zeros(xy_diff.shape)
+    #
+    # calc dist and direction for overlapping objects
+    #
+    rtn = np.zeros(xy_dist.shape)
 
     # only process overlapping items further
-    i_over = np.flatnonzero(overlaps)
-    xy_diff = xy_diff[i_over, :]
-    min_xy_dist = min_xy_dist[i_over, :]
+    min_spatial_rel = _min_spatial_relation(xy_dist=xy_dist[i_over, :],
+                                            min_xy_dist=min_xy_dist[i_over, :])
+    # subtract distance inside rectangles from euclidean distance
+    l_inside_a = center_edge_distance(min_spatial_rel[:, 1],
+                                      rects_a_sizes[i_over, :])
+    l_inside_b = center_edge_distance(min_spatial_rel[:, 1],
+                                      rects_b_sizes[i_over, :])
+    min_spatial_rel[:, 0] = min_spatial_rel[:, 0] - (l_inside_a + l_inside_b)
 
-    # euclidean distances  and directions between center
-    dist_direct = cartesian2polar(xy_diff[i_over, :])  # distance and direction
+    # insert calculated replacements into return array
+    rtn[i_over, :] = min_spatial_rel
 
-    # adapt distance to minimum required movement
-    # dist(x)**2 + dist(y)**2 = euclidean_dist(xy)**2
-    # set e.g. x to minimum dist:
-    #   sqrt(min_dist(x)**2 + dist(y)**2) = min_euclidean_dist(xy)
+    return rtn
+
+
+def required_displacement_with_dot(rects_xy: NDArray,
+                                   rects_sizes: NDArray,
+                                   dots_xy: NDArray,
+                                   dots_diameter: NDArray,
+                                   minimum_distance: float = 0) -> NDArray:
+    """Minimum required displacement of rectangle B to have no overlap with
+     rectangle A. Array with replacement vectors in polar coordinates.
+
+    Two objects do not overlap if replacements[:, 0] == 0.
+
+    Returns:
+        replacements as array of vectors in polar coordinates
+        if distance (replacements[:, 0]) is 0, no replacement required.
+
+        Calculated movement direction (replacements[:, 0]) is always along the
+        line between the two object center.
+    """
+
     #
-    # set the smaller xy distance to minimum and calc required movement along the
-    # line between object center (euclidean distances)
+    # all arrays are 2D and have the same n_rows
+    #
+    # fjnd two 2d array with more than one row
+    n_rows = 1
+    for arr in (rects_xy, rects_sizes, dots_xy):
+        if arr.ndim > 1 and arr.shape[0] > 1:
+            n_rows = arr.shape[0]
+            break
+    rects_xy = make_array2d(rects_xy, n_rows=n_rows)
+    rects_sizes = make_array2d(rects_sizes, n_rows=n_rows)
+    dots_xy = make_array2d(dots_xy, n_rows=n_rows)
+    dots_diameter = as_vector(dots_diameter)
+    dots_rect_sizes = np.transpose(
+        np.ones((2, dots_diameter.shape[0])) * dots_diameter)
+
+    #
+    # find xy overlapping objects (simplified: treat dot as rect)
+    #
+    xy_dist = dots_xy - rects_xy  # type: ignore
+    min_xy_dist = ((rects_sizes + dots_rect_sizes) / 2) + minimum_distance
+    overlapping = np.all(np.abs(xy_dist) - min_xy_dist < 0, axis=1)
+    i_over = np.flatnonzero(overlapping)
+
+    #
+    # calc dist and direction for overlapping objects
+    #
+    rtn = np.zeros(xy_dist.shape)
+
+    # only process overlapping items further
+    min_spatial_rel = _min_spatial_relation(xy_dist=xy_dist[i_over, :],
+                                            min_xy_dist=min_xy_dist[i_over, :])
+    # subtract distance inside rectangles from euclidean distance
+    l_inside_rect = center_edge_distance(min_spatial_rel[:, 1],
+                                         rects_sizes[i_over, :])
+    l_inside_dot = dots_diameter/2
+    min_spatial_rel[:, 0] = min_spatial_rel[:, 0] \
+        - (l_inside_rect + l_inside_dot)
+    # FIXME check if replacement is at all required here. spatial relation might be smaller than inside_rect + inside dot
+    # insert calculated replacements into return array
+    rtn[i_over, :] = min_spatial_rel
+
+    return rtn
+
+
+def _min_spatial_relation(xy_dist: NDArray, min_xy_dist: NDArray) -> NDArray[np.floating]:
+    """Calculate required minimum Euclidean distance and direction
+    (polar coordinates) from xy distances and min_minimum required xy distances
+
+    dist(x)**2 + dist(y)**2 = euclidean_dist(xy)**2
+    set e.g. x to minimum dist:
+      sqrt(min_dist(x)**2 + dist(y)**2) = min_euclidean_dist(xy)
+
+    Set the smaller xy distance to minimum dist and calc required movement
+    long the line between object centers (Euclidean distances minus length of
+    line inside objects).
+    """
 
     # find x smaller then y distance
     # if equals, randomly choose some and treat them like x_smaller
-    x_smaller = np.abs(xy_diff[:, 0]) < np.abs(xy_diff[:, 1])
+    x_smaller = np.abs(xy_dist[:, 0]) < np.abs(xy_dist[:, 1])
+    xy_equal = xy_dist[:, 0] == xy_dist[:, 1]
+    if np.sum(xy_equal) > 0:
+        # randomly take some (via filtering) and add to x_smaller
+        filter_vector = np.random.choice([False, True], size=len(xy_equal))
+        x_smaller = x_smaller | (xy_equal & filter_vector)
 
-    # TODO
-    # i_xy_equal = np.flatnonzero(xy_diff[:, 0] == xy_diff[:, 1])
-    # if len(i_xy_equal) > 0:
-    #    # randomly delete some items and add the remained to x_smaller
-    #    r_del = np.random.choice([False, True], size=len(i_xy_equal))
-    #    x_smaller = np.append(x_smaller, np.delete(i_xy_equal, r_del))
+    # calc required euclidean distances between object center
+    min_eucl_dist = np.empty(xy_dist.shape[0])
+    i = np.flatnonzero(x_smaller)  # x smaller -> set x to min_xy_dist
+    min_eucl_dist[i] = np.hypot(min_xy_dist[i, 0], xy_dist[i, 1])
+    i = np.flatnonzero(~x_smaller)  # x larger -> set y to min_xy_dist
+    min_eucl_dist[i] = np.hypot(xy_dist[i, 0], min_xy_dist[i, 1])
 
-    # calc target distances
-    target_eucl_dist = np.empty(len(i_over))
-    # x smaller -> set x to min_dist
-    i = np.flatnonzero(x_smaller)
-    target_eucl_dist[i] = np.sqrt(min_xy_dist[i, 0] ** 2
-                                  + xy_diff[i, 1] ** 2)
-    # x larger -> set y to min_dist
-    i = np.flatnonzero(~x_smaller)
-    target_eucl_dist[i] = np.sqrt(xy_diff[i, 0] ** 2
-                                  + min_xy_dist[i, 1] ** 2)
-
-    # subtract distance inside rectangles
-    l_inside_a = center_edge_distance(dist_direct[:, 1], a_sizes[i_over, :])
-    l_inside_b = center_edge_distance(dist_direct[:, 1], b_sizes[i_over, :])
-    dist_direct[:, 0] = target_eucl_dist - l_inside_a - l_inside_b
-
-    # insert in return array
-    rtn[i_over, :] = dist_direct
-
-    return rtn
+    # return array of polar vectors
+    # [[euclidean distances, directions between center]]
+    directions = np.arctan2(xy_dist[:, 1], xy_dist[:, 0])
+    return np.array([min_eucl_dist, directions]).T

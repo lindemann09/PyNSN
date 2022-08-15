@@ -44,23 +44,35 @@ def as_vector(x):
         return x.flatten()
 
 
-def as_array2d(data: ArrayLike) -> NDArray[np.floating]:
-    """converts a simple 1D array to 2D with only row.
-    It just insures a multi-dimensional array"""
-    rtn = np.asarray(data)
+def make_array2d(arr: NDArray, n_rows: int) -> NDArray:
+    """make 2d array with n equal rows, if array is zero or one dimensional"""
+    if arr.ndim < 2 or arr.shape[0] != n_rows:
+        try:
+            return np.ones((n_rows, 1)) * arr
+        except ValueError as err:
+            raise ValueError(f"Can not make a numpy array with {n_rows} rows from "
+                             f" an array with the shape={arr.shape}.") from err
+    else:
+        return arr
+
+
+def as_array2d(arr: ArrayLike) -> NDArray:
+    """converts a simple 1D ArrayLike object to a 2D numpy array with only
+    one row. It thus insures a multi-dimensional numpy array"""
+    rtn = np.asarray(arr)
     if rtn.ndim == 1:
         return rtn.reshape((1, rtn.shape[0]))
     return rtn
 
 
-def round2(array: NDArray, decimals: int,
+def round2(arr: NDArray, decimals: int,
            int_type: type = np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
-    array = np.round(array, decimals=decimals)
+    arr = np.round(arr, decimals=decimals)
     if decimals == 0:
-        return array.astype(int_type)
+        return arr.astype(int_type)
     else:
-        return array
+        return arr
 
 
 def is_all_equal(vector):
