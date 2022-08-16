@@ -29,7 +29,7 @@ class CombinationMatrx(object):
         return self.matrix
 
 
-def as_vector(x):
+def as_vector(x: ArrayLike) -> NDArray:
     """helper function:
     make an numpy vector from any element (list, _arrays, and single data (str, numeric))
     """
@@ -75,12 +75,12 @@ def round2(arr: NDArray, decimals: int,
         return arr
 
 
-def is_all_equal(vector):
+def is_all_equal(vector: ArrayLike)->bool:
     # returns true if all elements are equal
     return len(np.unique(np.asarray(vector))) == 1
 
 
-def triu_nan(m, k=0):
+def triu_nan(m: NDArray, k:int=0)-> NDArray:
     """helper function
     upper triangular but nan instead of zeros (as in numpy's original function,
     see docu numpy.triu)

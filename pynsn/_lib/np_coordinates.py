@@ -3,7 +3,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
 
 from .._lib import rng
 
@@ -33,7 +33,7 @@ def polar2cartesian(polar: NDArray) -> NDArray:
                     polar[:, 0] * np.sin(polar[:, 1])]).T
 
 
-def cartesian2polar(xy: NDArray,
+def cartesian2polar(xy: ArrayLike,
                     radii_only: bool = False) -> NDArray:
     """polar coordinates (radius, angle)
 
@@ -50,15 +50,15 @@ def cartesian2polar(xy: NDArray,
     return rtn
 
 
-def cartesian2image_coordinates(xy: NDArray,
-                                image_size: NDArray) -> NDArray:
+def cartesian2image_coordinates(xy: ArrayLike,
+                                image_size: ArrayLike) -> NDArray:
     """convert cartesian to image coordinates with (0,0) at top left and
     reversed y axis
 
     xy has to be a 2D array
 
     """
-    return (xy * [1, -1]) + image_size / 2
+    return (np.asarray(xy) * [1, -1]) + np.asarray(image_size) / 2
 
 
 def distances(a_xy: NDArray, b_xy: NDArray) -> NDArray:
