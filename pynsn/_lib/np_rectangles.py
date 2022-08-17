@@ -2,10 +2,11 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Union
 import numpy as np
 from numpy.typing import NDArray
 
-from .np_tools import CombinationMatrx, as_vector, make_array2d
+from .np_tools import CombinationMatrx, as_vector, as_array2d_nrow
 from .np_coordinates import cartesian2polar
 
 # all functions are 2D arrays (at least) as fist arguments
@@ -22,27 +23,30 @@ def xy_distances(a_xy: NDArray, a_sizes: NDArray,
     return np.abs(a_xy - b_xy) - (a_sizes + b_sizes) / 2  # type: ignore
 
 
-def overlaps(a_xy: NDArray, a_sizes: NDArray,
-             b_xy: NDArray, b_sizes: NDArray,
-             minimum_distance: float = 0) -> NDArray:
+def overlap(a_xy: NDArray, a_sizes: NDArray,
+            b_xy: NDArray, b_sizes: NDArray,
+            minimum_distance: float = 0) -> Union[NDArray, np.bool_]:
     """True if rectangles overlap
 
     Note: At least one xy parameter has to be a 2D array
     """
     # columns both negative -> it overlaps
-    return np.all(xy_distances(a_xy, a_sizes, b_xy, b_sizes)
-                  < minimum_distance, axis=1)
+    comp = xy_distances(a_xy, a_sizes, b_xy, b_sizes) < minimum_distance
+    if comp.shape[0] > 1:
+        return np.all(comp, axis=1)
+    else:
+        return np.all(comp)
 
 
 def overlap_matrix(xy: NDArray, sizes: NDArray,
                    minimum_distance: float = 0) -> NDArray:
     """Matrix with overlaps (True/False) between the rectangles"""
     mtx = CombinationMatrx(xy.shape[0])
-    dist = overlaps(a_xy=xy[mtx.idx_a, :],
-                    a_sizes=sizes[mtx.idx_a, :],
-                    b_xy=xy[mtx.idx_b, :],
-                    b_sizes=sizes[mtx.idx_b, :],
-                    minimum_distance=minimum_distance)
+    dist = overlap(a_xy=xy[mtx.idx_a, :],
+                   a_sizes=sizes[mtx.idx_a, :],
+                   b_xy=xy[mtx.idx_b, :],
+                   b_sizes=sizes[mtx.idx_b, :],
+                   minimum_distance=minimum_distance)
     return mtx.fill(values=dist)
 
 
@@ -85,23 +89,21 @@ def distance_matrix(xy: NDArray, sizes: NDArray) -> NDArray:
 
 
 def overlap_with_dots(rect_xy: NDArray, rect_sizes: NDArray,
-                      dot_xy: NDArray, dot_diameter: NDArray) -> NDArray:
+                      dot_xy: NDArray, dot_diameter: NDArray) -> Union[NDArray, np.bool_]:
     """Array with overlaps (True, False) of the rectangle and the dot/dots"""
-    rect_xy = np.asarray(rect_xy)
-    rect_sizes2 = np.asarray(rect_sizes) / 2
-    dot_xy = np.asarray(dot_xy)
-    dot_diameter = np.asarray(dot_diameter)
+    rect_sizes2 = rect_sizes / 2
     dot_diameter = dot_diameter.reshape((dot_diameter.shape[0], 1))
-
     # positive dist -> dot outside rect, negative is a potential overlap
     dist_left_bottom = (rect_xy - rect_sizes2) - dot_xy \
         - dot_diameter  # +y = dot below,  +x = dot left
     dist_right_top = dot_xy - (rect_xy + rect_sizes2) \
         - dot_diameter  # +y = dot top, +x dot right
-
-    dist_lbrt = np.append(dist_left_bottom, dist_right_top, axis=1)
     # if dot is overlapping -> all distances negative
-    return np.all(dist_lbrt < 0, axis=1)
+    comp = np.append(dist_left_bottom, dist_right_top, axis=1) < 0
+    if comp.shape[0] > 1:
+        return np.all(comp, axis=1)
+    else:
+        return np.all(comp)
 
 
 def inside_rectangle(xy: NDArray, sizes: NDArray) -> NDArray:
@@ -115,7 +117,7 @@ def inside_dots(xy: NDArray, sizes: NDArray) -> NDArray:
 
 
 def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
-    """Distance between rectangle center and rectangle edge along the  line
+    """Distance between rectangle center and rectangle edge along the line
     in direction of `angle`.
     """
 
@@ -135,7 +137,7 @@ def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray[np.floa
     return l_inside
 
 
-#GO ON HERE: TEST THESE FUNCTIONS
+# GO ON HERE: TEST THESE FUNCTIONS
 
 
 def required_displacement_with_rects(rects_a_xy: NDArray,
@@ -156,19 +158,8 @@ def required_displacement_with_rects(rects_a_xy: NDArray,
         line between the two object center.
     """
 
-    #
-    # all arrays are 2D and have the same n_rows
-    #
-    # fjnd two 2d array with more than one row
-    n_rows = 1
-    for arr in (rects_a_xy, rects_a_sizes, rects_b_xy, rects_b_sizes):
-        if arr.ndim > 1 and arr.shape[0] > 1:
-            n_rows = arr.shape[0]
-            break
-    rects_a_xy = make_array2d(rects_a_xy, n_rows=n_rows)
-    rects_a_sizes = make_array2d(rects_a_sizes, n_rows=n_rows)
-    rects_b_xy = make_array2d(rects_b_xy, n_rows=n_rows)
-    rects_b_sizes = make_array2d(rects_b_sizes, n_rows=n_rows)
+    assert(rects_a_xy.shape == rects_a_sizes.shape ==
+           rects_b_xy.shape == rects_b_sizes.shape)
 
     #
     # find overlapping objects
@@ -217,18 +208,16 @@ def required_displacement_with_dot(rects_xy: NDArray,
         line between the two object center.
     """
 
-    #
-    # all arrays are 2D and have the same n_rows
-    #
-    # fjnd two 2d array with more than one row
-    n_rows = 1
+    assert(rects_xy.shape == rects_sizes.shape == dots_xy.shape and
+           dots_xy.shape[0] == dots_diameter.shape[0])
+
     for arr in (rects_xy, rects_sizes, dots_xy):
         if arr.ndim > 1 and arr.shape[0] > 1:
             n_rows = arr.shape[0]
             break
-    rects_xy = make_array2d(rects_xy, n_rows=n_rows)
-    rects_sizes = make_array2d(rects_sizes, n_rows=n_rows)
-    dots_xy = make_array2d(dots_xy, n_rows=n_rows)
+    rects_xy = as_array2d_nrow(rects_xy, n_rows=n_rows)
+    rects_sizes = as_array2d_nrow(rects_sizes, n_rows=n_rows)
+    dots_xy = as_array2d_nrow(dots_xy, n_rows=n_rows)
     dots_diameter = as_vector(dots_diameter)
     dots_rect_sizes = np.transpose(
         np.ones((2, dots_diameter.shape[0])) * dots_diameter)

@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from itertools import combinations
+from typing import Iterable, List
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -44,8 +45,9 @@ def as_vector(x: ArrayLike) -> NDArray:
         return x.flatten()
 
 
-def make_array2d(arr: NDArray, n_rows: int) -> NDArray:
+def as_array2d_nrow(arr: ArrayLike, n_rows: int) -> NDArray:
     """make 2d array with n equal rows, if array is zero or one dimensional"""
+    arr = np.asarray(arr)
     if arr.ndim < 2 or arr.shape[0] != n_rows:
         try:
             return np.ones((n_rows, 1)) * arr
@@ -54,6 +56,22 @@ def make_array2d(arr: NDArray, n_rows: int) -> NDArray:
                              f" an array with the shape={arr.shape}.") from err
     else:
         return arr
+
+
+def all_as_array2d_equal_rows(list_of_arrays: Iterable[ArrayLike]) -> List[NDArray]:
+    """make all arrays 2D. If one array is 2d with n rows all zero or one
+    dimensional arrays will be converted to arrays with n identical rows"""
+    n_rows = 1
+    array_list = []
+    for arr in list_of_arrays:
+        array_list.append(np.asarray(arr))
+        if array_list[-1].ndim > 1 and array_list[-1].shape[0] > n_rows:
+            n_rows = array_list[-1].shape[0]
+
+    for i, arr in enumerate(array_list):
+        array_list[i] = as_array2d_nrow(arr, n_rows=n_rows)
+
+    return array_list
 
 
 def as_array2d(arr: ArrayLike) -> NDArray:
@@ -75,12 +93,12 @@ def round2(arr: NDArray, decimals: int,
         return arr
 
 
-def is_all_equal(vector: ArrayLike)->bool:
+def is_all_equal(vector: ArrayLike) -> bool:
     # returns true if all elements are equal
     return len(np.unique(np.asarray(vector))) == 1
 
 
-def triu_nan(m: NDArray, k:int=0)-> NDArray:
+def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     """helper function
     upper triangular but nan instead of zeros (as in numpy's original function,
     see docu numpy.triu)

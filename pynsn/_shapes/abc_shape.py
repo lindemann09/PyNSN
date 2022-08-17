@@ -54,7 +54,7 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         """
 
         if isinstance(self._attribute, str):
-            # check is color or picture
+            # check if colour or picture
             col = Colour(self._attribute)
             if col.colour is not None:
                 return col
