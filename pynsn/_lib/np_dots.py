@@ -46,3 +46,21 @@ def distance_matrix(xy: NDArray, diameter: NDArray) -> NDArray:
     dist = np.hypot(d_xy[:, 0], d_xy[:, 1]) - object_expension
 
     return mtx.fill(values=dist)
+
+
+def outer_points(dot_xy: NDArray, dot_diameter: NDArray) -> NDArray:
+    """returns a tensor (n, 2, 4) with four outer points (left, top, right, bottom)
+    on the cardinal axes"""
+    assert dot_xy.shape[0] == dot_diameter.shape[0]
+
+    # radius vector
+    radii = dot_diameter.reshape((dot_diameter.shape[0], )) / 2
+
+    # make tensor (n, 2, 4) with dot_xy at each [:, :, x]
+    rtn = dot_xy.reshape((dot_xy.shape[0], dot_xy.shape[1], 1)) * \
+        np.ones((dot_xy.shape[0], 2, 4))
+    rtn[:, 0, 0] = rtn[:, 0, 0] - radii  # left
+    rtn[:, 1, 1] = rtn[:, 1, 1] + radii  # top
+    rtn[:, 0, 2] = rtn[:, 0, 2] + radii  # right
+    rtn[:, 1, 3] = rtn[:, 1, 3] - radii  # bottom
+    return rtn

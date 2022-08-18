@@ -4,6 +4,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
+from scipy.spatial.distance import cdist
 
 from .._lib import rng
 
@@ -34,7 +35,7 @@ def polar2cartesian(polar: NDArray) -> NDArray:
 
 
 def cartesian2polar(xy: ArrayLike,
-                    radii_only: bool = False) -> NDArray:
+                    radii_only: bool = False) -> NDArray[np.floating]:
     """polar coordinates (radius, angle)
 
     if only radii required you may consider radii_only=True for faster
@@ -59,6 +60,12 @@ def cartesian2image_coordinates(xy: ArrayLike,
 
     """
     return (np.asarray(xy) * [1, -1]) + np.asarray(image_size) / 2
+
+
+def spatial_relation(a_xy, b_xy):
+    """distance and angle between two coordinates"""
+    # distance
+    return cartesian2polar(b_xy - a_xy)  # type: ignore
 
 
 def distances(a_xy: NDArray, b_xy: NDArray) -> NDArray:

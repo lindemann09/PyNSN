@@ -2,37 +2,27 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from re import I
-from typing import Union
+from types import NotImplementedType
+from typing import Optional, Union
 import numpy as np
 from numpy.typing import NDArray
 
 from .np_tools import CombinationMatrx, as_vector, as_array2d_nrow
 from .np_coordinates import cartesian2polar
-
+from . import np_dots
 # all functions are 2D arrays (at least) as fist arguments
-
-
-def xy_distances(a_xy: NDArray, a_sizes: NDArray,
-                 b_xy: NDArray, b_sizes: NDArray) -> NDArray:
-    """return distances on both axes between rectangles edges.
-    negative numbers indicate overlap of corners along that dimension.
-
-    Note: At least one xy  parameter has to be a 2D array
-    """
-
-    return np.abs(a_xy - b_xy) - (a_sizes + b_sizes) / 2  # type: ignore
 
 
 def overlap(a_xy: NDArray, a_sizes: NDArray,
             b_xy: NDArray, b_sizes: NDArray,
-            minimum_distance: float = 0) -> Union[NDArray, np.bool_]:
+            minimum_distance: float = 0) -> Union[NDArray[np.bool_], np.bool_]:
     """True if rectangles overlap
 
     Note: At least one xy parameter has to be a 2D array
     """
     # columns both negative -> it overlaps
-    comp = xy_distances(a_xy, a_sizes, b_xy, b_sizes) < minimum_distance
+    xy_dist = np.abs(a_xy - b_xy) - (a_sizes + b_sizes) / 2  # type: ignore
+    comp = xy_dist < minimum_distance
     if comp.shape[0] > 1:
         return np.all(comp, axis=1)
     else:
@@ -42,6 +32,7 @@ def overlap(a_xy: NDArray, a_sizes: NDArray,
 def overlap_matrix(xy: NDArray, sizes: NDArray,
                    minimum_distance: float = 0) -> NDArray:
     """Matrix with overlaps (True/False) between the rectangles"""
+    assert xy.shape == sizes.shape
     mtx = CombinationMatrx(xy.shape[0])
     dist = overlap(a_xy=xy[mtx.idx_a, :],
                    a_sizes=sizes[mtx.idx_a, :],
@@ -53,40 +44,77 @@ def overlap_matrix(xy: NDArray, sizes: NDArray,
 
 def distances(a_xy: NDArray, a_sizes: NDArray,
               b_xy: NDArray, b_sizes: NDArray) -> NDArray:
-    """Distance between rectangles
+    """Shortest distance between rectangles
 
-    negative distances indicate overlap and represent the
-    size of the minimum overlap
-    Note: At least one xy parameter has to be a 2D array
+    Note: does not return negative distances for overlap. Overlap-> dist=0
     """
-    d_xy = xy_distances(a_xy, a_sizes, b_xy, b_sizes)
-    # columns both negative -
-    both_neg = np.flatnonzero(np.all(d_xy < 0, axis=1))
-    # set make largest neg number positive for later dist calculation
-    tmp = d_xy[both_neg, :]
-    i = tmp[:, 0] < tmp[:, 1]
-    tmp[i, 1] = np.abs(tmp[i, 1])  # second is positive
-    tmp[~i, 0] = np.abs(tmp[~i, 0])  # first is positive
-    d_xy[both_neg, :] = tmp
-    # all other negatives are ignored and only one dimension is considered
-    d_xy[np.where(d_xy < 0)] = 0
-    # calc euclidean distance
-    rtn = np.hypot(d_xy[:, 0], d_xy[:, 1])
-    # set overlaps negative
-    rtn[both_neg] = -1 * rtn[both_neg]
-    return rtn
+
+    assert a_xy.shape == a_sizes.shape and b_xy.shape == b_sizes.shape
+    xy_dist = np.abs(a_xy - b_xy) - (a_sizes + b_sizes) / 2  # type: ignore
+    xy_dist[np.where(xy_dist < 0)] = 0
+    return np.hypot(xy_dist[:, 0], xy_dist[:, 0])
+
+
+def distances_coordinate(rect_xy: NDArray, rect_sizes: NDArray,
+                         coord_xy) -> NDArray:
+    """distances between rectangles and coordinates
+
+    Note: does not return negative distances for overlap. Overlap-> dist=0
+    """
+    return distances(a_xy=rect_xy, a_sizes=rect_sizes,
+                     b_xy=coord_xy, b_sizes=np.array([0, 0]))
 
 
 def distance_matrix(xy: NDArray, sizes: NDArray) -> NDArray:
     """Return matrix with distance between the rectangles"""
-    xy = np.array(xy)
-    size = np.array(sizes)
+    assert xy.shape == sizes.shape
+
     mtx = CombinationMatrx(xy.shape[0])
     dist = distances(a_xy=xy[mtx.idx_a, :],
-                     a_sizes=size[mtx.idx_a, :],
+                     a_sizes=sizes[mtx.idx_a, :],
                      b_xy=xy[mtx.idx_b, :],
-                     b_sizes=size[mtx.idx_b, :])
+                     b_sizes=sizes[mtx.idx_b, :])
     return mtx.fill(values=dist)
+
+
+def spatial_relation(a_xy: NDArray, a_sizes: NDArray,
+                     b_xy: NDArray, b_sizes: Optional[NDArray]) -> NDArray:
+    """spatial relation between two rectangles.
+    returns angle and distance long the line of the spatial relation.
+    """
+    assert a_xy.shape == a_xy.shape
+    rtn = cartesian2polar(b_xy - a_xy)   # type: ignore
+    d_a = center_edge_distance(angles=rtn[:, 1], rect_sizes=a_sizes)
+    if b_sizes is None:
+        d_b = 0
+    else:
+        d_b = center_edge_distance(angles=rtn[:, 1], rect_sizes=b_sizes)
+    rtn[:, 0] = rtn[:, 0] - d_a - d_b
+
+    return rtn
+
+
+def spatial_relation_coordinate(rect_xy: NDArray, rect_sizes: NDArray,
+                                coord_xy: NDArray) -> NDArray:
+    """spatial relation between rectangles and coordinate
+    returns angle and distance long the line of the spatial relation.
+    """
+    return spatial_relation(a_xy=rect_xy, a_sizes=rect_sizes,
+                            b_xy=coord_xy, b_sizes=None)
+
+
+def spatial_relation_dot(rect_xy: NDArray, rect_sizes: NDArray,
+                         dot_xy: NDArray, dot_diameter: NDArray) -> NDArray:
+    """spatial relation between two rectangles.
+    returns angle and distance long the line of the spatial relation.
+    """
+    assert (rect_xy.shape == rect_sizes.shape and
+            dot_diameter.shape[0] == dot_xy.shape[0])
+    # relation with dot center
+    rtn = spatial_relation(a_xy=rect_xy, a_sizes=rect_sizes,
+                           b_xy=dot_xy, b_sizes=None)
+    rtn[:, 0] = rtn[:, 0] - dot_diameter  # type: ignore
+    return rtn
 
 
 def corner_tensor(rect_xy: NDArray, rect_sizes: NDArray) -> NDArray:
@@ -106,24 +134,54 @@ def corner_tensor(rect_xy: NDArray, rect_sizes: NDArray) -> NDArray:
     return rtn
 
 
-def corner_inside_dot(rect_xy: NDArray, rect_sizes: NDArray,
-                      dot_xy: NDArray, dot_diameter: NDArray) -> Union[NDArray, np.bool_]:
-    """Array with overlaps (True, False) of the rectangle and the dot/dots"""
+def corner_distances(rect_xy: NDArray, rect_sizes: NDArray,
+                     coord_xy: NDArray) -> NDArray:
+    """ 2D array of euclidean distances (n, 4) of all corners of rectangles to
+    coordinates"""
+
+    assert rect_xy.shape == rect_sizes.shape == coord_xy.shape
+    # set shapes for coord_xy (n, 2, 1)
+    coord_xy = coord_xy.reshape(coord_xy.shape[0], 2, 1)
+    xy_dist = corner_tensor(
+        rect_xy=rect_xy, rect_sizes=rect_sizes) - coord_xy  # type: ignore
+    return np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+
+
+# TODO CHECK this
+def overlap_with_dots(rect_xy: NDArray, rect_sizes: NDArray,
+                      dot_xy: NDArray, dot_diameter: NDArray,
+                      minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
+    """check if rectangles overlap with dots"""
 
     assert (rect_xy.shape == rect_sizes.shape == dot_xy.shape and
             dot_diameter.shape[0] == dot_xy.shape[0])
-    # set shapes for dot_xy (n, 2, 1) and dot diameter (n, 1)
-    dot_xy = dot_xy.reshape(dot_xy.shape[0], 2, 1)
-    dot_diameter = dot_diameter.reshape((dot_diameter.shape[0], 1))
 
-    xy_dist = corner_tensor(
-        rect_xy=rect_xy, rect_sizes=rect_sizes) - dot_xy  # type: ignore
-    # 2D array of euclidean distance (rect, corner)
-    eucl_dist = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
-    if eucl_dist.shape[0] > 1:
-        return np.any(eucl_dist < dot_diameter, axis=1)
+    dot_radii = dot_diameter.reshape((rect_xy.shape[0], 1)) / 2  # (n, 1)-array
+
+    # overlap corner
+    eucl_dist = corner_distances(rect_xy=rect_xy, rect_sizes=rect_sizes,
+                                 coord_xy=dot_xy)
+    if rect_xy.shape[0] > 1:
+        overlap_corner = np.any(
+            eucl_dist < dot_radii + minimum_distance, axis=1)
     else:
-        return np.any(eucl_dist < dot_diameter)
+        overlap_corner = np.any(eucl_dist < dot_radii + minimum_distance)
+
+    # overlap dot outer points
+    # corners might not be in dot, but dot or intersects rect edge or is inside rect
+    # check xy dist overlap
+    dot_outer = np_dots.outer_points(dot_xy=dot_xy, dot_diameter=dot_diameter)
+    rect_xy = rect_xy.reshape(rect_xy.shape[0], 2, 1)  # make 3D
+    rect_sizes = rect_sizes.reshape(rect_sizes.shape[0], 2, 1)  # make 3D
+    xy_diff = np.abs(dot_outer - rect_xy) - rect_sizes / 2  # type: ignore
+    # check all true on xy of each outpoint, than  true  any of these comparison is true (for each point)
+    comp = np.all(xy_diff < minimum_distance, axis=1)
+    if comp.shape[0] > 1:
+        overlap_outer = np.any(comp, axis=1)
+    else:
+        overlap_outer = np.any(comp)
+
+    return overlap_corner | overlap_outer
 
 
 def inside_rectangle(xy: NDArray, sizes: NDArray) -> NDArray:
@@ -132,27 +190,27 @@ def inside_rectangle(xy: NDArray, sizes: NDArray) -> NDArray:
 
 
 def inside_dots(xy: NDArray, sizes: NDArray) -> NDArray:
-    """bool array indicates with rectangles are fully inside the dot/dots"""
+    """bool array indicates that rectangles are fully inside the dot/dots"""
     raise NotImplementedError()
 
 
-def center_edge_distance(angle: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
+def center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
     """Distance between rectangle center and rectangle edge along the line
     in direction of `angle`.
     """
 
     if rect_sizes.ndim == 1:
-        rect_sizes = np.ones((angle.shape[0], 1)) * rect_sizes
+        rect_sizes = np.ones((angles.shape[0], 1)) * rect_sizes
 
-    l_inside = np.empty(len(angle))
+    l_inside = np.empty(len(angles))
     # find vertical relations
-    v_rel = (np.pi-np.pi/4 >= abs(angle)) & (abs(angle) > np.pi/4)
+    v_rel = (np.pi-np.pi/4 >= abs(angles)) & (abs(angles) > np.pi/4)
     # vertical relation: in case line cut rectangle at the top or bottom corner
     i = np.flatnonzero(v_rel)
-    l_inside[i] = rect_sizes[i, 1] / 2 * np.cos(np.pi/2 - angle[i])
+    l_inside[i] = rect_sizes[i, 1] / 2 * np.cos(np.pi/2 - angles[i])
     # horizontal relation: in case line cut rectangle at the left or right corner
     i = np.flatnonzero(~v_rel)
-    l_inside[i] = rect_sizes[i, 0] / 2 * np.cos(angle[i])
+    l_inside[i] = rect_sizes[i, 0] / 2 * np.cos(angles[i])
 
     return l_inside
 
