@@ -2,6 +2,7 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from re import I
 from typing import Union
 import numpy as np
 from numpy.typing import NDArray
@@ -88,22 +89,41 @@ def distance_matrix(xy: NDArray, sizes: NDArray) -> NDArray:
     return mtx.fill(values=dist)
 
 
-def overlap_with_dots(rect_xy: NDArray, rect_sizes: NDArray,
+def corner_tensor(rect_xy: NDArray, rect_sizes: NDArray) -> NDArray:
+    """returns a tensor (n, 2, 4) with xy values of the four corners"""
+    assert rect_xy.shape == rect_sizes.shape
+    rtn = np.empty((rect_xy.shape[0], 2, 4))
+
+    rect_sizes2 = rect_sizes / 2
+    rtn[:, :, 1] = rect_xy + rect_sizes2  # right top
+    rtn[:, :, 3] = rect_xy - rect_sizes2  # left bottom
+    # left, top
+    rtn[:, 0, 0] = rtn[:, 0, 3]
+    rtn[:, 1, 0] = rtn[:, 1, 1]
+    # right, bottom
+    rtn[:, 0, 2] = rtn[:, 0, 1]
+    rtn[:, 1, 2] = rtn[:, 1, 3]
+    return rtn
+
+
+def corner_inside_dot(rect_xy: NDArray, rect_sizes: NDArray,
                       dot_xy: NDArray, dot_diameter: NDArray) -> Union[NDArray, np.bool_]:
     """Array with overlaps (True, False) of the rectangle and the dot/dots"""
-    rect_sizes2 = rect_sizes / 2
+
+    assert (rect_xy.shape == rect_sizes.shape == dot_xy.shape and
+            dot_diameter.shape[0] == dot_xy.shape[0])
+    # set shapes for dot_xy (n, 2, 1) and dot diameter (n, 1)
+    dot_xy = dot_xy.reshape(dot_xy.shape[0], 2, 1)
     dot_diameter = dot_diameter.reshape((dot_diameter.shape[0], 1))
-    # positive dist -> dot outside rect, negative is a potential overlap
-    dist_left_bottom = (rect_xy - rect_sizes2) - dot_xy \
-        - dot_diameter  # +y = dot below,  +x = dot left
-    dist_right_top = dot_xy - (rect_xy + rect_sizes2) \
-        - dot_diameter  # +y = dot top, +x dot right
-    # if dot is overlapping -> all distances negative
-    comp = np.append(dist_left_bottom, dist_right_top, axis=1) < 0
-    if comp.shape[0] > 1:
-        return np.all(comp, axis=1)
+
+    xy_dist = corner_tensor(
+        rect_xy=rect_xy, rect_sizes=rect_sizes) - dot_xy  # type: ignore
+    # 2D array of euclidean distance (rect, corner)
+    eucl_dist = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+    if eucl_dist.shape[0] > 1:
+        return np.any(eucl_dist < dot_diameter, axis=1)
     else:
-        return np.all(comp)
+        return np.any(eucl_dist < dot_diameter)
 
 
 def inside_rectangle(xy: NDArray, sizes: NDArray) -> NDArray:
