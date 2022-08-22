@@ -11,8 +11,8 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 
 
 arr_dia = np.array([10, 20])
-d = pynsn.Rectangle((55, -60), size=(40, 40), attribute="#FF0088")
-c = pynsn.Rectangle((-55, 60), size=(40, 40), attribute="#cc0011")
+d = pynsn.Rectangle((5, -71), size=(40, 40), attribute="#FF0088")
+c = pynsn.Rectangle((-65, 60), size=(40, 40), attribute="#cc0011")
 b = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF0000")
 a = pynsn.Dot((8, 9), diameter=120, attribute="#200800")
 
@@ -23,8 +23,9 @@ sizes = np.array([b.size, c.size, d.size])
 dot_xy = np_tools.as_array2d_nrow(a.xy, n_rows=xy.shape[0])
 dot_diameter = np_tools.as_array2d_nrow(a.diameter, n_rows=xy.shape[0])
 
+rdr = np_rectangles.RectangleDotRelations(xy, sizes, dot_xy, dot_diameter)
 
-print(np_rectangles.overlap_with_dots(xy, sizes, dot_xy, dot_diameter))
+print(rdr.overlap(minimum_distance=2))
 
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")

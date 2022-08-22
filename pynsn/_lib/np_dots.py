@@ -48,19 +48,16 @@ def distance_matrix(xy: NDArray, diameter: NDArray) -> NDArray:
     return mtx.fill(values=dist)
 
 
-def outer_points(dot_xy: NDArray, dot_diameter: NDArray) -> NDArray:
+def outer_points(dot_xy: NDArray, dot_radii: NDArray) -> NDArray:
     """returns a tensor (n, 2, 4) with four outer points (left, top, right, bottom)
     on the cardinal axes"""
-    assert dot_xy.shape[0] == dot_diameter.shape[0]
-
-    # radius vector
-    radii = dot_diameter.reshape((dot_diameter.shape[0], )) / 2
+    assert dot_xy.shape[0] == dot_radii.shape[0]
 
     # make tensor (n, 2, 4) with dot_xy at each [:, :, x]
     rtn = dot_xy.reshape((dot_xy.shape[0], dot_xy.shape[1], 1)) * \
         np.ones((dot_xy.shape[0], 2, 4))
-    rtn[:, 0, 0] = rtn[:, 0, 0] - radii  # left
-    rtn[:, 1, 1] = rtn[:, 1, 1] + radii  # top
-    rtn[:, 0, 2] = rtn[:, 0, 2] + radii  # right
-    rtn[:, 1, 3] = rtn[:, 1, 3] - radii  # bottom
+    rtn[:, 0, 0] = rtn[:, 0, 0] - dot_radii  # left
+    rtn[:, 1, 1] = rtn[:, 1, 1] + dot_radii  # top
+    rtn[:, 0, 2] = rtn[:, 0, 2] + dot_radii  # right
+    rtn[:, 1, 3] = rtn[:, 1, 3] - dot_radii  # bottom
     return rtn

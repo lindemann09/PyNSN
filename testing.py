@@ -26,9 +26,6 @@ my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
 )
 
 
-
-
-
 a = np.array((0, 0))
 b = np.array(((-10, -10), (-100, 0), (103, 303)))
 s = np.array([100, 100])
@@ -36,7 +33,7 @@ s = np.array([100, 100])
 polar = np_coordinates.cartesian2polar(
     np.asarray(b) - np.asarray(a))  # type: ignore
 
-x = np_rectangles.center_edge_distance(polar[:, 1], s)
+x = np_rectangles._center_edge_distance(polar[:, 1], s)
 # x = required_displacement(a, s, b, s)
 print(x)
 
