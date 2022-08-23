@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .. import _arrays
-from .._lib import constants, rng, np_coordinates
+from .._lib import constants, geometry, rng
 from .._lib.constants import VisualPropertyFlags
 from .._lib.exception import NoSolutionError
 from ..typing import OptFloat
@@ -668,13 +668,13 @@ def _match_field_area(object_array,
     # centered points
     old_center = object_array.get_center_of_field_area()
     object_array._xy = object_array.xy - old_center
-    centered_polar = np_coordinates.cartesian2polar(object_array.xy)
+    centered_polar = geometry.cartesian2polar(object_array.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        object_array._xy = np_coordinates.polar2cartesian(
+        object_array._xy = geometry.polar2cartesian(
             centered_polar * [scale, 1])
         object_array.properties.reset()  # required at this point to recalc convex hull
         current = object_array.properties.field_area

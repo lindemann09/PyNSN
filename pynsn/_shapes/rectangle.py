@@ -8,8 +8,8 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
-from .._lib import np_rectangles, np_tools
 from .._lib.coordinate import Coordinate
+from .._lib.spatial_relations import RectangleSpatRel
 from .abc_shape import ABCShape
 
 
@@ -66,18 +66,18 @@ class Rectangle(ABCShape):
             return dist - other.diameter / 2.0
 
         elif isinstance(other, _shapes.Rectangle):
-            dist = np_rectangles.distances(a_xy=np_tools.as_array2d(self._xy),
-                                           a_sizes=self._size,
-                                           b_xy=other.xy,
-                                           b_sizes=other.size)
-            return dist[0]
+            rel = RectangleSpatRel(a_xy=self._xy.reshape((1, 2)),
+                                   a_sizes=self._size,
+                                   b_xy=other.xy,
+                                   b_sizes=other.size)
+            return rel.distances()[0]
 
         elif other.__class__ == Coordinate:
-            dist = np_rectangles.distances(a_xy=np_tools.as_array2d(self._xy),
-                                           a_sizes=self._size,
-                                           b_xy=other.xy,
-                                           b_sizes=0)
-            return dist[0]
+            rel = RectangleSpatRel(a_xy=self._xy.reshape((1, 2)),
+                                   a_sizes=self._size,
+                                   b_xy=other.xy,
+                                   b_sizes=np.zeros((1, 2)))
+            return rel.distances()[0]
 
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")

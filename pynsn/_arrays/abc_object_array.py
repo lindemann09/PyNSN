@@ -16,7 +16,7 @@ from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
 from .._arrays.target_area import TargetArea
-from .._lib import constants, np_coordinates, np_tools, rng
+from .._lib import constants, geometry, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
@@ -46,7 +46,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
 
-        self._xy = np.array([])
+        self._xy = np.empty((0, 2))
         self._attributes = np.array([])
         self._properties = ArrayProperties(self)
 
@@ -177,7 +177,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def _append_xy_attribute(self, xy: ArrayLike,
                              attributes: OptArrayLike = None) -> int:
         """returns number of added rows"""
-        xy = np_tools.as_array2d(xy)
+        xy = np_tools.as_array2d_row(xy)
         if not isinstance(attributes, (tuple, list)):
             attributes = np.array([attributes] * xy.shape[0])
 
@@ -188,8 +188,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         self._attributes = np.append(self._attributes, attributes)
         if len(self._xy) == 0:
             # ensure good shape of self.xy
-            empty = np.array([]).reshape((0, 2))
-            self._xy = np.append(empty, xy, axis=0)
+            self._xy = np.append(np.empty((0, 2)), xy, axis=0)
         else:
             self._xy = np.append(self._xy, xy, axis=0)
         self._properties.reset()
@@ -319,14 +318,14 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Returns:
             Coordinate of center position
         """
-        return np_coordinates.center_of_coordinates(self.properties.convex_hull.xy)
+        return geometry.center_of_coordinates(self.properties.convex_hull.xy)
 
     def mod_center_array_mass(self) -> None:
         self._xy = self._xy - self.get_center_of_mass()
         self._properties.reset()
 
     def mod_center_field_area(self) -> None:
-        cxy = np_coordinates.center_of_coordinates(
+        cxy = geometry.center_of_coordinates(
             self.properties.convex_hull.xy)
         self._xy = self._xy - cxy  # type: ignore
         self._properties.reset()

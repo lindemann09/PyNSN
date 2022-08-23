@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from scipy import spatial
 
 from .. import _arrays
-from .._lib.np_coordinates import cartesian2polar, polar2cartesian
+from .._lib.geometry import cartesian2polar, polar2cartesian
 
 
 class ABCConvexHull(metaclass=ABCMeta):

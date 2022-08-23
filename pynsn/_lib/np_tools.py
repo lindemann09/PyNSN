@@ -1,33 +1,9 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from itertools import combinations
 from typing import Iterable, List
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-
-
-class CombinationMatrx(object):
-    """Symmetric combination matrix
-    helper class"""
-
-    def __init__(self, n_items: int) -> None:
-        idx = np.array(list(combinations(range(n_items), r=2)))
-        self.idx_a = idx[:, 0]
-        self.idx_b = idx[:, 1]
-        self.matrix = np.full((n_items, n_items), np.nan)
-
-    @property
-    def n_combinations(self) -> float:
-        return len(self.idx_a)
-
-    def fill(self, values) -> NDArray:
-        """returns combination matrix with values
-
-        """
-        self.matrix[self.idx_a, self.idx_b] = values
-        self.matrix[self.idx_b, self.idx_a] = values
-        return self.matrix
 
 
 def as_vector(x: ArrayLike) -> NDArray:
@@ -74,7 +50,7 @@ def all_as_array2d_equal_rows(list_of_arrays: Iterable[ArrayLike]) -> List[NDArr
     return array_list
 
 
-def as_array2d(arr: ArrayLike) -> NDArray:
+def as_array2d_row(arr: ArrayLike) -> NDArray:
     """converts a simple 1D ArrayLike object to a 2D numpy array with only
     one row. It thus insures a multi-dimensional numpy array"""
     rtn = np.asarray(arr)

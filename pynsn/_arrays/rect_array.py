@@ -3,6 +3,7 @@ Rectangle Array
 """
 from __future__ import annotations
 
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
@@ -10,12 +11,12 @@ from typing import Any, Iterator, Optional, Sequence, Union
 
 import numpy as np
 
-from .._lib import np_rectangles, np_tools
+from .._lib import np_tools
 from .._lib.coordinate import Coordinate
+from .._lib.spatial_relations import RectangleSpatRel
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
-from ..typing import (ArrayLike, IntOVector, NDArray, OptArrayLike,
-                      OptFloat)
+from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
 from .abc_object_array import ABCObjectArray
 from .tools import make_csv
 
@@ -58,7 +59,7 @@ class RectangleArray(ABCObjectArray):
 
     def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""
-        sizes = np_tools.as_array2d(sizes)
+        sizes = np_tools.as_array2d_row(sizes)
         if len(self._sizes) == 0:
             # ensure good shape of self.xy
             empty = np.array([]).reshape((0, 2))
@@ -190,10 +191,11 @@ class RectangleArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            return np_rectangles.distances(a_xy=self._xy,
-                                           a_sizes=self._sizes,
-                                           b_xy=rect.xy,
-                                           b_sizes=rect.size)
+            rel = RectangleSpatRel(a_xy=self._xy,
+                                   a_sizes=self._sizes,
+                                   b_xy=rect.xy,
+                                   b_sizes=rect.size)
+            return rel.distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:
         """iterate over all or a part of the objects
@@ -217,8 +219,8 @@ class RectangleArray(ABCObjectArray):
             if indices is None:
                 data = zip(self._xy, self._sizes, self._attributes)
             else:
-                data = zip(self._xy[indices, :],
-                           self._sizes[indices, :],
+                data = zip(self._xy[indices, :],  # type: ignore
+                           self._sizes[indices, :],  # type: ignore
                            self._attributes[indices])
 
             for xy, s, att in data:

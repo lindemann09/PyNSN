@@ -6,7 +6,7 @@ import numpy as _np
 import svgwrite as _svg
 
 from .. import _arrays, _shapes
-from .._lib.np_coordinates import cartesian2image_coordinates as _c2i_coord
+from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from . import _array_draw, _colour
 
 

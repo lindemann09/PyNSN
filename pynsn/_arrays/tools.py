@@ -4,7 +4,7 @@ helper functions for arrays
 
 import numpy as np
 
-from .._lib import np_coordinates, rng
+from .._lib import geometry, rng
 
 
 def make_csv(xy, size_data_dict, attributes=None,
@@ -50,13 +50,13 @@ def radial_replacement_from_reference_dots(xy, ref_pos_id,
     # check if there is an identical position and jitter to avoid fully overlapping positions
     if np.sum(np.all(xy[neighbour_ids, ] == xy[ref_pos_id, :],
                      axis=1)) > 0:
-        xy = np_coordinates.jitter_identical_coordinates(xy)
+        xy = geometry.jitter_identical_coordinates(xy)
 
     # relative polar positions to reference_dot
-    tmp_polar = np_coordinates.cartesian2polar(
+    tmp_polar = geometry.cartesian2polar(
         xy[neighbour_ids, :] - xy[ref_pos_id, :])
     tmp_polar[:, 0] = 0.000000001 + replacement_size  # determine movement size
-    tmp_xy = np_coordinates.polar2cartesian(tmp_polar)
+    tmp_xy = geometry.polar2cartesian(tmp_polar)
     xy[neighbour_ids, :] = np.array([xy[neighbour_ids, 0] + tmp_xy[:, 0],
                                      xy[neighbour_ids, 1] + tmp_xy[:, 1]]).T
     return xy
@@ -68,7 +68,7 @@ def remove_overlap_from_inner_to_outer(xy, min_distance_between_objects, distanc
 
     replacement_required = False
     # from inner to outer remove overlaps
-    for i in np.argsort(np_coordinates.cartesian2polar(xy, radii_only=True)):
+    for i in np.argsort(geometry.cartesian2polar(xy, radii_only=True)):
         dist_mtx = distance_matrix_function(between_positions=False)
         dist = dist_mtx[i, :]
         idx_overlaps = np.flatnonzero(

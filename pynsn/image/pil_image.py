@@ -6,7 +6,7 @@ import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
-from .._lib.np_coordinates import cartesian2image_coordinates as _c2i_coord
+from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
 from . import _array_draw
 from .. import _arrays
