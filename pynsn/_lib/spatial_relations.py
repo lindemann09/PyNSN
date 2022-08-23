@@ -110,7 +110,7 @@ class RectangleSpatRel(CoordinateSpatRel):
 
         xy_dist = np.abs(self._xy_diff) - (self.a_sizes + self.b_sizes) / 2
         xy_dist[np.where(xy_dist < 0)] = 0
-        return np.hypot(xy_dist[:, 0], xy_dist[:, 0])
+        return np.hypot(xy_dist[:, 0], xy_dist[:, 1])
 
     def spatial_relations(self) -> NDArray:
         """spatial relation between two rectangles.
@@ -163,7 +163,6 @@ class RectangleSpatRel(CoordinateSpatRel):
 
         # insert calculated replacements into return array
         rtn[i_over, :] = min_spatial_rel
-
         return rtn
 
 
@@ -306,12 +305,11 @@ def _center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.fl
     v_rel = (np.pi-np.pi/4 >= abs(angles)) & (abs(angles) > np.pi/4)
     # vertical relation: in case line cut rectangle at the top or bottom corner
     i = np.flatnonzero(v_rel)
-    l_inside[i] = rect_sizes[i, 1] / 2 * np.cos(np.pi/2 - angles[i])
+    l_inside[i] = rect_sizes[i, 1] / (2 * np.cos(np.pi/2 - angles[i]))
     # horizontal relation: in case line cut rectangle at the left or right corner
     i = np.flatnonzero(~v_rel)
-    l_inside[i] = rect_sizes[i, 0] / 2 * np.cos(angles[i])
-
-    return l_inside
+    l_inside[i] = rect_sizes[i, 0] / (2 * np.cos(angles[i]))
+    return np.abs(l_inside)
 
 
 def _min_spatial_relation(xy_dist: NDArray, min_xy_dist: NDArray) -> NDArray[np.floating]:

@@ -18,19 +18,29 @@ class _CombinationMatrix(object):
         idx = np.array(list(combinations(range(n_items), r=2)))
         self.idx_a = idx[:, 0]
         self.idx_b = idx[:, 1]
-        self.matrix = np.full((n_items, n_items), np.nan)
 
     @property
     def n_combinations(self) -> float:
         return len(self.idx_a)
 
-    def fill(self, values) -> NDArray:
+    def get_matrix(self, values) -> NDArray:
+        """returns matrix with [idx_a, idx_b, values, ...]
+
+        """
+        idx = np.array([self.idx_a, self.idx_b]).T
+        if values.ndim == 1:
+            values = values.reshape((len(values), 1))
+        return np.append(idx, values, axis=1)
+
+    def get_squared_matrix(self, values, both_triangle=True) -> NDArray:
         """returns combination matrix with values
 
         """
-        self.matrix[self.idx_a, self.idx_b] = values
-        self.matrix[self.idx_b, self.idx_a] = values
-        return self.matrix
+        rtn = np.full((len(self.idx_a), len(self.idx_a)), np.nan)
+        rtn[self.idx_a, self.idx_b] = values
+        if both_triangle:
+            rtn[self.idx_b, self.idx_a] = values
+        return rtn
 
 
 class RectangleMatrixSpatRel(_CombinationMatrix):
@@ -44,11 +54,22 @@ class RectangleMatrixSpatRel(_CombinationMatrix):
 
     def overlaps(self, minimum_distance: float = 0) -> NDArray:
         """Matrix with overlaps (True/False) between the rectangles"""
-        return self.fill(values=self._rr.overlaps(minimum_distance))
+        return self.get_matrix(values=self._rr.overlaps(minimum_distance))
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
-        return self.fill(values=self._rr.distances())
+        return self.get_matrix(values=self._rr.distances())
+
+    def spatial_relations(self) -> NDArray:
+        """Return matrix with distance between the rectangles"""
+        return self.get_matrix(values=self._rr.spatial_relations())
+
+    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
+        """Return matrix with distance between the rectangles"""
+        rtn = self.get_matrix(
+            values=self._rr.required_displacements(minimum_distance))
+        i = np.flatnonzero(rtn[:, 2] != 0)
+        return rtn[i, :]
 
 
 class CoordinateMatrixSpatRel(_CombinationMatrix):
@@ -60,7 +81,11 @@ class CoordinateMatrixSpatRel(_CombinationMatrix):
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
-        return self.fill(values=self._rr.distances())
+        return self.get_matrix(values=self._rr.distances())
+
+    def spatial_relations(self) -> NDArray:
+        """Return matrix with distance between the rectangles"""
+        return self.get_matrix(values=self._rr.spatial_relations())
 
 
 class DotMatrixSpatRel(_CombinationMatrix):
@@ -74,8 +99,19 @@ class DotMatrixSpatRel(_CombinationMatrix):
 
     def overlaps(self, minimum_distance: float = 0) -> NDArray:
         """Matrix with overlaps (True/False) between the rectangles"""
-        return self.fill(values=self._rr.overlaps(minimum_distance))
+        return self.get_matrix(values=self._rr.overlaps(minimum_distance))
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
-        return self.fill(values=self._rr.distances())
+        return self.get_matrix(values=self._rr.distances())
+
+    def spatial_relations(self) -> NDArray:
+        """Return matrix with distance between the rectangles"""
+        return self.get_matrix(values=self._rr.spatial_relations())
+
+    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
+        """Return matrix with distance between the rectangles"""
+        rtn = self.get_matrix(
+            values=self._rr.required_displacements(minimum_distance))
+        i = np.flatnonzero(rtn[:, 2] != 0)
+        return rtn[i, :]

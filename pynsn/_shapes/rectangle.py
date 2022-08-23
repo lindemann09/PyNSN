@@ -67,14 +67,14 @@ class Rectangle(ABCShape):
 
         elif isinstance(other, _shapes.Rectangle):
             rel = RectangleSpatRel(a_xy=self._xy.reshape((1, 2)),
-                                   a_sizes=self._size,
+                                   a_sizes=self._size.reshape((1, 2)),
                                    b_xy=other.xy,
                                    b_sizes=other.size)
             return rel.distances()[0]
 
         elif other.__class__ == Coordinate:
             rel = RectangleSpatRel(a_xy=self._xy.reshape((1, 2)),
-                                   a_sizes=self._size,
+                                   a_sizes=self._size.reshape((1, 2)),
                                    b_xy=other.xy,
                                    b_sizes=np.zeros((1, 2)))
             return rel.distances()[0]
