@@ -53,7 +53,7 @@ class Dot(ABCShape):
         # inherited doc
 
         if isinstance(other, _shapes.Dot):
-            rel = DotSpatRel(a_xy=self._xy.reshape((1, 2)),  # dist-functions required 2D data
+            rel = DotSpatRel(a_xy=self._xy,  # dist-functions required 2D data
                              a_diameter=np.array([self._diameter]),
                              b_xy=other.xy,
                              b_diameter=np.array([other.diameter]))
@@ -63,7 +63,7 @@ class Dot(ABCShape):
             return other.distance(self)
 
         elif other.__class__ == Coordinate:
-            rel = DotSpatRel(a_xy=self._xy.reshape((1, 2)),
+            rel = DotSpatRel(a_xy=self._xy,
                              a_diameter=np.array([self._diameter]),
                              b_xy=other.xy,
                              b_diameter=np.zeros(1))

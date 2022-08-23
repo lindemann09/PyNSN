@@ -14,6 +14,8 @@ from .geometry import corner_tensor, dots_outer_points, polar2cartesian
 class CoordinateSpatRel(object):
 
     def __init__(self, a_xy: NDArray, b_xy: NDArray) -> None:
+        if a_xy.ndim == 1:
+            a_xy = a_xy.reshape((1, len(a_xy)))  # make 2d
         self._xy_diff = b_xy - a_xy  # type: ignore
 
     def spatial_relations(self):
@@ -34,6 +36,11 @@ class DotSpatRel(CoordinateSpatRel):
 
     def __init__(self, a_xy: NDArray, a_diameter: NDArray,
                  b_xy: NDArray, b_diameter: NDArray) -> None:
+
+        if a_xy.ndim == 1:
+            a_xy = a_xy.reshape((1, len(a_xy)))
+        if b_xy.ndim == 1:
+            b_xy = b_xy.reshape((1, len(b_xy)))
 
         assert a_xy.shape[0] == a_diameter.shape[0] and \
             b_xy.shape[0] == b_diameter.shape[0]
@@ -89,8 +96,15 @@ class RectangleSpatRel(CoordinateSpatRel):
         assert a_sizes.shape == a_xy.shape and b_sizes.shape == b_xy.shape
 
         super().__init__(a_xy=a_xy, b_xy=b_xy)
-        self.a_sizes = a_sizes
-        self.b_sizes = b_sizes
+        if a_sizes.ndim == 1:
+            self.a_sizes = a_sizes.reshape((1, len(a_sizes)))  # make 2d
+        else:
+            self.a_sizes = a_sizes
+        if b_sizes.ndim == 1:
+            self.b_sizes = b_sizes.reshape((1, len(b_sizes)))  # make 2d
+        else:
+            self.b_sizes = b_sizes
+
         self._xy_diff_rect = np.abs(self._xy_diff) - \
             (self.a_sizes + self.b_sizes) / 2
 
@@ -167,13 +181,23 @@ class RectangleDotSpatRel(CoordinateSpatRel):
 
     def __init__(self, rect_xy: NDArray, rect_sizes: NDArray,
                  dot_xy: NDArray, dot_diameter: NDArray) -> None:
-        assert rect_xy.shape == rect_sizes.shape
-        assert dot_xy.shape[0] == dot_diameter.shape[0]
-        super().__init__(a_xy=rect_xy, b_xy=dot_xy)
 
-        self.rect_xy = rect_xy
+        if dot_xy.ndim == 1:
+            dot_xy = dot_xy.reshape((1, len(dot_xy)))
+
+        assert rect_xy.shape == rect_sizes.shape and \
+            dot_xy.shape[0] == dot_diameter.shape[0]
+
+        if rect_xy.ndim == 1:
+            self.rect_xy = rect_xy.reshape((1, len(rect_xy)))  # make 2d
+            self.rect_sizes = rect_sizes.reshape(
+                (1, len(rect_sizes)))  # make 2d
+        else:
+            self.rect_xy = rect_xy
+            self.rect_sizes = rect_sizes
         self.dot_xy = dot_xy
-        self.rect_sizes = rect_sizes
+
+        super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy)
         # self.dot_diameter = dot_diameter
         self._dot_radii = as_vector(dot_diameter) / 2
 

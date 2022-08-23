@@ -12,10 +12,15 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 
 arr_dia = np.array([10, 20])
 a = pynsn.Dot((8, 9), diameter=120, attribute="#200800")
+aa = pynsn.Dot((8, 94), diameter=10, attribute="#200800")
+
+print(a.distance(aa))
+exit()
 
 b = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF0000")
 c = pynsn.Rectangle((32, 60), size=(40, 40), attribute="#ccFF00")
 d = pynsn.Rectangle((5, -71), size=(40, 40), attribute="#000088")
+
 
 xy = np.array([b.xy, c.xy, d.xy])
 sizes = np.array([b.size, c.size, d.size])
@@ -25,7 +30,9 @@ dot_xy = np_tools.as_array2d_nrow(a.xy, n_rows=xy.shape[0])
 dot_diameter = np_tools.as_array2d_nrow(a.diameter, n_rows=xy.shape[0])
 
 
-mtx = matrix_spatial_relations.RectangleMatrixSpatRel(xy, sizes)
+spatial_relations.RectangleDotSpatRel(rect_xy=b.xy.reshape(1, 2),
+                                      rect_sizes=b.xy.reshape(1, 2))
+
 displace = mtx.required_displacements(minimum_distance=2)
 print(displace)
 
