@@ -89,7 +89,7 @@ class Colour(object):
     def __ne__(self, other):
         return self._colour != other._colour
 
-    @ property
+    @property
     def colour(self) -> Union[str, None]:
         """Hextriplet code of the colour or None"""
         return self._colour
@@ -129,7 +129,7 @@ class Colour(object):
             except TypeError as err:
                 raise TypeError(error_txt.format(value)) from err
 
-    @ property
+    @property
     def rgb(self) -> Union[RGBType, None]:
         """RGB code of the colour"""
         if self._colour is not None:

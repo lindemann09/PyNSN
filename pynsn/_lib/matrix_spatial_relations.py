@@ -68,8 +68,7 @@ class RectangleMatrixSpatRel(_CombinationMatrix):
         """Return matrix with distance between the rectangles"""
         rtn = self.get_matrix(
             values=self._rr.required_displacements(minimum_distance))
-        i = np.flatnonzero(rtn[:, 2] != 0)
-        return rtn[i, :]
+        return rtn[~np.isnan(rtn[:, 2]), :]
 
 
 class CoordinateMatrixSpatRel(_CombinationMatrix):
@@ -113,5 +112,4 @@ class DotMatrixSpatRel(_CombinationMatrix):
         """Return matrix with distance between the rectangles"""
         rtn = self.get_matrix(
             values=self._rr.required_displacements(minimum_distance))
-        i = np.flatnonzero(rtn[:, 2] != 0)
-        return rtn[i, :]
+        return rtn[~np.isnan(rtn[:, 2]), :]

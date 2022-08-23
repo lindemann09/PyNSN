@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .np_tools import as_vector
-from .geometry import corner_tensor, dots_outer_points
+from .geometry import corner_tensor, dots_outer_points, polar2cartesian
 # all init-functions require 2D arrays
 
 
@@ -91,12 +91,13 @@ class RectangleSpatRel(CoordinateSpatRel):
         super().__init__(a_xy=a_xy, b_xy=b_xy)
         self.a_sizes = a_sizes
         self.b_sizes = b_sizes
+        self._xy_diff_rect = np.abs(self._xy_diff) - \
+            (self.a_sizes + self.b_sizes) / 2
 
     def overlaps(self, minimum_distance: float = 0) -> Union[NDArray[np.bool_], np.bool_]:
         """True if rectangles overlap"""
         # columns both negative -> it overlaps
-        xy_dist = np.abs(self._xy_diff) - (self.a_sizes + self.b_sizes) / 2
-        comp = xy_dist < minimum_distance
+        comp = self._xy_diff_rect < minimum_distance
         if comp.shape[0] > 1:
             return np.all(comp, axis=1)
         else:
@@ -108,13 +109,13 @@ class RectangleSpatRel(CoordinateSpatRel):
         Note: does not return negative distances for overlap. Overlap-> dist=0
         """
 
-        xy_dist = np.abs(self._xy_diff) - (self.a_sizes + self.b_sizes) / 2
+        xy_dist = np.copy(self._xy_diff_rect)
         xy_dist[np.where(xy_dist < 0)] = 0
         return np.hypot(xy_dist[:, 0], xy_dist[:, 1])
 
     def spatial_relations(self) -> NDArray:
         """spatial relation between two rectangles.
-        returns angle and distance long the line of the spatial relation.
+        returns distance and angle long the line of the spatial relation.
         """
         rtn = CoordinateSpatRel.spatial_relations(self)
         d_a = _center_edge_distance(angles=rtn[:, 1], rect_sizes=self.a_sizes)
@@ -127,42 +128,28 @@ class RectangleSpatRel(CoordinateSpatRel):
         """Minimum required displacement of rectangle B to have no overlap with
         rectangle A. Array with replacement vectors in polar coordinates.
 
-        Two objects do not overlap if replacements[:, 0] == 0.
 
         Returns:
-            replacements as array of vectors in polar coordinates
-            if distance (replacements[:, 0]) is 0, no replacement required.
+            replacements as array of vectors in cartesian coordinates
+            if replacements coordinate is np.nan no replacement required.
 
             Calculated movement direction (replacements[:, 0]) is always along the
             line between the two object center.
         """
-        # TODO not tested
 
-        #
-        # find overlapping objects
-        #
-        min_xy_dist = ((self.a_sizes + self.b_sizes) / 2) + minimum_distance
-        overlapping = np.all(np.abs(self._xy_diff) - min_xy_dist < 0, axis=1)
-        i_over = np.flatnonzero(overlapping)
+        # spatial relations, but enlarge second rect by minimum distance
+        sr = CoordinateSpatRel.spatial_relations(self)
+        d_a = _center_edge_distance(angles=sr[:, 1],
+                                    rect_sizes=self.a_sizes)
+        d_b = _center_edge_distance(angles=sr[:, 1],
+                                    rect_sizes=self.b_sizes + 2 * minimum_distance)
+        sr[:, 0] = sr[:, 0] - d_a - d_b
 
-        #
-        # calc dist and direction for overlapping objects
-        #
-        rtn = np.zeros(self._xy_diff.shape)
-
-        # only process overlapping items further
-        min_spatial_rel = _min_spatial_relation(xy_dist=self._xy_diff[i_over, :],
-                                                min_xy_dist=min_xy_dist[i_over, :])
-        # subtract distance inside rectangles from euclidean distance
-        l_inside_a = _center_edge_distance(min_spatial_rel[:, 1],
-                                           self.a_sizes[i_over, :])
-        l_inside_b = _center_edge_distance(min_spatial_rel[:, 1],
-                                           self.b_sizes[i_over, :])
-        min_spatial_rel[:, 0] = min_spatial_rel[:, 0] - \
-            (l_inside_a + l_inside_b)
-
-        # insert calculated replacements into return array
-        rtn[i_over, :] = min_spatial_rel
+        # set all nan and override overlapping relations
+        rtn = np.full(sr.shape, np.nan)
+        i = np.flatnonzero(sr[:, 0] < 0)
+        sr[i, 1] = np.pi + sr[i, 1]  # opposite direction
+        rtn[i, :] = polar2cartesian(sr[i, :])
         return rtn
 
 
@@ -252,7 +239,7 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         Two objects do not overlap if replacements[:, 0] == 0.
 
         Returns:
-            replacements as array of vectors in polar coordinates
+            replacements as array of vectors in cartesian coordinates
             if distance (replacements[:, 0]) is 0, no replacement required.
 
             Calculated movement direction (replacements[:, 0]) is always along the
@@ -275,10 +262,10 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         #
         # calc dist and direction for overlapping objects
         #
-        rtn = np.zeros(self._xy_diff.shape)
+        rtn = np.full(self._xy_diff.shape, np.nan)
 
         # only process overlapping items further
-        min_spatial_rel = _min_spatial_relation(xy_dist=self._xy_diff[i_over, :],
+        min_spatial_rel = _min_spatial_relation(xy_diff=self._xy_diff[i_over, :],
                                                 min_xy_dist=min_xy_dist[i_over, :])
         # subtract distance inside rectangles from euclidean distance
         l_inside_rect = _center_edge_distance(min_spatial_rel[:, 1],
@@ -287,7 +274,7 @@ class RectangleDotSpatRel(CoordinateSpatRel):
             - (l_inside_rect + self._dot_radii)
         # FIXME check if replacement is at all required here. spatial relation might be smaller than inside_rect + inside dot
         # insert calculated replacements into return array
-        rtn[i_over, :] = min_spatial_rel
+        rtn[i_over, :] = polar2cartesian(min_spatial_rel)
 
         return rtn
 
@@ -312,7 +299,7 @@ def _center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.fl
     return np.abs(l_inside)
 
 
-def _min_spatial_relation(xy_dist: NDArray, min_xy_dist: NDArray) -> NDArray[np.floating]:
+def _min_spatial_relation(xy_diff: NDArray, min_xy_dist: NDArray) -> NDArray[np.floating]:
     """Calculate required minimum Euclidean distance and direction
     (polar coordinates) from xy distances and min_minimum required xy distances
 
@@ -327,23 +314,23 @@ def _min_spatial_relation(xy_dist: NDArray, min_xy_dist: NDArray) -> NDArray[np.
 
     # find x smaller then y distance
     # if equals, randomly choose some and treat them like x_smaller
-    x_smaller = np.abs(xy_dist[:, 0]) < np.abs(xy_dist[:, 1])
-    xy_equal = xy_dist[:, 0] == xy_dist[:, 1]
+    x_smaller = np.abs(xy_diff[:, 0]) < np.abs(xy_diff[:, 1])
+    xy_equal = xy_diff[:, 0] == xy_diff[:, 1]
     if np.sum(xy_equal) > 0:
         # randomly take some (via filtering) and add to x_smaller
         filter_vector = np.random.choice([False, True], size=len(xy_equal))
         x_smaller = x_smaller | (xy_equal & filter_vector)
 
     # calc required euclidean distances between object center
-    min_eucl_dist = np.empty(xy_dist.shape[0])
+    min_eucl_dist = np.empty(xy_diff.shape[0])
     i = np.flatnonzero(x_smaller)  # x smaller -> set x to min_xy_dist
-    min_eucl_dist[i] = np.hypot(min_xy_dist[i, 0], xy_dist[i, 1])
+    min_eucl_dist[i] = np.hypot(min_xy_dist[i, 0], xy_diff[i, 1])
     i = np.flatnonzero(~x_smaller)  # x larger -> set y to min_xy_dist
-    min_eucl_dist[i] = np.hypot(xy_dist[i, 0], min_xy_dist[i, 1])
+    min_eucl_dist[i] = np.hypot(xy_diff[i, 0], min_xy_dist[i, 1])
 
     # return array of polar vectors
     # [[euclidean distances, directions between center]]
-    directions = np.arctan2(xy_dist[:, 1], xy_dist[:, 0])
+    directions = np.arctan2(xy_diff[:, 1], xy_diff[:, 0])
     return np.array([min_eucl_dist, directions]).T
 
 

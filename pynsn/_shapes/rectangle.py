@@ -82,19 +82,19 @@ class Rectangle(ABCShape):
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")
 
-    @ property
+    @property
     def left(self) -> float:
         return self._xy[0] - 0.5 * self._size[0]
 
-    @ property
+    @property
     def top(self) -> float:
         return self._xy[1] + 0.5 * self._size[1]
 
-    @ property
+    @property
     def right(self) -> float:
         return self._xy[0] + 0.5 * self._size[0]
 
-    @ property
+    @property
     def bottom(self) -> float:
         return self._xy[1] - 0.5 * self._size[1]
 
@@ -145,7 +145,7 @@ class Rectangle(ABCShape):
         """Proportion of the rectangle (width/height)"""
         return self._size[0] / self._size[1]
 
-    @ property
+    @property
     def diagonal(self) -> None:
         '''size of the diagonal'''
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)

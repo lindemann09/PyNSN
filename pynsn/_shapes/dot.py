@@ -72,11 +72,11 @@ class Dot(ABCShape):
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")
 
-    @ property
+    @property
     def area(self) -> float:
         return np.pi * (self._diameter ** 2) / 4.0
 
-    @ property
+    @property
     def perimeter(self) -> float:
         return np.pi * self._diameter
 
