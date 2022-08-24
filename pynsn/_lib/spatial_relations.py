@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .np_tools import as_vector
-from .geometry import corner_tensor, dots_outer_points, polar2cartesian
+from .geometry import corner_tensor, dots_cardinal_points, polar2cartesian
 # all init-functions require 2D arrays
 
 
@@ -211,9 +211,6 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         # find min distance of corner per rect
         min_dist = np.min(cr[:, :, 0], axis=1).reshape((cr.shape[0], 1))
         idx_near_corner = np.nonzero(cr[:, :, 0] == min_dist)
-        print(idx_near_corner)
-
-        cai min  # index corner adjust
 
         # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
         idx_near_corner = np.vstack(np.nonzero(cr[:, :, 0] == min_dist)).T
@@ -230,10 +227,11 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         return spat_rel
 
     def distances(self) -> NDArray:
-        return np.min(self._corner_relations(just_distance=True), axis=1) \
+        # FIXME not crrect does not take intp account edbge relation
+        return np.min(self._corner_relations(distance_only=True), axis=1) \
             - self._dot_radii
 
-    def _corner_relations(self, just_distance=False) -> NDArray:
+    def _corner_relations(self, distance_only=False) -> NDArray:
         """euclidean distance and angle of all corners dot center
 
         Returns:
@@ -245,7 +243,7 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         xy_dist = corner_tensor(rect_xy=self.rect_xy,
                                 rect_sizes=self.rect_sizes) - dot_xy  # type: ignore
         dist = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
-        if just_distance:
+        if distance_only:
             # return shape(n, 4)
             return dist
         else:
@@ -257,28 +255,57 @@ class RectangleDotSpatRel(CoordinateSpatRel):
 
     def is_corner_inside(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
         """check if rectangles corner overlap with dots"""
-        dist_corner = self._corner_relations(just_distance=True)
+        dist_corner = self._corner_relations(distance_only=True)
         # overlap corner
         if self.rect_xy.shape[0] > 1:
             # (n, 1)-array
-            radii = self._dot_radii.reshape(self._dot_radii.shape[0], 1)
             return np.any(
-                dist_corner < radii + minimum_distance, axis=1)
+                dist_corner < np.atleast_2d(self._dot_radii).T + minimum_distance, axis=1)
         else:
             return np.any(
                 dist_corner < self._dot_radii + minimum_distance)
+
+    def _cardinal_point_edge_relations(self, xy_distance_only=False) -> NDArray:
+        """spatial relation between dot cardinal points and rectangle edges"""
+
+        dot_outer = dots_cardinal_points(dot_xy=self.dot_xy,
+                                         dot_radii=self._dot_radii)  # (n, 2, 4)
+        xy_diff_center = np.abs(
+            dot_outer - np.atleast_3d(self.rect_xy))  # type: ignore
+
+        xy_diff_edge = xy_diff_center - np.atleast_3d(self.rect_sizes) / 2
+        if xy_distance_only:
+            return xy_diff_edge
+
+        # idx of card inside rect (n, cardinal point)
+        idx_card_point_in_rect = np.nonzero(np.all(xy_diff_edge < 0, axis=1))
+
+        # get nearest card points to rect center
+        eucl_dist = np.hypot(
+            xy_diff_center[:, 0, :], xy_diff_center[:, 1, :])  # (n, 4)
+        angles = np.arctan2(xy_diff_center[:, 1, :], xy_diff_center[:, 0, :])
+        for i in range(4):
+            eucl_dist[:, i] = eucl_dist[:, i] \
+                - _center_edge_distance(angles=angles[:, i],
+                                        rect_sizes=self.rect_sizes)
+        print(eucl_dist)
+        print(angles)
+        exit()
+        # smallest xy distance per point
+        min_xy_diff = np.empty((xy_diff_edge.shape[0], 2))
+        min_xy_diff[:, 0] = np.min(xy_diff_edge[:, 0, :], axis=1)
+        min_xy_diff[:, 1] = np.min(xy_diff_edge[:, 1, :], axis=1)
+
+        print(min_xy_diff)
+        print(np.min(xy_diff_edge, axis=2))
+        exit()
 
     def is_edge_intersecting(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
         """check if rectangles edge intersect with dots"""
         # --> overlap dot outer points
         # corners might not be in dot, but dot or intersects rect edge or is inside rect
         # check xy dist overlap
-        dot_outer = dots_outer_points(dot_xy=self.dot_xy,
-                                      dot_radii=self._dot_radii)
-        rect_xy = self.rect_xy.reshape(self.rect_xy.shape[0], 2, 1)  # make 3D
-        rect_sizes = self.rect_sizes.reshape(
-            self.rect_sizes.shape[0], 2, 1)  # make 3D
-        xy_diff = np.abs(dot_outer - rect_xy) - rect_sizes / 2  # type: ignore
+        xy_diff = self._cardinal_point_edge_relations(xy_distance_only=True)
         # check all true on xy of each outpoint, than  true  any of these comparison is true (for each point)
         comp = np.all(xy_diff < minimum_distance, axis=1)
         if comp.shape[0] > 1:

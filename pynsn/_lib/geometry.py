@@ -84,7 +84,7 @@ def corner_tensor(rect_xy: NDArray, rect_sizes: NDArray) -> NDArray:
     return rtn
 
 
-def dots_outer_points(dot_xy: NDArray, dot_radii: NDArray) -> NDArray:
+def dots_cardinal_points(dot_xy: NDArray, dot_radii: NDArray) -> NDArray:
     """returns a tensor (n, 2, 4) with four outer points (left, top, right, bottom)
     on the cardinal axes"""
     assert dot_xy.shape[0] == dot_radii.shape[0]
@@ -97,3 +97,16 @@ def dots_outer_points(dot_xy: NDArray, dot_radii: NDArray) -> NDArray:
     rtn[:, 0, 2] = rtn[:, 0, 2] + dot_radii  # right
     rtn[:, 1, 3] = rtn[:, 1, 3] - dot_radii  # bottom
     return rtn
+
+
+def line_point_othogonal(p1_line, p2_line, p3):
+    """project of P3 to line (p1, p2)
+    crossing point of the orthogonal to line (LP1, LP2) that goes to the point p3
+
+    https://stackoverflow.com/questions/47177493/python-point-on-a-line-closest-to-third-point
+    """
+    p1 = np.asarray(p1_line)
+    dxy21 = np.asarray(p2_line) - p1  # type: ignore
+    dxy31 = np.asarray(p3) - p1  # type: ignore
+    a = np.sum(dxy21*dxy31) / np.sum(dxy21**2)
+    return p1 + a * dxy21
