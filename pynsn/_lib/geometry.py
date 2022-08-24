@@ -7,8 +7,6 @@ from numpy.typing import NDArray, ArrayLike
 
 from . import rng
 
-from .np_tools import as_array2d_row
-
 # all functions are 2D arrays (at least) as fist arguments
 
 
@@ -18,9 +16,9 @@ def center_of_coordinates(xy: NDArray) -> NDArray:
     return np.reshape(min_max[1, :] - np.diff(min_max, axis=0) / 2, 2)
 
 
-def polar2cartesian(polar: NDArray) -> NDArray:
+def polar2cartesian(polar: ArrayLike) -> NDArray:
     """polar has to be an 2D-array representing polar coordinates (radius, angle)"""
-    polar = np.asarray(polar)
+    polar = np.atleast_2d(polar)
     return np.array([polar[:, 0] * np.cos(polar[:, 1]),
                     polar[:, 0] * np.sin(polar[:, 1])]).T
 
@@ -34,7 +32,7 @@ def cartesian2polar(xy: ArrayLike,
 
     xy has to be a 2D array
     """
-    xy = np.asarray(xy)
+    xy = np.atleast_2d(xy)
     rtn = np.hypot(xy[:, 0], xy[:, 1])
     if not radii_only:
         # add angle column
@@ -62,9 +60,9 @@ def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArr
         if len(identical) > 1:
             for x in identical:  # jitter all identical positions
                 if x != idx:
-                    r = as_array2d_row((jitter_size,
+                    tmp = np.atleast_2d((jitter_size,
                                         rng.generator.random() * 2 * np.pi))
-                    xy[x, :] = xy[x, :] - polar2cartesian(r)[0]
+                    xy[x, :] = xy[x, :] - polar2cartesian(tmp)[0]
 
     return xy
 

@@ -76,7 +76,7 @@ class Rectangle(ABCShape):
             rel = RectangleSpatRel(a_xy=self._xy,
                                    a_sizes=self._size,
                                    b_xy=other.xy,
-                                   b_sizes=np.zeros((1, 2)))
+                                   b_sizes=np.zeros(2))
             return rel.distances()[0]
 
         raise NotImplementedError(f"distance to {type(other)} "

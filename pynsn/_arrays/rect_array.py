@@ -59,7 +59,7 @@ class RectangleArray(ABCObjectArray):
 
     def _append_sizes(self, sizes: ArrayLike) -> int:
         """returns number of added rows"""
-        sizes = np_tools.as_array2d_row(sizes)
+        sizes = np.atleast_2d(sizes)
         if len(self._sizes) == 0:
             # ensure good shape of self.xy
             empty = np.array([]).reshape((0, 2))

@@ -177,7 +177,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def _append_xy_attribute(self, xy: ArrayLike,
                              attributes: OptArrayLike = None) -> int:
         """returns number of added rows"""
-        xy = np_tools.as_array2d_row(xy)
+        xy = np.atleast_2d(xy)
         if not isinstance(attributes, (tuple, list)):
             attributes = np.array([attributes] * xy.shape[0])
 

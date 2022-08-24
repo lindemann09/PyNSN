@@ -202,32 +202,58 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         self._dot_radii = as_vector(dot_diameter) / 2
 
     def spatial_relations(self) -> NDArray:
-        """spatial relation between two rectangles.
+        """spatial relation between rectangles and dots.
         returns angle and distance long the line of the spatial relation.
         """
 
         # relation with dot center
-        rtn = CoordinateSpatRel.spatial_relations(self)
-        d_a = _center_edge_distance(angles=rtn[:, 1],
-                                    rect_sizes=self.rect_sizes)
-        rtn[:, 0] = rtn[:, 0] - d_a - self._dot_radii
-        return rtn
+        cr = self._corner_relations()
+        # find min distance of corner per rect
+        min_dist = np.min(cr[:, :, 0], axis=1).reshape((cr.shape[0], 1))
+        # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
+        idx_near_corner = np.vstack(np.nonzero(cr[:, :, 0] == min_dist)).T
+        # Problem: one rect could have multiple corners with min distance
+        #   --> choose randomly just one near corner of each rect
+        np.random.shuffle(idx_near_corner)  # shuffle rows
+        # get first unique rect_id (ui-index) (Note: set is sorted)
+        _, ui = np.unique(idx_near_corner[:, 0], return_index=True)
+        idx_near_corner = idx_near_corner[ui, :]
+
+        # spat_rel contains only one nearest corner per rect (n, 2=parameter)
+        spat_rel = cr[idx_near_corner[:, 0], idx_near_corner[:, 1], :]
+        spat_rel[:, 0] = spat_rel[:, 0] - self._dot_radii
+        return spat_rel
 
     def distances(self) -> NDArray:
-        return np.min(self._corner_distances(), axis=1)
+        return np.min(self._corner_relations(just_distance=True), axis=1) \
+            - self._dot_radii
 
-    def _corner_distances(self) -> NDArray:
-        # euclidean distance corner distances dot center shape=(n, 4)
+    def _corner_relations(self, just_distance=False) -> NDArray:
+        """euclidean distance and angle of all corners dot center
+
+        Returns:
+             distance and angle (n, 4=corner, 2=parameter)
+             if just distance: (n, 4=corner)
+        """
         # set shapes for xy (n, 2, 1)
         dot_xy = self.dot_xy.reshape(self.dot_xy.shape[0], 2, 1)
         xy_dist = corner_tensor(rect_xy=self.rect_xy,
                                 rect_sizes=self.rect_sizes) - dot_xy  # type: ignore
-        return np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+        dist = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+        if just_distance:
+            # return shape(n, 4)
+            return dist
+        else:
+            # return  shape=(n, 4, 2)
+            rtn = np.empty((dist.shape[0], 4, 2))
+            rtn[:, :, 0] = dist
+            rtn[:, :, 1] = np.arctan2(xy_dist[:, 1, :], xy_dist[:, 0, :])
+            return rtn
 
     def overlaps(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
         """check if rectangles overlap with dots"""
 
-        dist_corner = self._corner_distances()
+        dist_corner = self._corner_relations(just_distance=True)
         # overlap corner
         if self.rect_xy.shape[0] > 1:
             # (n, 1)-array
@@ -270,36 +296,14 @@ class RectangleDotSpatRel(CoordinateSpatRel):
             line between the two object center.
         """
 
-        # FIXME not tested
-        dots_rect_sizes = np.transpose(self._dot_radii *
-                                       np.full(shape=(2, self._dot_radii.shape[0]),
-                                               fill_value=2))
+        sr = self.spatial_relations()
+        sr[:, 0] = sr[:, 0] - minimum_distance
 
-        #
-        # find xy overlapping objects (simplified: treat dot as rect)
-        #
-        min_xy_dist = ((self.rect_sizes + dots_rect_sizes) /
-                       2) + minimum_distance
-        overlapping = np.all(np.abs(self._xy_diff) - min_xy_dist < 0, axis=1)
-        i_over = np.flatnonzero(overlapping)
-
-        #
-        # calc dist and direction for overlapping objects
-        #
-        rtn = np.full(self._xy_diff.shape, np.nan)
-
-        # only process overlapping items further
-        min_spatial_rel = _min_spatial_relation(xy_diff=self._xy_diff[i_over, :],
-                                                min_xy_dist=min_xy_dist[i_over, :])
-        # subtract distance inside rectangles from euclidean distance
-        l_inside_rect = _center_edge_distance(min_spatial_rel[:, 1],
-                                              self.rect_sizes[i_over, :])
-        min_spatial_rel[:, 0] = min_spatial_rel[:, 0] \
-            - (l_inside_rect + self._dot_radii)
-        # FIXME check if replacement is at all required here. spatial relation might be smaller than inside_rect + inside dot
-        # insert calculated replacements into return array
-        rtn[i_over, :] = polar2cartesian(min_spatial_rel)
-
+        # set all nan and override overlapping relations
+        rtn = np.full(sr.shape, np.nan)
+        i = np.flatnonzero(sr[:, 0] < 0)
+        sr[i, 1] = np.pi + sr[i, 1]  # opposite direction
+        rtn[i, :] = polar2cartesian(sr[i, :])
         return rtn
 
 

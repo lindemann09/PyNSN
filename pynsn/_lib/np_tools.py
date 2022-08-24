@@ -11,20 +11,13 @@ def as_vector(x: ArrayLike) -> NDArray:
     make an numpy vector from any element (list, _arrays, and single data (str, numeric))
     """
 
-    x = np.asarray(x)
-    if x.ndim == 1:
-        return x
-    elif x.ndim == 0:
-        # if one element only, make a array with one element
-        return x.reshape(1)
-    else:
-        return x.flatten()
+    return np.atleast_1d(x).flatten()
 
 
 def as_array2d_nrow(arr: ArrayLike, n_rows: int) -> NDArray:
     """make 2d array with n equal rows, if array is zero or one dimensional"""
-    arr = np.asarray(arr)
-    if arr.ndim < 2 or arr.shape[0] != n_rows:
+    arr = np.atleast_2d(arr)
+    if arr.shape[0] != n_rows:
         try:
             return np.ones((n_rows, 1)) * arr
         except ValueError as err:
@@ -50,15 +43,6 @@ def all_as_array2d_equal_rows(list_of_arrays: Iterable[ArrayLike]) -> List[NDArr
     return array_list
 
 
-def as_array2d_row(arr: ArrayLike) -> NDArray:
-    """converts a simple 1D ArrayLike object to a 2D numpy array with only
-    one row. It thus insures a multi-dimensional numpy array"""
-    rtn = np.asarray(arr)
-    if rtn.ndim == 1:
-        return rtn.reshape((1, rtn.shape[0]))
-    return rtn
-
-
 def round2(arr: NDArray, decimals: int,
            int_type: type = np.int32) -> NDArray:
     """rounds and changes to int type if decimals == 0"""
@@ -69,9 +53,10 @@ def round2(arr: NDArray, decimals: int,
         return arr
 
 
-def is_all_equal(vector: ArrayLike) -> bool:
+def is_all_equal(vector: ArrayLike) -> np.bool_:
     # returns true if all elements are equal
-    return len(np.unique(np.asarray(vector))) == 1
+    a = np.asarray(vector).flatten()
+    return np.all(np.equal(a, a[0]))
 
 
 def triu_nan(m: NDArray, k: int = 0) -> NDArray:
