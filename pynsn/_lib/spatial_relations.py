@@ -210,6 +210,11 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         cr = self._corner_relations()
         # find min distance of corner per rect
         min_dist = np.min(cr[:, :, 0], axis=1).reshape((cr.shape[0], 1))
+        idx_near_corner = np.nonzero(cr[:, :, 0] == min_dist)
+        print(idx_near_corner)
+
+        cai min  # index corner adjust
+
         # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
         idx_near_corner = np.vstack(np.nonzero(cr[:, :, 0] == min_dist)).T
         # Problem: one rect could have multiple corners with min distance
@@ -250,21 +255,22 @@ class RectangleDotSpatRel(CoordinateSpatRel):
             rtn[:, :, 1] = np.arctan2(xy_dist[:, 1, :], xy_dist[:, 0, :])
             return rtn
 
-    def overlaps(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
-        """check if rectangles overlap with dots"""
-
+    def is_corner_inside(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
+        """check if rectangles corner overlap with dots"""
         dist_corner = self._corner_relations(just_distance=True)
         # overlap corner
         if self.rect_xy.shape[0] > 1:
             # (n, 1)-array
             radii = self._dot_radii.reshape(self._dot_radii.shape[0], 1)
-            overlap_corner = np.any(
+            return np.any(
                 dist_corner < radii + minimum_distance, axis=1)
         else:
-            overlap_corner = np.any(
+            return np.any(
                 dist_corner < self._dot_radii + minimum_distance)
 
-        # overlap dot outer points
+    def is_edge_intersecting(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
+        """check if rectangles edge intersect with dots"""
+        # --> overlap dot outer points
         # corners might not be in dot, but dot or intersects rect edge or is inside rect
         # check xy dist overlap
         dot_outer = dots_outer_points(dot_xy=self.dot_xy,
@@ -276,11 +282,14 @@ class RectangleDotSpatRel(CoordinateSpatRel):
         # check all true on xy of each outpoint, than  true  any of these comparison is true (for each point)
         comp = np.all(xy_diff < minimum_distance, axis=1)
         if comp.shape[0] > 1:
-            overlap_outer = np.any(comp, axis=1)
+            return np.any(comp, axis=1)
         else:
-            overlap_outer = np.any(comp)
+            return np.any(comp)
 
-        return overlap_corner | overlap_outer
+    def overlaps(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
+        """check if rectangles overlap with dots"""
+
+        return self.is_corner_inside() | self.is_edge_intersecting()
 
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Minimum required displacement of rectangle B to have no overlap with
@@ -295,7 +304,7 @@ class RectangleDotSpatRel(CoordinateSpatRel):
             Calculated movement direction (replacements[:, 0]) is always along the
             line between the two object center.
         """
-
+        # incorrect
         sr = self.spatial_relations()
         sr[:, 0] = sr[:, 0] - minimum_distance
 
