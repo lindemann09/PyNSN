@@ -67,38 +67,6 @@ def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArr
     return xy
 
 
-def corner_tensor(rect_xy: NDArray, rect_sizes: NDArray) -> NDArray:
-    """returns a tensor (n, 2, 4) with xy values of the four corners"""
-    assert rect_xy.shape == rect_sizes.shape
-    rtn = np.empty((rect_xy.shape[0], 2, 4))
-
-    rect_sizes2 = rect_sizes / 2
-    rtn[:, :, 1] = rect_xy + rect_sizes2  # right top
-    rtn[:, :, 3] = rect_xy - rect_sizes2  # left bottom
-    # left, top
-    rtn[:, 0, 0] = rtn[:, 0, 3]
-    rtn[:, 1, 0] = rtn[:, 1, 1]
-    # right, bottom
-    rtn[:, 0, 2] = rtn[:, 0, 1]
-    rtn[:, 1, 2] = rtn[:, 1, 3]
-    return rtn
-
-
-def dots_cardinal_points(dot_xy: NDArray, dot_radii: NDArray) -> NDArray:
-    """returns a tensor (n, 2, 4) with four outer points (left, top, right, bottom)
-    on the cardinal axes"""
-    assert dot_xy.shape[0] == dot_radii.shape[0]
-
-    # make tensor (n, 2, 4) with dot_xy at each [:, :, x]
-    rtn = dot_xy.reshape((dot_xy.shape[0], dot_xy.shape[1], 1)) * \
-        np.ones((dot_xy.shape[0], 2, 4))
-    rtn[:, 0, 0] = rtn[:, 0, 0] - dot_radii  # left
-    rtn[:, 1, 1] = rtn[:, 1, 1] + dot_radii  # top
-    rtn[:, 0, 2] = rtn[:, 0, 2] + dot_radii  # right
-    rtn[:, 1, 3] = rtn[:, 1, 3] - dot_radii  # bottom
-    return rtn
-
-
 def line_point_othogonal(p1_line, p2_line, p3):
     """project of P3 to line (p1, p2)
     crossing point of the orthogonal to line (LP1, LP2) that goes to the point p3

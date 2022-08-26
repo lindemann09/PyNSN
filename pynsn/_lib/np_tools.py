@@ -65,3 +65,18 @@ def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     see docu numpy.triu)
     """
     return m + np.tril(np.full(m.shape, np.nan), k=k-1)
+
+
+def index_minmum_rowwise(array2d: NDArray) -> NDArray:
+    """returns array the indices of the minimum cell in each row. If more than one
+    cell in a row contains the minimum, select randomly one"""
+
+    min_value = np.atleast_2d(np.min(array2d, axis=1)).T
+    # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
+    idx_minimum = np.vstack(np.nonzero(array2d == min_value)).T
+    # Problem: one row could have min values
+    #   --> choose randomly one
+    np.random.shuffle(idx_minimum)  # shuffle rows
+    # return only first unique id (ui-index) (Note: set is sorted)
+    _, ui = np.unique(idx_minimum[:, 0], return_index=True)
+    return idx_minimum[ui, :]
