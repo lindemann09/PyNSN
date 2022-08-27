@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 import numpy as np
 
 from .._lib import np_tools
-from .._lib.spatial_relations import DotSpatRel
+from .._lib.spatial_relations import DotDot
 from .._shapes import Dot, Rectangle
 from ..typing import IntOVector, NDArray, OptArrayLike, OptFloat
 from .abc_object_array import ABCObjectArray
@@ -179,10 +179,10 @@ class DotArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            rel = DotSpatRel(a_xy=self._xy,
-                             a_diameter=self._diameter,
-                             b_xy=dot.xy,
-                             b_diameter=np.array([dot.diameter]))
+            rel = DotDot(a_xy=self._xy,
+                         a_diameter=self._diameter,
+                         b_xy=dot.xy,
+                         b_diameter=np.array([dot.diameter]))
             return rel.distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:

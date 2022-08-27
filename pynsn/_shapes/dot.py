@@ -10,7 +10,7 @@ from .abc_shape import ABCShape
 from .picture_file import PictureFile
 from .._lib.coordinate import Coordinate
 from .. import _shapes
-from .._lib.spatial_relations import DotSpatRel
+from .._lib.spatial_relations import DotDot
 
 
 class Dot(ABCShape):
@@ -53,20 +53,20 @@ class Dot(ABCShape):
         # inherited doc
 
         if isinstance(other, _shapes.Dot):
-            rel = DotSpatRel(a_xy=self._xy,  # dist-functions required 2D data
-                             a_diameter=np.array([self._diameter]),
-                             b_xy=other.xy,
-                             b_diameter=np.array([other.diameter]))
+            rel = DotDot(a_xy=self._xy,  # dist-functions required 2D data
+                         a_diameter=np.array([self._diameter]),
+                         b_xy=other.xy,
+                         b_diameter=np.array([other.diameter]))
             return rel.distances()[0]
 
         elif isinstance(other, _shapes.Rectangle):
             return other.distance(self)
 
         elif other.__class__ == Coordinate:
-            rel = DotSpatRel(a_xy=self._xy,
-                             a_diameter=np.array([self._diameter]),
-                             b_xy=other.xy,
-                             b_diameter=np.zeros(1))
+            rel = DotDot(a_xy=self._xy,
+                         a_diameter=np.array([self._diameter]),
+                         b_xy=other.xy,
+                         b_diameter=np.zeros(1))
             return rel.distances()[0]
 
         raise NotImplementedError(f"distance to {type(other)} "

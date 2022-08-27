@@ -13,7 +13,7 @@ import numpy as np
 
 from .._lib import np_tools
 from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleSpatRel
+from .._lib.spatial_relations import RectangleRectangle
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
@@ -191,10 +191,10 @@ class RectangleArray(ABCObjectArray):
         if len(self._xy) == 0:
             return np.array([])
         else:
-            rel = RectangleSpatRel(a_xy=self._xy,
-                                   a_sizes=self._sizes,
-                                   b_xy=rect.xy,
-                                   b_sizes=rect.size)
+            rel = RectangleRectangle(a_xy=self._xy,
+                                     a_sizes=self._sizes,
+                                     b_xy=rect.xy,
+                                     b_sizes=rect.size)
             return rel.distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:

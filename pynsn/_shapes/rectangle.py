@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
 from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleSpatRel
+from .._lib.spatial_relations import RectangleRectangle
 from .abc_shape import ABCShape
 
 
@@ -66,17 +66,17 @@ class Rectangle(ABCShape):
             return dist - other.diameter / 2.0
 
         elif isinstance(other, _shapes.Rectangle):
-            rel = RectangleSpatRel(a_xy=self._xy,
-                                   a_sizes=self._size,
-                                   b_xy=other.xy,
-                                   b_sizes=other.size)
+            rel = RectangleRectangle(a_xy=self._xy,
+                                     a_sizes=self._size,
+                                     b_xy=other.xy,
+                                     b_sizes=other.size)
             return rel.distances()[0]
 
         elif other.__class__ == Coordinate:
-            rel = RectangleSpatRel(a_xy=self._xy,
-                                   a_sizes=self._size,
-                                   b_xy=other.xy,
-                                   b_sizes=np.zeros(2))
+            rel = RectangleRectangle(a_xy=self._xy,
+                                     a_sizes=self._size,
+                                     b_xy=other.xy,
+                                     b_sizes=np.zeros(2))
             return rel.distances()[0]
 
         raise NotImplementedError(f"distance to {type(other)} "
