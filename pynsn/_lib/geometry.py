@@ -67,14 +67,27 @@ def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArr
     return xy
 
 
-def line_point_othogonal(p1_line, p2_line, p3):
+def line_point_othogonal(p1_line, p2_line, p3, outside_segment_nan=False):
     """project of P3 to line (p1, p2)
-    crossing point of the orthogonal to line (LP1, LP2) that goes to the point p3
+    Crossing point of the orthogonal to line (LP1, LP2) that goes to the
+    point p3
+
+    if outside_segment_nan, function checks if crosspoint is on the line segment
+    (p1-p2) and if not values are set to nan.
 
     https://stackoverflow.com/questions/47177493/python-point-on-a-line-closest-to-third-point
     """
-    p1 = np.asarray(p1_line)
-    dxy21 = np.asarray(p2_line) - p1  # type: ignore
-    dxy31 = np.asarray(p3) - p1  # type: ignore
-    a = np.sum(dxy21*dxy31) / np.sum(dxy21**2)
-    return p1 + a * dxy21
+    p1 = np.atleast_2d(p1_line)
+    dxy21 = np.atleast_2d(p2_line) - p1  # type: ignore
+    dxy31 = np.atleast_2d(p3) - p1  # type: ignore
+    a = np.sum(dxy21*dxy31, axis=1) / np.sum(dxy21**2, axis=1)
+    cross_points = p1 + np.atleast_2d(a).T * dxy21
+
+    if outside_segment_nan:
+        # boolean array (n, 2=outside_x or y)
+        outside = (np.maximum(p1_line, p2_line) < cross_points) |\
+            (cross_points < np.minimum(p1_line, p2_line))
+        outside = outside[:, 0] | outside[:, 1]  # vector
+        cross_points[outside, :] = np.nan
+
+    return cross_points

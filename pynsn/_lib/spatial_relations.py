@@ -37,8 +37,8 @@ class DotSpatRel(CoordinateSpatRel):
     def __init__(self, a_xy: NDArray, a_diameter: NDArray,
                  b_xy: NDArray, b_diameter: NDArray) -> None:
 
-        assert a_xy.shape == b_xy.shape and \
-            a_xy.shape[0] == a_diameter.shape[0] == b_diameter.shape[0]
+        assert a_xy.shape[0] == a_diameter.shape[0] and \
+            b_xy.shape[0] == b_diameter.shape[0]
 
         super().__init__(a_xy=a_xy, b_xy=b_xy)
         self._radii_sum = (as_vector(a_diameter) + as_vector(b_diameter)) / 2
@@ -88,7 +88,8 @@ class RectangleSpatRel(CoordinateSpatRel):
 
     def __init__(self, a_xy: NDArray, a_sizes: NDArray,
                  b_xy: NDArray, b_sizes: NDArray) -> None:
-        assert a_sizes.shape == a_xy.shape == b_sizes.shape == b_xy.shape
+        assert a_sizes.shape == a_xy.shape and\
+            b_sizes.shape == b_xy.shape
 
         super().__init__(a_xy=a_xy, b_xy=b_xy)
         self.a_sizes = np.atleast_2d(a_sizes)
@@ -169,17 +170,32 @@ class RectangleDotSpatRel(CoordinateSpatRel):
 
     def __init__(self, rect_xy: NDArray, rect_sizes: NDArray,
                  dot_xy: NDArray, dot_diameter: NDArray) -> None:
-        self.rect_xy = np.atleast_2d(rect_xy)
-        self.rect_sizes = np.atleast_2d(rect_sizes)
-        self.dot_xy = np.atleast_2d(dot_xy)
+
+        assert rect_xy.shape == rect_xy.shape and \
+            dot_xy.shape[0] == dot_diameter.shape[0]
+
+        if rect_xy.ndim == 2 and dot_xy.ndim == 2:
+            self.rect_xy = rect_xy
+            self.rect_sizes = rect_sizes
+            self.dot_xy = dot_xy
+        elif rect_xy.ndim == 1 and dot_xy.ndim == 1:
+            self.rect_xy = np.atleast_2d(rect_xy)
+            self.rect_sizes = np.atleast_2d(rect_sizes)
+            self.dot_xy = np.atleast_2d(dot_xy)
+        elif dot_xy.ndim == 1:
+            self.rect_xy = rect_xy
+            self.rect_sizes = rect_sizes
+            self.dot_xy = dot_xy * np.ones((1, rect_xy.shape[0]))
+        elif rect_xy.ndim == 1:
+            self.rect_xy = rect_xy * np.ones((1, rect_xy.shape[0]))
+            self.rect_sizes = rect_sizes * np.ones((1, rect_xy.shape[0]))
+            self.dot_xy = dot_xy
 
         self._dot_radii = as_vector(dot_diameter) / 2
+
         self.__corners = None
         self.__corner_rel = None
         self.__edge_rel = None
-
-        assert self.rect_xy.shape == self.rect_sizes.shape == self.dot_xy.shape and \
-            self.dot_xy.shape[0] == self._dot_radii.shape[0]
 
         super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy)
 
@@ -241,15 +257,19 @@ class RectangleDotSpatRel(CoordinateSpatRel):
             # find nearest edge cross points to dot centers
             # (ecp -> project dot center to rect edge)
             # ecp_xy_diff (n, 2=xy, 4=edges)
-            ecp_xy_diff = np.empty_like(self._corners)
+            ecp = np.empty_like(self._corners)
             for i in range(4):
-                # diff(edge, dot center): project of dot center to edge
-                ecp_xy_diff[:, :, i] = geometry.line_point_othogonal(
+                # project of dot center to edge
+                ecp[:, :, i] = geometry.line_point_othogonal(
                     p1_line=self._corners[:, :, edge_points[i, 0]],
                     p2_line=self._corners[:, :, edge_points[i, 1]],
-                    p3=self.dot_xy) - self.dot_xy
+                    p3=self.dot_xy,
+                    outside_segment_nan=True)
 
-            # Euclidian distance of each edge with dot center (n, 4=edges)
+            #[print((i, ecp[:, :, i])) for i in range(4)]
+
+            # Euclidean distance of each edge with dot center (n, 4=edges)
+            ecp_xy_diff = ecp - np.atleast_3d(self.dot_xy)  # type: ignore
             distances = np.hypot(ecp_xy_diff[:, 0, :],
                                  ecp_xy_diff[:, 1, :])
             # find nearest edge

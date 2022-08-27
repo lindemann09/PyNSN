@@ -16,33 +16,30 @@ aa = pynsn.Dot((55, 50), diameter=10, attribute="#200800")
 
 b = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF0000")
 c = pynsn.Rectangle((-32, 60), size=(40, 40), attribute="#ccFF00")
-d = pynsn.Rectangle((5, -60), size=(150, 40), attribute="#000088")
+d = pynsn.Rectangle((10, -50), size=(150, 40), attribute="#000088")
 
 
 xy = np.array([b.xy, c.xy, d.xy])
 sizes = np.array([b.size, c.size, d.size])
-# xy = np.array([b.xy])
-# sizes = np.array([b.size])
+#xy = np.array([d.xy])
+#sizes = np.array([d.size])
 dot_xy = np_tools.as_array2d_nrow(a.xy, n_rows=xy.shape[0])
 dot_diameter = np_tools.as_array2d_nrow(a.diameter, n_rows=xy.shape[0])
 
 
 rel = spatial_relations.RectangleDotSpatRel(rect_xy=xy,
                                             rect_sizes=sizes,
-                                            dot_xy=np.atleast_2d(
-                                                a.xy) * np.ones((3, 1)),
-                                            dot_diameter=np.ones(3) * a.diameter)
-
-print(rel.spatial_relations())
-exit()
+                                            dot_xy=np.atleast_2d(a.xy),
+                                            dot_diameter=np.atleast_1d([a.diameter]))
+rel.spatial_relations()
 
 
-displace = rel.required_displacements(minimum_distance=1)
-print(displace)
+#displace = rel.required_displacements(minimum_distance=1)
+# print(displace)
 # FIXME required displacement not correct
 # b.xy = b.xy + displace[0, :]
 # c.xy = c.xy + displace[1, :]
 # d.xy = d.xy + displace[0, :]
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
-shapes_test_picture((a, b, c, d))
+shapes_test_picture((d, a))
