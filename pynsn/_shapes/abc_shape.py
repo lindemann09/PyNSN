@@ -88,5 +88,11 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         """perimeter"""
 
     @abstractmethod
-    def is_inside(self, other: ABCShape) -> bool:
-        """True if shape is fully inside another shape"""
+    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        """TODO boolean or NDArray[bool] indicating whether dots are fully inside
+        the shape """
+
+    @abstractmethod
+    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        """TODO boolean or NDArray[bool] indicating whether dots are fully inside
+        the shape """

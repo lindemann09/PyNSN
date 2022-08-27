@@ -91,3 +91,37 @@ def line_point_othogonal(p1_line, p2_line, p3, outside_segment_nan=False):
         cross_points[outside, :] = np.nan
 
     return cross_points
+
+
+def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=True) -> NDArray:
+    """tensor (n, 2, 4) with xy values of the four corners of the rectangles
+    0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
+
+    if lt_rb_only=True,
+        return only  left-top and right-bottom point (n, 2_xy, 2=(lt, rb)
+        """
+    rect_xy = np.atleast_2d(rect_xy)
+    rect_sizes2 = np.atleast_2d(rect_sizes) / 2
+    right_top = rect_xy + rect_sizes2
+    left_button = rect_xy + rect_sizes2
+
+    if lt_rb_only:
+        rtn = np.empty((rect_xy.shape[0], 2, 2))
+        # left, top
+        rtn[:, 0, 0] = left_button[:, 0]
+        rtn[:, 1, 0] = right_top[:, 1]
+        # right, bottom
+        rtn[:, 0, 1] = right_top[:, 0]
+        rtn[:, 1, 1] = left_button[:, 1]
+    else:
+        rtn = np.empty((rect_xy.shape[0], 2, 4))
+        rtn[:, :, 1] = right_top  # right top
+        rtn[:, :, 3] = left_button  # left bottom
+        # left, top
+        rtn[:, 0, 0] = left_button[:, 0]
+        rtn[:, 1, 0] = right_top[:, 1]
+        # right, bottom
+        rtn[:, 0, 2] = right_top[:, 0]
+        rtn[:, 1, 2] = left_button[:, 1]
+
+    return rtn

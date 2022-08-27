@@ -80,7 +80,8 @@ class CoordinateMatrixSpatRel(_CombinationMatrix):
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.distances())
+        rel = self._rr.spatial_relations()
+        return self.get_matrix(values=rel[:, 0])
 
     def spatial_relations(self) -> NDArray:
         """Return matrix with distance between the rectangles"""

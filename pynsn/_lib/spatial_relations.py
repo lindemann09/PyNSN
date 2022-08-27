@@ -230,17 +230,8 @@ class RectangleDot(CoordinateCoordinate):
         0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
         """
         if self.__corners is None:
-            self.__corners = np.empty((self.rect_xy.shape[0], 2, 4))
-            rect_sizes2 = self.rect_sizes / 2
-            self.__corners[:, :, 1] = self.rect_xy + rect_sizes2  # right top
-            self.__corners[:, :, 3] = self.rect_xy - rect_sizes2  # left bottom
-            # left, top
-            self.__corners[:, 0, 0] = self.__corners[:, 0, 3]
-            self.__corners[:, 1, 0] = self.__corners[:, 1, 1]
-            # right, bottom
-            self.__corners[:, 0, 2] = self.__corners[:, 0, 1]
-            self.__corners[:, 1, 2] = self.__corners[:, 1, 3]
-
+            self.__corners = geometry.corners(rect_xy=self.rect_xy,
+                                              rect_sizes=self.rect_sizes)
         return self.__corners
 
     def _get_corner_relations(self) -> NDArray:
@@ -380,13 +371,3 @@ def _center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.fl
     i = np.flatnonzero(~v_rel)
     l_inside[i] = rect_sizes[i, 0] / (2 * np.cos(angles[i]))
     return np.abs(l_inside)
-
-
-def inside_rectangles(xy: NDArray, sizes: NDArray) -> NDArray:
-    """bool array indicates with dots are fully inside the rectangle/rectangles"""
-    raise NotImplementedError()
-
-
-def inside_dots(xy: NDArray, sizes: NDArray) -> NDArray:
-    """bool array indicates with dots are fully inside the dot/dots"""
-    raise NotImplementedError()

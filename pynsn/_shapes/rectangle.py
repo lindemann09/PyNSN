@@ -10,7 +10,10 @@ from numpy.typing import ArrayLike, NDArray
 from .. import _shapes
 from .._lib.coordinate import Coordinate
 from .._lib.spatial_relations import RectangleRectangle
+from .._lib import geometry
 from .abc_shape import ABCShape
+
+# TODO doc "basic properities" is all classes (like width)
 
 
 class Rectangle(ABCShape):
@@ -151,7 +154,7 @@ class Rectangle(ABCShape):
         return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
 
     def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle]) -> bool:
-        # inherited doc
+        # FIXME remove this function
         if isinstance(other, _shapes.Dot):
             r_other = other.diameter / 2.0
             for corner in self.iter_corners():
@@ -170,6 +173,45 @@ class Rectangle(ABCShape):
             else:
                 return True
 
-        raise NotImplementedError("is_inside is not "
-                                  f"implemented for {type(other)}.")
-# TODO doc "basic properities" is all classes (like width)
+    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        # inherited doc
+        # FIXME not tested
+
+        xy = np.atleast_2d(xy)
+        rect_sizes2 = np.atleast_2d(sizes)/2
+
+        # true if inside on this dimension
+        compare_lb_rt = np.empty(shape=(xy.shape[0], 4))
+        compare_lb_rt[:, (0, 1)] = xy - rect_sizes2 \
+            > np.atleast_2d(self.xy - self.size / 2)
+        compare_lb_rt[:, (2, 3)] = xy + rect_sizes2 \
+            > np.atleast_2d(self.xy + self.size / 2)
+
+        if compare_lb_rt.shape[0] > 1:
+            return np.all(compare_lb_rt, axis=1)
+        else:
+            return np.all(compare_lb_rt)
+
+        # [[left, top], [right, botton]]
+        corners = geometry.corners(rect_xy=xy, rect_sizes=sizes)
+        xy_dist = corners - np.atleast_3d(self.xy)  # type: ignore
+        distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+        return np.any(distances > self.diameter/2, axis=1)
+
+    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        # inherited doc
+        # FIXME not tested
+
+        xy = np.atleast_2d(xy)
+        radius = np.atleast_2d(diameters/2)
+        # if true if dot inside rect on this dimension
+        compare_lb_rt = np.empty(shape=(xy.shape[0], 4))
+        compare_lb_rt[:, (0, 1)] = xy - radius.T \
+            > np.atleast_2d(self.xy - self.size / 2)
+        compare_lb_rt[:, (2, 3)] = xy + radius.T \
+            > np.atleast_2d(self.xy + self.size / 2)
+
+        if compare_lb_rt.shape[0] > 1:
+            return np.all(compare_lb_rt, axis=1)
+        else:
+            return np.all(compare_lb_rt)

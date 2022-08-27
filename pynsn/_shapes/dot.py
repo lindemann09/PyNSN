@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from pynsn._lib import geometry
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from typing import Union, Any
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from .abc_shape import ABCShape
 from .picture_file import PictureFile
@@ -81,7 +83,8 @@ class Dot(ABCShape):
         return np.pi * self._diameter
 
     def is_inside(self, other: Union[_shapes.Dot, _shapes.Rectangle]) -> bool:
-        # inherited doc
+        # FIXME remove this function
+
         if isinstance(other, _shapes.Dot):
             return Coordinate.distance(self, other) \
                 < (other.diameter - self._diameter)/2.0
@@ -98,5 +101,26 @@ class Dot(ABCShape):
             else:
                 return True
 
-        raise NotImplementedError("is_inside is not "
-                                  f"implemented for {type(other)}.")
+    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        # inherited doc
+        # FIXME not tested
+        # [[left, top], [right, botton]]
+        corners = geometry.corners(rect_xy=xy, rect_sizes=sizes)
+        xy_dist = corners - np.atleast_3d(self.xy)  # type: ignore
+        distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+        comp = distances < self.diameter/2
+        if comp.shape[0] > 1:
+            return np.all(comp, axis=1)
+        else:
+            return np.all(comp)
+
+    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+        # inherited doc
+        # FIXME not tested
+        xy_diff = np.atleast_2d(xy) - np.atleast_2d(self.xy)
+        comp = np.hypot(xy_diff[:, 0], xy_diff[:, 1]) < \
+            (diameters - self.diameter)/2
+        if comp.shape[0] > 1:
+            return np.all(comp, axis=1)
+        else:
+            return np.all(comp)

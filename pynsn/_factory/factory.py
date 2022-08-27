@@ -309,7 +309,7 @@ class NSNFactory(TargetArea):
                                                          allow_overlapping=allow_overlapping)
             except NoSolutionError as err:
                 raise NoSolutionError(f"Can't find a solution for {n_objects} "
-                                      + f"items in this array.") from err
+                                      + "items in this array.") from err
             rectangle_array.add([rect])  # type:ignore
 
         return rectangle_array
