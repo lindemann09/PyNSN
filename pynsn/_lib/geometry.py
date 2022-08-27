@@ -93,7 +93,7 @@ def line_point_othogonal(p1_line, p2_line, p3, outside_segment_nan=False):
     return cross_points
 
 
-def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=True) -> NDArray:
+def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
     """tensor (n, 2, 4) with xy values of the four corners of the rectangles
     0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
 
