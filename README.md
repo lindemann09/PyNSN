@@ -1,7 +1,7 @@
 PyNSN
 =====
 
-**Creating Non-Symbolic Number Displays**
+**Python Library for Creating Non-Symbolic Number Displays**
 
 ---
 
@@ -30,7 +30,7 @@ some features:
 * svgwrite (>=1.4)
 * pygame (>=1.9)
 * expyriment (>=0.9)
-* PyQT5 (>=5.14)
+
 
 
 ## Installing via `pip`
@@ -57,20 +57,3 @@ packages.
 * data base, sequences
 * [Euro flag example](https://lindemann09.github.io/PyNSN/euro_flag_demo.html): using pictures as objects in array
   ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Feuro_flag_demo.ipynb))
-
-RUN GUI tool (beta version)
---------------------------
-
-*Note:* Using the PyNSN-GUI requires the installation of `PyQt5`
-
-```
-python -m pynsn
-```
-
-or if installed correctly:
-
-```
-pynsn
-```
-
-
