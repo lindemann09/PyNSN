@@ -12,7 +12,7 @@ from ..typing import OptFloat
 class TargetArea(object):
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: ShapeType,
                  min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None) -> None:
         """TargetArea Parameter"""
@@ -42,7 +42,7 @@ class TargetArea(object):
                 "min_distance_area_boarder": self.min_distance_area_boarder}
 
     @staticmethod
-    def _target_area_from_dict(dict_) -> Union[Dot, Rectangle]:
+    def _target_area_from_dict(dict_) -> ShapeType:
         # helper function
         if dict_["target_area"] == "Dot":
             return Dot(xy=(0, 0), diameter=dict_["target_area_size"])

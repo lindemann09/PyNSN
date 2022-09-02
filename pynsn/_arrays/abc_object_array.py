@@ -22,6 +22,7 @@ from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
+from .._shapes import ShapeType
 from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
 from .properties import ArrayProperties
 from .tools import BrownianMotion
@@ -35,7 +36,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     """
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: ShapeType,
                  min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,
@@ -88,7 +89,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     @abstractmethod
     def iter_objects(self, indices: Optional[IntOVector] = None) \
-            -> Iterator[Union[Dot, Rectangle]]:
+            -> Iterator[ShapeType]:
         """iterate over all or a part of the objects
 
         Parameters
@@ -274,7 +275,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             fl.write(self.json(indent=indent, include_hash=include_hash))
 
     def get_objects(self, indices: Optional[Sequence[int]] = None) \
-            -> Sequence[Union[Dot, Rectangle]]:
+            -> Sequence[ShapeType]:
         """ """
         return list(self.iter_objects(indices=indices))
 
@@ -353,11 +354,11 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         return search_area, half_search_area_size
 
     def get_free_position(self,
-                          ref_object: Union[Dot, Rectangle],
+                          ref_object: ShapeType,
                           in_neighborhood: bool = False,
                           allow_overlapping: bool = False,
                           inside_convex_hull: bool = False,
-                          occupied_space=None) -> Union[Dot, Rectangle]:
+                          occupied_space=None) -> ShapeType:
         """returns the copy of object of at a random free position
 
         raise exception if not found

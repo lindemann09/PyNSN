@@ -7,7 +7,7 @@ import numpy as _np
 
 from . import _colour
 from .. import _arrays
-from .._shapes import Dot, PictureFile, Rectangle
+from .._shapes import Dot, Rectangle
 
 # helper for type checking and error raising error
 
@@ -134,10 +134,8 @@ class ABCArrayDraw(metaclass=ABCMeta):
 
             # draw objects
             for obj in object_array.iter_objects():
-                att = obj.get_attribute_object()
-                if isinstance(att, PictureFile):
-                    pass
-                elif isinstance(att, _colour.Colour):
+                att = obj.get_colour()
+                if isinstance(att, _colour.Colour):
                     obj.attribute = att
                 else:
                     # dot or rect: force colour, set default colour if no colour

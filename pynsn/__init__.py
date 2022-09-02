@@ -18,7 +18,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
 # pylint: disable=C0413
 from ._arrays import DotArray, RectangleArray, \
     ArrayProperties, load_array
-from ._shapes import Dot, Rectangle, PictureFile
+from ._shapes import Dot, Rectangle, Picture, ShapeType
 from ._factory import NSNFactory
 from .image._colour import Colour, ImageColours
 

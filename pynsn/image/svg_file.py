@@ -53,23 +53,24 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
     def draw_shape(image, shape, opacity, scaling_factor):
         """"""
         assert isinstance(image, _svg.Drawing)
-        shape.xy = _c2i_coord(_np.asarray(shape.xy),
-                              _np.array(svg_image_size(image))).tolist()
-        attr = shape.get_attribute_object()
-        if isinstance(attr, _shapes.PictureFile):
+        if isinstance(shape, _shapes.Picture):
             raise RuntimeError("Pictures are not supported for SVG file.")
+
+        shape.xy = _c2i_coord(shape.xy,
+                              _np.array(svg_image_size(image))).tolist()
+        col = shape.get_colour()
 
         if isinstance(shape, _shapes.Dot):
             image.add(image.circle(center=shape.xy,
                                    r=shape.diameter / 2,
                                    # stroke_width="0", stroke="black",
-                                   fill=attr.colour,
+                                   fill=col.colour,
                                    opacity=opacity))
         elif isinstance(shape, _shapes.Rectangle):
             size = (float(shape.width), float(shape.height))
             image.add(image.rect(insert=(shape.left, shape.bottom),
                                  size=size,
-                                 fill=attr.colour,
+                                 fill=col.colour,
                                  opacity=opacity))
         else:
             raise NotImplementedError(

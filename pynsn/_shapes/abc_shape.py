@@ -5,14 +5,18 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from abc import ABCMeta, abstractmethod
 from typing import Any, Union
 
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
+from numpy import bool_
 
 from .._lib.coordinate import Coordinate
 from ..image._colour import Colour
-from .picture_file import PictureFile
 
 
 class ABCShape(Coordinate, metaclass=ABCMeta):
+    """Handles polar and cartesian representation (optimised processing, i.e.,
+    conversions between coordinates systems will be done only once if needed)
+    """
+
     __slots__ = ("_attribute",)
 
     def __init__(self, xy: ArrayLike,
@@ -38,19 +42,15 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         """
         if isinstance(attr, Colour):
             self._attribute = attr.colour
-        elif isinstance(attr, PictureFile):
-            self._attribute = attr.attribute
         else:
             self._attribute = attr
 
-    def get_attribute_object(self) -> Union[Colour, PictureFile, None]:
+    def get_colour(self) -> Colour:
         """Class instance of the attribute, if possible
 
         Returns
         -------
-        rtn : attribute
-            If attribute represents Colour or PictureFile it returns the instance
-            of the respective class otherwise None
+        rtn : Colour
         """
 
         if isinstance(self._attribute, str):
@@ -58,11 +58,7 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
             col = Colour(self._attribute)
             if col.colour is not None:
                 return col
-            else:
-                if PictureFile.is_picture_attribute(self._attribute):
-                    return PictureFile(self._attribute)
-
-        return None
+        return Colour(None)
 
     @abstractmethod
     def __repr__(self) -> str:
@@ -88,11 +84,11 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
         """perimeter"""
 
     @abstractmethod
-    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[bool_, NDArray[bool_]]:
         """TODO boolean or NDArray[bool] indicating whether dots are fully inside
         the shape """
 
     @abstractmethod
-    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[bool_, NDArray[bool_]]:
         """TODO boolean or NDArray[bool] indicating whether dots are fully inside
         the shape """

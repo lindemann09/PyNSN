@@ -33,7 +33,7 @@ class DotArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: ShapeType,
                  min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,

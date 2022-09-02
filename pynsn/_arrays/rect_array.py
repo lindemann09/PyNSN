@@ -3,6 +3,8 @@ Rectangle Array
 """
 from __future__ import annotations
 
+from pynsn._shapes import ShapeType
+
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -31,7 +33,7 @@ class RectangleArray(ABCObjectArray):
     """
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: ShapeType,
                  min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None,
                  xy: OptArrayLike = None,

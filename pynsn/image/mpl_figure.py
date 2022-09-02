@@ -57,10 +57,10 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         pass
 
     @staticmethod
-    def draw_shape(img, shape, opacity, scaling_factor):
-        attr = shape.get_attribute_object()
+    def draw_shape(img, shape:_shapes.ShapeType, opacity, scaling_factor):
+        attr = shape.get_colour()
 
-        if isinstance(attr, _shapes.PictureFile):
+        if isinstance(shape, _shapes.Picture):
             raise RuntimeError(
                 "Pictures are not supported for matplotlib files.")
 

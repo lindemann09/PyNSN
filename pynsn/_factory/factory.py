@@ -10,6 +10,7 @@ from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
+from .._shapes import ShapeType
 from ..typing import NDArray, OptFloat
 from .distributions import Levels, PyNSNDistribution, _round_samples
 
@@ -61,7 +62,7 @@ def _make_distr(value: ParameterDistributionTypes) -> Union[PyNSNDistribution, N
 class NSNFactory(TargetArea):
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: ShapeType,
                  min_distance_between_objects: OptFloat = None,
                  min_distance_area_boarder: OptFloat = None):
         """
