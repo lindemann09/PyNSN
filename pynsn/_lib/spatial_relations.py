@@ -231,7 +231,8 @@ class RectangleDot(CoordinateCoordinate):
         """
         if self.__corners is None:
             self.__corners = geometry.corners(rect_xy=self.rect_xy,
-                                              rect_sizes=self.rect_sizes)
+                                              rect_sizes=self.rect_sizes,
+                                              lt_rb_only=False)
         return self.__corners
 
     def _get_corner_relations(self) -> NDArray:

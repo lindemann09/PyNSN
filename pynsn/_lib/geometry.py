@@ -82,7 +82,6 @@ def line_point_othogonal(p1_line, p2_line, p3, outside_segment_nan=False):
     dxy31 = np.atleast_2d(p3) - p1  # type: ignore
     a = np.sum(dxy21*dxy31, axis=1) / np.sum(dxy21**2, axis=1)
     cross_points = p1 + np.atleast_2d(a).T * dxy21
-
     if outside_segment_nan:
         # boolean array (n, 2=outside_x or y)
         outside = (np.maximum(p1_line, p2_line) < cross_points) |\
@@ -103,7 +102,7 @@ def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
     rect_xy = np.atleast_2d(rect_xy)
     rect_sizes2 = np.atleast_2d(rect_sizes) / 2
     right_top = rect_xy + rect_sizes2
-    left_button = rect_xy + rect_sizes2
+    left_button = rect_xy - rect_sizes2
 
     if lt_rb_only:
         rtn = np.empty((rect_xy.shape[0], 2, 2))
