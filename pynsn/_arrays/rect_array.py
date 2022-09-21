@@ -2,6 +2,15 @@
 Rectangle Array
 """
 from __future__ import annotations
+from .tools import make_csv
+from .abc_object_array import ABCObjectArray
+from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
+from .._shapes.rectangle import Rectangle
+from .._shapes.dot import Dot
+from .._lib.spatial_relations import RectangleRectangle
+from .._lib.coordinate import Coordinate
+from .._lib import np_tools
+import numpy as np
 
 from pynsn._shapes import ShapeType
 
@@ -10,17 +19,6 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
 from typing import Any, Iterator, Optional, Sequence, Union
-
-import numpy as np
-
-from .._lib import np_tools
-from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleRectangle
-from .._shapes.dot import Dot
-from .._shapes.rectangle import Rectangle
-from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
-from .abc_object_array import ABCObjectArray
-from .tools import make_csv
 
 # pylint: disable=W0237:arguments-renamed
 
@@ -115,11 +113,10 @@ class RectangleArray(ABCObjectArray):
         self._sizes = np_tools.round2(self._sizes, decimals=decimals,
                                       int_type=int_type)
 
-    def to_dict(self, omit_objects: bool = False) -> dict:
+    def to_dict(self) -> dict:
         # inherited doc
-        d = super().to_dict(omit_objects=omit_objects)
-        if not omit_objects:
-            d.update({"sizes": self._sizes.tolist()})
+        d = super().to_dict()
+        d.update({"sizes": self._sizes.tolist()})
         return d
 
     @staticmethod
@@ -136,6 +133,22 @@ class RectangleArray(ABCObjectArray):
             raise RuntimeError("Badly shaped data: size data have not " +
                                "the same length as the coordinates")
         return rtn
+
+    def dataframe_dict(self, hash_column: bool = False,
+                       attribute_column: bool = True) -> dict:
+        # inherited doc
+
+        if hash_column:
+            d = {"hash": [self.hash] * len(self._xy)}
+        else:
+            d = {}
+        d.update({"x": self._xy[:, 0].tolist(),
+                  "y": self._xy[:, 1].tolist(),
+                  "width": self._sizes[:, 0].tolist(),
+                  "height": self._sizes[:, 1].tolist()})
+        if attribute_column:
+            d.update({"attributes": self._attributes.tolist()})
+        return d
 
     def clear(self) -> None:
         super().clear()

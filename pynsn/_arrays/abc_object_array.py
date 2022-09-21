@@ -65,17 +65,30 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """Vector with the perimeter of all objects"""
 
     @abstractmethod
-    def to_dict(self, omit_objects: bool = False) -> dict:
-        """Convert array tp dictionary
+    def to_dict(self) -> dict:
+        """Convert array to dictionary
         """
         d = super().to_dict()
-        if not omit_objects:
-            d.update({"xy": self._xy.tolist()})
-            if len(self._attributes) > 0 and np_tools.is_all_equal(self._attributes):
+        d.update({"xy": self._xy.tolist()})
+        if len(self._attributes) > 0:
+            att = self._attributes.flatten()
+            if np.all(att == att[0]):  # all equal
                 d.update({"attributes": self._attributes[0]})
             else:
                 d.update({"attributes": self._attributes.tolist()})
         return d
+
+    @abstractmethod
+    def dataframe_dict(self):
+        """Returns dict that can be used to create Pandas dataframe or Arrow Table
+
+        Examples
+        --------
+        >>> df_dict = stimulus.dataframe_dict()
+        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
+
+        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
+        """
 
     @staticmethod
     @abstractmethod
@@ -88,7 +101,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """ """
 
     @abstractmethod
-    def iter_objects(self, indices: Optional[IntOVector] = None) \
+    def iter_objects(self, indices: Optional[Sequence[int]] = None) \
             -> Iterator[ShapeType]:
         """iterate over all or a part of the objects
 
@@ -141,7 +154,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
 
     def __str__(self) -> str:
-        d = self.to_dict(omit_objects=True)
+        d = TargetArea(self).to_dict()  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
         return dict_to_text(d, col_a=30, col_b=7) + "\n " + prop[1:]
 
@@ -255,26 +268,22 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         m.update(self.attributes.tobytes())
         return m.hexdigest()
 
-    def json(self, indent: Optional[int] = None,
-             include_hash: bool = False) -> str:
+    def to_json(self, file_path: Optional[str] = None,
+                indent: Optional[int] = None,
+                include_hash: bool = False) -> Union[str, None]:
         """ """
-        # override and extend to_dict not this function
 
         d = self.to_dict()
         if include_hash:
             d.update({"hash": self.hash})
-        if not indent:
-            indent = None
-        return json.dumps(d, indent=indent)
+        j = json.dumps(d, indent=indent)
+        if file_path is None:
+            return j
+        else:
+            with open(file_path, 'w', encoding="utf-8") as fl:
+                fl.write(j)
 
-    def save(self, json_file_name: str,
-             indent: Optional[int] = None,
-             include_hash: bool = False) -> None:
-        """ """
-        with open(json_file_name, 'w', encoding="utf-8") as fl:
-            fl.write(self.json(indent=indent, include_hash=include_hash))
-
-    def get_objects(self, indices: Optional[Sequence[int]] = None) \
+    def get_objects(self, indices: Optional[Sequence[np.int_]] = None) \
             -> Sequence[ShapeType]:
         """ """
         return list(self.iter_objects(indices=indices))

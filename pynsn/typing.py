@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Sequence
 
 from numpy import float_, int_, str_
 from numpy.typing import ArrayLike, NDArray
@@ -8,6 +8,6 @@ OptInt = Optional[int]
 OptStr = Optional[str]
 OptFloat = Optional[float]
 
-IntOVector = Union[int, List[int], NDArray[int_]]
-StrOVector = Union[str, List[str], NDArray[str_]]
-FloatOVector = Union[float, List[float], NDArray[float_]]
+IntOVector = Union[int, List[int], Sequence[int_], NDArray[int_]]
+StrOVector = Union[str, List[str], Sequence[str_], NDArray[str_]]
+FloatOVector = Union[float, List[float], Sequence[float_], NDArray[float_]]

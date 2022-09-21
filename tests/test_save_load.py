@@ -52,11 +52,11 @@ class SaveLoad(TestArrays):
 
     def test_save_load_json(self):
         flname = self.make_path("dots.json")
-        self.dot_stim.save(flname)
+        self.dot_stim.to_json(flname)
         new_dots = pynsn.load_array(flname)
 
         flname = self.make_path("rects.json")
-        self.rect_stim.save(flname)
+        self.rect_stim.to_json(flname)
         new_rects = pynsn.load_array(flname)
 
         for flag in [pynsn.flags.TOTAL_PERIMETER,

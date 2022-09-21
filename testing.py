@@ -1,5 +1,8 @@
 """_summary_"""
 
+from pyarrow import feather
+import pyarrow
+import pandas
 import time
 from matplotlib import pyplot as pp
 import numpy as np
@@ -35,7 +38,7 @@ factory.set_appearance_dots(diameter=(20, 30, 40),
                             attributes=distr.Levels(["blue", "green"],
                                                     exact_weighting=True))
 
-factory.set_appearance_rectangles(width=(20, 30, 40), proportion=1,
+factory.set_appearance_rectangles(width=(21, 30, 40), proportion=1,
                                   attributes=distr.Levels(["blue", "green"],
                                                           exact_weighting=True))
 
@@ -45,6 +48,13 @@ stimulus = factory.random_rectangle_array(n_objects=20)
 # assert isinstance(stimulus, nsn.RectangleArray)
 # nsn.scale.log_size(stimulus, 1.2)
 # print(time.time()-start)
+
+df = pyarrow.Table.from_pydict(stimulus.dataframe_dict())
+print(df)
+
+feather.write_feather(df, "/tmp/demo4.arrow")  # save arrow table
+# df.to_feather("/tmp/demo3.arrow")
+
 
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")

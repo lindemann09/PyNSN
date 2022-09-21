@@ -54,12 +54,6 @@ def round2(arr: NDArray, decimals: int,
         return arr
 
 
-def is_all_equal(vector: ArrayLike) -> np.bool_:
-    # returns true if all elements are equal
-    a = np.asarray(vector).flatten()
-    return np.all(np.equal(a, a[0]))
-
-
 def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     """helper function
     upper triangular but nan instead of zeros (as in numpy's original function,

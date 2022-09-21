@@ -95,13 +95,23 @@ class DotArray(ABCObjectArray):
         self._diameter = np_tools.round2(self._diameter, decimals=decimals,
                                          int_type=int_type)
 
-    def to_dict(self, omit_objects: bool = False) -> dict:
-        """
+    def to_dict(self) -> dict:
+        d = super().to_dict()
+        d.update({"diameter": self._diameter.tolist()})
+        return d
 
-        """
-        d = super().to_dict(omit_objects=omit_objects)
-        if not omit_objects:
-            d.update({"diameter": self._diameter.tolist()})
+    def dataframe_dict(self, hash_column: bool = False,
+                       attribute_column: bool = True) -> dict:
+        # inherited doc
+        if hash_column:
+            d = {"hash": [self.hash] * len(self._xy)}
+        else:
+            d = {}
+        d.update({"x": self._xy[:, 0].tolist(),
+                  "y": self._xy[:, 1].tolist(),
+                  "diameter": self._diameter.tolist()})
+        if attribute_column:
+            d.update({"attributes": self._attributes.tolist()})
         return d
 
     @staticmethod
