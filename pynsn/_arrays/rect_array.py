@@ -209,7 +209,7 @@ class RectangleArray(ABCObjectArray):
                                      a_sizes=self._sizes,
                                      b_xy=rect.xy,
                                      b_sizes=rect.size)
-            return rel.distances()
+            return rel.xy_distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Rectangle]:
         """iterate over all or a part of the objects

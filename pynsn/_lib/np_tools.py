@@ -1,7 +1,6 @@
-import warnings
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Iterable, List
+from typing import Iterable, List, Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -62,19 +61,15 @@ def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     return m + np.tril(np.full(m.shape, np.nan), k=k-1)
 
 
-def index_minmum_rowwise(array2d: NDArray) -> NDArray:
-    """returns array the indices (row, column) of the minimum cell in each row.
-    If more than one cell in a row contains the minimum, select randomly one
+def find_value_rowwise(array2d: NDArray, values: Any) -> NDArray:
+    """returns array the indices (row, column) with that value in each row.
+    If more than one cell in a row contains the value, select randomly one
 
     function ignores NaNs
     """
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', r'All-NaN slice encountered')
-        min_value = np.atleast_2d(np.nanmin(array2d, axis=1)).T
-
     # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
-    idx_minimum = np.vstack(np.nonzero(array2d == min_value)).T
+    idx_minimum = np.vstack(np.nonzero(array2d == values)).T
     # Problem: one row could have min values
     #   --> choose randomly one
     np.random.shuffle(idx_minimum)  # shuffle rows

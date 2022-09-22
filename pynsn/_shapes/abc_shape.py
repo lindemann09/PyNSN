@@ -64,14 +64,14 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
     def __repr__(self) -> str:
         """"""
 
-    @abstractmethod
-    def distance(self, other: ABCShape) -> float:
-        """Euclidean distance to another shapes
-
-        Notes:
-            Negative distances indicate an overlap and represent minimum distance
-            between outer shape boarders
-        """
+#    @abstractmethod
+#    def spatial_relation(self, other: ABCShape) -> float:
+#        """Spatial Relation to another object
+#
+#        Notes:
+#            Negative distances indicate an overlap and represent minimum distance
+#            between outer shape boarders
+#        """
 
     @property
     @abstractmethod
@@ -82,13 +82,3 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
     @abstractmethod
     def perimeter(self) -> float:
         """perimeter"""
-
-    @abstractmethod
-    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[bool_, NDArray[bool_]]:
-        """TODO boolean or NDArray[bool] indicating whether dots are fully inside
-        the shape """
-
-    @abstractmethod
-    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[bool_, NDArray[bool_]]:
-        """TODO boolean or NDArray[bool] indicating whether dots are fully inside
-        the shape """

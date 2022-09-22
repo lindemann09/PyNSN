@@ -18,21 +18,11 @@ from pynsn._lib import geometry, spatial_relations, np_tools
 seed = 921
 nsn.init_random_generator(seed)
 
-my_colours = nsn.ImageColours(  # target_area="#EEEEEE",
-    background="",
-    opacity_object=0.9,
-    default_object_colour="darkmagenta",
-    # field_area_positions="magenta",
-    # field_area="gray",
-    # center_of_positions="red",
-    # center_of_mass="magenta"
-)
-
 
 factory = nsn.NSNFactory(min_distance_between_objects=2,
                          # target_area=pynsn.Rectangle(size=(200, 400)),
                          target_area=pynsn.Dot(diameter=400),
-                         min_distance_area_boarder=2)
+                         min_distance_area_boarder=0)
 
 factory.set_appearance_dots(diameter=(20, 30, 40),
                             attributes=distr.Levels(["blue", "green"],
@@ -49,11 +39,18 @@ stimulus = factory.random_rectangle_array(n_objects=20)
 # nsn.scale.log_size(stimulus, 1.2)
 # print(time.time()-start)
 
-df = pyarrow.Table.from_pydict(stimulus.dataframe_dict())
-print(df)
 
-feather.write_feather(df, "/tmp/demo4.arrow")  # save arrow table
-# df.to_feather("/tmp/demo3.arrow")
+# make image
+
+my_colours = pil_image.ImageColours(  # target_area="#EEEEEE",
+    background="",
+    opacity_object=0.9,
+    default_object_colour="darkmagenta",
+    # field_area_positions="magenta",
+    # field_area="gray",
+    # center_of_positions="red",
+    # center_of_mass="magenta"
+)
 
 
 img = pil_image.create(stimulus, my_colours)
@@ -66,9 +63,11 @@ img.save("demo.png")
 
 stimulus.properties.fit_field_area(99000)
 # print(stimulus)
-# stimulus.mod_squeeze_to_area()  # FIXME squeed too much, because incorrect distance calulations
 
 idx = stimulus.get_outlier()
+print(idx)
+# FIXME squeed too much, because incorrect distance calulations
+stimulus.mod_squeeze_to_area()
 
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")

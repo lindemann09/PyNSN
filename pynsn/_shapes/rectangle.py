@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
 from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleRectangle
+from .._lib.spatial_relations import RectangleRectangle, RectangleDot
 from .abc_shape import ABCShape
 
 # TODO doc "basic properities" is all classes (like width)
@@ -62,21 +62,25 @@ class Rectangle(ABCShape):
         # inherited doc
         if isinstance(other, _shapes.Dot):
             dist = self.distance(Coordinate(xy=other.xy))
-            return dist - other.diameter / 2.0
+            rel = RectangleDot(rect_xy=self._xy,
+                               rect_sizes=self._size,
+                               dot_xy=np.atleast_2d(other.xy),
+                               dot_diameter=np.atleast_1d(other.diameter))
+            return rel.spatial_relations(_min=True)[0, 0]/2
 
         elif isinstance(other, _shapes.Rectangle):
             rel = RectangleRectangle(a_xy=self._xy,
                                      a_sizes=self._size,
                                      b_xy=other.xy,
                                      b_sizes=other.size)
-            return rel.distances()[0]
+            return rel.xy_distances()[0]
 
         elif other.__class__ == Coordinate:
             rel = RectangleRectangle(a_xy=self._xy,
                                      a_sizes=self._size,
                                      b_xy=other.xy,
                                      b_sizes=np.zeros(2))
-            return rel.distances()[0]
+            return rel.xy_distances()[0]
 
         raise NotImplementedError(f"distance to {type(other)} "
                                   + "is implemented.")
@@ -168,41 +172,3 @@ class Rectangle(ABCShape):
                 return False
             else:
                 return True
-
-    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
-        # inherited doc
-        # FIXME not tested
-
-        xy = np.atleast_2d(xy)
-        rect_sizes2 = np.atleast_2d(sizes)/2
-
-        # true if inside on this dimension
-        compare_lb_rt = np.empty(shape=(xy.shape[0], 4))
-        compare_lb_rt[:, (0, 1)] = xy - rect_sizes2 \
-            > np.atleast_2d(self.xy - self.size / 2)
-        compare_lb_rt[:, (2, 3)] = xy + rect_sizes2 \
-            > np.atleast_2d(self.xy + self.size / 2)
-
-        if compare_lb_rt.shape[0] > 1:
-            return np.all(compare_lb_rt, axis=1)
-        else:
-            return np.all(compare_lb_rt)
-
-    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
-        # inherited doc
-        # FIXME not tested
-
-        xy = np.atleast_2d(xy)
-        radius = np.atleast_2d(diameters/2)
-        # if true if dot inside rect on this dimension
-        compare_lb_rt = np.empty(shape=(xy.shape[0], 4))
-        # type: ignore
-        compare_lb_rt[:, (0, 1)] = xy - \
-            radius.T > np.atleast_2d(self.xy - self.size / 2)
-        compare_lb_rt[:, (2, 3)] = xy + \
-            radius.T > np.atleast_2d(self.xy + self.size / 2)
-
-        if compare_lb_rt.shape[0] > 1:
-            return np.all(compare_lb_rt, axis=1)
-        else:
-            return np.all(compare_lb_rt)

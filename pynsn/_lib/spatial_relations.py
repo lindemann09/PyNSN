@@ -2,14 +2,36 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from abc import ABCMeta, abstractmethod
+
 from typing import Union
 import numpy as np
 from numpy.typing import NDArray
+import warnings
 
-from .np_tools import as_vector, index_minmum_rowwise
+from .np_tools import as_vector, find_value_rowwise
 from .geometry import polar2cartesian
 from .._lib import geometry
 # all init-functions require 2D arrays
+
+
+class ABCSpatialRelations(metaclass=ABCMeta):
+
+    @abstractmethod
+    def overlaps(self):
+        """True is objects overlap"""
+
+    @abstractmethod
+    def is_inside(self):
+        """True is objects are inside"""
+
+    @abstractmethod
+    def spatial_relations(self):
+        """Distances and angles between objects"""
+
+    @abstractmethod
+    def required_displacements(self):
+        """Distances and angles between objects"""
 
 
 class CoordinateCoordinate(object):
@@ -34,11 +56,9 @@ class DotDot(CoordinateCoordinate):
     def __init__(self, a_xy: NDArray, a_diameter: NDArray,
                  b_xy: NDArray, b_diameter: NDArray) -> None:
 
-        assert a_xy.shape[0] == a_diameter.shape[0] and \
-            b_xy.shape[0] == b_diameter.shape[0]
-
         super().__init__(a_xy=a_xy, b_xy=b_xy)
         self._radii_sum = (as_vector(a_diameter) + as_vector(b_diameter)) / 2
+        assert self._xy_diff.shape[0] == self._radii_sum.shape[0]
 
     def distances(self) -> NDArray:
         """Euclidean distances between dots (a and b)"""
@@ -124,7 +144,7 @@ class RectangleRectangle(CoordinateCoordinate):
         else:
             return np.all(comp)
 
-    def distances(self) -> NDArray:
+    def xy_distances(self) -> NDArray:
         """Shortest distance between rectangles
 
         Note: does not return negative distances for overlap. Overlap-> dist=0
@@ -197,9 +217,6 @@ class RectangleDot(CoordinateCoordinate):
     def __init__(self, rect_xy: NDArray, rect_sizes: NDArray,
                  dot_xy: NDArray, dot_diameter: NDArray) -> None:
 
-        assert rect_xy.shape == rect_xy.shape and \
-            dot_xy.shape[0] == dot_diameter.shape[0]
-
         if rect_xy.ndim == 2 and dot_xy.ndim == 2:
             self.rect_xy = rect_xy
             self.rect_sizes = rect_sizes
@@ -219,6 +236,9 @@ class RectangleDot(CoordinateCoordinate):
 
         self._dot_radii = as_vector(dot_diameter) / 2
 
+        assert self.rect_xy.shape == self.dot_xy.shape and \
+            self.dot_xy.shape[0] == self._dot_radii.shape[0]
+
         self.__corners = None
         self._spatial_relations = None
 
@@ -235,8 +255,8 @@ class RectangleDot(CoordinateCoordinate):
                                               lt_rb_only=False)
         return self.__corners
 
-    def _get_corner_relations(self) -> NDArray:
-        """Euclidean distance and angle of nearest corner and dot centers
+    def corner_relations(self, nearest_corners: bool = True) -> NDArray:
+        """Euclidean distance and angle of nearest or farthest corners and dot centers
         shape=(n, 2)
         """
 
@@ -247,19 +267,25 @@ class RectangleDot(CoordinateCoordinate):
         # find nearest corner per rect dist.shape=(n, 4)
         # Problem: one rect could have multiple corners with min distance
         #   --> choose randomly just one near corner of each rect
-        idx_nc = index_minmum_rowwise(distances)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', 'All-NaN slice encountered')
+            if nearest_corners:
+                values = np.nanmin(distances, axis=1)
+            else:
+                values = np.nanmax(distances, axis=1)
 
+        idx_nc = find_value_rowwise(distances,
+                                    np.atleast_2d(values).T)
         # spatial relations and nearest corners
         # return array contains only one nearest corner per rect (n, 2=parameter)
         distances = distances[idx_nc[:, 0], idx_nc[:, 1]] - self._dot_radii
         directions = np.arctan2(
             xy_dist[idx_nc[:, 0], 1, idx_nc[:, 1]],
             xy_dist[idx_nc[:, 0], 0, idx_nc[:, 1]])
-
         return np.array([distances, directions]).T
 
-    def _get_edge_cardinal_relations(self) -> NDArray:
-        """orthogonal spatial relations between nearest edge and dot center
+    def edge_cardinal_relations(self, nearest_edges: bool = True) -> NDArray:
+        """Cardinal spatial relations between nearest or farthest edges and dot center
 
         returns NaN if no edge is cardinal relation to dot center
         """
@@ -285,21 +311,27 @@ class RectangleDot(CoordinateCoordinate):
         ecp_xy_diff = ecp - np.atleast_3d(self.dot_xy)  # type: ignore
         distances = np.hypot(ecp_xy_diff[:, 0, :],
                              ecp_xy_diff[:, 1, :])
-        # find nearest edge (n, 2=[rect_idx, edge_idx])
-        idx_ne = index_minmum_rowwise(distances)
+        # find nearest or farthest edge (n, 2=[rect_idx, edge_idx])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', 'All-NaN slice encountered')
+            if nearest_edges:
+                values = np.nanmin(distances, axis=1)
+            else:
+                values = np.nanmax(distances, axis=1)
+        idx_e = find_value_rowwise(distances, values)
         # return array contains nearest edge per rect (n, 2=parameter)
         edge_rel = np.full(self.rect_xy.shape, np.nan)
         # distances
-        edge_rel[idx_ne[:, 0], 0] = distances[idx_ne[:, 0],
-                                              idx_ne[:, 1]] - self._dot_radii
+        edge_rel[idx_e[:, 0], 0] = distances[idx_e[:, 0],
+                                             idx_e[:, 1]] - self._dot_radii
         # directions
-        edge_rel[idx_ne[:, 0], 1] = np.arctan2(
-            ecp_xy_diff[idx_ne[:, 0], 1, idx_ne[:, 1]],
-            ecp_xy_diff[idx_ne[:, 0], 0, idx_ne[:, 1]])
+        edge_rel[idx_e[:, 0], 1] = np.arctan2(
+            ecp_xy_diff[idx_e[:, 0], 1, idx_e[:, 1]],
+            ecp_xy_diff[idx_e[:, 0], 0, idx_e[:, 1]])
 
         return edge_rel
 
-    def spatial_relations(self) -> NDArray:
+    def spatial_relations(self, _min: bool = False) -> NDArray:
         """spatial relation between rectangles and dots.
 
         returns distance long the line of the spatial relation
@@ -307,8 +339,8 @@ class RectangleDot(CoordinateCoordinate):
         """
         if self._spatial_relations is None:
             # find closer cardinal edge relation
-            corner_rel = self._get_corner_relations()
-            edge_rel = self._get_edge_cardinal_relations()
+            corner_rel = self.corner_relations(nearest_corners=_min)
+            edge_rel = self.edge_cardinal_relations()
             idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
 
             # spat rel shape =(n, 2=parameter)
@@ -318,11 +350,8 @@ class RectangleDot(CoordinateCoordinate):
 
         return self._spatial_relations
 
-    def distances(self) -> NDArray:
-        return self.spatial_relations()[:, 0]
-
     def overlaps(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
-        """check if rectangles overlap with dots"""
+        """Check if rectangles overlap with dots"""
         comp = self.spatial_relations()[:, 0] < minimum_distance
         if comp.shape[0] > 1:
             return comp

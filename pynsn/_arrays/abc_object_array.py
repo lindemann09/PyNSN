@@ -31,6 +31,18 @@ from .tools import BrownianMotion
 IntOVector = Union[int, List[int], Sequence[np.int_], NDArray[np.int_]]
 
 
+class NPCoordinates():
+    """Numpy Coordinates"""
+
+    def __init__(self, xy: Optional[ArrayLike] = None) -> None:
+        self.xy = np.empty((0, 2))
+        if xy is not None:
+            self.append(xy=xy)
+
+    def append(self, xy: ArrayLike) -> None:
+        self.xy = np.append(self.xy, np.atleast_2d(xy), axis=0)
+
+
 class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     """Abstract array class
 
@@ -157,7 +169,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
 
     def __str__(self) -> str:
-        d = TargetArea(self).to_dict()  # super: omit objects
+        d = TargetArea.to_dict(self)  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
         return dict_to_text(d, col_a=30, col_b=7) + "\n " + prop[1:]
 
@@ -182,7 +194,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Args:
             attributes: attribute (string) or list of attributes
         """
-        if isinstance(attributes, (list, tuple)):
+        if isinstance(attributes, (np.ndarray, list, tuple)):
             if len(attributes) != self._properties.numerosity:
                 raise ValueError("Length of attribute list does not adapt the " +
                                  "size of the dot array.")
@@ -191,23 +203,28 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             self._attributes = np.array(
                 [attributes] * self._properties.numerosity)
 
+    def _set_missing_attributes(self, attributes: Optional[ArrayLike]):
+        """appends attributes. If no list or np.array set all missing attributes
+        """
+        n_missing_attributes = self._xy.shape[0] - self._attributes.shape[0]
+        if not isinstance(attributes, (np.ndarray, tuple, list)):
+            attributes = np.array([attributes] * n_missing_attributes)
+        elif len(attributes) != n_missing_attributes:
+            raise RuntimeError("Badly shaped data: attributes have not " +
+                               "the same length as the xy coordinates")
+
+        self._attributes = np.append(self._attributes, attributes)
+
     def _append_xy_attribute(self, xy: ArrayLike,
                              attributes: Optional[ArrayLike] = None) -> int:
         """returns number of added rows"""
         xy = np.atleast_2d(xy)
-        if not isinstance(attributes, (tuple, list)):
-            attributes = np.array([attributes] * xy.shape[0])
-
-        if len(attributes) != xy.shape[0]:
-            raise RuntimeError("Badly shaped data: attributes have not " +
-                               "the same length as the coordinates")
-
-        self._attributes = np.append(self._attributes, attributes)
         if len(self._xy) == 0:
             # ensure good shape of self.xy
             self._xy = np.append(np.empty((0, 2)), xy, axis=0)
         else:
             self._xy = np.append(self._xy, xy, axis=0)
+        self._set_missing_attributes(attributes)
         self._properties.reset()
         return xy.shape[0]
 
@@ -634,6 +651,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 obj = self.get_object(index=object_id)
                 if isinstance(self.target_area, Dot):
                     mv_dist = obj.distance(self.target_area)  # type: ignore
+                    print(mv_dist)
                     self.mod_move_object(object_id,
                                          distance=abs(mv_dist),
                                          direction=(0, 0),

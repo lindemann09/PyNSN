@@ -43,29 +43,6 @@ class Dot(ABCShape):
     def diameter(self, value: float) -> None:
         self._diameter = value
 
-    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
-        # inherited doc
-
-        if isinstance(other, _shapes.Dot):
-            rel = DotDot(a_xy=self._xy,  # dist-functions required 2D data
-                         a_diameter=np.array([self._diameter]),
-                         b_xy=other.xy,
-                         b_diameter=np.array([other.diameter]))
-            return rel.distances()[0]
-
-        elif isinstance(other, _shapes.Rectangle):
-            return other.distance(self)
-
-        elif other.__class__ == Coordinate:
-            rel = DotDot(a_xy=self._xy,
-                         a_diameter=np.array([self._diameter]),
-                         b_xy=other.xy,
-                         b_diameter=np.zeros(1))
-            return rel.distances()[0]
-
-        raise NotImplementedError(f"distance to {type(other)} "
-                                  + "is implemented.")
-
     @property
     def area(self) -> float:
         return np.pi * (self._diameter ** 2) / 4.0
@@ -93,26 +70,25 @@ class Dot(ABCShape):
             else:
                 return True
 
-    def rectangles_inside(self, xy: NDArray, sizes: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
+    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
         # inherited doc
-        # FIXME not tested
-        # [[left, top], [right, botton]]
-        corners = geometry.corners(rect_xy=xy, rect_sizes=sizes)
-        xy_dist = corners - np.atleast_3d(self.xy)  # type: ignore
-        distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
-        comp = distances < self.diameter/2
-        if comp.shape[0] > 1:
-            return np.all(comp, axis=1)
-        else:
-            return np.all(comp)
 
-    def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
-        # inherited doc
-        # FIXME not tested
-        xy_diff = np.atleast_2d(xy) - np.atleast_2d(self.xy)  # type: ignore
-        comp = np.hypot(xy_diff[:, 0], xy_diff[:, 1]) < \
-            (diameters - self.diameter)/2
-        if comp.shape[0] > 1:
-            return np.all(comp, axis=1)
-        else:
-            return np.all(comp)
+        if isinstance(other, _shapes.Dot):
+            rel = DotDot(a_xy=self._xy,  # dist-functions required 2D data
+                         a_diameter=np.array([self._diameter]),
+                         b_xy=other.xy,
+                         b_diameter=np.array([other.diameter]))
+            return rel.distances()[0]
+
+        elif isinstance(other, _shapes.Rectangle):
+            return other.distance(self)
+
+        elif other.__class__ == Coordinate:
+            rel = DotDot(a_xy=self._xy,
+                         a_diameter=np.array([self._diameter]),
+                         b_xy=other.xy,
+                         b_diameter=np.zeros(1))
+            return rel.distances()[0]
+
+        raise NotImplementedError(f"distance to {type(other)} "
+                                  + "is implemented.")
