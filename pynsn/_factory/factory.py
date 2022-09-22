@@ -1,7 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import copy, deepcopy
-from typing import Any, Iterator, Optional, Sequence, Union
+from typing import Iterator, Optional, Sequence, Union
 
 from .._arrays.dot_array import DotArray
 from .._arrays.rect_array import RectangleArray
@@ -11,37 +11,10 @@ from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from .._shapes import ShapeType
-from ..typing import NDArray, OptFloat
-from .distributions import Levels, PyNSNDistribution, _round_samples
+from .distributions import Levels, PyNSNDistribution, _Constant, ParameterDistributionType
 
 
-ParameterDistributionTypes = Union[PyNSNDistribution,
-                                   float, int, Sequence[Any], None]
-
-
-class _Constant(PyNSNDistribution):
-
-    def __init__(self, value: float) -> None:
-        """Helper class to "sample" constance.
-
-        Looks like a PyNSNDistribution, but sample returns just the constant
-
-        Parameter:
-        ----------
-        constant : numeric
-        """
-
-        super().__init__(min_max=(value, value))
-
-    def sample(self, n, round_to_decimals=None) -> NDArray:
-        return _round_samples([self.min_max[0]] * n, round_to_decimals)
-
-    def to_dict(self) -> dict:
-        return {"distribution": "Constant",
-                "value": self.min_max[0]}
-
-
-def _make_distr(value: ParameterDistributionTypes) -> Union[PyNSNDistribution, None]:
+def _make_distr(value: ParameterDistributionType) -> Union[PyNSNDistribution, None]:
     """helper
     returns a distribution or None, if None
     """
@@ -63,8 +36,8 @@ class NSNFactory(TargetArea):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat = None):
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None):
         """
 
         Parameters
@@ -116,7 +89,7 @@ class NSNFactory(TargetArea):
         return self._distr_dot_attributes
 
     def set_appearance_dots(self,
-                            diameter: ParameterDistributionTypes,
+                            diameter: ParameterDistributionType,
                             attributes=None):
         """Set distributions of the parameter for random dot arrays
 
@@ -128,10 +101,10 @@ class NSNFactory(TargetArea):
         self._distr_dot_attributes = _make_distr(attributes)
 
     def set_appearance_rectangles(self,
-                                  width: ParameterDistributionTypes = None,
-                                  height: ParameterDistributionTypes = None,
-                                  proportion: ParameterDistributionTypes = None,
-                                  attributes: ParameterDistributionTypes = None):
+                                  width: ParameterDistributionType = None,
+                                  height: ParameterDistributionType = None,
+                                  proportion: ParameterDistributionType = None,
+                                  attributes: ParameterDistributionType = None):
         """Set distributions of the parameter for random rectangle arrays
 
         Args:

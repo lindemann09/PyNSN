@@ -2,23 +2,23 @@
 Rectangle Array
 """
 from __future__ import annotations
-from .tools import make_csv
-from .abc_object_array import ABCObjectArray
-from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
-from .._shapes.rectangle import Rectangle
-from .._shapes.dot import Dot
-from .._lib.spatial_relations import RectangleRectangle
-from .._lib.coordinate import Coordinate
-from .._lib import np_tools
-import numpy as np
-
-from pynsn._shapes import ShapeType
-
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
 from typing import Any, Iterator, Optional, Sequence, Union
+
+import numpy as np
+from numpy.typing import NDArray, ArrayLike
+
+from pynsn._shapes import ShapeType
+
+from .._lib import np_tools
+from .._lib.coordinate import Coordinate
+from .._lib.spatial_relations import RectangleRectangle
+from .._shapes.rectangle import Rectangle
+from .abc_object_array import ABCObjectArray, IntOVector
+from .tools import make_csv
 
 # pylint: disable=W0237:arguments-renamed
 
@@ -32,11 +32,11 @@ class RectangleArray(ABCObjectArray):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat = None,
-                 xy: OptArrayLike = None,
-                 sizes: OptArrayLike = None,
-                 attributes: OptArrayLike = None) -> None:
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None,
+                 xy: Optional[ArrayLike] = None,
+                 sizes: Optional[ArrayLike] = None,
+                 attributes: Optional[ArrayLike] = None) -> None:
         """Rectangular array is restricted to a certain area, it has a target area
         and a minimum gap.
 
@@ -137,7 +137,6 @@ class RectangleArray(ABCObjectArray):
     def dataframe_dict(self, hash_column: bool = False,
                        attribute_column: bool = True) -> dict:
         # inherited doc
-
         if hash_column:
             d = {"hash": [self.hash] * len(self._xy)}
         else:

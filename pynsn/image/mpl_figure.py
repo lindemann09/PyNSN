@@ -9,11 +9,11 @@ from matplotlib.figure import Figure as _Figure
 from .. import _arrays
 from .. import _shapes
 from . import _array_draw
-from . import _colour
+from ._image_colours import ImageColours
 
 
 def create(object_array: _arrays.ObjectArrayType,
-           colours: Optional[_colour.ImageColours] = None,
+           colours: Optional[ImageColours] = None,
            dpi: float = 100) -> _Figure:
     """Matplotlib figure
 
@@ -57,7 +57,7 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         pass
 
     @staticmethod
-    def draw_shape(img, shape:_shapes.ShapeType, opacity, scaling_factor):
+    def draw_shape(img, shape: _shapes.ShapeType, opacity, scaling_factor):
         attr = shape.get_colour()
 
         if isinstance(shape, _shapes.Picture):

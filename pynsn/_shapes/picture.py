@@ -1,12 +1,10 @@
 from __future__ import annotations
-from zlib import DEF_BUF_SIZE
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from os import path
-from typing import Any, Iterator, Union
 
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 
 from .rectangle import Rectangle
 
@@ -17,7 +15,7 @@ class Picture(Rectangle):
     def __init__(self,
                  xy: ArrayLike = (0, 0),
                  size: ArrayLike = (0, 0),
-                 filename: str = ""):
+                 filename: str = "") -> None:
         """Initialize a Picture
 
         Rectangle can also consist of a picture
@@ -31,15 +29,14 @@ class Picture(Rectangle):
         attribute : attribute (string) or PictureFile
         """
 
-
         super().__init__(xy=xy, size=size,
                          attribute=Picture.ATTR_PREFIX + filename)
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         return self.attribute[len(Picture.ATTR_PREFIX):]
 
-    def check_file_exists(self):
+    def check_file_exists(self) -> bool:
         """Checks if the file exists
         """
         return path.isfile(self.filename)
@@ -52,5 +49,4 @@ class Picture(Rectangle):
             txt: string to be checked
         """
         return isinstance(txt, str) and \
-                txt.startswith(Picture.ATTR_PREFIX)
-
+            txt.startswith(Picture.ATTR_PREFIX)

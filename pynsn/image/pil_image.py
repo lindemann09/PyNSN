@@ -10,14 +10,14 @@ from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from .. import _shapes
 from . import _array_draw
 from .. import _arrays
-from . import _colour
+from ._image_colours import ImageColours
 
 
 # TODO pillow supports no alpha/opacity
 
 
 def create(object_array: _arrays.ObjectArrayType,
-           colours: Optional[_colour.ImageColours] = None,
+           colours: Optional[ImageColours] = None,
            antialiasing: Union[bool, int] = True) -> _Image.Image:
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
@@ -71,17 +71,16 @@ class _PILDraw(_array_draw.ABCArrayDraw):
             # rectangle shape
             _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
                                             shape.right, shape.bottom),
-                                            fill=col.colour)  # TODO decentral _shapes seems to be bit larger than with pyplot
+                                           fill=col.colour)  # TODO decentral _shapes seems to be bit larger than with pyplot
         elif isinstance(shape, _shapes.Picture):
             tmp = _np.asarray(shape.size) * scaling_factor
             shape.size = tmp.tolist()
             # picture
-            shape_size = (round(shape.width), round(shape.height)) # TODO numpy?
-            target_box = (round(shape.left), round(shape.bottom),  # TODO ceil?
-                            round(shape.right), round(shape.top))  # reversed y axes
+            target_box = _np.round(shape.get_ltrb(), decimals=0)
+            target_box[:, 1] = _np.flip(target_box[:, 1])  # reversed y axes
             pict = _Image.open(shape.filename, "r")
-            if pict.size[0] != shape_size[0] or pict.size[1] != shape_size[1]:
-                pict = pict.resize(shape_size, resample=_Image.ANTIALIAS)
+            if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
+                pict = pict.resize(shape.size, resample=_Image.ANTIALIAS)
 
             tr_layer = _Image.new('RGBA', img.size, (0, 0, 0, 0))
             tr_layer.paste(pict, target_box)

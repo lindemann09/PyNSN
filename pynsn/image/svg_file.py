@@ -7,12 +7,13 @@ import svgwrite as _svg
 
 from .. import _arrays, _shapes
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from . import _array_draw, _colour
+from . import _array_draw
+from ._image_colours import ImageColours
 
 
 def create(filename: str,
            object_array: _arrays.ObjectArrayType,
-           colours: Optional[_colour.ImageColours] = None) -> _svg.Drawing:
+           colours: Optional[ImageColours] = None) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters

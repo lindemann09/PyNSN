@@ -3,6 +3,7 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
+from typing import Any, Sequence, Union
 
 import numpy as _np
 from numpy.typing import NDArray
@@ -374,3 +375,29 @@ class Beta(_PyNSNDistributionMuSigma):
         v = (a * b) / ((a + b) ** 2 * (a + b + 1))
         sigma = _np.sqrt(v) * r
         return mu, sigma
+
+
+class _Constant(PyNSNDistribution):
+
+    def __init__(self, value: float) -> None:
+        """Helper class to "sample" constance.
+
+        Looks like a PyNSNDistribution, but sample returns just the constant
+
+        Parameter:
+        ----------
+        constant : numeric
+        """
+
+        super().__init__(min_max=(value, value))
+
+    def sample(self, n, round_to_decimals=None) -> NDArray:
+        return _round_samples([self.min_max[0]] * n, round_to_decimals)
+
+    def to_dict(self) -> dict:
+        return {"distribution": "Constant",
+                "value": self.min_max[0]}
+
+
+ParameterDistributionType = Union[PyNSNDistribution,
+                                  float, int, Sequence[Any], None]

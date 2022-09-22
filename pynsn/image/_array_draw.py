@@ -5,9 +5,10 @@ from typing import Optional, Any
 
 import numpy as _np
 
-from . import _colour
+from .._lib.colour import Colour
 from .. import _arrays
 from .._shapes import Dot, Rectangle
+from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
 
@@ -70,7 +71,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
         """
 
     def create_image(self, object_array: _arrays.ObjectArrayType,
-                     colours: Optional[_colour.ImageColours],
+                     colours: Optional[ImageColours],
                      antialiasing: Optional[float] = None, **kwargs) -> Any:
         """create image
 
@@ -91,8 +92,8 @@ class ABCArrayDraw(metaclass=ABCMeta):
 
         _check_object_array(object_array)
         if colours is None:
-            colours = _colour.ImageColours()
-        if not isinstance(colours, _colour.ImageColours):
+            colours = ImageColours()
+        if not isinstance(colours, ImageColours):
             raise TypeError("Colours must be of type image.ImageColours")
 
         if isinstance(antialiasing, bool):
@@ -135,11 +136,11 @@ class ABCArrayDraw(metaclass=ABCMeta):
             # draw objects
             for obj in object_array.iter_objects():
                 att = obj.get_colour()
-                if isinstance(att, _colour.Colour):
+                if isinstance(att, Colour):
                     obj.attribute = att
                 else:
                     # dot or rect: force colour, set default colour if no colour
-                    obj.attribute = _colour.Colour(
+                    obj.attribute = Colour(
                         None, colours.default_object_colour.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_object,
                                 scaling_factor=aaf)

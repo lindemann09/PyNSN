@@ -7,8 +7,9 @@ import pygame as _pygame
 from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 
-from . import _array_draw, _colour
+from . import _array_draw
 from . import pil_image as _pil_image
+from ._image_colours import ImageColours
 
 
 class ExprimentDotArray(_Canvas):
@@ -20,8 +21,8 @@ class ExprimentDotArray(_Canvas):
 
         _array_draw._check_object_array(object_array)
         if colours is None:
-            colours = _colour.ImageColours()
-        if not isinstance(colours, _colour.ImageColours):
+            colours = ImageColours()
+        if not isinstance(colours, ImageColours):
             raise TypeError("Colours must be of type image.ImageColours")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
@@ -51,12 +52,12 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colours=_colour.ImageColours(),
+                 colours=ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):
 
-        if not isinstance(colours, _colour.ImageColours):
+        if not isinstance(colours, ImageColours):
             raise TypeError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence

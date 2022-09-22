@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 from numpy import bool_
 
 from .._lib.coordinate import Coordinate
-from ..image._colour import Colour
+from ..image._image_colours import Colour
 
 
 class ABCShape(Coordinate, metaclass=ABCMeta):

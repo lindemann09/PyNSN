@@ -9,12 +9,11 @@ from copy import deepcopy
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
-
+from numpy.typing import NDArray, ArrayLike
 from .._lib import np_tools
 from .._lib.spatial_relations import DotDot
-from .._shapes import Dot, Rectangle
-from ..typing import IntOVector, NDArray, OptArrayLike, OptFloat
-from .abc_object_array import ABCObjectArray
+from .._shapes import Dot, Rectangle, ShapeType
+from .abc_object_array import ABCObjectArray, IntOVector
 from .tools import make_csv
 
 # pylint: disable=W0237:arguments-renamed
@@ -34,11 +33,11 @@ class DotArray(ABCObjectArray):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat = None,
-                 xy: OptArrayLike = None,
-                 diameter: OptArrayLike = None,
-                 attributes: OptArrayLike = None) -> None:
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None,
+                 xy: Optional[ArrayLike] = None,
+                 diameter: Optional[ArrayLike] = None,
+                 attributes: Optional[ArrayLike] = None) -> None:
         super().__init__(xy=xy,
                          attributes=attributes,
                          target_area=target_area,
@@ -223,7 +222,7 @@ class DotArray(ABCObjectArray):
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
 
-    def find_objects(self, diameter: OptFloat = None,
+    def find_objects(self, diameter: Optional[float] = None,
                      attribute: Any = None) -> List[int]:
         """Search for an object
 

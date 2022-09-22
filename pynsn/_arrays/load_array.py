@@ -18,12 +18,12 @@ def load_array(filename: str) -> Union[DotArray, RectangleArray]:
     """
 
     with open(filename, 'r', encoding="utf-8") as fl:
-        d = json.load(fl)
+        array_dict = json.load(fl)
 
-    arr_type = d["type"]
+    arr_type = array_dict["type"]
     if arr_type == "DotArray":
-        return DotArray.from_dict(d)
+        return DotArray.from_dict(array_dict)
     elif arr_type == "RectangleArray":
-        return RectangleArray.from_dict(d)
+        return RectangleArray.from_dict(array_dict)
     else:
         raise RuntimeError(f"Unknown array type {arr_type}")

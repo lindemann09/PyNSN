@@ -1,16 +1,15 @@
 # calculates visual properties of a dot array/ dot cloud
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .. import _arrays
-from .._lib import constants, geometry, rng
-from .._lib.constants import VisualPropertyFlags
+from .. import _arrays, constants
+from .._lib import geometry, rng
+from ..constants import VisualPropertyFlags
 from .._lib.exception import NoSolutionError
-from ..typing import OptFloat
 from .convex_hull import ConvexHull, ConvexHullPositions
 
 
@@ -363,7 +362,7 @@ class ArrayProperties(object):
         self.reset()
 
     def fit_field_area(self, value: float,
-                       precision: OptFloat = None) -> None:
+                       precision: Optional[float] = None) -> None:
         """changes the convex hull area to a desired size with certain precision
 
         uses scaling radial positions if field area has to be increased
@@ -381,8 +380,8 @@ class ArrayProperties(object):
             _match_field_area(self._oa, value=value, precision=precision)
 
     def fit_coverage(self, value: float,
-                     precision: OptFloat = None,
-                     fa2ta_ratio: OptFloat = None) -> None:
+                     precision: Optional[float] = None,
+                     fa2ta_ratio: Optional[float] = None) -> None:
         """
 
         Parameters
@@ -469,7 +468,7 @@ class ArrayProperties(object):
         self.fit_total_surface_area(self.numerosity * value)
 
     def fit_log_spacing(self, value: float,
-                        precision: OptFloat = None) -> None:
+                        precision: Optional[float] = None) -> None:
         """
 
         Parameters
@@ -592,14 +591,14 @@ class ArrayProperties(object):
         return self.fit_total_surface_area(self.total_surface_area * factor)
 
     def scale_field_area(self, factor: float,
-                         precision: OptFloat = None) -> None:
+                         precision: Optional[float] = None) -> None:
         if factor == 1:
             return
         return self.fit_field_area(self.field_area * factor, precision=precision)
 
     def scale_coverage(self, factor: float,
-                       precision: OptFloat = None,
-                       FA2TA_ratio: OptFloat = None) -> None:
+                       precision: Optional[float] = None,
+                       FA2TA_ratio: Optional[float] = None) -> None:
         if factor == 1:
             return
         return self.fit_coverage(self.coverage * factor,
@@ -622,7 +621,7 @@ class ArrayProperties(object):
         return self.fit_average_surface_area(self.average_surface_area * factor)
 
     def scale_log_spacing(self, factor: float,
-                          precision: OptFloat = None) -> None:
+                          precision: Optional[float] = None) -> None:
         if factor == 1:
             return
         return self.fit_log_spacing(self.log_spacing * factor, precision=precision)
@@ -633,7 +632,7 @@ class ArrayProperties(object):
         return self.fit_log_size(self.log_size * factor)
 
     def scale_sparcity(self, factor: float,
-                       precision: OptFloat = None) -> None:
+                       precision: Optional[float] = None) -> None:
         if factor == 1:
             return
         return self.fit_sparcity(self.sparsity * factor, precision=precision)

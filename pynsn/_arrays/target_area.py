@@ -2,19 +2,18 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Union
+from typing import Optional
 
-from .._lib import constants
-from .._shapes import Dot, Rectangle
-from ..typing import OptFloat
+from .. import constants
+from .._shapes import Dot, Rectangle, ShapeType
 
 
 class TargetArea(object):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat = None) -> None:
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None) -> None:
         """TargetArea Parameter"""
 
         if not isinstance(target_area, (Dot, Rectangle)):

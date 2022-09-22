@@ -102,7 +102,7 @@ class Rectangle(ABCShape):
 
         Returns:
             NDArray with coordinates [[left, top],
-                                      [right, botton]]
+                                      [right, bottom]]
         '''
         rtn = np.array([self._xy - (self._size / 2),
                         self._xy + (self._size / 2)])
@@ -188,7 +188,6 @@ class Rectangle(ABCShape):
         else:
             return np.all(compare_lb_rt)
 
-
     def dots_inside(self, xy: NDArray, diameters: NDArray) -> Union[np.bool_, NDArray[np.bool_]]:
         # inherited doc
         # FIXME not tested
@@ -197,8 +196,11 @@ class Rectangle(ABCShape):
         radius = np.atleast_2d(diameters/2)
         # if true if dot inside rect on this dimension
         compare_lb_rt = np.empty(shape=(xy.shape[0], 4))
-        compare_lb_rt[:, (0, 1)] = xy - radius.T > np.atleast_2d(self.xy - self.size / 2)  # type: ignore
-        compare_lb_rt[:, (2, 3)] = xy + radius.T > np.atleast_2d(self.xy + self.size / 2)
+        # type: ignore
+        compare_lb_rt[:, (0, 1)] = xy - \
+            radius.T > np.atleast_2d(self.xy - self.size / 2)
+        compare_lb_rt[:, (2, 3)] = xy + \
+            radius.T > np.atleast_2d(self.xy + self.size / 2)
 
         if compare_lb_rt.shape[0] > 1:
             return np.all(compare_lb_rt, axis=1)

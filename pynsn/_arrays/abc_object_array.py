@@ -3,6 +3,8 @@
 """
 from __future__ import annotations
 
+from .. import constants
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
@@ -15,17 +17,18 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
-from .._arrays.target_area import TargetArea
-from .._lib import constants, geometry, np_tools, rng
+from .target_area import TargetArea
+from .._lib import geometry, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from .._shapes import ShapeType
-from ..typing import ArrayLike, IntOVector, NDArray, OptArrayLike, OptFloat
 from .properties import ArrayProperties
 from .tools import BrownianMotion
+
+IntOVector = Union[int, List[int], Sequence[np.int_], NDArray[np.int_]]
 
 
 class ABCObjectArray(TargetArea, metaclass=ABCMeta):
@@ -37,10 +40,10 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: OptFloat = None,
-                 min_distance_area_boarder: OptFloat = None,
-                 xy: OptArrayLike = None,
-                 attributes: OptArrayLike = None) -> None:
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None,
+                 xy: Optional[ArrayLike] = None,
+                 attributes: Optional[ArrayLike] = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
         super().__init__(target_area=target_area,
@@ -189,7 +192,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 [attributes] * self._properties.numerosity)
 
     def _append_xy_attribute(self, xy: ArrayLike,
-                             attributes: OptArrayLike = None) -> int:
+                             attributes: Optional[ArrayLike] = None) -> int:
         """returns number of added rows"""
         xy = np.atleast_2d(xy)
         if not isinstance(attributes, (tuple, list)):

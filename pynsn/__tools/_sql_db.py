@@ -1,5 +1,5 @@
 import sqlite3
-from ..image._colour import Colour, ImageColours
+from ..image._image_colours import Colour, ImageColours
 
 
 class DotArraySQLDB(object):
@@ -13,7 +13,8 @@ class DotArraySQLDB(object):
     def setup(self):
         conn = sqlite3.connect(self.db_file)
 
-        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        cursor = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table';")
         tables = [v[0] for v in cursor.fetchall() if v[0] != "sqlite_sequence"]
 
         if 'ARRAYS' not in tables:
@@ -59,29 +60,30 @@ class DotArraySQLDB(object):
             # assuming single colour dot _arrays
             # TODO if multi color, add to dots color column. multi_colour = len(attributes)!=1
             colour = Colour(attributes[0])
-            if colour.colour is None: # if attribute is no colour, use default coolour
+            if colour.colour is None:  # if attribute is no colour, use default coolour
                 colour = Colour(ImageColours.COL_DEFAULT_OBJECT)
 
             sql = "INSERT INTO ARRAYS (" + \
                   "HASH, N, TSA, ISA, FA, SPAR, logSIZE, logSPACE, COV, COLOUR" + \
                   ") \n VALUES\n" + \
                   "('{}',{},{},{},{},{},{},{},{},'{}');".format(
-                          da.hash,
-                          da._properties.numerosity,
-                          da._properties.total_surface_area,
-                          da._properties.average_surface_area,
-                          da._properties.field_area,
-                          da._properties.sparsity,
-                          da._properties.log_size,
-                          da._properties.log_spacing,
-                          da._properties.coverage,
-                          colour.colour)
+                      da.hash,
+                      da._properties.numerosity,
+                      da._properties.total_surface_area,
+                      da._properties.average_surface_area,
+                      da._properties.field_area,
+                      da._properties.sparsity,
+                      da._properties.log_size,
+                      da._properties.log_spacing,
+                      da._properties.coverage,
+                      colour.colour)
             cur.execute(sql)
 
-            ## add dots
+            # add dots
             sql = "INSERT INTO DOTS (HASH,x,y,diameter) \nVALUES"
             for xy, d in zip(da._xy, da._diameter):
-                sql += "\n  ('{}', {}, {}, {}),".format(da.hash, xy[0], xy[1], d)
+                sql += "\n  ('{}', {}, {}, {}),".format(da.hash,
+                                                        xy[0], xy[1], d)
             sql = sql[:-1] + ";"
             cur.execute(sql)
 
@@ -97,15 +99,16 @@ class DotArraySQLDB(object):
     def get_array(self, hash):
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
-        cur = conn.execute("SELECT * FROM ARRAYS WHERE hash ='{}';".format(hash))
+        cur = conn.execute(
+            "SELECT * FROM ARRAYS WHERE hash ='{}';".format(hash))
         v = cur.fetchone()
         conn.close()
-        return {k:v[k] for k in v.keys()}
+        return {k: v[k] for k in v.keys()}
 
     def get_dots(self, hash):
         # get ID
         conn = sqlite3.connect(self.db_file)
-        values = conn.execute("SELECT x, y, diameter, colour FROM DOTS WHERE hash ='{}';".format(hash)).fetchall()
+        values = conn.execute(
+            "SELECT x, y, diameter, colour FROM DOTS WHERE hash ='{}';".format(hash)).fetchall()
         conn.close()
-        return values #
-
+        return values
