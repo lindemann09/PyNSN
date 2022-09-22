@@ -313,7 +313,7 @@ class ArrayProperties(object):
             raise TypeError("Adapting diameter is not possible "
                             + f"for {type(self._oa).__name__}.")
         scale = value / self.average_dot_diameter
-        self._oa._diameter = self._oa.diameter * scale  # pylint: disable=W0212
+        self._oa._np_shapes.diameter = self._oa.diameter * scale  # pylint: disable=W0212
         self.reset()
 
     def fit_average_rectangle_size(self, value: ArrayLike) -> None:
@@ -339,7 +339,8 @@ class ArrayProperties(object):
             raise RuntimeError(
                 "Numerosity, width or hight is zero or not defined.")
         scale = np.divide(new_size, av_size)
-        self._oa._sizes = self._oa._sizes * scale  # pylint: disable=W0212
+        self._oa._np_shapes.sizes = self._oa._np_shapes.sizes * \
+            scale  # pylint: disable=W0212
         self.reset()
 
     def fit_total_surface_area(self, value: float) -> None:
@@ -353,11 +354,12 @@ class ArrayProperties(object):
         a_scale = value / self.total_surface_area
         # pylint: disable=W0212
         if isinstance(self._oa, _arrays.DotArray):
-            self._oa._diameter = np.sqrt(self._oa.surface_areas * a_scale) \
+            self._oa._np_shapes.diameter = np.sqrt(self._oa.surface_areas * a_scale) \
                 * 2 / np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
         elif isinstance(self._oa, _arrays.RectangleArray):
             # rect
-            self._oa._sizes = self._oa._sizes * np.sqrt(a_scale)
+            self._oa._np_shapes.sizes = self._oa._np_shapes.sizes * \
+                np.sqrt(a_scale)
 
         self.reset()
 
@@ -666,14 +668,14 @@ def _match_field_area(object_array,
 
     # centered points
     old_center = object_array.get_center_of_field_area()
-    object_array._xy = object_array.xy - old_center
+    object_array._np_shapes.xy = object_array.xy - old_center
     centered_polar = geometry.cartesian2polar(object_array.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        object_array._xy = geometry.polar2cartesian(
+        object_array._np_shapes.xy = geometry.polar2cartesian(
             centered_polar * [scale, 1])
         object_array.properties.reset()  # required at this point to recalc convex hull
         current = object_array.properties.field_area
@@ -682,7 +684,7 @@ def _match_field_area(object_array,
                 (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    object_array._xy = object_array.xy + old_center
+    object_array._np_shapes.xy = object_array.xy + old_center
     object_array.properties.reset()
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays
