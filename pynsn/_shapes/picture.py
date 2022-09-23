@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from os import path

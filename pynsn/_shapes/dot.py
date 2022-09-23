@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from pynsn._lib import geometry
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from typing import Union, Any
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate

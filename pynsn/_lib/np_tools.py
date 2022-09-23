@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Iterable, List, Any
+from typing import Iterable, List, Any, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -76,3 +76,21 @@ def find_value_rowwise(array2d: NDArray, values: Any) -> NDArray:
     # return only first unique id (ui-index) (Note: set is sorted)
     _, ui = np.unique(idx_minimum[:, 0], return_index=True)
     return idx_minimum[ui, :]
+
+
+def make_vector_fixed_length(values: Optional[ArrayLike], length: int):
+    """Helper function: make vector and scales to n elements, if
+    attributes comprises only one element."""
+
+    if values is None:
+        values = np.atleast_1d([np.nan])
+    else:
+        values = np.atleast_1d(values)
+
+    if len(values) == 1 and length > 1:
+        values = np.repeat(values, length)
+    elif len(values) != length:
+        raise ValueError("Values have to be a length of 1 "
+                         f"or n_elements ({length})")
+
+    return values

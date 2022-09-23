@@ -19,17 +19,16 @@ from .._lib import geometry, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
+from .._lib.typing import IntOVector
 from .._shapes import ShapeType
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
-from .._shapes.np_shapes import NPDots, NPRectangles
+from .._shapes.dot_list import DotList
+from .._shapes.rectangle_list import RectangleList
 from .properties import ArrayProperties
 from .target_area import TargetArea
 from .tools import BrownianMotion
 from .. import constants
-
-
-IntOVector = Union[int, List[int], Sequence[np.int_], NDArray[np.int_]]
 
 
 class ABCObjectArray(TargetArea, metaclass=ABCMeta):
@@ -43,7 +42,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                  target_area: ShapeType,
                  min_distance_between_objects: Optional[float],
                  min_distance_area_boarder: Optional[float],
-                 np_shapes: Union[NPDots, NPRectangles],
+                 object_shapes: Union[DotList, RectangleList],
                  attributes: Optional[ArrayLike] = None) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
@@ -51,7 +50,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
 
-        self._np_shapes = np_shapes
+        self._objs = object_shapes
         self._attributes = np.array([])
         self._set_missing_attributes(attributes)
         self._properties = ArrayProperties(self)
@@ -71,7 +70,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """Convert array to dictionary
         """
         d = super().to_dict()
-        d.update({"xy": self._np_shapes.xy.tolist()})
+        d.update({"xy": self._objs.xy.tolist()})
         if len(self._attributes) > 0:
             att = self._attributes.flatten()
             if np.all(att == att[0]):  # all equal
@@ -167,7 +166,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         The two dimensional array (shape=[2, `n`]) represents the locations of the center of
         the `n` objects in this array
         """
-        return self._np_shapes.xy
+        return self._objs.xy
 
     @ property
     def attributes(self) -> NDArray:
@@ -193,7 +192,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def _set_missing_attributes(self, attributes: Optional[ArrayLike]):
         """appends attributes. If no list or np.array set all missing attributes
         """
-        n_missing_attributes = self._np_shapes.xy.shape[0] - \
+        n_missing_attributes = self._objs.xy.shape[0] - \
             self._attributes.shape[0]
         if not isinstance(attributes, (np.ndarray, tuple, list)):
             attributes = np.array([attributes] * n_missing_attributes)
@@ -206,12 +205,12 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 #    def _append_xy_attribute(self, xy: ArrayLike,
 #                             attributes: Optional[ArrayLike] = None) -> None:
 #        """appends xy and attributes"""
-#        self._np_shapes.append(xy)
+#        self._objs.append(xy)
 #        self._set_missing_attributes(attributes)
 #        self._properties.reset()
 
     def clear(self) -> None:
-        self._np_shapes.clear()
+        self._objs.clear()
         self._attributes = np.array([])
         self._properties.reset()
 
@@ -224,7 +223,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Returns:
 
         """
-        self._np_shapes.delete(index)
+        self._objs.delete(index)
         self._attributes = np.delete(self._attributes, index)
         self._properties.reset()
 
@@ -262,7 +261,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
         m = md5()
         m.update(
-            self._np_shapes.xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
+            self._objs.xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         try:
             m.update(self.perimeter.tobytes())
         except AttributeError:
@@ -305,7 +304,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def get_distances_matrix(self, between_positions: bool = False) -> NDArray:
         """between position ignores the dot size"""
         if between_positions:
-            return spatial.distance.cdist(self._np_shapes.xy, self._np_shapes.xy)
+            return spatial.distance.cdist(self._objs.xy, self._objs.xy)
         # matrix with all distance between all objects
         dist = np.asarray([self.get_distances(d) for d in self.iter_objects()])
         return dist
@@ -322,7 +321,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     def get_center_of_mass(self) -> NDArray:
         weighted_sum = np.sum(
-            self._np_shapes.xy * self.perimeter[:, np.newaxis], axis=0)
+            self._objs.xy * self.perimeter[:, np.newaxis], axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
     def get_center_of_field_area(self) -> NDArray:
@@ -334,13 +333,13 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         return geometry.center_of_coordinates(self.properties.convex_hull.xy)
 
     def mod_center_array_mass(self) -> None:
-        self._np_shapes.xy = self._np_shapes.xy - self.get_center_of_mass()
+        self._objs.xy = self._objs.xy - self.get_center_of_mass()
         self._properties.reset()
 
     def mod_center_field_area(self) -> None:
         cxy = geometry.center_of_coordinates(
             self.properties.convex_hull.xy)
-        self._np_shapes.xy = self._np_shapes.xy - cxy  # type: ignore
+        self._objs.xy = self._objs.xy - cxy  # type: ignore
         self._properties.reset()
 
     def _search_area_parameter(self):
@@ -486,7 +485,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         if not keep_convex_hull:
             # touch convex hull objects
-            ids = list(range(len(self._np_shapes.xy)))
+            ids = list(range(len(self._objs.xy)))
             for x in self.properties.convex_hull.object_indices:
                 self.mod_move_object(x, 0, (0, 0), push_other=True)
                 ids.remove(x)
@@ -556,7 +555,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Args:
           xy: replacement at the x and y axis
         """
-        self._np_shapes.xy = self._np_shapes.xy + np.atleast_2d(xy)
+        self._objs.xy = self._objs.xy + np.atleast_2d(xy)
         self._properties.reset()
 
     def mod_move_object(self, object_ids: IntOVector,
@@ -597,8 +596,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 movement.xy = ang.xy - obj.xy
                 movement.rho = distance
 
-            self._np_shapes.xy[id_,
-                               :] = self._np_shapes.xy[id_, :] + movement.xy
+            self._objs.xy[id_,
+                          :] = self._objs.xy[id_, :] + movement.xy
 
             if push_other:
                 # push overlapping object
@@ -606,8 +605,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 dist = self.get_distances(obj)
                 for other_id in np.flatnonzero(dist < self.min_distance_between_objects):
                     if other_id != id_:
-                        movement.xy = self._np_shapes.xy[other_id, :] \
-                            - self._np_shapes.xy[id_, :]
+                        movement.xy = self._objs.xy[other_id, :] \
+                            - self._objs.xy[id_, :]
                         self.mod_move_object(other_id,
                                              direction=movement.theta,
                                              distance=abs(dist[other_id])

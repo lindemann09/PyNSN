@@ -12,9 +12,10 @@ import numpy as np
 from numpy.typing import NDArray, ArrayLike
 from .._lib import np_tools
 from .._lib.spatial_relations import DotDot
+from .._lib.typing import IntOVector
 from .._shapes import Dot,  ShapeType
-from .._shapes.np_shapes import NPDots
-from .abc_object_array import ABCObjectArray, IntOVector, NPDots
+from .._shapes.dot_list import DotList
+from .abc_object_array import ABCObjectArray
 from .tools import make_csv
 
 # pylint: disable=W0237:arguments-renamed
@@ -40,8 +41,8 @@ class DotArray(ABCObjectArray):
                  diameter: Optional[ArrayLike] = None,
                  attributes: Optional[ArrayLike] = None) -> None:
 
-        self._np_shapes = NPDots(xy, diameter)  # for typing
-        super().__init__(np_shapes=self._np_shapes,
+        self._objs = DotList(xy, diameter)  # for typing
+        super().__init__(object_shapes=self._objs,
                          attributes=attributes,
                          target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
@@ -62,13 +63,13 @@ class DotArray(ABCObjectArray):
             attributes.append(d.attribute)
             diameter.append(d.diameter)
 
-        self._np_shapes.append(xy, diameter)
+        self._objs.append(xy, diameter)
         self._set_missing_attributes(attributes)
         self.properties.reset()
 
     @property
     def diameter(self) -> NDArray:
-        return self._np_shapes.diameter
+        return self._objs.diameter
 
     @property
     def surface_areas(self) -> NDArray:
@@ -76,40 +77,40 @@ class DotArray(ABCObjectArray):
 
         """
         # a = pi r**2 = pi d**2 / 4
-        return np.pi * (self._np_shapes.diameter ** 2) / 4.0
+        return np.pi * (self._objs.diameter ** 2) / 4.0
 
     @property
     def perimeter(self) -> NDArray:
         """Perimeter for each dot
 
         """
-        return np.pi * self._np_shapes.diameter
+        return np.pi * self._objs.diameter
 
     def mod_round_values(self, decimals: int = 0,
                          int_type: type = np.int32) -> None:
         # inherited doc
         if decimals is None:
             return
-        self._np_shapes.xy = np_tools.round2(self._np_shapes.xy, decimals=decimals,
-                                             int_type=int_type)
-        self._np_shapes.diameter = np_tools.round2(self._np_shapes.diameter, decimals=decimals,
-                                                   int_type=int_type)
+        self._objs.xy = np_tools.round2(self._objs.xy, decimals=decimals,
+                                        int_type=int_type)
+        self._objs.diameter = np_tools.round2(self._objs.diameter, decimals=decimals,
+                                              int_type=int_type)
 
     def to_dict(self) -> dict:
         d = super().to_dict()
-        d.update({"diameter": self._np_shapes.diameter.tolist()})
+        d.update({"diameter": self._objs.diameter.tolist()})
         return d
 
     def dataframe_dict(self, hash_column: bool = False,
                        attribute_column: bool = True) -> dict:
         # inherited doc
         if hash_column:
-            d = {"hash": [self.hash] * len(self._np_shapes.xy)}
+            d = {"hash": [self.hash] * len(self._objs.xy)}
         else:
             d = {}
-        d.update({"x": self._np_shapes.xy[:, 0].tolist(),
-                  "y": self._np_shapes.xy[:, 1].tolist(),
-                  "diameter": self._np_shapes.diameter.tolist()})
+        d.update({"x": self._objs.xy[:, 0].tolist(),
+                  "y": self._objs.xy[:, 1].tolist(),
+                  "diameter": self._objs.diameter.tolist()})
         if attribute_column:
             d.update({"attributes": self._attributes.tolist()})
         return d
@@ -121,7 +122,7 @@ class DotArray(ABCObjectArray):
                        min_distance_between_objects=the_dict["min_distance_between_objects"],
                        min_distance_area_boarder=the_dict["min_distance_area_boarder"])
 
-        rtn._np_shapes.append(xy=the_dict["xy"], diameter=the_dict["diameter"])
+        rtn._objs.append(xy=the_dict["xy"], diameter=the_dict["diameter"])
         rtn._set_missing_attributes(attributes=the_dict["attributes"])
         return rtn
 
@@ -139,27 +140,27 @@ class DotArray(ABCObjectArray):
             a copy of the array
         """
 
-        if len(self._np_shapes.xy) == 0:
+        if len(self._objs.xy) == 0:
             return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder)
 
         if indices is None:
-            indices = list(range(len(self._np_shapes.xy)))
+            indices = list(range(len(self._objs.xy)))
 
         if deep_copy:
             return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder,
-                            xy=self._np_shapes.xy[indices, :].copy(),
-                            diameter=self._np_shapes.diameter[indices].copy(),
+                            xy=self._objs.xy[indices, :].copy(),
+                            diameter=self._objs.diameter[indices].copy(),
                             attributes=self._attributes[indices].copy())
         else:
             return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder,
-                            xy=self._np_shapes.xy[indices, :],
-                            diameter=self._np_shapes.diameter[indices],
+                            xy=self._objs.xy[indices, :],
+                            diameter=self._objs.diameter[indices],
                             attributes=self._attributes[indices])
 
     def get_distances(self, dot: Dot) -> NDArray:
@@ -173,11 +174,11 @@ class DotArray(ABCObjectArray):
         Returns: numpy array of distances
         """
         assert isinstance(dot, Dot)
-        if len(self._np_shapes.xy) == 0:
+        if len(self._objs.xy) == 0:
             return np.array([])
         else:
-            rel = DotDot(a_xy=self._np_shapes.xy,
-                         a_diameter=self._np_shapes.diameter,
+            rel = DotDot(a_xy=self._objs.xy,
+                         a_diameter=self._objs.diameter,
                          b_xy=dot.xy,
                          b_diameter=np.array([dot.diameter]))
             return rel.distances()
@@ -197,17 +198,17 @@ class DotArray(ABCObjectArray):
         """
 
         if isinstance(indices, (int, np.integer)):
-            yield Dot(xy=self._np_shapes.xy[indices, :],
-                      diameter=self._np_shapes.diameter[indices],
+            yield Dot(xy=self._objs.xy[indices, :],
+                      diameter=self._objs.diameter[indices],
                       attribute=self._attributes[indices])
         else:
             if indices is None:
-                data = zip(self._np_shapes.xy,
-                           self._np_shapes.diameter,
+                data = zip(self._objs.xy,
+                           self._objs.diameter,
                            self._attributes)
             else:
-                data = zip(self._np_shapes.xy[indices, :],  # type: ignore
-                           self._np_shapes.diameter[indices],
+                data = zip(self._objs.xy[indices, :],  # type: ignore
+                           self._objs.diameter[indices],
                            self._attributes[indices])
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
@@ -225,8 +226,8 @@ class DotArray(ABCObjectArray):
         """
         rtn = []
 
-        for i, _ in enumerate(self._np_shapes.diameter):
-            if (diameter is not None and self._np_shapes.diameter[i] != diameter) or \
+        for i, _ in enumerate(self._objs.diameter):
+            if (diameter is not None and self._objs.diameter[i] != diameter) or \
                     (attribute is not None and
                         self._attributes[i] != attribute):
                 continue
@@ -237,7 +238,7 @@ class DotArray(ABCObjectArray):
             hash_column: bool = False,
             attribute_column: bool = True) -> str:
         # inherited doc
-        size_dict = {"diameter": self._np_shapes.diameter}
+        size_dict = {"diameter": self._objs.diameter}
         if attribute_column:
             attr = self.attributes
         else:
@@ -246,7 +247,7 @@ class DotArray(ABCObjectArray):
             array_hash = self.hash
         else:
             array_hash = None
-        return make_csv(xy=self._np_shapes.xy,
+        return make_csv(xy=self._objs.xy,
                         size_data_dict=size_dict,
                         attributes=attr, array_hash=array_hash,
                         make_variable_names=variable_names)

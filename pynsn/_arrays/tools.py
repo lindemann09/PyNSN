@@ -1,7 +1,6 @@
 """
 helper functions for arrays
 """
-
 import numpy as np
 
 from .._lib import geometry, rng
