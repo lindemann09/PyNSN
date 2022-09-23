@@ -9,9 +9,12 @@ import numpy as np
 from numpy.typing import NDArray
 import warnings
 
-from .np_tools import as_vector, find_value_rowwise
-from .geometry import polar2cartesian
+from .._lib.np_tools import as_vector, find_value_rowwise
+from .._lib.geometry import polar2cartesian
 from .._lib import geometry
+
+from .dot_list import BaseDotList
+from .rectangle_list import BaseRectangleList
 # all init-functions require 2D arrays
 
 
@@ -36,7 +39,9 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
 class CoordinateCoordinate(object):
 
-    def __init__(self, a_xy: NDArray, b_xy: NDArray) -> None:
+    def __init__(self,
+                 a_xy: NDArray,
+                 b_xy: NDArray) -> None:
         self._xy_diff = np.atleast_2d(b_xy) \
             - np.atleast_2d(a_xy)  # type: ignore
         self._spatial_relations = None
@@ -53,11 +58,11 @@ class CoordinateCoordinate(object):
 
 class DotDot(CoordinateCoordinate):
 
-    def __init__(self, a_xy: NDArray, a_diameter: NDArray,
-                 b_xy: NDArray, b_diameter: NDArray) -> None:
-
-        super().__init__(a_xy=a_xy, b_xy=b_xy)
-        self._radii_sum = (as_vector(a_diameter) + as_vector(b_diameter)) / 2
+    def __init__(self,
+                 dots_a: BaseDotList,
+                 dots_b: BaseDotList) -> None:
+        super().__init__(a_xy=dots_a.xy, b_xy=dots_b.xy)
+        self._radii_sum = (dots_a.diameter + dots_b.diameter) / 2
         assert self._xy_diff.shape[0] == self._radii_sum.shape[0]
 
     def distances(self) -> NDArray:
@@ -110,28 +115,27 @@ class DotDot(CoordinateCoordinate):
 
 class DotCoordinate(DotDot):
 
-    def __init__(self, dot_xy: NDArray, dot_diameter: NDArray,
+    def __init__(self,
+                 dots: BaseDotList,
                  coord_xy: NDArray) -> None:
-        super().__init__(a_xy=dot_xy,
-                         a_diameter=dot_diameter,
-                         b_xy=coord_xy,
-                         b_diameter=np.zeros(coord_xy.shape[0]))
+        dots_b = BaseDotList(xy=coord_xy,
+                             diameter=np.zeros(coord_xy.shape[0]))
+        super().__init__(dots_a=dots, dots_b=dots_b)
 
 
 class RectangleRectangle(CoordinateCoordinate):
 
-    def __init__(self, a_xy: NDArray, a_sizes: NDArray,
-                 b_xy: NDArray, b_sizes: NDArray) -> None:
-        assert a_sizes.shape == a_xy.shape and\
-            b_sizes.shape == b_xy.shape
+    def __init__(self,
+                 rectangles_a: BaseRectangleList,
+                 rectangles_b: BaseRectangleList) -> None:
 
-        super().__init__(a_xy=a_xy, b_xy=b_xy)
-        self.a_sizes = np.atleast_2d(a_sizes)
-        if np.all(b_sizes == 0):
+        super().__init__(a_xy=rectangles_a.xy, b_xy=rectangles_b.xy)
+        self.a_sizes = rectangles_a.sizes
+        if np.all(rectangles_b.sizes == 0):  # Coordinate
             self.b_sizes = None
             self._xy_diff_rect = np.abs(self._xy_diff) - self.a_sizes / 2
         else:
-            self.b_sizes = np.atleast_2d(b_sizes)
+            self.b_sizes = rectangles_b.sizes
             self._xy_diff_rect = np.abs(self._xy_diff) - \
                 (self.a_sizes + self.b_sizes) / 2
 
@@ -204,40 +208,37 @@ class RectangleRectangle(CoordinateCoordinate):
 
 class RectangleCoordinate(RectangleRectangle):
 
-    def __init__(self, rect_xy: NDArray, rect_sizes: NDArray,
+    def __init__(self,
+                 rectangles: BaseRectangleList,
                  coord_xy: NDArray) -> None:
-        super().__init__(a_xy=rect_xy,
-                         a_sizes=rect_sizes,
-                         b_xy=coord_xy,
-                         b_sizes=np.zeros(coord_xy.shape))
+        rects_b = BaseRectangleList(xy=coord_xy,
+                                    sizes=np.zeros(coord_xy.shape))
+        super().__init__(rectangles_a=rectangles, rectangles_b=rects_b)
 
 
 class RectangleDot(CoordinateCoordinate):
 
-    def __init__(self, rect_xy: NDArray, rect_sizes: NDArray,
-                 dot_xy: NDArray, dot_diameter: NDArray) -> None:
+    def __init__(self,
+                 rectangles: BaseRectangleList,
+                 dots: BaseDotList) -> None:
 
-        if rect_xy.ndim == 2 and dot_xy.ndim == 2:
-            self.rect_xy = rect_xy
-            self.rect_sizes = rect_sizes
-            self.dot_xy = dot_xy
-        elif rect_xy.ndim == 1 and dot_xy.ndim == 1:
-            self.rect_xy = np.atleast_2d(rect_xy)
-            self.rect_sizes = np.atleast_2d(rect_sizes)
-            self.dot_xy = np.atleast_2d(dot_xy)
-        elif dot_xy.ndim == 1:
-            self.rect_xy = rect_xy
-            self.rect_sizes = rect_sizes
-            self.dot_xy = dot_xy * np.ones((1, rect_xy.shape[0]))
-        elif rect_xy.ndim == 1:
-            self.rect_xy = rect_xy * np.ones((1, rect_xy.shape[0]))
-            self.rect_sizes = rect_sizes * np.ones((1, rect_xy.shape[0]))
-            self.dot_xy = dot_xy
+        self.rect_xy = rectangles.xy
+        self.rect_sizes = rectangles.sizes
+        self.dot_xy = dots.xy
+        self.dot_radii = dots.diameter / 2
 
-        self._dot_radii = as_vector(dot_diameter) / 2
+        n_rects = len(self.rect_xy)
+        n_dots = len(self.dot_xy)
+        if n_rects > 1 and n_dots == 1:
+            ones = np.ones((1, n_rects))
+            self.dot_xy = self.dot_xy * ones
+            self.dot_radii = self.dot_radii * ones
+        elif n_rects == 1 and n_dots > 1:
+            ones = np.ones((1, n_dots))
+            self.rect_xy = self.rect_xy * ones
+            self.rect_sizes = self.rect_sizes * ones
 
-        assert self.rect_xy.shape == self.dot_xy.shape and \
-            self.dot_xy.shape[0] == self._dot_radii.shape[0]
+        assert self.rect_xy.shape == self.dot_xy.shape
 
         self.__corners = None
         self._spatial_relations = None
@@ -260,8 +261,7 @@ class RectangleDot(CoordinateCoordinate):
         shape=(n, 2)
         """
 
-        xy_dist = self._corners - \
-            np.atleast_3d(self.dot_xy)  # type: ignore
+        xy_dist = self._corners - np.atleast_3d(self.dot_xy)  # type: ignore
 
         distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
         # find nearest corner per rect dist.shape=(n, 4)
@@ -278,7 +278,7 @@ class RectangleDot(CoordinateCoordinate):
                                     np.atleast_2d(values).T)
         # spatial relations and nearest corners
         # return array contains only one nearest corner per rect (n, 2=parameter)
-        distances = distances[idx_nc[:, 0], idx_nc[:, 1]] - self._dot_radii
+        distances = distances[idx_nc[:, 0], idx_nc[:, 1]] - self.dot_radii
         directions = np.arctan2(
             xy_dist[idx_nc[:, 0], 1, idx_nc[:, 1]],
             xy_dist[idx_nc[:, 0], 0, idx_nc[:, 1]])
@@ -323,7 +323,7 @@ class RectangleDot(CoordinateCoordinate):
         edge_rel = np.full(self.rect_xy.shape, np.nan)
         # distances
         edge_rel[idx_e[:, 0], 0] = distances[idx_e[:, 0],
-                                             idx_e[:, 1]] - self._dot_radii
+                                             idx_e[:, 1]] - self.dot_radii
         # directions
         edge_rel[idx_e[:, 0], 1] = np.arctan2(
             ecp_xy_diff[idx_e[:, 0], 1, idx_e[:, 1]],

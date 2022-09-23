@@ -9,18 +9,17 @@ from copy import deepcopy
 from typing import Any, Iterator, Optional, Sequence, Union
 
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
-
-from .._shapes import ShapeType, Picture
+from numpy.typing import ArrayLike, NDArray
 
 from .._lib import np_tools
 from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleRectangle
 from .._lib.typing import IntOVector
+from .._shapes import Picture, ShapeType
 from .._shapes.rectangle import Rectangle
+from .._shapes.rectangle_list import BaseRectangleList, RectangleList
+from .._shapes.spatial_relations import RectangleRectangle
 from .abc_object_array import ABCObjectArray
 from .tools import make_csv
-from .._shapes.rectangle_list import RectangleList
 
 # pylint: disable=W0237:arguments-renamed
 
@@ -150,10 +149,9 @@ class RectangleArray(ABCObjectArray):
         if len(self._objs.xy) == 0:
             return np.array([])
         else:
-            rel = RectangleRectangle(a_xy=self._objs.xy,
-                                     a_sizes=self._objs.sizes,
-                                     b_xy=rect.xy,
-                                     b_sizes=rect.size)
+            rel = RectangleRectangle(
+                rectangles_a=self._objs,
+                rectangles_b=BaseRectangleList(xy=rect.xy, sizes=rect.size))
             return rel.xy_distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) \

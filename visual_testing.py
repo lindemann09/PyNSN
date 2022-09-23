@@ -3,7 +3,8 @@ from typing import List, Sequence
 import numpy as np
 from numpy.typing import NDArray
 import pynsn
-from pynsn._lib import geometry, np_tools, spatial_relations, matrix_spatial_relations
+from pynsn._lib import geometry, np_tools
+from pynsn._shapes import matrix_spatial_relations, spatial_relations
 from tests.shapes_test_picture import shapes_test_picture, Line
 
 arr_xy = np.array([[10, 20], [100, 100], [99, 32]])
@@ -25,7 +26,6 @@ sizes = np.array([b.size, c.size, d.size])
 #sizes = np.array([d.size])
 dot_xy = np_tools.as_array2d_nrow(a.xy, n_rows=xy.shape[0])
 dot_diameter = np_tools.as_array2d_nrow(a.diameter, n_rows=xy.shape[0])
-
 
 
 rel = spatial_relations.RectangleDot(rect_xy=xy,

@@ -9,7 +9,6 @@ from numpy.typing import ArrayLike
 from .abc_shape import ABCShape
 from .._lib.coordinate import Coordinate
 from .. import _shapes
-from .._lib.spatial_relations import DotDot
 
 
 class Dot(ABCShape):
@@ -67,26 +66,3 @@ class Dot(ABCShape):
                 return False
             else:
                 return True
-
-    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
-        # inherited doc
-
-        if isinstance(other, _shapes.Dot):
-            rel = DotDot(a_xy=self._xy,  # dist-functions required 2D data
-                         a_diameter=np.array([self._diameter]),
-                         b_xy=other.xy,
-                         b_diameter=np.array([other.diameter]))
-            return rel.distances()[0]
-
-        elif isinstance(other, _shapes.Rectangle):
-            return other.distance(self)
-
-        elif other.__class__ == Coordinate:
-            rel = DotDot(a_xy=self._xy,
-                         a_diameter=np.array([self._diameter]),
-                         b_xy=other.xy,
-                         b_diameter=np.zeros(1))
-            return rel.distances()[0]
-
-        raise NotImplementedError(f"distance to {type(other)} "
-                                  + "is implemented.")

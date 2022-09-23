@@ -9,7 +9,6 @@ from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
 from .._lib.coordinate import Coordinate
-from .._lib.spatial_relations import RectangleRectangle, RectangleDot
 from .abc_shape import ABCShape
 
 # TODO doc "basic properities" is all classes (like width)
@@ -58,33 +57,6 @@ class Rectangle(ABCShape):
     @property
     def perimeter(self) -> float:
         return 2 * (self.width + self.height)
-
-    def distance(self, other: Union[_shapes.ShapeType, Coordinate]) -> float:
-        # inherited doc
-        if isinstance(other, _shapes.Dot):
-            dist = self.distance(Coordinate(xy=other.xy))
-            rel = RectangleDot(rect_xy=self._xy,
-                               rect_sizes=self._size,
-                               dot_xy=np.atleast_2d(other.xy),
-                               dot_diameter=np.atleast_1d(other.diameter))
-            return rel.spatial_relations(_min=True)[0, 0]/2
-
-        elif isinstance(other, _shapes.Rectangle):
-            rel = RectangleRectangle(a_xy=self._xy,
-                                     a_sizes=self._size,
-                                     b_xy=other.xy,
-                                     b_sizes=other.size)
-            return rel.xy_distances()[0]
-
-        elif other.__class__ == Coordinate:
-            rel = RectangleRectangle(a_xy=self._xy,
-                                     a_sizes=self._size,
-                                     b_xy=other.xy,
-                                     b_sizes=np.zeros(2))
-            return rel.xy_distances()[0]
-
-        raise NotImplementedError(f"distance to {type(other)} "
-                                  + "is implemented.")
 
     @property
     def left(self) -> float:

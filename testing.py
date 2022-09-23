@@ -11,9 +11,10 @@ from numpy.typing import NDArray, ArrayLike
 import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
+from pynsn._shapes import spatial_relations
 from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn._lib import geometry, spatial_relations, np_tools
+from pynsn._lib import geometry, np_tools
 
 seed = 921
 nsn.init_random_generator(seed)

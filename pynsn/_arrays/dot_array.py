@@ -9,12 +9,13 @@ from copy import deepcopy
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import ArrayLike, NDArray
+
 from .._lib import np_tools
-from .._lib.spatial_relations import DotDot
 from .._lib.typing import IntOVector
-from .._shapes import Dot,  ShapeType
+from .._shapes import Dot, ShapeType
 from .._shapes.dot_list import DotList
+from .._shapes.spatial_relations import DotDot
 from .abc_object_array import ABCObjectArray
 from .tools import make_csv
 
