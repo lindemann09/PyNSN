@@ -1,6 +1,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from os import path
+from typing import Union
 
 from numpy.typing import ArrayLike
 
@@ -40,11 +41,15 @@ class Picture(Rectangle):
         return path.isfile(self.filename)
 
     @staticmethod
-    def is_picture_attribute(txt: str) -> bool:
-        """Check if text string is a picture attribute
+    def extract_filename(txt: str) -> Union[str, None]:
+        """Check if text string is a picture attribute and returns the filename.
+        Otherwise, returns None
 
         Args:
             txt: string to be checked
         """
-        return isinstance(txt, str) and \
-            txt.startswith(Picture.ATTR_PREFIX)
+        if isinstance(txt, str) and \
+                txt.startswith(Picture.ATTR_PREFIX):
+            return txt[len(Picture.ATTR_PREFIX)]
+        else:
+            return None

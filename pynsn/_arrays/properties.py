@@ -297,7 +297,7 @@ class ArrayProperties(object):
                         raise NoSolutionError(
                             "Can't increase numerosity. No free position found.") from err
 
-                    self._oa.add([rnd_object])
+                    self._oa.add([rnd_object])  # type: ignore
 
     def fit_average_diameter(self, value: float) -> None:
         """Set average diameter.

@@ -13,7 +13,7 @@ from .._lib.spatial_relations import DotDot
 
 
 class Dot(ABCShape):
-    __slots__ = ("_diameter", )
+    __slots__ = ("_diameter",)
 
     def __init__(self, xy: ArrayLike = (0, 0),
                  diameter: float = 0,

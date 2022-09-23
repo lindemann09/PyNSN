@@ -16,7 +16,8 @@ from .abc_shape import ABCShape
 
 
 class Rectangle(ABCShape):
-    __slot__ = ("_size", )
+
+    __slots__ = ("_size", )
 
     def __init__(self, xy: ArrayLike = (0, 0),
                  size: ArrayLike = (0, 0),

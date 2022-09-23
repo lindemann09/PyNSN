@@ -15,7 +15,7 @@ RGBType = Tuple[int, int, int]
 ColourType = Union[str, RGBType, Sequence[float], None]
 
 
-@ total_ordering
+@total_ordering
 class Colour(object):
     """Colour Class
 
@@ -162,7 +162,7 @@ class Colour(object):
 
         return self.rgb + (alpha,)
 
-    @ staticmethod
+    @staticmethod
     def convert_hextriplet_to_rgb(hextriplet: str) -> RGBType:
         """Convert a hextriplet string to RGB values"""
         ht = hextriplet.lstrip("#")
@@ -172,7 +172,7 @@ class Colour(object):
             raise ValueError(
                 f"Can't convert {hextriplet} to rgb value") from err
 
-    @ staticmethod
+    @staticmethod
     def convert_rgb_hextriplet(rgb: Sequence, uppercase: bool = True):
         """Convert RBG values to a hextriplet string"""
         if len(rgb) != 3:

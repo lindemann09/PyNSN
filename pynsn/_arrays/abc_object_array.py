@@ -42,44 +42,35 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                  target_area: ShapeType,
                  min_distance_between_objects: Optional[float],
                  min_distance_area_boarder: Optional[float],
-                 object_shapes: Union[DotList, RectangleList],
-                 attributes: Optional[ArrayLike] = None) -> None:
+                 object_list: Union[DotList, RectangleList]) -> None:
         # also as parent  class for implementation of dot and rect arrays
 
         super().__init__(target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
 
-        self._objs = object_shapes
-        self._attributes = np.array([])
-        self._set_missing_attributes(attributes)
+        self._objs = object_list
         self._properties = ArrayProperties(self)
 
-    @ property
-    @ abstractmethod
-    def surface_areas(self):
-        """Vector with the surface areas of all objects"""
+    @abstractmethod
+    def add(self, obj):
+        """ """
 
-    @ property
-    @ abstractmethod
-    def perimeter(self) -> NDArray:
-        """Vector with the perimeter of all objects"""
-
-    @ abstractmethod
+    @abstractmethod
     def to_dict(self) -> dict:
         """Convert array to dictionary
         """
         d = super().to_dict()
         d.update({"xy": self._objs.xy.tolist()})
-        if len(self._attributes) > 0:
-            att = self._attributes.flatten()
-            if np.all(att == att[0]):  # all equal
-                d.update({"attributes": self._attributes[0]})
+        if len(self._objs.attributes) > 0:
+            if np.all(self._objs.attributes == self._objs.attributes[0]):
+                # all equal
+                d.update({"attributes": self._objs.attributes[0]})
             else:
-                d.update({"attributes": self._attributes.tolist()})
+                d.update({"attributes": self._objs.attributes.tolist()})
         return d
 
-    @ abstractmethod
+    @abstractmethod
     def dataframe_dict(self):
         """Returns dict that can be used to create Pandas dataframe or Arrow Table
 
@@ -91,19 +82,18 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
-    @ staticmethod
-    @ abstractmethod
+    @staticmethod
+    @abstractmethod
     def from_dict(the_dict):
         """ """
 
-    @ abstractmethod
+    @abstractmethod
     def copy(self, indices: Union[IntOVector, None] = None,
              deep_copy=True) -> ABCObjectArray:
         """ """
 
-    @ abstractmethod
-    def iter_objects(self, indices: Optional[IntOVector] = None) \
-            -> Iterator[ShapeType]:
+    @abstractmethod
+    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator:
         """iterate over all or a part of the objects
 
         Parameters
@@ -117,19 +107,15 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         >>>    print(obj)
         """
 
-    @ abstractmethod
-    def add(self, obj):
-        """ """
-
-    @ abstractmethod
+    @abstractmethod
     def find_objects(self, size=None, attribute=None):
         """ """
 
-    @ abstractmethod
+    @abstractmethod
     def get_distances(self, ref_object) -> NDArray:
         """get_distances """
 
-    @ abstractmethod
+    @abstractmethod
     def csv(self, variable_names: bool, hash_column: bool,
             attribute_column: bool):
         """Comma-separated table representation the object array
@@ -144,7 +130,16 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         """
 
-    @ abstractmethod
+    @property
+    def surface_areas(self) -> NDArray:
+        """Vector with the surface areas of all objects"""
+        return self._objs.surface_areas
+
+    @property
+    def perimeter(self) -> NDArray:
+        """Vector with the perimeter of all objects"""
+        return self._objs.perimeter
+
     def mod_round_values(self, decimals: int = 0,
                          int_type: type = np.int16) -> None:
         """Round all values
@@ -153,13 +148,14 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             decimals: number of decimal places
             int_type: numpy int type (default=numpy.int16)
         """
+        self._objs.round_values(decimals, int_type)
 
     def __str__(self) -> str:
         d = TargetArea.to_dict(self)  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
         return dict_to_text(d, col_a=30, col_b=7) + "\n " + prop[1:]
 
-    @ property
+    @property
     def xy(self) -> NDArray:
         """Numpy array of the object locations
 
@@ -168,50 +164,22 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
         return self._objs.xy
 
-    @ property
+    @property
     def attributes(self) -> NDArray:
         """Numpy vector of the object attributes
         """
-        return self._attributes
+        return self._objs.attributes
 
-    def set_attributes(self, attributes: ArrayLike) -> None:
+    def mod_set_attributes(self, attributes: Optional[ArrayLike]) -> None:
         """Set all attributes
 
         Args:
-            attributes: attribute (string) or list of attributes
+            attributes: single attribute or list of attributes
         """
-        if isinstance(attributes, (np.ndarray, list, tuple)):
-            if len(attributes) != self._properties.numerosity:
-                raise ValueError("Length of attribute list does not adapt the " +
-                                 "size of the dot array.")
-            self._attributes = np.array(attributes)
-        else:
-            self._attributes = np.array(
-                [attributes] * self._properties.numerosity)
-
-    def _set_missing_attributes(self, attributes: Optional[ArrayLike]):
-        """appends attributes. If no list or np.array set all missing attributes
-        """
-        n_missing_attributes = self._objs.xy.shape[0] - \
-            self._attributes.shape[0]
-        if not isinstance(attributes, (np.ndarray, tuple, list)):
-            attributes = np.array([attributes] * n_missing_attributes)
-        elif len(attributes) != n_missing_attributes:
-            raise RuntimeError("Badly shaped data: attributes have not " +
-                               "the same length as the xy coordinates")
-
-        self._attributes = np.append(self._attributes, attributes)
-
-#    def _append_xy_attribute(self, xy: ArrayLike,
-#                             attributes: Optional[ArrayLike] = None) -> None:
-#        """appends xy and attributes"""
-#        self._objs.append(xy)
-#        self._set_missing_attributes(attributes)
-#        self._properties.reset()
+        self._objs.set_attributes(attributes=attributes)
 
     def clear(self) -> None:
         self._objs.clear()
-        self._attributes = np.array([])
         self._properties.reset()
 
     def delete(self, index: IntOVector) -> None:
@@ -224,10 +192,9 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         """
         self._objs.delete(index)
-        self._attributes = np.delete(self._attributes, index)
         self._properties.reset()
 
-    @ property
+    @property
     def properties(self) -> ArrayProperties:
         """Properties of the object array.
 
@@ -249,7 +216,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
         return self._properties
 
-    @ property
+    @property
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
 
@@ -321,7 +288,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     def get_center_of_mass(self) -> NDArray:
         weighted_sum = np.sum(
-            self._objs.xy * self.perimeter[:, np.newaxis], axis=0)
+            self._objs.xy * np.atleast_2d(self.perimeter).T, axis=0)
         return weighted_sum / np.sum(self.perimeter)
 
     def get_center_of_field_area(self) -> NDArray:
@@ -441,7 +408,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     def get_outlier(self) -> List[int]:
         """Indices of object that are not fully inside the target area"""
-        # TODO test me
+        # FIXME make numpy search test me
         indices = []
         search_area, _ = self._search_area_parameter()
 
@@ -648,7 +615,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def get_split_arrays(self) -> List[ABCObjectArray]:
         """returns a list of _arrays
         each array contains all dots of with particular colour"""
-        att = self._attributes
+        att = self._objs.attributes
         att[np.where(att == None)] = "None"
 
         rtn = []

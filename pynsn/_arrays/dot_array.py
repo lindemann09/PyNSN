@@ -41,60 +41,19 @@ class DotArray(ABCObjectArray):
                  diameter: Optional[ArrayLike] = None,
                  attributes: Optional[ArrayLike] = None) -> None:
 
-        self._objs = DotList(xy, diameter)  # for typing
-        super().__init__(object_shapes=self._objs,
-                         attributes=attributes,
+        self._objs = DotList(xy, diameter, attributes)  # for typing
+        super().__init__(object_list=self._objs,
                          target_area=target_area,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
 
-    def add(self, obj: Union[Dot, Sequence[Dot]]) -> None:
+    def add(self, shapes: Union[Dot, Sequence[Dot]]) -> None:
         """append one dot or list of dots"""
-        if isinstance(obj, Dot):
-            obj = [obj]
-        else:
-            obj = list(obj)
-
-        xy = []
-        diameter = []
-        attributes = []
-        for d in obj:
-            xy.append(d.xy)
-            attributes.append(d.attribute)
-            diameter.append(d.diameter)
-
-        self._objs.append(xy, diameter)
-        self._set_missing_attributes(attributes)
-        self.properties.reset()
+        self._objs.add_objects(shapes)
 
     @property
     def diameter(self) -> NDArray:
         return self._objs.diameter
-
-    @property
-    def surface_areas(self) -> NDArray:
-        """TODO
-
-        """
-        # a = pi r**2 = pi d**2 / 4
-        return np.pi * (self._objs.diameter ** 2) / 4.0
-
-    @property
-    def perimeter(self) -> NDArray:
-        """Perimeter for each dot
-
-        """
-        return np.pi * self._objs.diameter
-
-    def mod_round_values(self, decimals: int = 0,
-                         int_type: type = np.int32) -> None:
-        # inherited doc
-        if decimals is None:
-            return
-        self._objs.xy = np_tools.round2(self._objs.xy, decimals=decimals,
-                                        int_type=int_type)
-        self._objs.diameter = np_tools.round2(self._objs.diameter, decimals=decimals,
-                                              int_type=int_type)
 
     def to_dict(self) -> dict:
         d = super().to_dict()
@@ -112,21 +71,20 @@ class DotArray(ABCObjectArray):
                   "y": self._objs.xy[:, 1].tolist(),
                   "diameter": self._objs.diameter.tolist()})
         if attribute_column:
-            d.update({"attributes": self._attributes.tolist()})
+            d.update({"attributes": self._objs.attributes.tolist()})
         return d
 
     @staticmethod
     def from_dict(the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
-        rtn = DotArray(target_area=DotArray._target_area_from_dict(the_dict),
-                       min_distance_between_objects=the_dict["min_distance_between_objects"],
-                       min_distance_area_boarder=the_dict["min_distance_area_boarder"])
+        return DotArray(xy=the_dict["xy"],
+                        diameter=the_dict["diameter"],
+                        attributes=the_dict["attributes"],
+                        target_area=DotArray._target_area_from_dict(the_dict),
+                        min_distance_between_objects=the_dict["min_distance_between_objects"],
+                        min_distance_area_boarder=the_dict["min_distance_area_boarder"])
 
-        rtn._objs.append(xy=the_dict["xy"], diameter=the_dict["diameter"])
-        rtn._set_missing_attributes(attributes=the_dict["attributes"])
-        return rtn
-
-    def copy(self, indices: Union[int, Sequence[int], None] = None,
+    def copy(self, indices: Union[int, Sequence[int], NDArray[np.int_], None] = None,
              deep_copy: bool = True) -> DotArray:
         """A (deep) copy of the dot array.
 
@@ -146,7 +104,7 @@ class DotArray(ABCObjectArray):
                             min_distance_area_boarder=self.min_distance_area_boarder)
 
         if indices is None:
-            indices = list(range(len(self._objs.xy)))
+            indices = np.arange(len(self._objs.xy.shape))
 
         if deep_copy:
             return DotArray(target_area=deepcopy(self.target_area),
@@ -154,14 +112,14 @@ class DotArray(ABCObjectArray):
                             min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._objs.xy[indices, :].copy(),
                             diameter=self._objs.diameter[indices].copy(),
-                            attributes=self._attributes[indices].copy())
+                            attributes=self._objs.attributes[indices].copy())
         else:
             return DotArray(target_area=deepcopy(self.target_area),
                             min_distance_between_objects=self.min_distance_between_objects,
                             min_distance_area_boarder=self.min_distance_area_boarder,
                             xy=self._objs.xy[indices, :],
                             diameter=self._objs.diameter[indices],
-                            attributes=self._attributes[indices])
+                            attributes=self._objs.attributes[indices])
 
     def get_distances(self, dot: Dot) -> NDArray:
         """Euclidean distances toward a single dot
@@ -184,34 +142,8 @@ class DotArray(ABCObjectArray):
             return rel.distances()
 
     def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
-        """iterate over all or a part of the objects
-
-        Parameters
-        ----------
-        indices: int or interable of integer
-
-        Notes
-        -----
-        To iterate all object you might all use the class iterator __iter__:
-        >>> for obj in my_array:
-        >>>    print(obj)
-        """
-
-        if isinstance(indices, (int, np.integer)):
-            yield Dot(xy=self._objs.xy[indices, :],
-                      diameter=self._objs.diameter[indices],
-                      attribute=self._attributes[indices])
-        else:
-            if indices is None:
-                data = zip(self._objs.xy,
-                           self._objs.diameter,
-                           self._attributes)
-            else:
-                data = zip(self._objs.xy[indices, :],  # type: ignore
-                           self._objs.diameter[indices],
-                           self._attributes[indices])
-            for xy, dia, att in data:
-                yield Dot(xy=xy, diameter=dia, attribute=att)
+        # inherited doc
+        return self._objs.iter_objects(indices)
 
     def find_objects(self, diameter: Optional[float] = None,
                      attribute: Any = None) -> List[int]:
@@ -229,7 +161,7 @@ class DotArray(ABCObjectArray):
         for i, _ in enumerate(self._objs.diameter):
             if (diameter is not None and self._objs.diameter[i] != diameter) or \
                     (attribute is not None and
-                        self._attributes[i] != attribute):
+                        self._objs.attributes[i] != attribute):
                 continue
             rtn.append(i)
         return rtn

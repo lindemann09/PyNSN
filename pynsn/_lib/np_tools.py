@@ -79,8 +79,9 @@ def find_value_rowwise(array2d: NDArray, values: Any) -> NDArray:
 
 
 def make_vector_fixed_length(values: Optional[ArrayLike], length: int):
-    """Helper function: make vector and scales to n elements, if
-    attributes comprises only one element."""
+    """Helper function: (a) makes vector and scales to n elements, if attributes
+    comprises only one element and (b) converts None to nparray([np.nan])
+    """
 
     if values is None:
         values = np.atleast_1d([np.nan])
