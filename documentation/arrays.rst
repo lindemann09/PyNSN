@@ -4,7 +4,7 @@ Non-symbolic number stimuli
 
 .. currentmodule:: pynsn
 
-Object Array
+nsn stimulus
 =============
 .. autosummary::
     :toctree: api/
@@ -14,7 +14,7 @@ Object Array
     ArrayProperties
 
 
-Dot Array
+nsn stimulus
 --------------
 
 .. autoclass:: DotArray
@@ -22,7 +22,7 @@ Dot Array
    :inherited-members:
    :undoc-members:
 
-Rectangle Array
+nsn stimulus
 --------------
 
 .. autoclass:: pynsn.RectangleArray
@@ -79,7 +79,7 @@ Point
 PictureFile
 -----------------
 
-``PictureFile`` can be used as attribute of a `Rectangle`_ to use pictures in `Rectangle Array`_. The pictures will be
+``PictureFile`` can be used as attribute of a `Rectangle`_ to use pictures in `nsn stimulus`_. The pictures will be
 scaled to the size of the rectangle.
 
 .. code-block:: py
@@ -93,4 +93,3 @@ scaled to the size of the rectangle.
    :members:
    :inherited-members:
    :undoc-members:
-

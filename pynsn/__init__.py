@@ -16,24 +16,23 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                            _python_version_info[1]) +
                        "Please use Python 3.8 or later.")
 # pylint: disable=C0413
-from ._arrays import DotArray, RectangleArray, \
-    ArrayProperties, load_array
-from ._shapes import Dot, Rectangle, Picture
 
-from ._factory.factory import NSNFactory
-from ._factory import distributions
+from ._arrays import NSNStimulus,  ArrayProperties, load_array
+from ._shapes import Dot, Rectangle, Picture, RectangleList, DotList, BaseDotList, BaseRectangleList
 
-from ._lib.coordinate import Coordinate
-from ._lib.colour import Colour
-from ._lib.rng import init_random_generator
-from ._lib import exception
 from . import constants
+from ._lib import exception
+from ._lib.rng import init_random_generator
+from ._lib.colour import Colour
+from ._lib.coordinate import Coordinate
+from ._factory import distributions
+from ._factory.factory import NSNFactory
 
 
 def _print_version_info():
     from ._lib.misc import is_interactive_mode
     if is_interactive_mode():
-        print("PyNSN {}".format(__version__))
+        print(f"PyNSN {__version__}")
 
 
 _print_version_info()

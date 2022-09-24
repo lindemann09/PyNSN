@@ -1,10 +1,13 @@
-from typing import Optional, Sequence, Union, Iterator
+from __future__ import annotations
+
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from .._lib.typing import IntOVector
-from .._lib.np_tools import make_vector_fixed_length, round2
 
+from .._lib.np_tools import make_vector_fixed_length, round2
+from .._lib.typing import IntOVector
+from .abc_object_list import ABCObjectList
 from .dot import Dot
 
 
@@ -27,7 +30,7 @@ class BaseDotList:
                              "xy has not the same length as item_diameter")
 
 
-class DotList(BaseDotList):
+class DotList(BaseDotList, ABCObjectList):
     """Class of numpy representation of dot"""
 
     def __init__(self, xy: Optional[ArrayLike] = None,
@@ -36,7 +39,7 @@ class DotList(BaseDotList):
         super().__init__()
         self.attributes = np.array([])
         if xy is not None and diameter is not None:
-            self.append(xy, diameter, attributes)
+            self.np_append(xy, diameter, attributes)
 
     def check(self) -> None:
         """raises value error if badly shaped data"""
@@ -58,10 +61,10 @@ class DotList(BaseDotList):
             raise ValueError("Length of attribute list does not match the " +
                              "size of the array.") from err
 
-    def append(self,
-               xy: ArrayLike,
-               diameter: ArrayLike,
-               attributes: Optional[ArrayLike] = None) -> None:
+    def np_append(self,
+                  xy: ArrayLike,
+                  diameter: ArrayLike,
+                  attributes: Optional[ArrayLike] = None) -> None:
         """if attributes comprises only one element all new objects will get
         this attribute """
         xy = np.atleast_2d(xy)
@@ -88,7 +91,7 @@ class DotList(BaseDotList):
         self.diameter = np.array([])
         self.attributes = np.array([])
 
-    def add_objects(self, shapes: Union[Dot, Sequence[Dot]]) -> None:
+    def add(self, shapes: Union[Dot, Sequence[Dot], List[Dot]]) -> None:
         """append one dot or list of dots"""
         if isinstance(shapes, Dot):
             shapes = [shapes]
@@ -116,24 +119,18 @@ class DotList(BaseDotList):
 
     def round_values(self, decimals: int = 0,
                      int_type: type = np.int32) -> None:
-        """Round all values
-
-        Args:
-            decimals: number of decimal places
-            int_type: numpy int type (default=numpy.int16)
-        """
         if decimals is None:
             return
         self.xy = round2(self.xy, decimals=decimals, int_type=int_type)
         self.diameter = round2(self.diameter, decimals=decimals,
                                int_type=int_type)
 
-    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
+    def iter(self, indices: Optional[IntOVector] = None) -> Iterator[Dot]:
         """iterate over all or a part of the objects
 
         Parameters
         ----------
-        indices: int or interable of integer
+        indices
 
         Notes
         -----
@@ -141,7 +138,6 @@ class DotList(BaseDotList):
         >>> for obj in my_array:
         >>>    print(obj)
         """
-
         if isinstance(indices, (int, np.integer)):
             yield Dot(xy=self.xy[indices, :],
                       diameter=self.diameter[indices],
@@ -157,3 +153,58 @@ class DotList(BaseDotList):
                            self.attributes[indices])
             for xy, dia, att in data:
                 yield Dot(xy=xy, diameter=dia, attribute=att)
+
+    def find(self, diameter: Optional[float] = None,
+             attribute: Any = None) -> List[int]:
+        """returns indices of found objects
+
+        2D-tuple
+        """
+
+        rtn = []
+
+        for i, _ in enumerate(self.diameter):
+            if (diameter is not None and self.diameter[i] != diameter) or \
+                    (attribute is not None and
+                        self.attributes[i] != attribute):
+                continue
+            rtn.append(i)
+        return rtn
+
+    def to_dict(self) -> dict:
+        d = {"xy": self.xy.tolist()}
+        d.update({"diameter": self.diameter.tolist()})
+        if len(self.attributes) > 0:
+            if np.all(self.attributes == self.attributes[0]):
+                # all equal
+                d.update({"attributes": self.attributes[0]})
+            else:
+                d.update({"attributes": self.attributes.tolist()})
+        return d
+
+    @staticmethod
+    def from_dict(the_dict: Dict[str, Any]) -> DotList:
+        """read Dot collection from dict"""
+        return DotList(xy=the_dict["xy"],
+                       diameter=the_dict["diameter"],
+                       attributes=the_dict["attributes"])
+
+    def copy(self,
+             indices: Union[int, Sequence[int], NDArray[np.int_], None] = None,
+             deep_copy: bool = True) -> DotList:
+        # inherited docs
+        if indices is None or len(self.xy) == 0:
+            xy = self.xy
+            diameter = self.diameter
+            attributes = self.attributes
+        else:
+            xy = self.xy[indices, :]
+            diameter = self.diameter[indices]
+            attributes = self.attributes[indices]
+
+        if deep_copy:
+            return DotList(xy=xy.copy(),
+                           diameter=diameter.copy(),
+                           attributes=attributes.copy())
+        else:
+            return DotList(xy=xy, diameter=diameter, attributes=attributes)

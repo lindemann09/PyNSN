@@ -10,11 +10,11 @@ from . import pil_image as _pil_image
 from ._image_colours import ImageColours
 
 
-def create(object_array: _arrays.ObjectArrayType,
+def create(object_array: _arrays.NSNStimulus,
            colours: Optional[ImageColours] = None,
            antialiasing: Union[bool, int] = True) -> _pygame.Surface:
 
-    _array_draw._check_object_array(object_array)
+    _array_draw._check_nsn_stimulus(object_array)
     if colours is None:
         colours = ImageColours()
     if not isinstance(colours, ImageColours):

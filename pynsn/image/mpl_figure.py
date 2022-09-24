@@ -12,7 +12,7 @@ from . import _array_draw
 from ._image_colours import ImageColours
 
 
-def create(object_array: _arrays.ObjectArrayType,
+def create(object_array: _arrays.NSNStimulus,
            colours: Optional[ImageColours] = None,
            dpi: float = 100) -> _Figure:
     """Matplotlib figure

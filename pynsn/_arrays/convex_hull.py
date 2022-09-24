@@ -6,7 +6,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import spatial
 
-from .. import _arrays
+from .._shapes.rectangle_list import RectangleList
+from .._shapes.dot_list import DotList
 from .._lib.geometry import cartesian2polar, polar2cartesian
 
 
@@ -17,7 +18,7 @@ class ABCConvexHull(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def __init__(self, object_array) -> None:
+    def __init__(self) -> None:
         self._convex_hull = None
 
     def _try_convex_hull(self, xy):
@@ -69,9 +70,9 @@ class ABCConvexHull(metaclass=ABCMeta):
 
 class ConvexHullPositions(ABCConvexHull):
 
-    def __init__(self, object_array) -> None:
-        super().__init__(object_array=object_array)
-        self._try_convex_hull(xy=object_array.xy)
+    def __init__(self, object_list) -> None:
+        super().__init__()
+        self._try_convex_hull(xy=object_list.xy)
 
 
 class ConvexHull(ABCConvexHull):
@@ -80,42 +81,42 @@ class ConvexHull(ABCConvexHull):
     using outer positions, able to handle rects
     """
 
-    def __init__(self, object_array) -> None:
+    def __init__(self, object_list) -> None:
 
-        super().__init__(object_array=object_array)
-        self._is_rect_array = isinstance(object_array, _arrays.RectangleArray)
+        super().__init__()
+        self._is_rect_array = isinstance(object_list, RectangleList)
         if self._is_rect_array:
-            if len(object_array.xy) < 2:
+            if len(object_list.xy) < 2:
                 return  # no convex hull possible
         else:
             # object point array at least 3 points
-            if len(object_array.xy) < 2:
+            if len(object_list.xy) < 2:
                 return  # no convex hull possible
 
-        if isinstance(object_array, _arrays.DotArray):
-            if len(object_array.xy) < 2:
+        if isinstance(object_list, DotList):
+            if len(object_list.xy) < 2:
                 return  # no convex hull possible
             # centered polar coordinates
-            minmax = np.array((np.min(object_array.xy, axis=0),
-                               np.max(object_array.xy, axis=0)))
+            minmax = np.array((np.min(object_list.xy, axis=0),
+                               np.max(object_list.xy, axis=0)))
             # center outer positions
             center = np.reshape(minmax[1, :] - np.diff(minmax, axis=0) / 2, 2)
-            xy_centered = object_array.xy - center
+            xy_centered = object_list.xy - center
             # outer positions
             polar_centered = cartesian2polar(xy_centered)
             polar_centered[:, 0] = polar_centered[:, 0] + \
-                (object_array.diameter / 2)
+                (object_list.diameter / 2)
             outer_xy = polar2cartesian(polar_centered) + center
 
-        elif isinstance(object_array, _arrays.RectangleArray):
+        elif isinstance(object_list, RectangleList):
             # simple solution: get all corners
             corners = []
-            for rect in object_array.iter_objects():
+            for rect in object_list.iter():
                 corners.extend([e.xy for e in rect.iter_corners()])
             outer_xy = np.array(corners)
 
         else:  # generic attribute array
-            outer_xy = object_array.xy
+            outer_xy = object_list.xy
 
         self._try_convex_hull(xy=outer_xy)
 

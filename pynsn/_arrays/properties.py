@@ -1,10 +1,13 @@
-# calculates visual properties of a dot array/ dot cloud
+# calculates visual properties of a nsn stimulus/ dot cloud
 
 from collections import OrderedDict
 from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+
+from .._shapes.rectangle_list import RectangleList
+from .._shapes.dot_list import DotList
 
 from .. import _arrays, constants
 from .._lib import geometry, rng
@@ -16,14 +19,13 @@ from .convex_hull import ConvexHull, ConvexHullPositions
 class ArrayProperties(object):
     """Visual properties fo an associated arrays
 
-    Visual features of each object array can be access and
+    Visual features of each nsn stimulus can be access and
     modified via an instance of this class
     """
 
     def __init__(self, object_array: Any) -> None:
         # _lib or dot_cloud
-        assert isinstance(object_array, (_arrays.DotArray,
-                                         _arrays.RectangleArray))
+        assert isinstance(object_array, _arrays.NSNStimulus)
         self._oa = object_array
         self._convex_hull = None
         self._convex_hull_positions = None
@@ -49,40 +51,40 @@ class ArrayProperties(object):
 
     @property
     def average_dot_diameter(self) -> float:
-        if not isinstance(self._oa, _arrays.DotArray) or self.numerosity == 0:
+        if not isinstance(self._oa.objects, DotList) or self.numerosity == 0:
             return np.nan
         else:
-            return float(np.mean(self._oa.diameter))
+            return float(np.mean(self._oa.objects.diameter))
 
     @property
     def average_rectangle_size(self) -> NDArray:
-        if not isinstance(self._oa, _arrays.RectangleArray) \
+        if not isinstance(self._oa.objects, RectangleList) \
                 or self.numerosity == 0:
             return np.array([np.nan, np.nan])
         else:
-            return np.mean(self._oa.sizes, axis=0)
+            return np.mean(self._oa.objects.sizes, axis=0)
 
     @property
     def total_surface_area(self) -> float:
-        return float(np.sum(self._oa.surface_areas))
+        return float(np.sum(self._oa.objects.surface_areas))
 
     @property
     def average_surface_area(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.mean(self._oa.surface_areas))
+        return float(np.mean(self._oa.objects.surface_areas))
 
     @property
     def total_perimeter(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.sum(self._oa.perimeter))
+        return float(np.sum(self._oa.objects.perimeter))
 
     @property
     def average_perimeter(self) -> float:
         if self.numerosity == 0:
             return np.nan
-        return float(np.mean(self._oa.perimeter))
+        return float(np.mean(self._oa.objects.perimeter))
 
     @property
     def field_area_positions(self) -> float:
@@ -194,10 +196,10 @@ class ArrayProperties(object):
                (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self._oa, _arrays.DotArray):
+        if isinstance(self._oa.objects, DotList):
             rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(),
                       self.average_dot_diameter)
-        elif isinstance(self._oa, _arrays.RectangleArray):
+        elif isinstance(self._oa.objects, RectangleList):
             rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(),
                       self.average_rectangle_size.tolist())
         else:
@@ -287,7 +289,7 @@ class ArrayProperties(object):
                 else:
                     # add object: copy a random dot
                     clone_id = rng.generator.integers(0, self.numerosity)
-                    rnd_object = next(self._oa.iter_objects(clone_id))
+                    rnd_object = next(self._oa.objects.iter(clone_id))
                     try:
                         rnd_object = self._oa.get_free_position(
                             ref_object=rnd_object, allow_overlapping=False,
@@ -297,7 +299,7 @@ class ArrayProperties(object):
                         raise NoSolutionError(
                             "Can't increase numerosity. No free position found.") from err
 
-                    self._oa.add([rnd_object])  # type: ignore
+                    self._oa.objects.add([rnd_object])  # type: ignore
 
     def fit_average_diameter(self, value: float) -> None:
         """Set average diameter.
@@ -306,14 +308,15 @@ class ArrayProperties(object):
             value: diameter
 
         Raises:
-            TypeError: if associated array is not a DotArray
+            TypeError: if associated array is not a array of dots
         """
         # changes diameter
-        if not isinstance(self._oa, _arrays.DotArray):
+        if not isinstance(self._oa.objects, DotList):
             raise TypeError("Adapting diameter is not possible "
                             + f"for {type(self._oa).__name__}.")
         scale = value / self.average_dot_diameter
-        self._oa._objs.diameter = self._oa.diameter * scale  # pylint: disable=W0212
+        self._oa.objects.diameter = \
+            self._oa.objects.diameter * scale  # pylint: disable=W0212
         self.reset()
 
     def fit_average_rectangle_size(self, value: ArrayLike) -> None:
@@ -323,12 +326,12 @@ class ArrayProperties(object):
             value:  (width, height)
 
         Raises:
-            TypeError: if associated array is not a RectangleArray or values is not a tuple of two numerical values
+            TypeError: if associated array is not a object of rectangles
+            or values is not a tuple of two numerical values
         """
-        # changes diameter
-        if not isinstance(self._oa, _arrays.RectangleArray):
-            raise RuntimeError("Adapting rectangle size is not possible for "
-                               + f"{type(self._oa).__name__}.")
+        if not isinstance(self._oa.objects, RectangleList):
+            raise TypeError("Adapting rectangle size is not possible "
+                            + f"for {type(self._oa).__name__}.")
         new_size = np.asarray(value)
         if new_size.shape != (2,):
             raise ValueError(f"Value ({value}) has to tuple of 2 numerical "
@@ -339,7 +342,7 @@ class ArrayProperties(object):
             raise RuntimeError(
                 "Numerosity, width or hight is zero or not defined.")
         scale = np.divide(new_size, av_size)
-        self._oa._objs.sizes = self._oa._objs.sizes * \
+        self._oa.objects.sizes = self._oa.objects.sizes * \
             scale  # pylint: disable=W0212
         self.reset()
 
@@ -353,13 +356,16 @@ class ArrayProperties(object):
         """
         a_scale = value / self.total_surface_area
         # pylint: disable=W0212
-        if isinstance(self._oa, _arrays.DotArray):
-            self._oa._objs.diameter = np.sqrt(self._oa.surface_areas * a_scale) \
+        if isinstance(self._oa.objects, DotList):
+            self._oa.objects.diameter = \
+                np.sqrt(self._oa.objects.surface_areas * a_scale) \
                 * 2 / np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        elif isinstance(self._oa, _arrays.RectangleArray):
+        elif isinstance(self._oa.objects, RectangleList):
             # rect
-            self._oa._objs.sizes = self._oa._objs.sizes * \
+            self._oa.objects.sizes = self._oa.objects.sizes * \
                 np.sqrt(a_scale)
+        else:
+            raise NotImplementedError()
 
         self.reset()
 
@@ -448,10 +454,10 @@ class ArrayProperties(object):
         -------
 
         """
-        if isinstance(self._oa, _arrays.DotArray):
+        if isinstance(self._oa.objects, DotList):
             self.fit_average_diameter(value / (self.numerosity * np.pi))
 
-        elif isinstance(self._oa, _arrays.RectangleArray):
+        elif isinstance(self._oa.objects, RectangleList):
             new_size = self.average_rectangle_size * value / self.total_perimeter
 
             self.fit_average_rectangle_size(new_size)
@@ -520,7 +526,7 @@ class ArrayProperties(object):
         """
         adapt_properties: continuous property or list of continuous properties
         several properties to be adapted
-        if adapt dot array is specified, array will be adapt to adapt_dot_array, otherwise
+        if adapt nsn stimulus is specified, array will be adapt to adapt_dot_array, otherwise
         the values defined in adapt_properties is used.
         some adapting requires realignement to avoid overlaps. However,
         realigment might result in a different field area. Thus, realign after
@@ -572,7 +578,7 @@ class ArrayProperties(object):
                 property_flag.label()))
 
     def scale_average_diameter(self, factor: float) -> None:
-        if not isinstance(self._oa, _arrays.DotArray):
+        if not isinstance(self._oa.objects, DotList):
             raise TypeError("Scaling diameter is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -580,7 +586,7 @@ class ArrayProperties(object):
         return self.fit_average_diameter(self.average_dot_diameter * factor)
 
     def scale_average_rectangle_size(self, factor: float) -> None:
-        if not isinstance(self._oa, _arrays.RectangleArray):
+        if not isinstance(self._oa.objects, RectangleList):
             raise TypeError("Scaling rectangle size is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -646,7 +652,7 @@ class ArrayProperties(object):
                         value=self.get(feature) * factor)
 
 
-def _match_field_area(object_array,
+def _match_field_area(object_array: _arrays.NSNStimulus,
                       value: float,
                       precision: float) -> None:
     """change the convex hull area to a desired size by scale the polar
@@ -668,14 +674,14 @@ def _match_field_area(object_array,
 
     # centered points
     old_center = object_array.get_center_of_field_area()
-    object_array._objs.xy = object_array.xy - old_center
+    object_array.objects.xy = object_array.objects.xy - old_center
     centered_polar = geometry.cartesian2polar(object_array.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        object_array._objs.xy = geometry.polar2cartesian(
+        object_array.objects.xy = geometry.polar2cartesian(
             centered_polar * [scale, 1])
         object_array.properties.reset()  # required at this point to recalc convex hull
         current = object_array.properties.field_area
@@ -684,7 +690,7 @@ def _match_field_area(object_array,
                 (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    object_array._objs.xy = object_array.xy + old_center
+    object_array.objects.xy = object_array.xy + old_center
     object_array.properties.reset()
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays

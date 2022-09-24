@@ -12,14 +12,14 @@ from . import pil_image as _pil_image
 from ._image_colours import ImageColours
 
 
-class ExprimentDotArray(_Canvas):
+class ExprimentNSNStimulus(_Canvas):
 
     def __init__(self, object_array,
                  colours=None,
                  position=(0, 0),
                  antialiasing=True):
 
-        _array_draw._check_object_array(object_array)
+        _array_draw._check_nsn_stimulus(object_array)
         if colours is None:
             colours = ImageColours()
         if not isinstance(colours, ImageColours):
@@ -66,9 +66,9 @@ class ExpyrimentDASequence(object):
         self.antialiasing = antialiasing
 
         for da in self.da_sequence.dot_arrays:
-            stim = ExprimentDotArray(object_array=da, position=position,
-                                     colours=colours,
-                                     antialiasing=antialiasing)
+            stim = ExprimentNSNStimulus(object_array=da, position=position,
+                                        colours=colours,
+                                        antialiasing=antialiasing)
             self.stimuli.append(stim)
 
         if make_pil_images_now:

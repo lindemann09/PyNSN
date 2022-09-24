@@ -12,7 +12,7 @@ from ._image_colours import ImageColours
 
 
 def create(filename: str,
-           object_array: _arrays.ObjectArrayType,
+           object_array: _arrays.NSNStimulus,
            colours: Optional[ImageColours] = None) -> _svg.Drawing:
     """SVG image/file, vector image format
 

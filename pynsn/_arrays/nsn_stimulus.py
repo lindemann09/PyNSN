@@ -3,13 +3,13 @@
 """
 from __future__ import annotations
 
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
-from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from hashlib import md5
-from typing import Iterator, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -22,56 +22,69 @@ from .._lib.misc import dict_to_text
 from .._lib.typing import IntOVector
 from .._shapes import ShapeType
 from .._shapes.dot import Dot
+from .._shapes.spatial_relations import DotDot, RectangleRectangle
+
 from .._shapes.rectangle import Rectangle
-from .._shapes.dot_list import DotList
-from .._shapes.rectangle_list import RectangleList
-from .properties import ArrayProperties
+from .._shapes.dot_list import BaseDotList, DotList
+from .._shapes.rectangle_list import BaseRectangleList, RectangleList
+from .. import _arrays
 from .target_area import TargetArea
-from .tools import BrownianMotion
+from .tools import BrownianMotion, make_csv
 from .. import constants
 
+DOT_ARRAY = "dot_array"
+RECTANGLE_ARRAY = "rectangle_array"
 
-class ABCObjectArray(TargetArea, metaclass=ABCMeta):
-    """Abstract array class
 
-    All object arrays are restricted to a certain target area. The classes are
+class NSNStimulus(TargetArea):
+    """Non-Symbolic Number Stimulus
+
+    NSN-Stimulus are restricted to a certain target area. The classes are
     optimized for numpy calculations
     """
 
     def __init__(self,
-                 target_area: ShapeType,
-                 min_distance_between_objects: Optional[float],
-                 min_distance_area_boarder: Optional[float],
-                 object_list: Union[DotList, RectangleList]) -> None:
-        # also as parent  class for implementation of dot and rect arrays
+                 object_list: Union[DotList, RectangleList],
+                 target_area_shape: ShapeType,
+                 min_distance_between_objects: Optional[float] = None,
+                 min_distance_area_boarder: Optional[float] = None) -> None:
+        # also as parent  class for implementation of dot and nsn stimuli
 
-        super().__init__(target_area=target_area,
+        super().__init__(target_area_shape=target_area_shape,
                          min_distance_between_objects=min_distance_between_objects,
                          min_distance_area_boarder=min_distance_area_boarder)
+        if not isinstance(object_list, (DotList, RectangleList)):
+            raise ValueError("object_list has to be a DotList "
+                             "or RectangleList, but not "
+                             f"{type(object_list).__name__}")
+        self._objects = object_list
+        self._properties = _arrays.ArrayProperties(self)
 
-        self._objs = object_list
-        self._properties = ArrayProperties(self)
+    @property
+    def objects(self) -> Union[DotList, RectangleList]:
+        """The objects in the array"""
+        return self._objects
 
-    @abstractmethod
-    def add(self, obj):
-        """ """
+    def type(self) -> str:
+        if isinstance(self.objects, DotList):
+            return DOT_ARRAY
+        elif isinstance(self.objects, RectangleList):
+            return RECTANGLE_ARRAY
+        else:
+            raise ValueError("object_list has to be a DotList "
+                             "or RectangleList, but not "
+                             f"{type(self.objects).__name__}")
 
-    @abstractmethod
     def to_dict(self) -> dict:
         """Convert array to dictionary
         """
-        d = super().to_dict()
-        d.update({"xy": self._objs.xy.tolist()})
-        if len(self._objs.attributes) > 0:
-            if np.all(self._objs.attributes == self._objs.attributes[0]):
-                # all equal
-                d.update({"attributes": self._objs.attributes[0]})
-            else:
-                d.update({"attributes": self._objs.attributes.tolist()})
-        return d
+        rtn = {"type": self.type()}
+        rtn.update(super().to_dict())
+        rtn.update(self.objects.to_dict())
+        return rtn
 
-    @abstractmethod
-    def dataframe_dict(self):
+    def dataframe_dict(self, hash_column: bool = False,
+                       attribute_column: bool = True) -> dict:
         """Returns dict that can be used to create Pandas dataframe or Arrow Table
 
         Examples
@@ -82,43 +95,63 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
+        if hash_column:
+            d = {"hash": [self.hash] * len(self._objects.xy)}
+        else:
+            d = {}
+        d.update({"x": self._objects.xy[:, 0].tolist(),
+                  "y": self._objects.xy[:, 1].tolist()})
+        if isinstance(self._objects, DotList):
+            d.update({"diameter": self._objects.diameter.tolist()})
+        else:
+            d.update({"width": self._objects.sizes[:, 0].tolist(),
+                      "height": self._objects.sizes[:, 1].tolist()})
+
+        if attribute_column:
+            d.update({"attributes": self._objects.attributes.tolist()})
+        return d
+
     @staticmethod
-    @abstractmethod
-    def from_dict(the_dict):
-        """ """
+    def from_dict(the_dict: dict):
+        """read nsn stimulus from dict"""
 
-    @abstractmethod
-    def copy(self, indices: Union[IntOVector, None] = None,
-             deep_copy=True) -> ABCObjectArray:
-        """ """
+        oa_type = the_dict["type"]
+        if oa_type == DOT_ARRAY:
+            object_list = DotList.from_dict(the_dict)
+        elif oa_type == RECTANGLE_ARRAY:
+            object_list = RectangleList.from_dict(the_dict)
+        else:
+            raise RuntimeError(f"Unknown nsn stimulus type {oa_type}")
+        target_area = TargetArea.from_dict(the_dict)
 
-    @abstractmethod
-    def iter_objects(self, indices: Optional[IntOVector] = None) -> Iterator:
-        """iterate over all or a part of the objects
+        return NSNStimulus(
+            object_list=object_list,
+            target_area_shape=target_area.target_area_shape,
+            min_distance_between_objects=target_area.min_distance_between_objects,
+            min_distance_area_boarder=target_area.min_distance_area_boarder)
 
-        Parameters
-        ----------
-        indices: int or iterable of integer
+    def copy(self, indices: Union[int, Sequence[int], None] = None,
+             deep_copy: bool = True) -> NSNStimulus:
+        """returns a (deep) copy of the nsn stimulus.
 
-        Notes
-        -----
-        To iterate all object you might all use the class iterator __iter__:
-        >>> for obj in my_array:
-        >>>    print(obj)
+        It allows to copy a subset of objects.
+
         """
+        if deep_copy:
+            target_area_shape = deepcopy(self.target_area_shape)
+        else:
+            target_area_shape = self.target_area_shape
+        return NSNStimulus(
+            object_list=self._objects.copy(
+                indices=indices, deep_copy=deep_copy),
+            target_area_shape=target_area_shape,
+            min_distance_between_objects=self.min_distance_between_objects,
+            min_distance_area_boarder=self.min_distance_area_boarder)
 
-    @abstractmethod
-    def find_objects(self, size=None, attribute=None):
-        """ """
-
-    @abstractmethod
-    def get_distances(self, ref_object) -> NDArray:
-        """get_distances """
-
-    @abstractmethod
-    def csv(self, variable_names: bool, hash_column: bool,
-            attribute_column: bool):
-        """Comma-separated table representation the object array
+    def csv(self, variable_names: bool = True,
+            hash_column: bool = False,
+            attribute_column: bool = True):
+        """Comma-separated table representation the nsn stimulus
 
         Args:
             variable_names: if True first line include the variable names
@@ -130,25 +163,24 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         """
 
-    @property
-    def surface_areas(self) -> NDArray:
-        """Vector with the surface areas of all objects"""
-        return self._objs.surface_areas
+        if isinstance(self._objects, DotList):
+            size_dict = {"diameter": self._objects.diameter}
+        else:
+            size_dict = {"width": self._objects.sizes[:, 0],
+                         "height": self._objects.sizes[:, 1]}
+        if attribute_column:
+            attr = self.attributes
+        else:
+            attr = None
+        if hash_column:
+            array_hash = self.hash
+        else:
+            array_hash = None
 
-    @property
-    def perimeter(self) -> NDArray:
-        """Vector with the perimeter of all objects"""
-        return self._objs.perimeter
-
-    def mod_round_values(self, decimals: int = 0,
-                         int_type: type = np.int16) -> None:
-        """Round all values
-
-        Args:
-            decimals: number of decimal places
-            int_type: numpy int type (default=numpy.int16)
-        """
-        self._objs.round_values(decimals, int_type)
+        return make_csv(xy=self._objects.xy,
+                        size_data_dict=size_dict,
+                        attributes=attr, array_hash=array_hash,
+                        make_variable_names=variable_names)
 
     def __str__(self) -> str:
         d = TargetArea.to_dict(self)  # super: omit objects
@@ -162,24 +194,16 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         The two dimensional array (shape=[2, `n`]) represents the locations of the center of
         the `n` objects in this array
         """
-        return self._objs.xy
+        return self._objects.xy
 
     @property
     def attributes(self) -> NDArray:
         """Numpy vector of the object attributes
         """
-        return self._objs.attributes
-
-    def mod_set_attributes(self, attributes: Optional[ArrayLike]) -> None:
-        """Set all attributes
-
-        Args:
-            attributes: single attribute or list of attributes
-        """
-        self._objs.set_attributes(attributes=attributes)
+        return self._objects.attributes
 
     def clear(self) -> None:
-        self._objs.clear()
+        self._objects.clear()
         self._properties.reset()
 
     def delete(self, index: IntOVector) -> None:
@@ -191,12 +215,12 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         Returns:
 
         """
-        self._objs.delete(index)
+        self._objects.delete(index)
         self._properties.reset()
 
     @property
-    def properties(self) -> ArrayProperties:
-        """Properties of the object array.
+    def properties(self) -> _arrays.ArrayProperties:
+        """Properties of the nsn stimulus.
 
         ``ArrayProperties`` represents and handles (fitting, scaling) visual
         properties of the object like
@@ -220,7 +244,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
 
-        The hash can be used as an unique identifier of the object array.
+        The hash can be used as an unique identifier of the nsn stimulus.
 
         Notes:
             Hashing is based on the byte representations of the positions, perimeter
@@ -228,9 +252,9 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
         m = md5()
         m.update(
-            self._objs.xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
+            self._objects.xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
         try:
-            m.update(self.perimeter.tobytes())
+            m.update(self._objects.perimeter.tobytes())
         except AttributeError:
             pass
         m.update(self.attributes.tobytes())
@@ -251,29 +275,18 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             with open(file_path, 'w', encoding="utf-8") as fl:
                 fl.write(j)
 
-    def get_objects(self, indices: Optional[IntOVector] = None) \
-            -> Sequence[ShapeType]:
-        """ """
-        return list(self.iter_objects(indices=indices))
-
-    def get_object(self, index: int) -> Union[None, Dot, Rectangle]:
-        """ """
-        if isinstance(index, int):
-            return next(self.iter_objects(indices=index))
-        else:
-            raise ValueError("Index must be a integer not a {}. ".format(
-                type(index).__name__) + "To handle multiple indices use 'get_objects'. ")
-
     def join(self, object_array) -> None:
-        """add another object _arrays"""
-        self.add(object_array.iter_objects())
+        """joins with another dot list list """
+        self._objects.join(object_array.objects)
+        self._properties.reset()
 
     def get_distances_matrix(self, between_positions: bool = False) -> NDArray:
         """between position ignores the dot size"""
         if between_positions:
-            return spatial.distance.cdist(self._objs.xy, self._objs.xy)
+            return spatial.distance.cdist(self._objects.xy, self._objects.xy)
         # matrix with all distance between all objects
-        dist = np.asarray([self.get_distances(d) for d in self.iter_objects()])
+        dist = np.asarray([self.get_distances(d)
+                           for d in self._objects.iter()])
         return dist
 
     def get_overlaps(self) -> Tuple[NDArray, NDArray]:
@@ -288,8 +301,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
     def get_center_of_mass(self) -> NDArray:
         weighted_sum = np.sum(
-            self._objs.xy * np.atleast_2d(self.perimeter).T, axis=0)
-        return weighted_sum / np.sum(self.perimeter)
+            self._objects.xy * np.atleast_2d(self._objects.perimeter).T, axis=0)
+        return weighted_sum / np.sum(self._objects.perimeter)
 
     def get_center_of_field_area(self) -> NDArray:
         """Center of all objects
@@ -300,13 +313,13 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         return geometry.center_of_coordinates(self.properties.convex_hull.xy)
 
     def mod_center_array_mass(self) -> None:
-        self._objs.xy = self._objs.xy - self.get_center_of_mass()
+        self._objects.xy = self._objects.xy - self.get_center_of_mass()
         self._properties.reset()
 
     def mod_center_field_area(self) -> None:
         cxy = geometry.center_of_coordinates(
             self.properties.convex_hull.xy)
-        self._objs.xy = self._objs.xy - cxy  # type: ignore
+        self._objects.xy = self._objects.xy - cxy  # type: ignore
         self._properties.reset()
 
     def _search_area_parameter(self):
@@ -315,15 +328,15 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         It takes into account to minimum distance to area boarder
         """
-        if isinstance(self.target_area, Dot):
-            tmp = self.target_area.diameter/2.0 \
+        if isinstance(self.target_area_shape, Dot):
+            tmp = self.target_area_shape.diameter/2.0 \
                 - self.min_distance_area_boarder
             search_area = Dot(xy=(0, 0), diameter=tmp*2)
             half_search_area_size = np.array([tmp, tmp])
 
-        elif isinstance(self.target_area, Rectangle):
-            tmp = (self.target_area.width - 2 * self.min_distance_area_boarder,
-                   self.target_area.height - 2 * self.min_distance_area_boarder)
+        elif isinstance(self.target_area_shape, Rectangle):
+            tmp = (self.target_area_shape.width - 2 * self.min_distance_area_boarder,
+                   self.target_area_shape.height - 2 * self.min_distance_area_boarder)
             search_area = Rectangle(xy=(0, 0), size=tmp)
             half_search_area_size = np.asarray(search_area.size) / 2.0
         else:
@@ -344,13 +357,13 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         """
 
         if not isinstance(ref_object, (Dot, Rectangle)):
-            raise NotImplementedError("Not implemented for {}".format(
-                type(ref_object).__name__))
+            raise NotImplementedError("Not implemented for "
+                                      f"{type(ref_object).__name__}")
 
         if occupied_space is not None and \
-                not isinstance(occupied_space, ABCObjectArray):
+                not isinstance(occupied_space, NSNStimulus):
             raise TypeError(
-                "Occupied_space has to be a Dot or Rectangle Array or None.")
+                "Occupied_space has to be a Dot or nsn stimulus or None.")
 
         search_area, half_search_area_size = self._search_area_parameter()
         rtn_object = deepcopy(ref_object)
@@ -375,7 +388,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             if is_inside and inside_convex_hull:
                 # use only those that do not change the convex hull
                 tmp_array = self.copy(deep_copy=True)
-                tmp_array.add([rtn_object])  # type: ignore
+                tmp_array.objects.add([rtn_object])  # type: ignore
                 is_inside = tmp_array.properties.convex_hull == \
                     self.properties.convex_hull
 
@@ -387,7 +400,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             if not allow_overlapping:
                 # find overlap (and lower minimum distance)
                 dist = self.get_distances(rtn_object)
-                if isinstance(occupied_space, ABCObjectArray):
+                if isinstance(occupied_space, NSNStimulus):
                     dist = np.append(dist,
                                      occupied_space.get_distances(rtn_object))
                 if sum(dist < self.min_distance_between_objects) > 0:  # at least one is overlapping
@@ -399,12 +412,12 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         # find new position for each dot
         # mixes always all position (ignores dot limitation)
 
-        all_objects = list(self.iter_objects())
+        all_objects = list(self._objects.iter())
         self.clear()
         for obj in all_objects:
             new = self.get_free_position(obj, in_neighborhood=False,
                                          allow_overlapping=allow_overlapping)
-            self.add([new])  # type: ignore
+            self.objects.add([new])  # type: ignore
 
     def get_outlier(self) -> List[int]:
         """Indices of object that are not fully inside the target area"""
@@ -412,13 +425,13 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         indices = []
         search_area, _ = self._search_area_parameter()
 
-        for cnt, obj in enumerate(self.iter_objects()):
+        for cnt, obj in enumerate(self._objects.iter()):
             if not obj.is_inside(search_area):
                 indices.append(cnt)
         return indices
 
     def get_number_deviant(self, change_numerosity: int,
-                           preserve_field_area: bool = False) -> ABCObjectArray:
+                           preserve_field_area: bool = False) -> NSNStimulus:
         """number deviant
         """
         object_array = self.copy()
@@ -446,13 +459,13 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         TODO describe different algorithm for keep and not keep CH
         """
-
+        # FIXME not tested
         warning_info = "Can't keep field area constant."
         old_fa = self.properties.field_area
 
         if not keep_convex_hull:
             # touch convex hull objects
-            ids = list(range(len(self._objs.xy)))
+            ids = list(range(len(self._objects.xy)))
             for x in self.properties.convex_hull.object_indices:
                 self.mod_move_object(x, 0, (0, 0), push_other=True)
                 ids.remove(x)
@@ -478,7 +491,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 else:
                     raise NoSolutionError(warning_info)
 
-                obj = next(self.iter_objects(idx))
+                obj = next(self._objects.iter(idx))
                 self.delete(idx)
 
                 # search new pos: fist inside convex hull later outside
@@ -497,11 +510,11 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                                 found = None
 
                 if found is None:
-                    self.add([obj])  # put back
+                    self.objects.add([obj])  # type: ignore # put back
                     raise NoSolutionError(
                         "Can't find a solution for remove overlap")
                 else:
-                    self.add([found])
+                    self.objects.add([found])
                     overlaps = self.get_overlaps()[0]
 
             self.properties.reset()
@@ -517,12 +530,12 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
         return old_fa == new_ch
 
     def mod_replace(self, xy: ArrayLike) -> None:
-        """Replace the object array
+        """Replace the nsn stimulus
 
         Args:
           xy: replacement at the x and y axis
         """
-        self._objs.xy = self._objs.xy + np.atleast_2d(xy)
+        self._objects.xy = self._objects.xy + np.atleast_2d(xy)
         self._properties.reset()
 
     def mod_move_object(self, object_ids: IntOVector,
@@ -554,7 +567,7 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             object_ids = [object_ids]
         movement = Coordinate(xy=(0, 0))
 
-        for id_, obj in zip(object_ids, self.iter_objects(indices=object_ids)):
+        for id_, obj in zip(object_ids, self._objects.iter(indices=object_ids)):
 
             if isinstance(ang, float):
                 movement.polar = (distance, ang)
@@ -563,8 +576,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 movement.xy = ang.xy - obj.xy
                 movement.rho = distance
 
-            self._objs.xy[id_,
-                          :] = self._objs.xy[id_, :] + movement.xy
+            self._objects.xy[id_,
+                             :] = self._objects.xy[id_, :] + movement.xy
 
             if push_other:
                 # push overlapping object
@@ -572,8 +585,8 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 dist = self.get_distances(obj)
                 for other_id in np.flatnonzero(dist < self.min_distance_between_objects):
                     if other_id != id_:
-                        movement.xy = self._objs.xy[other_id, :] \
-                            - self._objs.xy[id_, :]
+                        movement.xy = self._objects.xy[other_id, :] \
+                            - self._objects.xy[id_, :]
                         self.mod_move_object(other_id,
                                              direction=movement.theta,
                                              distance=abs(dist[other_id])
@@ -597,10 +610,10 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
             idx = self.get_outlier()
             if len(idx) == 0:
                 return
-            for object_id in idx:
-                obj = self.get_object(index=object_id)
-                if isinstance(self.target_area, Dot):
-                    mv_dist = obj.distance(self.target_area)  # type: ignore
+            for object_id, obj in zip(idx, self.objects.iter(idx)):
+                if isinstance(self.target_area_shape, Dot):
+                    mv_dist = obj.distance(
+                        self.target_area_shape)  # type: ignore
                     print(mv_dist)
                     self.mod_move_object(object_id,
                                          distance=abs(mv_dist),
@@ -609,13 +622,14 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 else:
                     # target area is rect
                     # should be always this case
-                    assert isinstance(self.target_area, Rectangle)
+                    assert isinstance(self.target_area_shape, Rectangle)
                     raise NotImplementedError()  # FIXME
 
-    def get_split_arrays(self) -> List[ABCObjectArray]:
+    def get_split_arrays(self) -> List[NSNStimulus]:
         """returns a list of _arrays
         each array contains all dots of with particular colour"""
-        att = self._objs.attributes
+        # FIXME not checked
+        att = self._objects.attributes
         att[np.where(att == None)] = "None"
 
         rtn = []
@@ -624,7 +638,9 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
                 # fast. shallow copy with just one object
                 da = self.copy(indices=0, deep_copy=False)
                 da.clear()
-                da.add(self.find_objects(attribute=c))  # type: ignore
+                idx = self.objects.find(attribute=c)
+                objects = list(self._objects.iter(indices=idx))
+                da.objects.add(objects)  # type: ignore
                 rtn.append(da)
         return rtn
 
@@ -660,4 +676,47 @@ class ABCObjectArray(TargetArea, metaclass=ABCMeta):
 
         return convex_hull_unchanged, has_no_outlier
 
-# TODO  everywhere: file header doc and author information
+    def get_distances(self, shape: ShapeType) -> NDArray:
+        """Euclidean distances toward a single object
+
+        Negative numbers indicate an overlap of the objects
+
+        Args:
+            dot: object towards the distances will be calculated
+
+        Returns: numpy array of distances
+        """
+
+        if len(self._objects.xy) == 0:
+            return np.array([])
+
+        if isinstance(shape, Dot) and isinstance(self._objects, DotList):
+            rel = DotDot(dots_a=self._objects,
+                         dots_b=BaseDotList(xy=shape.xy,
+                                            diameter=shape.diameter))
+            return rel.distances()
+
+        elif isinstance(shape, Rectangle) and \
+                isinstance(self._objects, RectangleList):
+            rel = RectangleRectangle(
+                rectangles_a=self._objects,
+                rectangles_b=BaseRectangleList(xy=shape.xy, sizes=shape.size))
+            return rel.xy_distances()
+
+        else:
+            raise NotImplementedError()
+
+
+def load_array(filename: str) -> NSNStimulus:
+    """Loading json array file
+
+    Args:
+        filename: the file name
+
+    Returns:
+        nsn stimulus
+    """
+
+    with open(filename, 'r', encoding="utf-8") as fl:
+        array_dict = json.load(fl)
+    return NSNStimulus.from_dict(array_dict)

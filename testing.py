@@ -19,6 +19,8 @@ from pynsn._lib import geometry, np_tools
 seed = 921
 nsn.init_random_generator(seed)
 
+dota = pynsn.NSNStimulus(object_list=nsn.DotList(),
+                         target_area_shape=pynsn.Dot(diameter=400))
 
 factory = nsn.NSNFactory(min_distance_between_objects=2,
                          # target_area=pynsn.Rectangle(size=(200, 400)),
@@ -66,9 +68,9 @@ stimulus.properties.fit_field_area(99000)
 # print(stimulus)
 
 idx = stimulus.get_outlier()
-print(idx)
+print(stimulus.properties)
 # FIXME squeed too much, because incorrect distance calulations
-stimulus.mod_squeeze_to_area()
+# stimulus.mod_squeeze_to_area()
 
 img = mpl_figure.create(stimulus, my_colours)
 pp.savefig("demo2.png")

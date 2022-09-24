@@ -16,7 +16,7 @@ from ._image_colours import ImageColours
 # TODO pillow supports no alpha/opacity
 
 
-def create(object_array: _arrays.ObjectArrayType,
+def create(object_array: _arrays.NSNStimulus,
            colours: Optional[ImageColours] = None,
            antialiasing: Union[bool, int] = True) -> _Image.Image:
     # ImageParameter
@@ -53,7 +53,8 @@ class _PILDraw(_array_draw.ABCArrayDraw):
         return image.resize(im_size, resample=resample)
 
     @staticmethod
-    def draw_shape(img, shape: _shapes.ShapeType, opacity, scaling_factor):
+    def draw_shape(img, shape: _shapes.ShapeType,
+                   opacity: float, scaling_factor: float):
         # FIXME opacity is ignored (not yet supported)
         # draw object
         shape.xy = _c2i_coord(shape.xy * scaling_factor, img.size).tolist()
@@ -65,13 +66,6 @@ class _PILDraw(_array_draw.ABCArrayDraw):
             _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
                                           shape.x + r, shape.y + r),
                                          fill=col.colour)
-        elif isinstance(shape, _shapes.Rectangle):
-            tmp = _np.asarray(shape.size) * scaling_factor
-            shape.size = tmp.tolist()
-            # rectangle shape
-            _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
-                                            shape.right, shape.bottom),
-                                           fill=col.colour)  # TODO decentral _shapes seems to be bit larger than with pyplot
         elif isinstance(shape, _shapes.Picture):
             tmp = _np.asarray(shape.size) * scaling_factor
             shape.size = tmp.tolist()
@@ -80,12 +74,21 @@ class _PILDraw(_array_draw.ABCArrayDraw):
             target_box[:, 1] = _np.flip(target_box[:, 1])  # reversed y axes
             pict = _Image.open(shape.filename, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
-                pict = pict.resize(shape.size, resample=_Image.ANTIALIAS)
+                pict = pict.resize(shape.size.tolist(),
+                                   resample=_Image.ANTIALIAS)
 
             tr_layer = _Image.new('RGBA', img.size, (0, 0, 0, 0))
-            tr_layer.paste(pict, target_box)
+            tr_layer.paste(pict, target_box)  # FIXME .flatten or .tolist()?
             res = _Image.alpha_composite(img, tr_layer)
             img.paste(res)
+
+        elif isinstance(shape, _shapes.Rectangle):
+            tmp = _np.asarray(shape.size) * scaling_factor
+            shape.size = tmp.tolist()
+            # rectangle shape
+            _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
+                                            shape.right, shape.bottom),
+                                           fill=col.colour)  # TODO decentral _shapes seems to be bit larger than with pyplot
 
         else:
             raise NotImplementedError(

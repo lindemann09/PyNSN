@@ -6,16 +6,16 @@ from typing import Optional, Any
 import numpy as _np
 
 from .._lib.colour import Colour
-from .. import _arrays
+from .._arrays import NSNStimulus
 from .._shapes import Dot, Rectangle
 from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
 
 
-def _check_object_array(obj):
-    if not isinstance(obj, (_arrays.DotArray, _arrays.RectangleArray)):
-        raise TypeError("DotArray or RectangleArray expected, but not {}".format(
+def _check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
+    if not isinstance(obj, (NSNStimulus)):
+        raise TypeError("NSNStimulus expected, but not {}".format(
             type(obj).__name__))
 
 
@@ -70,7 +70,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
                     (e.g. pillow image, axes (matplotlib) or svrdraw object)
         """
 
-    def create_image(self, object_array: _arrays.ObjectArrayType,
+    def create_image(self, object_array: NSNStimulus,
                      colours: Optional[ImageColours],
                      antialiasing: Optional[float] = None, **kwargs) -> Any:
         """create image
@@ -90,7 +90,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
         rtn : image
         """
 
-        _check_object_array(object_array)
+        _check_nsn_stimulus(object_array)
         if colours is None:
             colours = ImageColours()
         if not isinstance(colours, ImageColours):
@@ -108,14 +108,15 @@ class ABCArrayDraw(metaclass=ABCMeta):
                 aaf = 1
 
         # prepare the image, make target area if required
-        if isinstance(object_array.target_area, Dot):
-            tmp = int(_np.ceil(object_array.target_area.diameter) * aaf)
+        if isinstance(object_array.target_area_shape, Dot):
+            tmp = int(_np.ceil(object_array.target_area_shape.diameter) * aaf)
             target_area_shape = Dot(xy=(0, 0), diameter=tmp,
                                     attribute=colours.target_area.colour)
             image_size = _np.ones(2) * tmp
 
-        elif isinstance(object_array.target_area, Rectangle):
-            tmp = _np.int16(_np.ceil(object_array.target_area.size) * aaf)
+        elif isinstance(object_array.target_area_shape, Rectangle):
+            tmp = _np.int16(
+                _np.ceil(object_array.target_area_shape.size) * aaf)
             target_area_shape = Rectangle(xy=(0, 0), size=tmp,
                                           attribute=colours.target_area.colour)
             image_size = target_area_shape.size
@@ -134,7 +135,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
         if object_array.properties.numerosity > 0:
 
             # draw objects
-            for obj in object_array.iter_objects():
+            for obj in object_array.objects.iter():
                 att = obj.get_colour()
                 if isinstance(att, Colour):
                     obj.attribute = att

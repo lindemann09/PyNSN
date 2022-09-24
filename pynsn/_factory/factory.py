@@ -3,11 +3,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy, deepcopy
 from typing import Iterator, Optional, Sequence, Union
 
-from .._arrays.dot_array import DotArray
-from .._arrays.rect_array import RectangleArray
+from .._arrays.nsn_stimulus import NSNStimulus
 from .._arrays.target_area import TargetArea
 from .._lib.exception import NoSolutionError
 from .._lib.misc import dict_to_text
+from .._shapes.dot_list import DotList
+from .._shapes.rectangle_list import RectangleList
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
 from .._shapes import ShapeType
@@ -48,7 +49,7 @@ class NSNFactory(TargetArea):
         """
 
         TargetArea.__init__(self,
-                            target_area=target_area,
+                            target_area_shape=target_area,
                             min_distance_between_objects=min_distance_between_objects,
                             min_distance_area_boarder=min_distance_area_boarder)
         self._distr_diameter = None
@@ -91,7 +92,7 @@ class NSNFactory(TargetArea):
     def set_appearance_dots(self,
                             diameter: ParameterDistributionType,
                             attributes=None):
-        """Set distributions of the parameter for random dot arrays
+        """Set distributions of the parameter for random nsn stimuli
 
         Args:
             diameter: distribution of diameter
@@ -105,7 +106,7 @@ class NSNFactory(TargetArea):
                                   height: ParameterDistributionType = None,
                                   proportion: ParameterDistributionType = None,
                                   attributes: ParameterDistributionType = None):
-        """Set distributions of the parameter for random rectangle arrays
+        """Set distributions of the parameter for random nsn stimuli
 
         Args:
             width: distribution of width (Optional)
@@ -205,12 +206,12 @@ class NSNFactory(TargetArea):
             pass
         return rtn
 
-    def add_random_dots(self, dot_array: DotArray,
+    def add_random_dots(self, object_array: NSNStimulus,
                         n_objects: int = 1,
                         allow_overlapping: bool = False,
-                        occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
+                        occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
         """
-        occupied_space is a dot array (used for multicolour dot array (join after)
+        occupied_space is a nsn stimulus (used for multicolour nsn stimulus (join after)
 
         attribute is an array, _arrays are assigned randomly.
 
@@ -223,28 +224,28 @@ class NSNFactory(TargetArea):
 
         Returns
         -------
-        rtn : object array
+        rtn : nsn stimulus
         """
-        if not isinstance(dot_array, DotArray):
-            raise ValueError("Dot array has to be a DotArray and not "
-                             f" {type(dot_array).__name__}")
+        if not isinstance(object_array.objects, DotList):
+            raise ValueError("nsn stimulus has to have a DotList and not "
+                             f" {type(object_array.objects).__name__}")
         for dot in self._sample_dots(n=n_objects):
             try:
-                dot = dot_array.get_free_position(ref_object=dot, in_neighborhood=False,
-                                                  occupied_space=occupied_space,
-                                                  allow_overlapping=allow_overlapping)
+                dot = object_array.get_free_position(ref_object=dot, in_neighborhood=False,
+                                                     occupied_space=occupied_space,
+                                                     allow_overlapping=allow_overlapping)
             except NoSolutionError as err:
                 raise NoSolutionError(f"Can't find a solution for {n_objects} "
                                       + "items in this array") from err
-            dot_array.add([dot])  # type: ignore
+            object_array.objects.add([dot])  # type: ignore
 
-        return dot_array
+        return object_array
 
     def random_dot_array(self, n_objects: int,
                          allow_overlapping: bool = False,
-                         occupied_space: Union[None, DotArray, RectangleArray] = None) -> DotArray:
-        """Create a new random dot array
-        occupied_space is a dot array (used for multicolour dot array (join after)
+                         occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
+        """Create a new random nsn stimulus
+        occupied_space is a nsn stimulus (used for multicolour nsn stimulus (join after)
 
         attribute is an array, _arrays are assigned randomly.
 
@@ -257,42 +258,43 @@ class NSNFactory(TargetArea):
 
         Returns
         -------
-        rtn : object array
+        rtn : nsn stimulus
         """
-        rtn = DotArray(target_area=deepcopy(self.target_area),
-                       min_distance_between_objects=self.min_distance_between_objects,
-                       min_distance_area_boarder=self.min_distance_area_boarder)
-        return self.add_random_dots(dot_array=rtn,
+        rtn = NSNStimulus(object_list=DotList(),
+                          target_area_shape=deepcopy(self.target_area_shape),
+                          min_distance_between_objects=self.min_distance_between_objects,
+                          min_distance_area_boarder=self.min_distance_area_boarder)
+        return self.add_random_dots(object_array=rtn,
                                     n_objects=n_objects,
                                     allow_overlapping=allow_overlapping,
                                     occupied_space=occupied_space)
 
     def add_random_rectangles(self,
-                              rectangle_array: RectangleArray,
+                              object_array: NSNStimulus,
                               n_objects: int = 1,
                               allow_overlapping: bool = False,
-                              occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+                              occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
 
-        if not isinstance(rectangle_array, RectangleArray):
-            raise ValueError("Dot array has to be a DotArray and not "
-                             f" {type(rectangle_array).__name__}")
+        if not isinstance(object_array.objects, RectangleList):
+            raise ValueError("nsn stimulus has to have a RectangleList and not "
+                             f" {type(object_array.objects).__name__}")
         for rect in self._sample_rectangles(n=n_objects):
             try:
-                rect = rectangle_array.get_free_position(ref_object=rect, in_neighborhood=False,
-                                                         occupied_space=occupied_space,
-                                                         allow_overlapping=allow_overlapping)
+                rect = object_array.get_free_position(ref_object=rect, in_neighborhood=False,
+                                                      occupied_space=occupied_space,
+                                                      allow_overlapping=allow_overlapping)
             except NoSolutionError as err:
                 raise NoSolutionError(f"Can't find a solution for {n_objects} "
                                       + "items in this array.") from err
-            rectangle_array.add([rect])  # type:ignore
+            object_array.objects.add([rect])  # type:ignore
 
-        return rectangle_array
+        return object_array
 
     def random_rectangle_array(self, n_objects: int,
                                allow_overlapping: bool = False,
-                               occupied_space: Union[None, DotArray, RectangleArray] = None) -> RectangleArray:
+                               occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
         """
-        occupied_space is a dot array (used for multicolour dot array (join after)
+        occupied_space is a nsn stimulus (used for multicolour nsn stimulus (join after)
 
         attribute is an array, _arrays are assigned randomly.
 
@@ -305,18 +307,19 @@ class NSNFactory(TargetArea):
 
         Returns
         -------
-        rtn : object array
+        rtn : nsn stimulus
         """
-        rtn = RectangleArray(target_area=deepcopy(self.target_area),
-                             min_distance_between_objects=self.min_distance_between_objects,
-                             min_distance_area_boarder=self.min_distance_area_boarder)
-        return self.add_random_rectangles(rectangle_array=rtn,
+        rtn = NSNStimulus(object_list=RectangleList(),
+                          target_area_shape=deepcopy(self.target_area_shape),
+                          min_distance_between_objects=self.min_distance_between_objects,
+                          min_distance_area_boarder=self.min_distance_area_boarder)
+        return self.add_random_rectangles(object_array=rtn,
                                           n_objects=n_objects,
                                           allow_overlapping=allow_overlapping,
                                           occupied_space=occupied_space)
 
     def incremental_random_dot_array(self, n_objects: int,
-                                     allow_overlapping: bool = False) -> Iterator[DotArray]:
+                                     allow_overlapping: bool = False) -> Iterator[NSNStimulus]:
         """
 
         Parameters
@@ -339,7 +342,7 @@ class NSNFactory(TargetArea):
             yield current
 
     def incremental_random_rectangle_array(self, n_objects: int,
-                                           allow_overlapping: bool = False) -> Iterator[RectangleArray]:
+                                           allow_overlapping: bool = False) -> Iterator[NSNStimulus]:
         """
 
         Parameters

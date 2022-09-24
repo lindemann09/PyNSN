@@ -49,9 +49,9 @@ for [Expyriment](http://expyriment.org), please install the respective
 packages.
 
 ## Examples
-* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays_demo.html): manually creating object arrays and exporting picture file
+* [making arrays](https://lindemann09.github.io/PyNSN/make_object_arrays_demo.html): manually creating nsn stimuluss and exporting picture file
   ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fmake_object_arrays_demo.ipynb))
-* [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random dot arrays
+* [random arrays](https://lindemann09.github.io/PyNSN/pynsn_demo.html): Creating random nsn stimuli
   ([binder](https://mybinder.org/v2/gh/lindemann09/PyNSN/jupyter?labpath=examples%2Fpynsn_demo.ipynb))
 * matching visual features
 * data base, sequences
