@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Iterable, List, Any, Optional
+from typing import Iterable, List, Any, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -61,21 +61,22 @@ def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     return m + np.tril(np.full(m.shape, np.nan), k=k-1)
 
 
-def find_value_rowwise(array2d: NDArray, values: Any) -> NDArray:
+def find_value_rowwise(array2d: NDArray, values: NDArray) -> Tuple[NDArray, NDArray]:
     """returns array the indices (row, column) with that value in each row.
     If more than one cell in a row contains the value, select randomly one
 
-    function ignores NaNs
-    """
+    function ignores nans
 
+    returns idx_row, idx_column
+    """
     # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
-    idx_minimum = np.vstack(np.nonzero(array2d == values)).T
+    idx_value = np.vstack(np.nonzero(array2d == values)).T
     # Problem: one row could have min values
     #   --> choose randomly one
-    np.random.shuffle(idx_minimum)  # shuffle rows
+    np.random.shuffle(idx_value)  # shuffle rows
     # return only first unique id (ui-index) (Note: set is sorted)
-    _, ui = np.unique(idx_minimum[:, 0], return_index=True)
-    return idx_minimum[ui, :]
+    _, ui = np.unique(idx_value[:, 0], return_index=True)
+    return idx_value[ui, 0], idx_value[ui, 1]
 
 
 def make_vector_fixed_length(values: Optional[ArrayLike], length: int):

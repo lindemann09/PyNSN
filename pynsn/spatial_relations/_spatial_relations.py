@@ -231,9 +231,8 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
         n_rects = len(self.rect_xy)
         n_dots = len(self.dot_xy)
         if n_rects > 1 and n_dots == 1:
-            ones = np.ones((n_rects, 1))
-            self.dot_xy = self.dot_xy * ones
-            self.dot_radii = self.dot_radii * ones
+            self.dot_xy = self.dot_xy * np.ones((n_rects, 1))
+            self.dot_radii = self.dot_radii * np.ones(n_rects)
         elif n_rects == 1 and n_dots > 1:
             ones = np.ones((n_dots, 1))
             self.rect_xy = self.rect_xy * ones
@@ -275,14 +274,14 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
             else:
                 values = np.nanmax(distances, axis=1)
 
-        idx_nc = find_value_rowwise(distances,
-                                    np.atleast_2d(values).T)
+        # find idx nearest corner
+        idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
         # spatial relations and nearest corners
         # return array contains only one nearest corner per rect (n, 2=parameter)
-        distances = distances[idx_nc[:, 0], idx_nc[:, 1]] - self.dot_radii
+        distances = distances[idx_r, idx_c] - self.dot_radii[idx_r]
         directions = np.arctan2(
-            xy_dist[idx_nc[:, 0], 1, idx_nc[:, 1]],
-            xy_dist[idx_nc[:, 0], 0, idx_nc[:, 1]])
+            xy_dist[idx_r, 1, idx_c],
+            xy_dist[idx_r, 0, idx_c])
         return np.array([distances, directions]).T
 
     def edge_cardinal_relations(self, nearest_edges: bool = True) -> NDArray:
@@ -319,17 +318,16 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
                 values = np.nanmin(distances, axis=1)
             else:
                 values = np.nanmax(distances, axis=1)
-        idx_e = find_value_rowwise(distances, values)
+        # idx_nearest edge
+        idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
         # return array contains nearest edge per rect (n, 2=parameter)
         edge_rel = np.full(self.rect_xy.shape, np.nan)
         # distances
-        edge_rel[idx_e[:, 0], 0] = distances[idx_e[:, 0],
-                                             idx_e[:, 1]] - self.dot_radii
+        edge_rel[idx_r, 0] = distances[idx_r, idx_c] - self.dot_radii[idx_r]
         # directions
-        edge_rel[idx_e[:, 0], 1] = np.arctan2(
-            ecp_xy_diff[idx_e[:, 0], 1, idx_e[:, 1]],
-            ecp_xy_diff[idx_e[:, 0], 0, idx_e[:, 1]])
-
+        edge_rel[idx_r, 1] = np.arctan2(
+            ecp_xy_diff[idx_r, 1, idx_c],
+            ecp_xy_diff[idx_r, 0, idx_c])
         return edge_rel
 
     def spatial_relations(self, _min: bool = False) -> NDArray:
