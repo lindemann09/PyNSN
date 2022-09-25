@@ -38,24 +38,23 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
     return rtn
 
 
-def dict_to_text(the_dict, col_a=22, col_b=14,
-                 spacing_char=" "):
+def key_value_format(key, value):
+    try:
+        v = f"{value:14.2f}"  # try rounding
+    except (ValueError, TypeError):
+        v = f"{str(value):>14}"
+    return f"{key:<24}{v}"
+
+
+def dict_to_text(the_dict):
 
     rtn = ""
     for k, v in the_dict.items():
         if len(rtn) == 0:
-            key_str = "- " + k
+            rtn += "-"
         else:
-            key_str = "  " + k
-
-        value = f"{v}\n"
-        len_col_b = col_b - len(value)
-        if len_col_b < 2:
-            len_col_b = 2
-        rtn += key_str \
-            + (spacing_char * (col_a - len(key_str))) \
-            + (" " * len_col_b) + value
-
+            rtn += " "
+        rtn += key_value_format(k, v) + "\n"
     return rtn.rstrip()
 
 

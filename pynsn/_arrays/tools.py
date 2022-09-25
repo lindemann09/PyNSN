@@ -61,7 +61,7 @@ def radial_replacement_from_reference_dots(xy, ref_pos_id,
     return xy
 
 
-def remove_overlap_from_inner_to_outer(xy, min_distance_between_objects, distance_matrix_function):
+def remove_overlap_from_inner_to_outer(xy, min_dist_between_objects, distance_matrix_function):
     """returns xy and boolean, if replacements were required"""
     assert callable(distance_matrix_function)
 
@@ -71,12 +71,12 @@ def remove_overlap_from_inner_to_outer(xy, min_distance_between_objects, distanc
         dist_mtx = distance_matrix_function(between_positions=False)
         dist = dist_mtx[i, :]
         idx_overlaps = np.flatnonzero(
-            dist < min_distance_between_objects).tolist()  # overlapping dot ids
+            dist < min_dist_between_objects).tolist()  # overlapping dot ids
         if len(idx_overlaps) > 1:
             replacement_required = True
             idx_overlaps.remove(i)  # don't move yourself
             # dist is mostly negative, because of overlap
-            replace_size = min_distance_between_objects - dist[idx_overlaps]
+            replace_size = min_dist_between_objects - dist[idx_overlaps]
             xy = radial_replacement_from_reference_dots(
                 xy=xy,
                 ref_pos_id=i,

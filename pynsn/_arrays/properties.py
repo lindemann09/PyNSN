@@ -6,6 +6,8 @@ from typing import Any, Optional
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .._lib.misc import key_value_format
+
 from .._shapes.rectangle_list import RectangleList
 from .._shapes.dot_list import DotList
 
@@ -181,7 +183,7 @@ class ArrayProperties(object):
 
     def to_dict(self) -> dict:
         """Dictionary with the visual properties"""
-        rtn = [("Hash", self._oa.hash),
+        rtn = [("Hash", self._oa.hash()),
                ("Numerosity", self.numerosity),
                ("?", None),  # placeholder
                (VisualPropertyFlags.AV_PERIMETER.label(), self.average_perimeter),
@@ -209,44 +211,31 @@ class ArrayProperties(object):
     def __str__(self) -> str:
         return self.as_text(extended_format=True)
 
-    def as_text(self, with_hash: bool = True,
-                extended_format: bool = False,
-                spacing_char: str = " ") -> str:
+    def as_text(self, with_hash: bool = False,
+                extended_format: bool = False) -> str:
         if extended_format:
             rtn = None
             for k, v in self.to_dict().items():
                 if rtn is None:
                     if with_hash:
-                        rtn = f"- {k}: {v}\n"
+                        rtn = f"-{k}  {v}\n"
                     else:
-                        rtn = ""
+                        rtn = "-"
                 else:
-                    if rtn == "":
-                        name = "- " + k
-                    else:
-                        name = "  " + k
-                    try:
-                        value = f"{v:.2f}\n"  # try rounding
-                    except (ValueError, TypeError):
-                        value = f"{v}\n"
+                    rtn += key_value_format(k, v) + "\n "
 
-                    n_space = 14 - len(value)
-                    if n_space < 2:
-                        n_space = 2
-                    rtn += name + (spacing_char * (24 - len(name))
-                                   ) + (" " * n_space) + value
             if rtn is None:
                 rtn = ""
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self._oa.hash)
+                rtn = "ID: {} ".format(self._oa.hash())
             else:
                 rtn = ""
             rtn += f"N: {self.numerosity}, " \
                 + f"TSA: {int(self.total_surface_area)}, " \
                 + f"ISA: {int(self.average_surface_area)}, "\
                 + f"FA: {int(self.field_area)}, "\
-                + f"SPAR: {self.sparsity:.3f}, "\
+                + f"SPAR: {self.sparsity:.2f}, "\
                 + f"logSIZE: {self.log_size:.2f}, "\
                 + f"logSPACE: {self.log_spacing:.2f}, "\
                 + f"COV: {self.coverage:.2f}"

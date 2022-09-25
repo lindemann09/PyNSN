@@ -37,21 +37,21 @@ class NSNFactory(TargetArea):
 
     def __init__(self,
                  target_area: ShapeType,
-                 min_distance_between_objects: Optional[float] = None,
-                 min_distance_area_boarder: Optional[float] = None):
+                 min_dist_between_objects: Optional[float] = None,
+                 min_dist_area_edge: Optional[float] = None):
         """
 
         Parameters
         ----------
         target_area_radius
-        min_distance_between_objects
-        min_distance_area_boarder
+        min_dist_between_objects
+        min_dist_area_edge
         """
 
         TargetArea.__init__(self,
                             target_area_shape=target_area,
-                            min_distance_between_objects=min_distance_between_objects,
-                            min_distance_area_boarder=min_distance_area_boarder)
+                            min_dist_between_objects=min_dist_between_objects,
+                            min_dist_area_edge=min_dist_area_edge)
         self._distr_diameter = None
         self._distr_width = None
         self._distr_height = None
@@ -262,8 +262,8 @@ class NSNFactory(TargetArea):
         """
         rtn = NSNStimulus(object_list=DotList(),
                           target_area_shape=deepcopy(self.target_area_shape),
-                          min_distance_between_objects=self.min_distance_between_objects,
-                          min_distance_area_boarder=self.min_distance_area_boarder)
+                          min_dist_between_objects=self.min_dist_between_objects,
+                          min_dist_area_edge=self.min_dist_area_edge)
         return self.add_random_dots(object_array=rtn,
                                     n_objects=n_objects,
                                     allow_overlapping=allow_overlapping,
@@ -311,8 +311,8 @@ class NSNFactory(TargetArea):
         """
         rtn = NSNStimulus(object_list=RectangleList(),
                           target_area_shape=deepcopy(self.target_area_shape),
-                          min_distance_between_objects=self.min_distance_between_objects,
-                          min_distance_area_boarder=self.min_distance_area_boarder)
+                          min_dist_between_objects=self.min_dist_between_objects,
+                          min_dist_area_edge=self.min_dist_area_edge)
         return self.add_random_rectangles(object_array=rtn,
                                           n_objects=n_objects,
                                           allow_overlapping=allow_overlapping,

@@ -12,21 +12,21 @@ class TargetArea(object):
 
     def __init__(self,
                  target_area_shape: ShapeType,
-                 min_distance_between_objects: Optional[float] = None,
-                 min_distance_area_boarder: Optional[float] = None) -> None:
+                 min_dist_between_objects: Optional[float] = None,
+                 min_dist_area_edge: Optional[float] = None) -> None:
         """TargetArea Parameter"""
 
         if not isinstance(target_area_shape, (Dot, Rectangle)):
             raise ValueError("Area shape has to be a Dot or Rectangle")
         self.target_area_shape = target_area_shape
-        if min_distance_between_objects is None:
-            self.min_distance_between_objects = constants.DEFAULT_MIN_DISTANCE_BETWEEN_OBJECTS
+        if min_dist_between_objects is None:
+            self.min_dist_between_objects = constants.DEFAULT_min_dist_between_objects
         else:
-            self.min_distance_between_objects = min_distance_between_objects
-        if min_distance_area_boarder is None:
-            self.min_distance_area_boarder = constants.DEFAULT_MIN_DISTANCE_AREA_BOARDER
+            self.min_dist_between_objects = min_dist_between_objects
+        if min_dist_area_edge is None:
+            self.min_dist_area_edge = constants.DEFAULT_min_dist_area_edge
         else:
-            self.min_distance_area_boarder = min_distance_area_boarder
+            self.min_dist_area_edge = min_dist_area_edge
 
     def to_dict(self) -> dict:
         """Dict representation of the target area"""
@@ -36,8 +36,8 @@ class TargetArea(object):
             area_size = self.target_area_shape.size
         return {"target_area_shape": type(self.target_area_shape).__name__,
                 "target_area_size": area_size,
-                "min_distance_between_objects": self.min_distance_between_objects,
-                "min_distance_area_boarder": self.min_distance_area_boarder}
+                "min_dist_between_objects": self.min_dist_between_objects,
+                "min_dist_area_edge": self.min_dist_area_edge}
 
     @classmethod
     def from_dict(cls, the_dict: dict) -> TargetArea:
@@ -49,5 +49,5 @@ class TargetArea(object):
             raise NotImplementedError()  # should never happen
         return cls(
             target_area_shape=shape,
-            min_distance_area_boarder=the_dict["min_distance_area_boarder"],
-            min_distance_between_objects=the_dict["min_distance_between_objects"])
+            min_dist_area_edge=the_dict["min_dist_area_edge"],
+            min_dist_between_objects=the_dict["min_dist_between_objects"])

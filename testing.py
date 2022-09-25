@@ -22,10 +22,10 @@ nsn.init_random_generator(seed)
 dota = pynsn.NSNStimulus(object_list=nsn.DotList(),
                          target_area_shape=pynsn.Dot(diameter=400))
 
-factory = nsn.NSNFactory(min_distance_between_objects=2,
+factory = nsn.NSNFactory(min_dist_between_objects=2,
                          # target_area=pynsn.Rectangle(size=(200, 400)),
                          target_area=pynsn.Dot(diameter=400),
-                         min_distance_area_boarder=0)
+                         min_dist_area_edge=0)
 
 factory.set_appearance_dots(diameter=(20, 30, 40),
                             attributes=distr.Levels(["blue", "green"],
@@ -68,7 +68,7 @@ stimulus.properties.fit_field_area(99000)
 # print(stimulus)
 
 idx = stimulus.get_outlier()
-print(stimulus.properties)
+print(stimulus)
 # FIXME squeed too much, because incorrect distance calulations
 # stimulus.mod_squeeze_to_area()
 

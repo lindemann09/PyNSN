@@ -18,7 +18,7 @@ from scipy import spatial
 from .._lib import geometry, np_tools, rng
 from .._lib.coordinate import Coordinate
 from .._lib.exception import NoSolutionError
-from .._lib.misc import dict_to_text
+from .._lib.misc import dict_to_text, key_value_format
 from .._lib.typing import IntOVector
 from .._shapes import ShapeType
 from .._shapes.dot import Dot
@@ -32,8 +32,8 @@ from .target_area import TargetArea
 from .tools import BrownianMotion, make_csv
 from .. import constants
 
-DOT_ARRAY = "dot_array"
-RECTANGLE_ARRAY = "rectangle_array"
+DOT_ARRAY = "Dot Array"
+RECTANGLE_ARRAY = "Rectangle Array"
 
 
 class NSNStimulus(TargetArea):
@@ -46,13 +46,13 @@ class NSNStimulus(TargetArea):
     def __init__(self,
                  object_list: Union[DotList, RectangleList],
                  target_area_shape: ShapeType,
-                 min_distance_between_objects: Optional[float] = None,
-                 min_distance_area_boarder: Optional[float] = None) -> None:
+                 min_dist_between_objects: Optional[float] = None,
+                 min_dist_area_edge: Optional[float] = None) -> None:
         # also as parent  class for implementation of dot and nsn stimuli
 
         super().__init__(target_area_shape=target_area_shape,
-                         min_distance_between_objects=min_distance_between_objects,
-                         min_distance_area_boarder=min_distance_area_boarder)
+                         min_dist_between_objects=min_dist_between_objects,
+                         min_dist_area_edge=min_dist_area_edge)
         if not isinstance(object_list, (DotList, RectangleList)):
             raise ValueError("object_list has to be a DotList "
                              "or RectangleList, but not "
@@ -96,7 +96,7 @@ class NSNStimulus(TargetArea):
         """
 
         if hash_column:
-            d = {"hash": [self.hash] * len(self._objects.xy)}
+            d = {"hash": [self.hash()] * len(self._objects.xy)}
         else:
             d = {}
         d.update({"x": self._objects.xy[:, 0].tolist(),
@@ -127,8 +127,8 @@ class NSNStimulus(TargetArea):
         return cls(
             object_list=object_list,
             target_area_shape=target_area.target_area_shape,
-            min_distance_between_objects=target_area.min_distance_between_objects,
-            min_distance_area_boarder=target_area.min_distance_area_boarder)
+            min_dist_between_objects=target_area.min_dist_between_objects,
+            min_dist_area_edge=target_area.min_dist_area_edge)
 
     def copy(self, indices: Union[int, Sequence[int], None] = None,
              deep_copy: bool = True) -> NSNStimulus:
@@ -145,8 +145,8 @@ class NSNStimulus(TargetArea):
             object_list=self._objects.copy(
                 indices=indices, deep_copy=deep_copy),
             target_area_shape=target_area_shape,
-            min_distance_between_objects=self.min_distance_between_objects,
-            min_distance_area_boarder=self.min_distance_area_boarder)
+            min_dist_between_objects=self.min_dist_between_objects,
+            min_dist_area_edge=self.min_dist_area_edge)
 
     def csv(self, variable_names: bool = True,
             hash_column: bool = False,
@@ -173,7 +173,7 @@ class NSNStimulus(TargetArea):
         else:
             attr = None
         if hash_column:
-            array_hash = self.hash
+            array_hash = self.hash()
         else:
             array_hash = None
 
@@ -185,7 +185,10 @@ class NSNStimulus(TargetArea):
     def __str__(self) -> str:
         d = TargetArea.to_dict(self)  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
-        return dict_to_text(d, col_a=30, col_b=7) + "\n " + prop[1:]
+
+        rtn = f"-{self.type():_^38}\n"
+        rtn += f" {self.hash()}\n "
+        return rtn + dict_to_text(d)[1:] + f"\n {'Propeties':_^38}\n " + prop[1:]
 
     @property
     def xy(self) -> NDArray:
@@ -240,7 +243,6 @@ class NSNStimulus(TargetArea):
         """
         return self._properties
 
-    @property
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
 
@@ -267,7 +269,7 @@ class NSNStimulus(TargetArea):
 
         d = self.to_dict()
         if include_hash:
-            d.update({"hash": self.hash})
+            d.update({"hash": self.hash()})
         j = json.dumps(d, indent=indent)
         if file_path is None:
             return j
@@ -292,11 +294,11 @@ class NSNStimulus(TargetArea):
     def get_overlaps(self) -> Tuple[NDArray, NDArray]:
         """return pairs of indices of overlapping of objects and an array of the
         amount of overlap
-        takes into account min_distance_between_objects property
+        takes into account min_dist_between_objects property
         """
         dist = np_tools.triu_nan(self.get_distances_matrix(between_positions=False),
                                  k=1)
-        overlap = np.where(dist < self.min_distance_between_objects)
+        overlap = np.where(dist < self.min_dist_between_objects)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
     def get_center_of_mass(self) -> NDArray:
@@ -330,13 +332,13 @@ class NSNStimulus(TargetArea):
         """
         if isinstance(self.target_area_shape, Dot):
             tmp = self.target_area_shape.diameter/2.0 \
-                - self.min_distance_area_boarder
+                - self.min_dist_area_edge
             search_area = Dot(xy=(0, 0), diameter=tmp*2)
             half_search_area_size = np.array([tmp, tmp])
 
         elif isinstance(self.target_area_shape, Rectangle):
-            tmp = (self.target_area_shape.width - 2 * self.min_distance_area_boarder,
-                   self.target_area_shape.height - 2 * self.min_distance_area_boarder)
+            tmp = (self.target_area_shape.width - 2 * self.min_dist_area_edge,
+                   self.target_area_shape.height - 2 * self.min_dist_area_edge)
             search_area = Rectangle(xy=(0, 0), size=tmp)
             half_search_area_size = np.asarray(search_area.size) / 2.0
         else:
@@ -403,7 +405,7 @@ class NSNStimulus(TargetArea):
                 if isinstance(occupied_space, NSNStimulus):
                     dist = np.append(dist,
                                      occupied_space.get_distances(rtn_object))
-                if sum(dist < self.min_distance_between_objects) > 0:  # at least one is overlapping
+                if sum(dist < self.min_dist_between_objects) > 0:  # at least one is overlapping
                     continue  # try another position
             return rtn_object
 
@@ -583,14 +585,14 @@ class NSNStimulus(TargetArea):
                 # push overlapping object
                 obj.xy += movement.xy
                 dist = self.get_distances(obj)
-                for other_id in np.flatnonzero(dist < self.min_distance_between_objects):
+                for other_id in np.flatnonzero(dist < self.min_dist_between_objects):
                     if other_id != id_:
                         movement.xy = self._objects.xy[other_id, :] \
                             - self._objects.xy[id_, :]
                         self.mod_move_object(other_id,
                                              direction=movement.theta,
                                              distance=abs(dist[other_id])
-                                             + self.min_distance_between_objects,
+                                             + self.min_dist_between_objects,
                                              push_other=True)
 
         self.properties.reset()
