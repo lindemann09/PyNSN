@@ -111,8 +111,8 @@ class NSNStimulus(TargetArea):
             d.update({"attributes": self._objects.attributes.tolist()})
         return d
 
-    @staticmethod
-    def from_dict(the_dict: dict):
+    @classmethod
+    def from_dict(cls, the_dict: dict) -> NSNStimulus:
         """read nsn stimulus from dict"""
 
         oa_type = the_dict["type"]
@@ -124,7 +124,7 @@ class NSNStimulus(TargetArea):
             raise RuntimeError(f"Unknown nsn stimulus type {oa_type}")
         target_area = TargetArea.from_dict(the_dict)
 
-        return NSNStimulus(
+        return cls(
             object_list=object_list,
             target_area_shape=target_area.target_area_shape,
             min_distance_between_objects=target_area.min_distance_between_objects,

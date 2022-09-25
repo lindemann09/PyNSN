@@ -91,9 +91,9 @@ class ABCObjectList(metaclass=ABCMeta):
     def to_dict(self) -> dict:
         """dict representation of the object area"""
 
-    @ staticmethod
+    @ classmethod
     @ abstractmethod
-    def from_dict(the_dict: Dict[str, Any]):
+    def from_dict(cls, the_dict: Dict[str, Any]):
         """read Dot collection from dict"""
 
     # generic methods

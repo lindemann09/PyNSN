@@ -39,15 +39,15 @@ class TargetArea(object):
                 "min_distance_between_objects": self.min_distance_between_objects,
                 "min_distance_area_boarder": self.min_distance_area_boarder}
 
-    @staticmethod
-    def from_dict(the_dict: dict) -> TargetArea:
+    @classmethod
+    def from_dict(cls, the_dict: dict) -> TargetArea:
         if the_dict["target_area_shape"] == "Dot":
             shape = Dot(xy=(0, 0), diameter=the_dict["target_area_size"])
         elif the_dict["target_area_shape"] == "Rectangle":
             shape = Rectangle(xy=(0, 0), size=the_dict["target_area_size"])
         else:
             raise NotImplementedError()  # should never happen
-        return TargetArea(
+        return cls(
             target_area_shape=shape,
             min_distance_area_boarder=the_dict["min_distance_area_boarder"],
             min_distance_between_objects=the_dict["min_distance_between_objects"])

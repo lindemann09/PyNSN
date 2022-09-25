@@ -200,10 +200,10 @@ class RectangleList(BaseRectangleList, ABCObjectList):
                 d.update({"attributes": self.attributes.tolist()})
         return d
 
-    @staticmethod
-    def from_dict(the_dict: Dict[str, Any]) -> RectangleList:
+    @classmethod
+    def from_dict(cls, the_dict: Dict[str, Any]) -> RectangleList:
         """read nsn stimulus from dict"""
-        return RectangleList(
+        return cls(
             xy=the_dict["xy"],
             sizes=the_dict["sizes"],
             attributes=the_dict["attributes"])

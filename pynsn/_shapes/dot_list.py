@@ -182,12 +182,12 @@ class DotList(BaseDotList, ABCObjectList):
                 d.update({"attributes": self.attributes.tolist()})
         return d
 
-    @staticmethod
-    def from_dict(the_dict: Dict[str, Any]) -> DotList:
+    @classmethod
+    def from_dict(cls, the_dict: Dict[str, Any]) -> DotList:
         """read Dot collection from dict"""
-        return DotList(xy=the_dict["xy"],
-                       diameter=the_dict["diameter"],
-                       attributes=the_dict["attributes"])
+        return cls(xy=the_dict["xy"],
+                   diameter=the_dict["diameter"],
+                   attributes=the_dict["attributes"])
 
     def copy(self,
              indices: Union[int, Sequence[int], NDArray[np.int_], None] = None,
