@@ -1,19 +1,19 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Any
+from typing import Any, Optional
 
 import numpy as _np
 
 from .._lib.colour import Colour
-from .._arrays import NSNStimulus
-from .._shapes import Dot, Rectangle
+from .._shapes import Dot, Rectangle, Picture
+from .._stimulus import NSNStimulus
 from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
 
 
-def _check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
+def check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
     if not isinstance(obj, (NSNStimulus)):
         raise TypeError("NSNStimulus expected, but not {}".format(
             type(obj).__name__))
@@ -27,7 +27,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
         'get_image', 'scale_image', 'draw_shape', 'draw_convex_hull'
 
     Image can be then generated via
-    >>> MyDraw()().create_image(object_array=object_array, colours=colours)
+    >>> MyDraw()().create_image(nsn_stimulus=nsn_stimulus, colours=colours)
     """
 
     @staticmethod
@@ -70,14 +70,14 @@ class ABCArrayDraw(metaclass=ABCMeta):
                     (e.g. pillow image, axes (matplotlib) or svrdraw object)
         """
 
-    def create_image(self, object_array: NSNStimulus,
+    def create_image(self, nsn_stimulus: NSNStimulus,
                      colours: Optional[ImageColours],
                      antialiasing: Optional[float] = None, **kwargs) -> Any:
         """create image
 
         Parameters
         ----------
-        object_array : the array
+        nsn_stimulus : the array
         colours : ImageColours
         antialiasing :   bool or number (scaling factor)
             Only useful for pixel graphics. If turn on, picture will be
@@ -90,7 +90,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
         rtn : image
         """
 
-        _check_nsn_stimulus(object_array)
+        check_nsn_stimulus(nsn_stimulus)
         if colours is None:
             colours = ImageColours()
         if not isinstance(colours, ImageColours):
@@ -108,15 +108,15 @@ class ABCArrayDraw(metaclass=ABCMeta):
                 aaf = 1
 
         # prepare the image, make target area if required
-        if isinstance(object_array.target_area_shape, Dot):
-            tmp = int(_np.ceil(object_array.target_area_shape.diameter) * aaf)
+        if isinstance(nsn_stimulus.target_area_shape, Dot):
+            tmp = int(_np.ceil(nsn_stimulus.target_area_shape.diameter) * aaf)
             target_area_shape = Dot(xy=(0, 0), diameter=tmp,
                                     attribute=colours.target_area.colour)
             image_size = _np.ones(2) * tmp
 
-        elif isinstance(object_array.target_area_shape, Rectangle):
+        elif isinstance(nsn_stimulus.target_area_shape, Rectangle):
             tmp = _np.int16(
-                _np.ceil(object_array.target_area_shape.size) * aaf)
+                _np.ceil(nsn_stimulus.target_area_shape.size) * aaf)
             target_area_shape = Rectangle(xy=(0, 0), size=tmp,
                                           attribute=colours.target_area.colour)
             image_size = target_area_shape.size
@@ -132,14 +132,12 @@ class ABCArrayDraw(metaclass=ABCMeta):
             self.draw_shape(img, target_area_shape,
                             opacity=1, scaling_factor=1)
 
-        if object_array.properties.numerosity > 0:
+        if nsn_stimulus.properties.numerosity > 0:
 
             # draw objects
-            for obj in object_array.objects.iter():
+            for obj in nsn_stimulus.objects.iter():
                 att = obj.get_colour()
-                if isinstance(att, Colour):
-                    obj.attribute = att
-                else:
+                if att.colour is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour
                     obj.attribute = Colour(
                         None, colours.default_object_colour.colour)
@@ -148,28 +146,28 @@ class ABCArrayDraw(metaclass=ABCMeta):
 
             # draw convex hulls
             if colours.field_area_positions.colour is not None and \
-                    object_array.properties.field_area_positions > 0:
+                    nsn_stimulus.properties.field_area_positions > 0:
                 self.draw_convex_hull(img,
-                                      points=object_array.properties.convex_hull_positions.xy,
+                                      points=nsn_stimulus.properties.convex_hull_positions.xy,
                                       convex_hull_colour=colours.field_area_positions,
                                       opacity=colours.opacity_guides,
                                       scaling_factor=aaf)
             if colours.field_area.colour is not None and \
-                    object_array.properties.field_area > 0:
+                    nsn_stimulus.properties.field_area > 0:
                 self.draw_convex_hull(img,
-                                      points=object_array.properties.convex_hull.xy,
+                                      points=nsn_stimulus.properties.convex_hull.xy,
                                       convex_hull_colour=colours.field_area,
                                       opacity=colours.opacity_guides,
                                       scaling_factor=aaf)
             #  and center of mass
             if colours.center_of_field_area.colour is not None:
-                obj = Dot(xy=object_array.get_center_of_field_area(),
+                obj = Dot(xy=nsn_stimulus.get_center_of_field_area(),
                           diameter=10,
                           attribute=colours.center_of_field_area.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
             if colours.center_of_mass.colour is not None:
-                obj = Dot(xy=object_array.get_center_of_mass(),
+                obj = Dot(xy=nsn_stimulus.get_center_of_mass(),
                           diameter=10,
                           attribute=colours.center_of_mass.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,

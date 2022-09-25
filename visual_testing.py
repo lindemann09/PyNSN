@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 import pynsn
 from pynsn._lib import geometry, np_tools
-from pynsn._shapes import matrix_spatial_relations, spatial_relations
+from pynsn import spatial_relations as sprel
 from tests.shapes_test_picture import shapes_test_picture, Line
 
 arr_xy = np.array([[10, 20], [100, 100], [99, 32]])
@@ -22,17 +22,15 @@ d = pynsn.Rectangle((10, -40), size=(150, 50), attribute="#000088")
 
 xy = np.array([b.xy, c.xy, d.xy])
 sizes = np.array([b.size, c.size, d.size])
-#xy = np.array([d.xy])
-#sizes = np.array([d.size])
+# xy = np.array([d.xy])
+# sizes = np.array([d.size])
 dot_xy = np_tools.as_array2d_nrow(a.xy, n_rows=xy.shape[0])
 dot_diameter = np_tools.as_array2d_nrow(a.diameter, n_rows=xy.shape[0])
 
-
-rel = spatial_relations.RectangleDot(rect_xy=xy,
-                                     rect_sizes=sizes,
-                                     dot_xy=np.atleast_2d(a.xy),
-                                     dot_diameter=np.atleast_1d([a.diameter]))
-
+rects = pynsn.RectangleArray(xy=xy, sizes=sizes)
+dots = pynsn.DotArray(xy=np.atleast_2d(a.xy),
+                      diameter=np.atleast_1d([a.diameter]))
+rel = sprel.RectangleDot(rects, dots)
 print(rel.spatial_relations())
 
 

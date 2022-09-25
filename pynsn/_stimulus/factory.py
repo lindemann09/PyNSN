@@ -3,16 +3,17 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy, deepcopy
 from typing import Iterator, Optional, Sequence, Union
 
-from .._arrays.nsn_stimulus import NSNStimulus
-from .._arrays.target_area import TargetArea
-from .._lib.exception import NoSolutionError
+from .._lib.exceptions import NoSolutionError
 from .._lib.misc import dict_to_text
-from .._shapes.dot_list import DotList
-from .._shapes.rectangle_list import RectangleList
+from .._object_arrays.dot_array import DotArray
+from .._object_arrays.rectangle_array import RectangleArray
+from .._shapes import ShapeType
 from .._shapes.dot import Dot
 from .._shapes.rectangle import Rectangle
-from .._shapes import ShapeType
-from .distributions import Levels, PyNSNDistribution, _Constant, ParameterDistributionType
+from ..distributions import (Levels, ParameterDistributionType,
+                             PyNSNDistribution, _Constant)
+from .nsn_stimulus import NSNStimulus
+from .target_area import TargetArea
 
 
 def _make_distr(value: ParameterDistributionType) -> Union[PyNSNDistribution, None]:
@@ -206,7 +207,7 @@ class NSNFactory(TargetArea):
             pass
         return rtn
 
-    def add_random_dots(self, object_array: NSNStimulus,
+    def add_random_dots(self, nsn_stimulus: NSNStimulus,
                         n_objects: int = 1,
                         allow_overlapping: bool = False,
                         occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
@@ -226,20 +227,20 @@ class NSNFactory(TargetArea):
         -------
         rtn : nsn stimulus
         """
-        if not isinstance(object_array.objects, DotList):
-            raise ValueError("nsn stimulus has to have a DotList and not "
-                             f" {type(object_array.objects).__name__}")
+        if not isinstance(nsn_stimulus.objects, DotArray):
+            raise ValueError("nsn stimulus has to have a DotArray and not "
+                             f" {type(nsn_stimulus.objects).__name__}")
         for dot in self._sample_dots(n=n_objects):
             try:
-                dot = object_array.get_free_position(ref_object=dot, in_neighborhood=False,
+                dot = nsn_stimulus.get_free_position(ref_object=dot, in_neighborhood=False,
                                                      occupied_space=occupied_space,
                                                      allow_overlapping=allow_overlapping)
             except NoSolutionError as err:
                 raise NoSolutionError(f"Can't find a solution for {n_objects} "
                                       + "items in this array") from err
-            object_array.objects.add([dot])  # type: ignore
+            nsn_stimulus.objects.add([dot])  # type: ignore
 
-        return object_array
+        return nsn_stimulus
 
     def random_dot_array(self, n_objects: int,
                          allow_overlapping: bool = False,
@@ -260,35 +261,35 @@ class NSNFactory(TargetArea):
         -------
         rtn : nsn stimulus
         """
-        rtn = NSNStimulus(object_list=DotList(),
+        rtn = NSNStimulus(object_array=DotArray(),
                           target_area_shape=deepcopy(self.target_area_shape),
                           min_dist_between_objects=self.min_dist_between_objects,
                           min_dist_area_edge=self.min_dist_area_edge)
-        return self.add_random_dots(object_array=rtn,
+        return self.add_random_dots(nsn_stimulus=rtn,
                                     n_objects=n_objects,
                                     allow_overlapping=allow_overlapping,
                                     occupied_space=occupied_space)
 
     def add_random_rectangles(self,
-                              object_array: NSNStimulus,
+                              nsn_stimulus: NSNStimulus,
                               n_objects: int = 1,
                               allow_overlapping: bool = False,
                               occupied_space: Union[None, NSNStimulus] = None) -> NSNStimulus:
 
-        if not isinstance(object_array.objects, RectangleList):
-            raise ValueError("nsn stimulus has to have a RectangleList and not "
-                             f" {type(object_array.objects).__name__}")
+        if not isinstance(nsn_stimulus.objects, RectangleArray):
+            raise ValueError("nsn stimulus has to have a RectangleArray and not "
+                             f" {type(nsn_stimulus.objects).__name__}")
         for rect in self._sample_rectangles(n=n_objects):
             try:
-                rect = object_array.get_free_position(ref_object=rect, in_neighborhood=False,
+                rect = nsn_stimulus.get_free_position(ref_object=rect, in_neighborhood=False,
                                                       occupied_space=occupied_space,
                                                       allow_overlapping=allow_overlapping)
             except NoSolutionError as err:
                 raise NoSolutionError(f"Can't find a solution for {n_objects} "
                                       + "items in this array.") from err
-            object_array.objects.add([rect])  # type:ignore
+            nsn_stimulus.objects.add([rect])  # type:ignore
 
-        return object_array
+        return nsn_stimulus
 
     def random_rectangle_array(self, n_objects: int,
                                allow_overlapping: bool = False,
@@ -309,11 +310,11 @@ class NSNFactory(TargetArea):
         -------
         rtn : nsn stimulus
         """
-        rtn = NSNStimulus(object_list=RectangleList(),
+        rtn = NSNStimulus(object_array=RectangleArray(),
                           target_area_shape=deepcopy(self.target_area_shape),
                           min_dist_between_objects=self.min_dist_between_objects,
                           min_dist_area_edge=self.min_dist_area_edge)
-        return self.add_random_rectangles(object_array=rtn,
+        return self.add_random_rectangles(nsn_stimulus=rtn,
                                           n_objects=n_objects,
                                           allow_overlapping=allow_overlapping,
                                           occupied_space=occupied_space)
@@ -365,4 +366,4 @@ class NSNFactory(TargetArea):
             yield current
 
     def __str__(self) -> str:
-        return dict_to_text(self.to_dict(), col_a=12, col_b=7)
+        return dict_to_text(self.to_dict())

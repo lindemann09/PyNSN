@@ -3,6 +3,7 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -15,22 +16,17 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
+from .. import _stimulus, constants
 from .._lib import geometry, np_tools, rng
-from .._lib.coordinate import Coordinate
-from .._lib.exception import NoSolutionError
-from .._lib.misc import dict_to_text, key_value_format
+from .._lib.exceptions import NoSolutionError
+from .._lib.misc import dict_to_text
 from .._lib.typing import IntOVector
-from .._shapes import ShapeType
-from .._shapes.dot import Dot
-from .._shapes.spatial_relations import DotDot, RectangleRectangle
-
-from .._shapes.rectangle import Rectangle
-from .._shapes.dot_list import BaseDotList, DotList
-from .._shapes.rectangle_list import BaseRectangleList, RectangleList
-from .. import _arrays
+from .._object_arrays import (BaseDotArray, BaseRectangleArray, DotArray,
+                              RectangleArray)
+from .._shapes import Coordinate, Dot, Rectangle, ShapeType
+from ..spatial_relations import _spatial_relations as sprel
 from .target_area import TargetArea
 from .tools import BrownianMotion, make_csv
-from .. import constants
 
 DOT_ARRAY = "Dot Array"
 RECTANGLE_ARRAY = "Rectangle Array"
@@ -44,7 +40,7 @@ class NSNStimulus(TargetArea):
     """
 
     def __init__(self,
-                 object_list: Union[DotList, RectangleList],
+                 object_array: Union[DotArray, RectangleArray],
                  target_area_shape: ShapeType,
                  min_dist_between_objects: Optional[float] = None,
                  min_dist_area_edge: Optional[float] = None) -> None:
@@ -53,26 +49,26 @@ class NSNStimulus(TargetArea):
         super().__init__(target_area_shape=target_area_shape,
                          min_dist_between_objects=min_dist_between_objects,
                          min_dist_area_edge=min_dist_area_edge)
-        if not isinstance(object_list, (DotList, RectangleList)):
-            raise ValueError("object_list has to be a DotList "
-                             "or RectangleList, but not "
-                             f"{type(object_list).__name__}")
-        self._objects = object_list
-        self._properties = _arrays.ArrayProperties(self)
+        if not isinstance(object_array, (DotArray, RectangleArray)):
+            raise ValueError("object_array has to be a DotArray "
+                             "or RectangleArray, but not "
+                             f"{type(object_array).__name__}")
+        self._objects = object_array
+        self._properties = _stimulus.StimulusProperties(self)
 
     @property
-    def objects(self) -> Union[DotList, RectangleList]:
+    def objects(self) -> Union[DotArray, RectangleArray]:
         """The objects in the array"""
         return self._objects
 
     def type(self) -> str:
-        if isinstance(self.objects, DotList):
+        if isinstance(self.objects, DotArray):
             return DOT_ARRAY
-        elif isinstance(self.objects, RectangleList):
+        elif isinstance(self.objects, RectangleArray):
             return RECTANGLE_ARRAY
         else:
-            raise ValueError("object_list has to be a DotList "
-                             "or RectangleList, but not "
+            raise ValueError("object_array has to be a DotArray "
+                             "or RectangleArray, but not "
                              f"{type(self.objects).__name__}")
 
     def to_dict(self) -> dict:
@@ -101,7 +97,7 @@ class NSNStimulus(TargetArea):
             d = {}
         d.update({"x": self._objects.xy[:, 0].tolist(),
                   "y": self._objects.xy[:, 1].tolist()})
-        if isinstance(self._objects, DotList):
+        if isinstance(self._objects, DotArray):
             d.update({"diameter": self._objects.diameter.tolist()})
         else:
             d.update({"width": self._objects.sizes[:, 0].tolist(),
@@ -117,18 +113,35 @@ class NSNStimulus(TargetArea):
 
         oa_type = the_dict["type"]
         if oa_type == DOT_ARRAY:
-            object_list = DotList.from_dict(the_dict)
+            object_array = DotArray.from_dict(the_dict)
         elif oa_type == RECTANGLE_ARRAY:
-            object_list = RectangleList.from_dict(the_dict)
+            object_array = RectangleArray.from_dict(the_dict)
         else:
             raise RuntimeError(f"Unknown nsn stimulus type {oa_type}")
         target_area = TargetArea.from_dict(the_dict)
 
         return cls(
-            object_list=object_list,
+            object_array=object_array,
             target_area_shape=target_area.target_area_shape,
             min_dist_between_objects=target_area.min_dist_between_objects,
             min_dist_area_edge=target_area.min_dist_area_edge)
+
+    @classmethod
+    def from_json(cls, filename_or_json_str: str) -> NSNStimulus:
+        """Loading stimulus from json file or json string
+
+        Args:
+            filename: the file name
+
+        Returns:
+            nsn stimulus
+        """
+        fl = Path(filename_or_json_str)
+        if fl.is_file():
+            json_str = fl.read_text(encoding="utf-8")
+        else:
+            json_str = filename_or_json_str
+        return cls.from_dict(json.loads(json_str))
 
     def copy(self, indices: Union[int, Sequence[int], None] = None,
              deep_copy: bool = True) -> NSNStimulus:
@@ -142,7 +155,7 @@ class NSNStimulus(TargetArea):
         else:
             target_area_shape = self.target_area_shape
         return NSNStimulus(
-            object_list=self._objects.copy(
+            object_array=self._objects.copy(
                 indices=indices, deep_copy=deep_copy),
             target_area_shape=target_area_shape,
             min_dist_between_objects=self.min_dist_between_objects,
@@ -163,7 +176,7 @@ class NSNStimulus(TargetArea):
 
         """
 
-        if isinstance(self._objects, DotList):
+        if isinstance(self._objects, DotArray):
             size_dict = {"diameter": self._objects.diameter}
         else:
             size_dict = {"width": self._objects.sizes[:, 0],
@@ -222,7 +235,7 @@ class NSNStimulus(TargetArea):
         self._properties.reset()
 
     @property
-    def properties(self) -> _arrays.ArrayProperties:
+    def properties(self) -> _stimulus.StimulusProperties:
         """Properties of the nsn stimulus.
 
         ``ArrayProperties`` represents and handles (fitting, scaling) visual
@@ -270,16 +283,16 @@ class NSNStimulus(TargetArea):
         d = self.to_dict()
         if include_hash:
             d.update({"hash": self.hash()})
-        j = json.dumps(d, indent=indent)
-        if file_path is None:
-            return j
-        else:
-            with open(file_path, 'w', encoding="utf-8") as fl:
-                fl.write(j)
 
-    def join(self, object_array) -> None:
-        """joins with another dot list list """
-        self._objects.join(object_array.objects)
+        json_str = json.dumps(d, indent=indent)
+        if file_path is not None:
+            with open(file_path, 'w', encoding="utf-8") as fl:
+                fl.write(json_str)
+        return json_str
+
+    def join(self, nsn_stimulus) -> None:
+        """joins with another dot array """
+        self._objects.join(nsn_stimulus.objects)
         self._properties.reset()
 
     def get_distances_matrix(self, between_positions: bool = False) -> NDArray:
@@ -436,11 +449,11 @@ class NSNStimulus(TargetArea):
                            preserve_field_area: bool = False) -> NSNStimulus:
         """number deviant
         """
-        object_array = self.copy()
+        nsn_stimulus = self.copy()
         new_num = self.properties.numerosity + change_numerosity
         self.properties.fit_numerosity(value=new_num,
                                        keep_convex_hull=preserve_field_area)
-        return object_array
+        return nsn_stimulus
 
     def mod_remove_overlaps(self, keep_convex_hull: bool = False,
                             strict: bool = False) -> bool:
@@ -628,7 +641,7 @@ class NSNStimulus(TargetArea):
                     raise NotImplementedError()  # FIXME
 
     def get_split_arrays(self) -> List[NSNStimulus]:
-        """returns a list of _arrays
+        """returns a list of nsn stimuli
         each array contains all dots of with particular colour"""
         # FIXME not checked
         att = self._objects.attributes
@@ -692,33 +705,18 @@ class NSNStimulus(TargetArea):
         if len(self._objects.xy) == 0:
             return np.array([])
 
-        if isinstance(shape, Dot) and isinstance(self._objects, DotList):
-            rel = DotDot(dots_a=self._objects,
-                         dots_b=BaseDotList(xy=shape.xy,
-                                            diameter=shape.diameter))
+        if isinstance(shape, Dot) and isinstance(self._objects, DotArray):
+            rel = sprel.DotDot(dots_a=self._objects,
+                               dots_b=BaseDotArray(xy=shape.xy,
+                                                   diameter=shape.diameter))
             return rel.distances()
 
         elif isinstance(shape, Rectangle) and \
-                isinstance(self._objects, RectangleList):
-            rel = RectangleRectangle(
+                isinstance(self._objects, RectangleArray):
+            rel = sprel.RectangleRectangle(
                 rectangles_a=self._objects,
-                rectangles_b=BaseRectangleList(xy=shape.xy, sizes=shape.size))
+                rectangles_b=BaseRectangleArray(xy=shape.xy, sizes=shape.size))
             return rel.xy_distances()
 
         else:
             raise NotImplementedError()
-
-
-def load_array(filename: str) -> NSNStimulus:
-    """Loading json array file
-
-    Args:
-        filename: the file name
-
-    Returns:
-        nsn stimulus
-    """
-
-    with open(filename, 'r', encoding="utf-8") as fl:
-        array_dict = json.load(fl)
-    return NSNStimulus.from_dict(array_dict)

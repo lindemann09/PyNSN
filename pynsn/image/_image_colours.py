@@ -59,4 +59,4 @@ class ImageColours(object):
              })
 
     def __str__(self) -> str:
-        return misc.dict_to_text(self.to_dict(), col_a=24, col_b=10)
+        return misc.dict_to_text(self.to_dict())

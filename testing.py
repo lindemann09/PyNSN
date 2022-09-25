@@ -3,7 +3,7 @@
 from pyarrow import feather
 import pyarrow
 import pandas
-import time
+import timeit
 from matplotlib import pyplot as pp
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
@@ -11,7 +11,7 @@ from numpy.typing import NDArray, ArrayLike
 import pynsn
 import pynsn as nsn
 from pynsn import distributions as distr
-from pynsn._shapes import spatial_relations
+from pynsn.spatial_relations import _spatial_relations
 from pynsn._shapes.rectangle import Rectangle
 from pynsn.image import svg_file, pil_image, mpl_figure
 from pynsn._lib import geometry, np_tools
@@ -19,7 +19,7 @@ from pynsn._lib import geometry, np_tools
 seed = 921
 nsn.init_random_generator(seed)
 
-dota = pynsn.NSNStimulus(object_list=nsn.DotList(),
+data = pynsn.NSNStimulus(object_array=nsn.DotArray(),
                          target_area_shape=pynsn.Dot(diameter=400))
 
 factory = nsn.NSNFactory(min_dist_between_objects=2,
@@ -36,11 +36,14 @@ factory.set_appearance_rectangles(width=(21, 30, 40), proportion=1,
                                                           exact_weighting=True))
 
 
-# start = time.time()
+def timetest():
+    factory.random_rectangle_array(n_objects=20)
+
+
+print("create:", timeit.timeit(timetest, number=100)*10)
+
+
 stimulus = factory.random_rectangle_array(n_objects=20)
-# assert isinstance(stimulus, nsn.RectangleArray)
-# nsn.scale.log_size(stimulus, 1.2)
-# print(time.time()-start)
 
 
 # make image
@@ -55,7 +58,8 @@ my_colours = pil_image.ImageColours(  # target_area="#EEEEEE",
     # center_of_mass="magenta"
 )
 
-
+a = pynsn.Picture("examples/eurostar.png")
+# stimulus.objects.set_attributes(a.attribute)
 img = pil_image.create(stimulus, my_colours)
 img.save("demo.png")
 
@@ -64,13 +68,22 @@ img.save("demo.png")
 
 # stimulus.mod_realign(keep_convex_hull=False, strict=False)
 
+
 stimulus.properties.fit_field_area(99000)
 # print(stimulus)
 
 idx = stimulus.get_outlier()
-print(stimulus)
+
 # FIXME squeed too much, because incorrect distance calulations
 # stimulus.mod_squeeze_to_area()
+img = pil_image.create(stimulus, my_colours)
 
-img = mpl_figure.create(stimulus, my_colours)
-pp.savefig("demo2.png")
+
+def timetest2():
+    pil_image.create(stimulus, my_colours)
+
+
+print("picture:", timeit.timeit(timetest2, number=100)*10)
+
+
+img.save("demo2.png")

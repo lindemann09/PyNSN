@@ -12,9 +12,9 @@ class Picture(Rectangle):
     ATTR_PREFIX = "p:"
 
     def __init__(self,
+                 filename: str = "",
                  xy: ArrayLike = (0, 0),
-                 size: ArrayLike = (0, 0),
-                 filename: str = "") -> None:
+                 size: ArrayLike = (0, 0)) -> None:
         """Initialize a Picture
 
         Rectangle can also consist of a picture
@@ -31,11 +31,15 @@ class Picture(Rectangle):
         super().__init__(xy=xy, size=size,
                          attribute=Picture.ATTR_PREFIX + filename)
 
+    def __repr__(self):
+        return f"Picture(xy={self.xy}, size={self.size}, " \
+            + f"filename='{self.filename}')"
+
     @property
     def filename(self) -> str:
         return self.attribute[len(Picture.ATTR_PREFIX):]
 
-    def check_file_exists(self) -> bool:
+    def file_exists(self) -> bool:
         """Checks if the file exists
         """
         return path.isfile(self.filename)
@@ -50,6 +54,6 @@ class Picture(Rectangle):
         """
         if isinstance(txt, str) and \
                 txt.startswith(Picture.ATTR_PREFIX):
-            return txt[len(Picture.ATTR_PREFIX)]
+            return txt[len(Picture.ATTR_PREFIX):]
         else:
             return None

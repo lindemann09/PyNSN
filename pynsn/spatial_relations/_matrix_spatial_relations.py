@@ -7,10 +7,11 @@ from itertools import combinations
 import numpy as np
 from numpy.typing import NDArray
 
-from .spatial_relations import CoordinateCoordinate, DotDot, RectangleRectangle
+from .._object_arrays import BaseDotArray, BaseRectangleArray
+from ._spatial_relations import CoordinateCoordinate, DotDot, RectangleRectangle
 
 
-class _CombinationMatrix(object):
+class CombinationMatrix(object):
     """Symmetric combination matrix
     helper class"""
 
@@ -43,14 +44,16 @@ class _CombinationMatrix(object):
         return rtn
 
 
-class RectangleMatrixSpatRel(_CombinationMatrix):
+class MatrixRectangleSpatRel(CombinationMatrix):
 
     def __init__(self, xy: NDArray, sizes: NDArray):
         super().__init__(n_items=xy.shape[0])
-        self._rr = RectangleRectangle(a_xy=xy[self.idx_a, :],
-                                      a_sizes=sizes[self.idx_a, :],
-                                      b_xy=xy[self.idx_b, :],
-                                      b_sizes=sizes[self.idx_b, :])
+        rect_a = BaseRectangleArray(xy=xy[self.idx_a, :],
+                                    sizes=sizes[self.idx_a, :])
+        rect_b = BaseRectangleArray(xy=xy[self.idx_b, :],
+                                    sizes=sizes[self.idx_b, :])
+        self._rr = RectangleRectangle(rectangles_a=rect_a,
+                                      rectangles_b=rect_b)
 
     def overlaps(self, minimum_distance: float = 0) -> NDArray:
         """Matrix with overlaps (True/False) between the rectangles"""
@@ -71,7 +74,7 @@ class RectangleMatrixSpatRel(_CombinationMatrix):
         return rtn[~np.isnan(rtn[:, 2]), :]
 
 
-class CoordinateMatrixSpatRel(_CombinationMatrix):
+class MatrixCoordinateSpatRel(CombinationMatrix):
 
     def __init__(self, xy: NDArray):
         super().__init__(n_items=xy.shape[0])
@@ -88,14 +91,15 @@ class CoordinateMatrixSpatRel(_CombinationMatrix):
         return self.get_matrix(values=self._rr.spatial_relations())
 
 
-class DotMatrixSpatRel(_CombinationMatrix):
+class MatrixDotSpatRel(CombinationMatrix):
 
     def __init__(self, xy: NDArray, diameter: NDArray):
         super().__init__(n_items=xy.shape[0])
-        self._rr = DotDot(a_xy=xy[self.idx_a, :],
-                          a_diameter=diameter[self.idx_a, :],
-                          b_xy=xy[self.idx_b, :],
-                          b_diameter=diameter[self.idx_b, :])
+        dots_a = BaseDotArray(xy=xy[self.idx_a, :],
+                              diameter=diameter[self.idx_a, :])
+        dots_b = BaseDotArray(xy=xy[self.idx_b, :],
+                              diameter=diameter[self.idx_b, :])
+        self._rr = DotDot(dots_a=dots_a, dots_b=dots_b)
 
     def overlaps(self, minimum_distance: float = 0) -> NDArray:
         """Matrix with overlaps (True/False) between the rectangles"""

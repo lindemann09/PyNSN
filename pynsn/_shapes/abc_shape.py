@@ -3,13 +3,12 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Union
+from typing import Any
 
-from numpy.typing import ArrayLike, NDArray
-from numpy import bool_
+from numpy.typing import ArrayLike
 
-from .._lib.coordinate import Coordinate
 from ..image._image_colours import Colour
+from .coordinate import Coordinate
 
 
 class ABCShape(Coordinate, metaclass=ABCMeta):

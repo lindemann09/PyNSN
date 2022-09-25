@@ -7,17 +7,17 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .._lib.coordinate import Coordinate
+from .._shapes.coordinate import Coordinate
 from .._lib.np_tools import make_vector_fixed_length, round2
 from .._lib.typing import IntOVector
-from .abc_object_list import ABCObjectList
-from .picture import Picture
-from .rectangle import Rectangle
+from .abc_object_aray import ABCObjectArray
+from .._shapes.picture import Picture
+from .._shapes.rectangle import Rectangle
 
 RectangleLike = Union[Rectangle, Picture]
 
 
-class BaseRectangleList:
+class BaseRectangleArray:
     """Basic class comprising numpy lists of coordinates and sizes for rectangles"""
 
     def __init__(self, xy: Optional[ArrayLike] = None,
@@ -37,7 +37,7 @@ class BaseRectangleList:
                              "xy has not the same shape as sizes array")
 
 
-class RectangleList(BaseRectangleList, ABCObjectList):
+class RectangleArray(BaseRectangleArray, ABCObjectArray):
     """Class of numpy representation of rectangles"""
 
     def __init__(self, xy: Optional[ArrayLike] = None,
@@ -201,7 +201,7 @@ class RectangleList(BaseRectangleList, ABCObjectList):
         return d
 
     @classmethod
-    def from_dict(cls, the_dict: Dict[str, Any]) -> RectangleList:
+    def from_dict(cls, the_dict: Dict[str, Any]) -> RectangleArray:
         """read nsn stimulus from dict"""
         return cls(
             xy=the_dict["xy"],
@@ -210,7 +210,7 @@ class RectangleList(BaseRectangleList, ABCObjectList):
 
     def copy(self,
              indices: Union[int, Sequence[int], NDArray[np.int_], None] = None,
-             deep_copy: bool = True) -> RectangleList:
+             deep_copy: bool = True) -> RectangleArray:
         # inherited docs
         if indices is None or len(self.xy) == 0:
             xy = self.xy
@@ -222,8 +222,8 @@ class RectangleList(BaseRectangleList, ABCObjectList):
             attributes = self.attributes[indices]
 
         if deep_copy:
-            return RectangleList(xy=xy.copy(),
-                                 sizes=sizes.copy(),
-                                 attributes=attributes.copy())
+            return RectangleArray(xy=xy.copy(),
+                                  sizes=sizes.copy(),
+                                  attributes=attributes.copy())
         else:
-            return RectangleList(xy=xy, sizes=sizes, attributes=attributes)
+            return RectangleArray(xy=xy, sizes=sizes, attributes=attributes)

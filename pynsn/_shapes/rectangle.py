@@ -2,14 +2,14 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Any, Iterator, Union
+from typing import Any, Iterator
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .. import _shapes
-from .._lib.coordinate import Coordinate
 from .abc_shape import ABCShape
+from .coordinate import Coordinate
 
 # TODO doc "basic properities" is all classes (like width)
 
@@ -40,7 +40,7 @@ class Rectangle(ABCShape):
 
     def __repr__(self):
         return f"Rectangle(xy={self.xy}, size={self.size}, " \
-            + "attribute='{self.attribute}')"
+            + f"attribute='{self.attribute}')"
 
     @property
     def width(self) -> float:

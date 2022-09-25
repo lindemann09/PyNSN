@@ -4,23 +4,23 @@ from typing import Optional, Union
 
 import pygame as _pygame
 
-from .. import _arrays
-from . import _array_draw
+from .. import _stimulus
 from . import pil_image as _pil_image
+from ._array_draw import check_nsn_stimulus
 from ._image_colours import ImageColours
 
 
-def create(object_array: _arrays.NSNStimulus,
+def create(nsn_stimulus: _stimulus.NSNStimulus,
            colours: Optional[ImageColours] = None,
            antialiasing: Union[bool, int] = True) -> _pygame.Surface:
 
-    _array_draw._check_nsn_stimulus(object_array)
+    check_nsn_stimulus(nsn_stimulus)
     if colours is None:
         colours = ImageColours()
     if not isinstance(colours, ImageColours):
         raise TypeError("Colours must be of type image.ImageColours")
 
-    img = _pil_image.create(object_array=object_array,
+    img = _pil_image.create(nsn_stimulus=nsn_stimulus,
                             colours=colours,
                             antialiasing=antialiasing)
 

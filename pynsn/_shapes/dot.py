@@ -2,13 +2,14 @@ from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Union, Any
+from typing import Any
+
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .abc_shape import ABCShape
-from .._lib.coordinate import Coordinate
 from .. import _shapes
+from .abc_shape import ABCShape
+from .coordinate import Coordinate
 
 
 class Dot(ABCShape):

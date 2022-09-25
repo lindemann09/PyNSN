@@ -7,11 +7,11 @@ from numpy.typing import ArrayLike, NDArray
 
 from .._lib.np_tools import make_vector_fixed_length, round2
 from .._lib.typing import IntOVector
-from .abc_object_list import ABCObjectList
-from .dot import Dot
+from .._shapes.dot import Dot
+from .abc_object_aray import ABCObjectArray
 
 
-class BaseDotList:
+class BaseDotArray:
     """Basic class comprising numpy lists of coordinates and diameter for dots"""
 
     def __init__(self, xy: Optional[ArrayLike] = None,
@@ -30,7 +30,7 @@ class BaseDotList:
                              "xy has not the same length as item_diameter")
 
 
-class DotList(BaseDotList, ABCObjectList):
+class DotArray(BaseDotArray, ABCObjectArray):
     """Class of numpy representation of dot"""
 
     def __init__(self, xy: Optional[ArrayLike] = None,
@@ -183,7 +183,7 @@ class DotList(BaseDotList, ABCObjectList):
         return d
 
     @classmethod
-    def from_dict(cls, the_dict: Dict[str, Any]) -> DotList:
+    def from_dict(cls, the_dict: Dict[str, Any]) -> DotArray:
         """read Dot collection from dict"""
         return cls(xy=the_dict["xy"],
                    diameter=the_dict["diameter"],
@@ -191,7 +191,7 @@ class DotList(BaseDotList, ABCObjectList):
 
     def copy(self,
              indices: Union[int, Sequence[int], NDArray[np.int_], None] = None,
-             deep_copy: bool = True) -> DotList:
+             deep_copy: bool = True) -> DotArray:
         # inherited docs
         if indices is None or len(self.xy) == 0:
             xy = self.xy
@@ -203,8 +203,8 @@ class DotList(BaseDotList, ABCObjectList):
             attributes = self.attributes[indices]
 
         if deep_copy:
-            return DotList(xy=xy.copy(),
-                           diameter=diameter.copy(),
-                           attributes=attributes.copy())
+            return DotArray(xy=xy.copy(),
+                            diameter=diameter.copy(),
+                            attributes=attributes.copy())
         else:
-            return DotList(xy=xy, diameter=diameter, attributes=attributes)
+            return DotArray(xy=xy, diameter=diameter, attributes=attributes)

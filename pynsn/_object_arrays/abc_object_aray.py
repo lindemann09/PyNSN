@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike, NDArray
 from .._lib.typing import IntOVector
 
 
-class ABCObjectList(metaclass=ABCMeta):
+class ABCObjectArray(metaclass=ABCMeta):
     """Class of numpy representation of dot"""
 
     @abstractmethod
@@ -97,9 +97,9 @@ class ABCObjectList(metaclass=ABCMeta):
         """read Dot collection from dict"""
 
     # generic methods
-    def join(self, object_list) -> None:
+    def join(self, object_array) -> None:
         """joins with another objects list """
-        self.add(object_list.iter())
+        self.add(object_array.iter())
 
     def get(self, indices: Optional[IntOVector] = None) -> List:
         """Returns list of rectangles/pictures)"""

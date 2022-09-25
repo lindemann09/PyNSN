@@ -6,29 +6,26 @@ from typing import Any, Optional
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .._lib.misc import key_value_format
-
-from .._shapes.rectangle_list import RectangleList
-from .._shapes.dot_list import DotList
-
-from .. import _arrays, constants
+from .. import _stimulus, constants
 from .._lib import geometry, rng
+from .._lib.exceptions import NoSolutionError
+from .._lib.misc import key_value_format
+from .._object_arrays import DotArray, RectangleArray
+from .._object_arrays.convex_hull import ConvexHull, ConvexHullPositions
 from ..constants import VisualPropertyFlags
-from .._lib.exception import NoSolutionError
-from .convex_hull import ConvexHull, ConvexHullPositions
 
 
-class ArrayProperties(object):
+class StimulusProperties(object):
     """Visual properties fo an associated arrays
 
     Visual features of each nsn stimulus can be access and
     modified via an instance of this class
     """
 
-    def __init__(self, object_array: Any) -> None:
+    def __init__(self, nsn_stimulus: Any) -> None:
         # _lib or dot_cloud
-        assert isinstance(object_array, _arrays.NSNStimulus)
-        self._oa = object_array
+        assert isinstance(nsn_stimulus, _stimulus.NSNStimulus)
+        self._oa = nsn_stimulus
         self._convex_hull = None
         self._convex_hull_positions = None
 
@@ -53,14 +50,14 @@ class ArrayProperties(object):
 
     @property
     def average_dot_diameter(self) -> float:
-        if not isinstance(self._oa.objects, DotList) or self.numerosity == 0:
+        if not isinstance(self._oa.objects, DotArray) or self.numerosity == 0:
             return np.nan
         else:
             return float(np.mean(self._oa.objects.diameter))
 
     @property
     def average_rectangle_size(self) -> NDArray:
-        if not isinstance(self._oa.objects, RectangleList) \
+        if not isinstance(self._oa.objects, RectangleArray) \
                 or self.numerosity == 0:
             return np.array([np.nan, np.nan])
         else:
@@ -198,10 +195,10 @@ class ArrayProperties(object):
                (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self._oa.objects, DotList):
+        if isinstance(self._oa.objects, DotArray):
             rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(),
                       self.average_dot_diameter)
-        elif isinstance(self._oa.objects, RectangleList):
+        elif isinstance(self._oa.objects, RectangleArray):
             rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(),
                       self.average_rectangle_size.tolist())
         else:
@@ -228,7 +225,7 @@ class ArrayProperties(object):
                 rtn = ""
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self._oa.hash())
+                rtn = "ID: {} ".format(self._oa.hash)
             else:
                 rtn = ""
             rtn += f"N: {self.numerosity}, " \
@@ -300,7 +297,7 @@ class ArrayProperties(object):
             TypeError: if associated array is not a array of dots
         """
         # changes diameter
-        if not isinstance(self._oa.objects, DotList):
+        if not isinstance(self._oa.objects, DotArray):
             raise TypeError("Adapting diameter is not possible "
                             + f"for {type(self._oa).__name__}.")
         scale = value / self.average_dot_diameter
@@ -318,7 +315,7 @@ class ArrayProperties(object):
             TypeError: if associated array is not a object of rectangles
             or values is not a tuple of two numerical values
         """
-        if not isinstance(self._oa.objects, RectangleList):
+        if not isinstance(self._oa.objects, RectangleArray):
             raise TypeError("Adapting rectangle size is not possible "
                             + f"for {type(self._oa).__name__}.")
         new_size = np.asarray(value)
@@ -345,11 +342,11 @@ class ArrayProperties(object):
         """
         a_scale = value / self.total_surface_area
         # pylint: disable=W0212
-        if isinstance(self._oa.objects, DotList):
+        if isinstance(self._oa.objects, DotArray):
             self._oa.objects.diameter = \
                 np.sqrt(self._oa.objects.surface_areas * a_scale) \
                 * 2 / np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        elif isinstance(self._oa.objects, RectangleList):
+        elif isinstance(self._oa.objects, RectangleArray):
             # rect
             self._oa.objects.sizes = self._oa.objects.sizes * \
                 np.sqrt(a_scale)
@@ -443,10 +440,10 @@ class ArrayProperties(object):
         -------
 
         """
-        if isinstance(self._oa.objects, DotList):
+        if isinstance(self._oa.objects, DotArray):
             self.fit_average_diameter(value / (self.numerosity * np.pi))
 
-        elif isinstance(self._oa.objects, RectangleList):
+        elif isinstance(self._oa.objects, RectangleArray):
             new_size = self.average_rectangle_size * value / self.total_perimeter
 
             self.fit_average_rectangle_size(new_size)
@@ -567,7 +564,7 @@ class ArrayProperties(object):
                 property_flag.label()))
 
     def scale_average_diameter(self, factor: float) -> None:
-        if not isinstance(self._oa.objects, DotList):
+        if not isinstance(self._oa.objects, DotArray):
             raise TypeError("Scaling diameter is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -575,7 +572,7 @@ class ArrayProperties(object):
         return self.fit_average_diameter(self.average_dot_diameter * factor)
 
     def scale_average_rectangle_size(self, factor: float) -> None:
-        if not isinstance(self._oa.objects, RectangleList):
+        if not isinstance(self._oa.objects, RectangleArray):
             raise TypeError("Scaling rectangle size is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -641,7 +638,7 @@ class ArrayProperties(object):
                         value=self.get(feature) * factor)
 
 
-def _match_field_area(object_array: _arrays.NSNStimulus,
+def _match_field_area(nsn_stimulus: _stimulus.NSNStimulus,
                       value: float,
                       precision: float) -> None:
     """change the convex hull area to a desired size by scale the polar
@@ -651,7 +648,7 @@ def _match_field_area(object_array: _arrays.NSNStimulus,
 
     Note: see doc string `field_area`
     """
-    current = object_array.properties.field_area
+    current = nsn_stimulus.properties.field_area
 
     if current is None:
         return  # not defined
@@ -662,24 +659,24 @@ def _match_field_area(object_array: _arrays.NSNStimulus,
         step *= -1
 
     # centered points
-    old_center = object_array.get_center_of_field_area()
-    object_array.objects.xy = object_array.objects.xy - old_center
-    centered_polar = geometry.cartesian2polar(object_array.xy)
+    old_center = nsn_stimulus.get_center_of_field_area()
+    nsn_stimulus.objects.xy = nsn_stimulus.objects.xy - old_center
+    centered_polar = geometry.cartesian2polar(nsn_stimulus.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        object_array.objects.xy = geometry.polar2cartesian(
+        nsn_stimulus.objects.xy = geometry.polar2cartesian(
             centered_polar * [scale, 1])
-        object_array.properties.reset()  # required at this point to recalc convex hull
-        current = object_array.properties.field_area
+        nsn_stimulus.properties.reset()  # required at this point to recalc convex hull
+        current = nsn_stimulus.properties.field_area
 
         if (current < value and step < 0) or \
                 (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    object_array.objects.xy = object_array.xy + old_center
-    object_array.properties.reset()
+    nsn_stimulus.objects.xy = nsn_stimulus.xy + old_center
+    nsn_stimulus.properties.reset()
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays

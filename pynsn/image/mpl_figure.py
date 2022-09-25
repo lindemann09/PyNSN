@@ -6,13 +6,13 @@ import numpy as _np
 from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
-from .. import _arrays
+from .. import _stimulus
 from .. import _shapes
 from . import _array_draw
 from ._image_colours import ImageColours
 
 
-def create(object_array: _arrays.NSNStimulus,
+def create(nsn_stimulus: _stimulus.NSNStimulus,
            colours: Optional[ImageColours] = None,
            dpi: float = 100) -> _Figure:
     """Matplotlib figure
@@ -20,14 +20,14 @@ def create(object_array: _arrays.NSNStimulus,
     Parameters
     ----------
     dpi
-    object_array
+    nsn_stimulus
     colours
 
     Returns
     -------
 
     """
-    return _MatplotlibDraw().create_image(object_array=object_array, colours=colours,
+    return _MatplotlibDraw().create_image(nsn_stimulus=nsn_stimulus, colours=colours,
                                           dpi=dpi)
 
 

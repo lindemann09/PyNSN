@@ -8,14 +8,18 @@ from typing import Any, Sequence, Union
 import numpy as _np
 from numpy.typing import NDArray
 
-from .._lib import rng as _rng
-from .._lib.exception import NoSolutionError as _NoSolutionError
-from .._lib.np_tools import round2 as _numpy_round2
+from ._lib import rng as _rng
+from ._lib.exceptions import NoSolutionError as _NoSolutionError
 
 
-def _round_samples(samples, round_to_decimals):
+def _round_samples(samples: NDArray,
+                   round_to_decimals: Union[None, int]) -> NDArray:
     if round_to_decimals is not None:
-        return _numpy_round2(samples, decimals=round_to_decimals)
+        arr = _np.round(samples, decimals=round_to_decimals)
+        if round_to_decimals == 0:
+            return arr.astype(_np.int32)
+        else:
+            return arr
     else:
         return _np.array(samples)
 

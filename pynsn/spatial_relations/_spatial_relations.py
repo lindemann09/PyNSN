@@ -4,17 +4,17 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 
+import warnings
 from typing import Union
 import numpy as np
 from numpy.typing import NDArray
-import warnings
 
-from .._lib.np_tools import as_vector, find_value_rowwise
+from .._lib.np_tools import find_value_rowwise
 from .._lib.geometry import polar2cartesian
 from .._lib import geometry
 
-from .dot_list import BaseDotList
-from .rectangle_list import BaseRectangleList
+from .._object_arrays.dot_array import BaseDotArray
+from .._object_arrays.rectangle_array import BaseRectangleArray
 # all init-functions require 2D arrays
 
 
@@ -24,9 +24,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def overlaps(self):
         """True is objects overlap"""
 
-    @abstractmethod
-    def is_inside(self):
-        """True is objects are inside"""
+# FIXME TODO
+#    @abstractmethod
+#    def is_inside(self):
+#        """True is objects are inside"""
 
     @abstractmethod
     def spatial_relations(self):
@@ -56,11 +57,11 @@ class CoordinateCoordinate(object):
         return self._spatial_relations
 
 
-class DotDot(CoordinateCoordinate):
+class DotDot(CoordinateCoordinate, ABCSpatialRelations):
 
     def __init__(self,
-                 dots_a: BaseDotList,
-                 dots_b: BaseDotList) -> None:
+                 dots_a: BaseDotArray,
+                 dots_b: BaseDotArray) -> None:
         super().__init__(a_xy=dots_a.xy, b_xy=dots_b.xy)
         self._radii_sum = (dots_a.diameter + dots_b.diameter) / 2
         assert self._xy_diff.shape[0] == self._radii_sum.shape[0]
@@ -113,21 +114,21 @@ class DotDot(CoordinateCoordinate):
         return rtn
 
 
-class DotCoordinate(DotDot):
+class DotCoordinate(DotDot, ABCSpatialRelations):
 
     def __init__(self,
-                 dots: BaseDotList,
+                 dots: BaseDotArray,
                  coord_xy: NDArray) -> None:
-        dots_b = BaseDotList(xy=coord_xy,
-                             diameter=np.zeros(coord_xy.shape[0]))
+        dots_b = BaseDotArray(xy=coord_xy,
+                              diameter=np.zeros(coord_xy.shape[0]))
         super().__init__(dots_a=dots, dots_b=dots_b)
 
 
-class RectangleRectangle(CoordinateCoordinate):
+class RectangleRectangle(CoordinateCoordinate, ABCSpatialRelations):
 
     def __init__(self,
-                 rectangles_a: BaseRectangleList,
-                 rectangles_b: BaseRectangleList) -> None:
+                 rectangles_a: BaseRectangleArray,
+                 rectangles_b: BaseRectangleArray) -> None:
 
         super().__init__(a_xy=rectangles_a.xy, b_xy=rectangles_b.xy)
         self.a_sizes = rectangles_a.sizes
@@ -206,21 +207,21 @@ class RectangleRectangle(CoordinateCoordinate):
         return rtn
 
 
-class RectangleCoordinate(RectangleRectangle):
+class RectangleCoordinate(RectangleRectangle, ABCSpatialRelations):
 
     def __init__(self,
-                 rectangles: BaseRectangleList,
+                 rectangles: BaseRectangleArray,
                  coord_xy: NDArray) -> None:
-        rects_b = BaseRectangleList(xy=coord_xy,
-                                    sizes=np.zeros(coord_xy.shape))
+        rects_b = BaseRectangleArray(xy=coord_xy,
+                                     sizes=np.zeros(coord_xy.shape))
         super().__init__(rectangles_a=rectangles, rectangles_b=rects_b)
 
 
-class RectangleDot(CoordinateCoordinate):
+class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
 
     def __init__(self,
-                 rectangles: BaseRectangleList,
-                 dots: BaseDotList) -> None:
+                 rectangles: BaseRectangleArray,
+                 dots: BaseDotArray) -> None:
 
         self.rect_xy = rectangles.xy
         self.rect_sizes = rectangles.sizes
@@ -230,11 +231,11 @@ class RectangleDot(CoordinateCoordinate):
         n_rects = len(self.rect_xy)
         n_dots = len(self.dot_xy)
         if n_rects > 1 and n_dots == 1:
-            ones = np.ones((1, n_rects))
+            ones = np.ones((n_rects, 1))
             self.dot_xy = self.dot_xy * ones
             self.dot_radii = self.dot_radii * ones
         elif n_rects == 1 and n_dots > 1:
-            ones = np.ones((1, n_dots))
+            ones = np.ones((n_dots, 1))
             self.rect_xy = self.rect_xy * ones
             self.rect_sizes = self.rect_sizes * ones
 

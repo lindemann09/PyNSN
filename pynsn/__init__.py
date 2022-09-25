@@ -4,7 +4,7 @@ Creating Non-Symbolic Number Displays
 """
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
-__version__ = '0.15.2'
+__version__ = '0.16'
 
 from sys import version_info as _python_version_info
 
@@ -17,16 +17,13 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                        "Please use Python 3.8 or later.")
 # pylint: disable=C0413
 
-from ._arrays import NSNStimulus,  ArrayProperties, load_array
-from ._shapes import Dot, Rectangle, Picture, RectangleList, DotList, BaseDotList, BaseRectangleList
+from ._stimulus import NSNStimulus,  StimulusProperties, NSNFactory
+from ._shapes import Dot, Rectangle, Picture, Coordinate
+from ._object_arrays import RectangleArray, DotArray, BaseDotArray, BaseRectangleArray
 
-from . import constants
-from ._lib import exception
 from ._lib.rng import init_random_generator
 from ._lib.colour import Colour
-from ._lib.coordinate import Coordinate
-from ._factory import distributions
-from ._factory.factory import NSNFactory
+from ._lib.exceptions import NoSolutionError
 
 
 def _print_version_info():

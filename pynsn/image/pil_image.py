@@ -7,16 +7,17 @@ from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
+from .._lib.np_tools import round2
 from .. import _shapes
 from . import _array_draw
-from .. import _arrays
+from .. import _stimulus
 from ._image_colours import ImageColours
 
 
 # TODO pillow supports no alpha/opacity
 
 
-def create(object_array: _arrays.NSNStimulus,
+def create(nsn_stimulus: _stimulus.NSNStimulus,
            colours: Optional[ImageColours] = None,
            antialiasing: Union[bool, int] = True) -> _Image.Image:
     # ImageParameter
@@ -29,7 +30,7 @@ def create(object_array: _arrays.NSNStimulus,
     default_dot_colour: if colour is undefined in _lib
     """
 
-    return _PILDraw().create_image(object_array=object_array,
+    return _PILDraw().create_image(nsn_stimulus=nsn_stimulus,
                                    colours=colours,
                                    antialiasing=antialiasing)
 
@@ -67,10 +68,11 @@ class _PILDraw(_array_draw.ABCArrayDraw):
                                           shape.x + r, shape.y + r),
                                          fill=col.colour)
         elif isinstance(shape, _shapes.Picture):
-            tmp = _np.asarray(shape.size) * scaling_factor
+            tmp = round2(_np.asarray(shape.size) *
+                         scaling_factor, decimals=0)
             shape.size = tmp.tolist()
             # picture
-            target_box = _np.round(shape.get_ltrb(), decimals=0)
+            target_box = round2(shape.get_ltrb(), decimals=0)
             target_box[:, 1] = _np.flip(target_box[:, 1])  # reversed y axes
             pict = _Image.open(shape.filename, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
@@ -78,7 +80,7 @@ class _PILDraw(_array_draw.ABCArrayDraw):
                                    resample=_Image.ANTIALIAS)
 
             tr_layer = _Image.new('RGBA', img.size, (0, 0, 0, 0))
-            tr_layer.paste(pict, target_box)  # FIXME .flatten or .tolist()?
+            tr_layer.paste(pict, target_box.flatten().tolist())
             res = _Image.alpha_composite(img, tr_layer)
             img.paste(res)
 

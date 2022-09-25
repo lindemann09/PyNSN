@@ -6,6 +6,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import sys
 from collections import OrderedDict
+from typing import Any
 
 import numpy as np
 
@@ -38,7 +39,7 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
     return rtn
 
 
-def key_value_format(key, value):
+def key_value_format(key: str, value: Any) -> str:
     try:
         v = f"{value:14.2f}"  # try rounding
     except (ValueError, TypeError):
@@ -46,7 +47,7 @@ def key_value_format(key, value):
     return f"{key:<24}{v}"
 
 
-def dict_to_text(the_dict):
+def dict_to_text(the_dict: dict) -> str:
 
     rtn = ""
     for k, v in the_dict.items():

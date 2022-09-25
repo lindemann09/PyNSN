@@ -14,19 +14,19 @@ from ._image_colours import ImageColours
 
 class ExprimentNSNStimulus(_Canvas):
 
-    def __init__(self, object_array,
+    def __init__(self, nsn_stimulus,
                  colours=None,
                  position=(0, 0),
                  antialiasing=True):
 
-        _array_draw._check_nsn_stimulus(object_array)
+        _array_draw.check_nsn_stimulus(nsn_stimulus)
         if colours is None:
             colours = ImageColours()
         if not isinstance(colours, ImageColours):
             raise TypeError("Colours must be of type image.ImageColours")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
-        self.dot_array = object_array
+        self.dot_array = nsn_stimulus
         self.colours = colours
         self.antialiasing = antialiasing
         self._image = None
@@ -34,7 +34,7 @@ class ExprimentNSNStimulus(_Canvas):
     @property
     def image(self):
         if self._image is None:
-            self._image = _pil_image.create(object_array=self.dot_array,
+            self._image = _pil_image.create(nsn_stimulus=self.dot_array,
                                             colours=self.colours,
                                             antialiasing=self.antialiasing)  # TODO gabor filter
 
@@ -66,7 +66,7 @@ class ExpyrimentDASequence(object):
         self.antialiasing = antialiasing
 
         for da in self.da_sequence.dot_arrays:
-            stim = ExprimentNSNStimulus(object_array=da, position=position,
+            stim = ExprimentNSNStimulus(nsn_stimulus=da, position=position,
                                         colours=colours,
                                         antialiasing=antialiasing)
             self.stimuli.append(stim)

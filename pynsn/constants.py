@@ -1,7 +1,7 @@
 import enum as _enum
 import typing as _tp
 
-# _arrays
+# stimuli
 DEFAULT_min_dist_between_objects = 2
 DEFAULT_min_dist_area_edge = 1
 

@@ -5,20 +5,20 @@ from typing import Optional
 import numpy as _np
 import svgwrite as _svg
 
-from .. import _arrays, _shapes
+from .. import _shapes, _stimulus
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from . import _array_draw
 from ._image_colours import ImageColours
 
 
 def create(filename: str,
-           object_array: _arrays.NSNStimulus,
+           nsn_stimulus: _stimulus.NSNStimulus,
            colours: Optional[ImageColours] = None) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters
     ----------
-    object_array
+    nsn_stimulus
     colours
     filename
 
@@ -26,7 +26,7 @@ def create(filename: str,
     -------
 
     """
-    return _SVGDraw().create_image(object_array=object_array, colours=colours,
+    return _SVGDraw().create_image(nsn_stimulus=nsn_stimulus, colours=colours,
                                    filename=filename)
 
 
