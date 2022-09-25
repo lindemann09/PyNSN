@@ -161,13 +161,13 @@ class ABCArrayDraw(metaclass=ABCMeta):
                                       scaling_factor=aaf)
             #  and center of mass
             if colours.center_of_field_area.colour is not None:
-                obj = Dot(xy=nsn_stimulus.get_center_of_field_area(),
+                obj = Dot(xy=nsn_stimulus.properties.convex_hull.center,
                           diameter=10,
                           attribute=colours.center_of_field_area.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,
                                 scaling_factor=aaf)
             if colours.center_of_mass.colour is not None:
-                obj = Dot(xy=nsn_stimulus.get_center_of_mass(),
+                obj = Dot(xy=nsn_stimulus.objects.center_of_mass,
                           diameter=10,
                           attribute=colours.center_of_mass.colour)
                 self.draw_shape(img, obj, opacity=colours.opacity_guides,

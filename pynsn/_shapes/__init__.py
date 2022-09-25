@@ -6,3 +6,4 @@ from .picture import Picture
 from .coordinate import Coordinate
 
 ShapeType = _tp.Union[Dot, Rectangle, Picture]
+RectangleLike = _tp.Union[Rectangle, Picture]

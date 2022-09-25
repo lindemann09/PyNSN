@@ -6,9 +6,10 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import spatial
 
-from .rectangle_array import RectangleArray
+from .._lib.geometry import cartesian2polar, polar2cartesian, center_of_coordinates
+from . import ObjectArrayType
 from .dot_array import DotArray
-from .._lib.geometry import cartesian2polar, polar2cartesian
+from .rectangle_array import RectangleArray
 
 
 class ABCConvexHull(metaclass=ABCMeta):
@@ -67,11 +68,22 @@ class ABCConvexHull(metaclass=ABCMeta):
         return len(self.xy) == len(other.xy) and \
             self.field_area == other.field_area
 
+    @property
+    def center(self) -> NDArray:
+        """Center of convex hull
+
+        Returns:
+            Coordinate of center position
+        """
+
+        return center_of_coordinates(self.xy)
+
 
 class ConvexHullPositions(ABCConvexHull):
 
-    def __init__(self, object_array) -> None:
+    def __init__(self, object_array: ObjectArrayType) -> None:
         super().__init__()
+        assert isinstance(object_array, (RectangleArray, DotArray))
         self._try_convex_hull(xy=object_array.xy)
 
 
@@ -81,9 +93,10 @@ class ConvexHull(ABCConvexHull):
     using outer positions, able to handle rects
     """
 
-    def __init__(self, object_array) -> None:
+    def __init__(self, object_array: ObjectArrayType) -> None:
 
         super().__init__()
+        assert isinstance(object_array, (RectangleArray, DotArray))
         self._is_rect_array = isinstance(object_array, RectangleArray)
         if self._is_rect_array:
             if len(object_array.xy) < 2:

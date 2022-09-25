@@ -40,7 +40,7 @@ def timetest():
     factory.random_rectangle_array(n_objects=20)
 
 
-print("create:", timeit.timeit(timetest, number=100)*10)
+#print("create:", timeit.timeit(timetest, number=100)*10)
 
 
 stimulus = factory.random_rectangle_array(n_objects=20)
@@ -70,20 +70,18 @@ img.save("demo.png")
 
 
 stimulus.properties.fit_field_area(99000)
-# print(stimulus)
+print(stimulus)
 
 idx = stimulus.get_outlier()
 
-# FIXME squeed too much, because incorrect distance calulations
-# stimulus.mod_squeeze_to_area()
+# stimulus.mod_squeeze_to_area() # FIXME squeed does not work
+
 img = pil_image.create(stimulus, my_colours)
 
 
 def timetest2():
     pil_image.create(stimulus, my_colours)
-
-
-print("picture:", timeit.timeit(timetest2, number=100)*10)
+#print("picture:", timeit.timeit(timetest2, number=100)*10)
 
 
 img.save("demo2.png")

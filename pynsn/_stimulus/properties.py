@@ -1,7 +1,7 @@
 # calculates visual properties of a nsn stimulus/ dot cloud
 
 from collections import OrderedDict
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -10,22 +10,29 @@ from .. import _stimulus, constants
 from .._lib import geometry, rng
 from .._lib.exceptions import NoSolutionError
 from .._lib.misc import key_value_format
-from .._object_arrays import DotArray, RectangleArray
+from .._object_arrays import DotArray, RectangleArray, ObjectArrayType
 from .._object_arrays.convex_hull import ConvexHull, ConvexHullPositions
 from ..constants import VisualPropertyFlags
 
 
-class StimulusProperties(object):
+class ArrayProperties(object):
     """Visual properties fo an associated arrays
 
     Visual features of each nsn stimulus can be access and
     modified via an instance of this class
     """
 
-    def __init__(self, nsn_stimulus: Any) -> None:
-        # _lib or dot_cloud
-        assert isinstance(nsn_stimulus, _stimulus.NSNStimulus)
-        self._oa = nsn_stimulus
+    def __init__(self, object_array: Union[ObjectArrayType, _stimulus.NSNStimulus]) -> None:
+        if isinstance(object_array, _stimulus.NSNStimulus):
+            self._oa = object_array.objects
+            self._nsn_stimulus = object_array
+        elif isinstance(object_array, (DotArray, RectangleArray)):
+            self._oa = object_array
+            self._nsn_stimulus = None
+        else:
+            raise TypeError(
+                "object_array has to be a NSNStimulus or an ObjectArrayType")
+
         self._convex_hull = None
         self._convex_hull_positions = None
 
@@ -50,40 +57,40 @@ class StimulusProperties(object):
 
     @property
     def average_dot_diameter(self) -> float:
-        if not isinstance(self._oa.objects, DotArray) or self.numerosity == 0:
+        if not isinstance(self._oa, DotArray) or self.numerosity == 0:
             return np.nan
         else:
-            return float(np.mean(self._oa.objects.diameter))
+            return float(np.mean(self._oa.diameter))
 
     @property
     def average_rectangle_size(self) -> NDArray:
-        if not isinstance(self._oa.objects, RectangleArray) \
+        if not isinstance(self._oa, RectangleArray) \
                 or self.numerosity == 0:
             return np.array([np.nan, np.nan])
         else:
-            return np.mean(self._oa.objects.sizes, axis=0)
+            return np.mean(self._oa.sizes, axis=0)
 
     @property
     def total_surface_area(self) -> float:
-        return float(np.sum(self._oa.objects.surface_areas))
+        return float(np.sum(self._oa.surface_areas))
 
     @property
     def average_surface_area(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.mean(self._oa.objects.surface_areas))
+        return float(np.mean(self._oa.surface_areas))
 
     @property
     def total_perimeter(self) -> float:
         if self.numerosity == 0:
             return 0
-        return float(np.sum(self._oa.objects.perimeter))
+        return float(np.sum(self._oa.perimeter))
 
     @property
     def average_perimeter(self) -> float:
         if self.numerosity == 0:
             return np.nan
-        return float(np.mean(self._oa.objects.perimeter))
+        return float(np.mean(self._oa.perimeter))
 
     @property
     def field_area_positions(self) -> float:
@@ -195,10 +202,10 @@ class StimulusProperties(object):
                (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
                (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing)]
 
-        if isinstance(self._oa.objects, DotArray):
+        if isinstance(self._oa, DotArray):
             rtn[2] = (VisualPropertyFlags.AV_DOT_DIAMETER.label(),
                       self.average_dot_diameter)
-        elif isinstance(self._oa.objects, RectangleArray):
+        elif isinstance(self._oa, RectangleArray):
             rtn[2] = (VisualPropertyFlags.AV_RECT_SIZE.label(),
                       self.average_rectangle_size.tolist())
         else:
@@ -225,7 +232,7 @@ class StimulusProperties(object):
                 rtn = ""
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self._oa.hash)
+                rtn = "ID: {} ".format(self._oa.hash())
             else:
                 rtn = ""
             rtn += f"N: {self.numerosity}, " \
@@ -244,6 +251,11 @@ class StimulusProperties(object):
         """
 
         """
+        if self._nsn_stimulus is None:
+            raise RuntimeError(
+                "Numerosity can be only modified, if NSNStimulus is "
+                "defined the property, because free position can not be  "
+                "found otherwise.")
 
         # make a copy for the deviant
         if value <= 0:
@@ -266,7 +278,7 @@ class StimulusProperties(object):
                                 break
                         if delete_id is None:
                             raise NoSolutionError(
-                                "Can't increase numeroisty, while keeping field area.")
+                                "Can't increase numerosity, while keeping field area.")
                     else:
                         delete_id = rng.generator.integers(0, self.numerosity)
 
@@ -275,17 +287,18 @@ class StimulusProperties(object):
                 else:
                     # add object: copy a random dot
                     clone_id = rng.generator.integers(0, self.numerosity)
-                    rnd_object = next(self._oa.objects.iter(clone_id))
+                    rnd_object = next(self._oa.iter(clone_id))
                     try:
-                        rnd_object = self._oa.get_free_position(
-                            ref_object=rnd_object, allow_overlapping=False,
+                        rnd_object = self._nsn_stimulus.get_free_position(
+                            ref_object=rnd_object,
+                            allow_overlapping=False,
                             inside_convex_hull=keep_convex_hull)
                     except NoSolutionError as err:
                         # no free position
                         raise NoSolutionError(
                             "Can't increase numerosity. No free position found.") from err
 
-                    self._oa.objects.add([rnd_object])  # type: ignore
+                    self._oa.add([rnd_object])  # type: ignore
 
     def fit_average_diameter(self, value: float) -> None:
         """Set average diameter.
@@ -297,12 +310,12 @@ class StimulusProperties(object):
             TypeError: if associated array is not a array of dots
         """
         # changes diameter
-        if not isinstance(self._oa.objects, DotArray):
+        if not isinstance(self._oa, DotArray):
             raise TypeError("Adapting diameter is not possible "
                             + f"for {type(self._oa).__name__}.")
         scale = value / self.average_dot_diameter
-        self._oa.objects.diameter = \
-            self._oa.objects.diameter * scale  # pylint: disable=W0212
+        self._oa.diameter = \
+            self._oa.diameter * scale  # pylint: disable=W0212
         self.reset()
 
     def fit_average_rectangle_size(self, value: ArrayLike) -> None:
@@ -315,7 +328,7 @@ class StimulusProperties(object):
             TypeError: if associated array is not a object of rectangles
             or values is not a tuple of two numerical values
         """
-        if not isinstance(self._oa.objects, RectangleArray):
+        if not isinstance(self._oa, RectangleArray):
             raise TypeError("Adapting rectangle size is not possible "
                             + f"for {type(self._oa).__name__}.")
         new_size = np.asarray(value)
@@ -328,7 +341,7 @@ class StimulusProperties(object):
             raise RuntimeError(
                 "Numerosity, width or hight is zero or not defined.")
         scale = np.divide(new_size, av_size)
-        self._oa.objects.sizes = self._oa.objects.sizes * \
+        self._oa.sizes = self._oa.sizes * \
             scale  # pylint: disable=W0212
         self.reset()
 
@@ -342,13 +355,13 @@ class StimulusProperties(object):
         """
         a_scale = value / self.total_surface_area
         # pylint: disable=W0212
-        if isinstance(self._oa.objects, DotArray):
-            self._oa.objects.diameter = \
-                np.sqrt(self._oa.objects.surface_areas * a_scale) \
+        if isinstance(self._oa, DotArray):
+            self._oa.diameter = \
+                np.sqrt(self._oa.surface_areas * a_scale) \
                 * 2 / np.sqrt(np.pi)  # d=sqrt(4a/pi) = sqrt(a)*2/sqrt(pi)
-        elif isinstance(self._oa.objects, RectangleArray):
+        elif isinstance(self._oa, RectangleArray):
             # rect
-            self._oa.objects.sizes = self._oa.objects.sizes * \
+            self._oa.sizes = self._oa.sizes * \
                 np.sqrt(a_scale)
         else:
             raise NotImplementedError()
@@ -371,7 +384,7 @@ class StimulusProperties(object):
         if self.field_area is None:
             return None  # not defined
         else:
-            _match_field_area(self._oa, value=value, precision=precision)
+            _match_field_area(self, value=value, precision=precision)
 
     def fit_coverage(self, value: float,
                      precision: Optional[float] = None,
@@ -440,10 +453,10 @@ class StimulusProperties(object):
         -------
 
         """
-        if isinstance(self._oa.objects, DotArray):
+        if isinstance(self._oa, DotArray):
             self.fit_average_diameter(value / (self.numerosity * np.pi))
 
-        elif isinstance(self._oa.objects, RectangleArray):
+        elif isinstance(self._oa, RectangleArray):
             new_size = self.average_rectangle_size * value / self.total_perimeter
 
             self.fit_average_rectangle_size(new_size)
@@ -564,7 +577,7 @@ class StimulusProperties(object):
                 property_flag.label()))
 
     def scale_average_diameter(self, factor: float) -> None:
-        if not isinstance(self._oa.objects, DotArray):
+        if not isinstance(self._oa, DotArray):
             raise TypeError("Scaling diameter is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -572,7 +585,7 @@ class StimulusProperties(object):
         return self.fit_average_diameter(self.average_dot_diameter * factor)
 
     def scale_average_rectangle_size(self, factor: float) -> None:
-        if not isinstance(self._oa.objects, RectangleArray):
+        if not isinstance(self._oa, RectangleArray):
             raise TypeError("Scaling rectangle size is not possible for {}.".format(
                 type(self._oa).__name__))
         if factor == 1:
@@ -638,7 +651,7 @@ class StimulusProperties(object):
                         value=self.get(feature) * factor)
 
 
-def _match_field_area(nsn_stimulus: _stimulus.NSNStimulus,
+def _match_field_area(properties: ArrayProperties,
                       value: float,
                       precision: float) -> None:
     """change the convex hull area to a desired size by scale the polar
@@ -648,7 +661,9 @@ def _match_field_area(nsn_stimulus: _stimulus.NSNStimulus,
 
     Note: see doc string `field_area`
     """
-    current = nsn_stimulus.properties.field_area
+
+    object_array = properties._oa
+    current = properties.field_area
 
     if current is None:
         return  # not defined
@@ -659,24 +674,24 @@ def _match_field_area(nsn_stimulus: _stimulus.NSNStimulus,
         step *= -1
 
     # centered points
-    old_center = nsn_stimulus.get_center_of_field_area()
-    nsn_stimulus.objects.xy = nsn_stimulus.objects.xy - old_center
-    centered_polar = geometry.cartesian2polar(nsn_stimulus.xy)
+    old_center = properties.convex_hull.center
+    object_array.xy = object_array.xy - old_center
+    centered_polar = geometry.cartesian2polar(object_array.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        nsn_stimulus.objects.xy = geometry.polar2cartesian(
+        object_array.xy = geometry.polar2cartesian(
             centered_polar * [scale, 1])
-        nsn_stimulus.properties.reset()  # required at this point to recalc convex hull
-        current = nsn_stimulus.properties.field_area
+        properties.reset()  # required at this point to recalc convex hull
+        current = properties.field_area
 
         if (current < value and step < 0) or \
                 (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    nsn_stimulus.objects.xy = nsn_stimulus.xy + old_center
-    nsn_stimulus.properties.reset()
+    object_array.xy = object_array.xy + old_center
+    properties.reset()
 
     # TODO "visual test" (eye inspection) of fitting rect _arrays

@@ -17,7 +17,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
                        "Please use Python 3.8 or later.")
 # pylint: disable=C0413
 
-from ._stimulus import NSNStimulus,  StimulusProperties, NSNFactory
+from ._stimulus import NSNStimulus,  ArrayProperties, NSNFactory
 from ._shapes import Dot, Rectangle, Picture, Coordinate
 from ._object_arrays import RectangleArray, DotArray, BaseDotArray, BaseRectangleArray
 

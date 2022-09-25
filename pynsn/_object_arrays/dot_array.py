@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ast import Str
 
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
@@ -8,7 +9,7 @@ from numpy.typing import ArrayLike, NDArray
 from .._lib.np_tools import make_vector_fixed_length, round2
 from .._lib.typing import IntOVector
 from .._shapes.dot import Dot
-from .abc_object_aray import ABCObjectArray
+from .abc_object_aray import ABCObjectArray, hash_array, make_csv
 
 
 class BaseDotArray:
@@ -60,6 +61,10 @@ class DotArray(BaseDotArray, ABCObjectArray):
         except ValueError as err:
             raise ValueError("Length of attribute list does not match the " +
                              "size of the array.") from err
+
+    def hash(self) -> str:
+        return hash_array(xy=self.xy, perimeter=self.perimeter,
+                          attributes=self.attributes)
 
     def np_append(self,
                   xy: ArrayLike,
@@ -208,3 +213,46 @@ class DotArray(BaseDotArray, ABCObjectArray):
                             attributes=attributes.copy())
         else:
             return DotArray(xy=xy, diameter=diameter, attributes=attributes)
+
+    def dataframe_dict(self, hash_column: bool = False,
+                       attribute_column: bool = True) -> dict:
+        # inherited docs
+
+        if hash_column:
+            d = {"hash": [self.hash()] * len(self.xy)}
+        else:
+            d = {}
+        d.update({"x": self.xy[:, 0].tolist(),
+                  "y": self.xy[:, 1].tolist(),
+                  "diameter": self.diameter.tolist()})
+        if attribute_column:
+            d.update({"attributes": self.attributes.tolist()})
+        return d
+
+    def csv(self,
+            variable_names: bool = True,
+            hash_column: bool = False,
+            attribute_column: bool = True) -> str:
+        # inherited docs
+
+        if attribute_column:
+            attr = self.attributes
+        else:
+            attr = None
+        if hash_column:
+            array_hash = self.hash()
+        else:
+            array_hash = None
+
+        return make_csv(xy=self.xy,
+                        size_data_dict={"diameter": self.diameter},
+                        attributes=attr,
+                        array_hash=array_hash,
+                        make_variable_names=variable_names)
+
+    @property
+    def center_of_mass(self) -> NDArray:
+        """center of mass of all objects"""
+        weighted_sum = np.sum(
+            self.xy * np.atleast_2d(self.perimeter).T, axis=0)
+        return weighted_sum / np.sum(self.perimeter)

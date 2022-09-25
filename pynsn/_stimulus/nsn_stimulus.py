@@ -3,13 +3,11 @@
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 import json
 from copy import deepcopy
-from hashlib import md5
+from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -17,7 +15,7 @@ from numpy.typing import ArrayLike, NDArray
 from scipy import spatial
 
 from .. import _stimulus, constants
-from .._lib import geometry, np_tools, rng
+from .._lib import np_tools, rng
 from .._lib.exceptions import NoSolutionError
 from .._lib.misc import dict_to_text
 from .._lib.typing import IntOVector
@@ -26,7 +24,7 @@ from .._object_arrays import (BaseDotArray, BaseRectangleArray, DotArray,
 from .._shapes import Coordinate, Dot, Rectangle, ShapeType
 from ..spatial_relations import _spatial_relations as sprel
 from .target_area import TargetArea
-from .tools import BrownianMotion, make_csv
+from .tools import BrownianMotion
 
 DOT_ARRAY = "Dot Array"
 RECTANGLE_ARRAY = "Rectangle Array"
@@ -54,7 +52,7 @@ class NSNStimulus(TargetArea):
                              "or RectangleArray, but not "
                              f"{type(object_array).__name__}")
         self._objects = object_array
-        self._properties = _stimulus.StimulusProperties(self)
+        self._properties = _stimulus.ArrayProperties(self)
 
     @property
     def objects(self) -> Union[DotArray, RectangleArray]:
@@ -72,40 +70,12 @@ class NSNStimulus(TargetArea):
                              f"{type(self.objects).__name__}")
 
     def to_dict(self) -> dict:
-        """Convert array to dictionary
+        """Convert stimulus to dictionary
         """
         rtn = {"type": self.type()}
         rtn.update(super().to_dict())
         rtn.update(self.objects.to_dict())
         return rtn
-
-    def dataframe_dict(self, hash_column: bool = False,
-                       attribute_column: bool = True) -> dict:
-        """Returns dict that can be used to create Pandas dataframe or Arrow Table
-
-        Examples
-        --------
-        >>> df_dict = stimulus.dataframe_dict()
-        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
-
-        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
-        """
-
-        if hash_column:
-            d = {"hash": [self.hash()] * len(self._objects.xy)}
-        else:
-            d = {}
-        d.update({"x": self._objects.xy[:, 0].tolist(),
-                  "y": self._objects.xy[:, 1].tolist()})
-        if isinstance(self._objects, DotArray):
-            d.update({"diameter": self._objects.diameter.tolist()})
-        else:
-            d.update({"width": self._objects.sizes[:, 0].tolist(),
-                      "height": self._objects.sizes[:, 1].tolist()})
-
-        if attribute_column:
-            d.update({"attributes": self._objects.attributes.tolist()})
-        return d
 
     @classmethod
     def from_dict(cls, the_dict: dict) -> NSNStimulus:
@@ -161,62 +131,13 @@ class NSNStimulus(TargetArea):
             min_dist_between_objects=self.min_dist_between_objects,
             min_dist_area_edge=self.min_dist_area_edge)
 
-    def csv(self, variable_names: bool = True,
-            hash_column: bool = False,
-            attribute_column: bool = True):
-        """Comma-separated table representation the nsn stimulus
-
-        Args:
-            variable_names: if True first line include the variable names
-            hash_column: if True hash will be included as first column
-            attribute_column: if True attributes will be included as
-                    last column
-        Returns:
-            CSV representation
-
-        """
-
-        if isinstance(self._objects, DotArray):
-            size_dict = {"diameter": self._objects.diameter}
-        else:
-            size_dict = {"width": self._objects.sizes[:, 0],
-                         "height": self._objects.sizes[:, 1]}
-        if attribute_column:
-            attr = self.attributes
-        else:
-            attr = None
-        if hash_column:
-            array_hash = self.hash()
-        else:
-            array_hash = None
-
-        return make_csv(xy=self._objects.xy,
-                        size_data_dict=size_dict,
-                        attributes=attr, array_hash=array_hash,
-                        make_variable_names=variable_names)
-
     def __str__(self) -> str:
         d = TargetArea.to_dict(self)  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
 
         rtn = f"-{self.type():_^38}\n"
-        rtn += f" {self.hash()}\n "
-        return rtn + dict_to_text(d)[1:] + f"\n {'Propeties':_^38}\n " + prop[1:]
-
-    @property
-    def xy(self) -> NDArray:
-        """Numpy array of the object locations
-
-        The two dimensional array (shape=[2, `n`]) represents the locations of the center of
-        the `n` objects in this array
-        """
-        return self._objects.xy
-
-    @property
-    def attributes(self) -> NDArray:
-        """Numpy vector of the object attributes
-        """
-        return self._objects.attributes
+        rtn += f" {self._objects.hash()}\n "
+        return rtn + dict_to_text(d)[1:] + f"\n {'Properties':_^38}\n " + prop[1:]
 
     def clear(self) -> None:
         self._objects.clear()
@@ -235,7 +156,7 @@ class NSNStimulus(TargetArea):
         self._properties.reset()
 
     @property
-    def properties(self) -> _stimulus.StimulusProperties:
+    def properties(self) -> _stimulus.ArrayProperties:
         """Properties of the nsn stimulus.
 
         ``ArrayProperties`` represents and handles (fitting, scaling) visual
@@ -256,25 +177,6 @@ class NSNStimulus(TargetArea):
         """
         return self._properties
 
-    def hash(self) -> str:
-        """Hash (MD5 hash) of the array
-
-        The hash can be used as an unique identifier of the nsn stimulus.
-
-        Notes:
-            Hashing is based on the byte representations of the positions, perimeter
-            and attributes.
-        """
-        m = md5()
-        m.update(
-            self._objects.xy.tobytes())  # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
-        try:
-            m.update(self._objects.perimeter.tobytes())
-        except AttributeError:
-            pass
-        m.update(self.attributes.tobytes())
-        return m.hexdigest()
-
     def to_json(self, file_path: Optional[str] = None,
                 indent: Optional[int] = None,
                 include_hash: bool = False) -> Union[str, None]:
@@ -282,7 +184,7 @@ class NSNStimulus(TargetArea):
 
         d = self.to_dict()
         if include_hash:
-            d.update({"hash": self.hash()})
+            d.update({"hash": self._objects.hash()})
 
         json_str = json.dumps(d, indent=indent)
         if file_path is not None:
@@ -314,26 +216,12 @@ class NSNStimulus(TargetArea):
         overlap = np.where(dist < self.min_dist_between_objects)
         return np.asarray(overlap).T, np.abs(dist[overlap])
 
-    def get_center_of_mass(self) -> NDArray:
-        weighted_sum = np.sum(
-            self._objects.xy * np.atleast_2d(self._objects.perimeter).T, axis=0)
-        return weighted_sum / np.sum(self._objects.perimeter)
-
-    def get_center_of_field_area(self) -> NDArray:
-        """Center of all objects
-
-        Returns:
-            Coordinate of center position
-        """
-        return geometry.center_of_coordinates(self.properties.convex_hull.xy)
-
     def mod_center_array_mass(self) -> None:
-        self._objects.xy = self._objects.xy - self.get_center_of_mass()
+        self._objects.xy = self._objects.xy - self._objects.center_of_mass
         self._properties.reset()
 
     def mod_center_field_area(self) -> None:
-        cxy = geometry.center_of_coordinates(
-            self.properties.convex_hull.xy)
+        cxy = self.properties.convex_hull.center
         self._objects.xy = self._objects.xy - cxy  # type: ignore
         self._properties.reset()
 
@@ -388,7 +276,7 @@ class NSNStimulus(TargetArea):
         while True:
             if cnt > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a free position: "
-                                      + f"Current n={len(self.xy)}")
+                                      + f"Current n={len(self._objects.xy)}")
             cnt += 1
 
             if in_neighborhood:
