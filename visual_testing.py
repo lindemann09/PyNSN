@@ -1,9 +1,7 @@
 
-from typing import List, Sequence
 import numpy as np
-from numpy.typing import NDArray
 import pynsn
-from pynsn._lib import geometry, np_tools
+from pynsn._lib import np_tools
 from pynsn import spatial_relations as sprel
 from tests.shapes_test_picture import shapes_test_picture, Line
 

@@ -135,9 +135,9 @@ class NSNStimulus(TargetArea):
         d = TargetArea.to_dict(self)  # super: omit objects
         prop = self.properties.as_text(extended_format=True)
 
-        rtn = f"-{self.type():_^38}\n"
-        rtn += f" {self._objects.hash()}\n "
-        return rtn + dict_to_text(d)[1:] + f"\n {'Properties':_^38}\n " + prop[1:]
+        rtn = f"-{self.type():-^38}\n"
+        rtn += f" {self._objects.hash():^38}\n "
+        return rtn + dict_to_text(d)[1:] + f"\n {'Properties':^38}\n " + prop[1:]
 
     def clear(self) -> None:
         self._objects.clear()

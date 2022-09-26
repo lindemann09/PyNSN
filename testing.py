@@ -1,31 +1,20 @@
 """_summary_"""
 
-from pyarrow import feather
-import pyarrow
-import pandas
-import timeit
-from matplotlib import pyplot as pp
-import numpy as np
-from numpy.typing import NDArray, ArrayLike
-
 import pynsn
-import pynsn as nsn
 from pynsn import distributions as distr
-from pynsn.spatial_relations import _spatial_relations
-from pynsn._shapes.rectangle import Rectangle
-from pynsn.image import svg_file, pil_image, mpl_figure
-from pynsn._lib import geometry, np_tools
+#from pynsn import spatial_relations
+from pynsn.image import pil_image
 
 seed = 921
-nsn.init_random_generator(seed)
+pynsn.init_random_generator(seed)
 
-data = pynsn.NSNStimulus(object_array=nsn.DotArray(),
+data = pynsn.NSNStimulus(object_array=pynsn.DotArray(),
                          target_area_shape=pynsn.Dot(diameter=400))
 
-factory = nsn.NSNFactory(min_dist_between_objects=2,
-                         # target_area=pynsn.Rectangle(size=(200, 400)),
-                         target_area=pynsn.Dot(diameter=400),
-                         min_dist_area_edge=0)
+factory = pynsn.NSNFactory(min_dist_between_objects=2,
+                           # target_area=pynsn.Rectangle(size=(200, 400)),
+                           target_area=pynsn.Dot(diameter=400),
+                           min_dist_area_edge=0)
 
 factory.set_appearance_dots(diameter=(20, 30, 40),
                             attributes=distr.Levels(["blue", "green"],
@@ -70,6 +59,7 @@ img.save("demo.png")
 
 
 stimulus.properties.fit_field_area(99000)
+print(stimulus)
 print(stimulus)
 
 idx = stimulus.get_outlier()

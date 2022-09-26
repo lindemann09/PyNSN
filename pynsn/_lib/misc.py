@@ -40,10 +40,14 @@ def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
 
 
 def key_value_format(key: str, value: Any) -> str:
-    try:
-        v = f"{value:14.2f}"  # try rounding
-    except (ValueError, TypeError):
-        v = f"{str(value):>14}"
+    if isinstance(value, int):
+        v = f"{value:14}"  # try rounding
+    else:
+        try:
+            v = f"{value:14.2f}"  # try rounding
+        except (ValueError, TypeError):
+            v = f"{str(value):>14}"
+
     return f"{key:<24}{v}"
 
 
