@@ -55,10 +55,6 @@ class MatrixRectangleSpatRel(CombinationMatrix):
         self._rr = RectangleRectangle(rectangles_a=rect_a,
                                       rectangles_b=rect_b)
 
-    def overlaps(self, minimum_distance: float = 0) -> NDArray:
-        """Matrix with overlaps (True/False) between the rectangles"""
-        return self.get_matrix(values=self._rr.overlaps(minimum_distance))
-
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
         return self.get_matrix(values=self._rr.xy_distances())
@@ -101,13 +97,9 @@ class MatrixDotSpatRel(CombinationMatrix):
                               diameter=diameter[self.idx_b, :])
         self._rr = DotDot(dots_a=dots_a, dots_b=dots_b)
 
-    def overlaps(self, minimum_distance: float = 0) -> NDArray:
-        """Matrix with overlaps (True/False) between the rectangles"""
-        return self.get_matrix(values=self._rr.overlaps(minimum_distance))
-
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.distances())
+        return self.get_matrix(values=self._rr.distances)
 
     def spatial_relations(self) -> NDArray:
         """Return matrix with distance between the rectangles"""

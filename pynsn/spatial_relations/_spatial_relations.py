@@ -20,75 +20,30 @@ from .._object_arrays.rectangle_array import BaseRectangleArray
 
 class ABCSpatialRelations(metaclass=ABCMeta):
 
+    def __init__(self, a_xy: NDArray[np.floating],
+                 b_xy: NDArray[np.floating]):
+        self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
+        self._angles = None
+        self._distances = None
+
+    @property
+    def angles(self) -> NDArray:
+        """Angle between the objects"""
+        if self._angles is None:
+            self._angles = np.arctan2(self._xy_diff[:, 1],
+                                      self._xy_diff[:, 0])
+        return self._angles
+
+    @property
     @abstractmethod
-    def overlaps(self):
-        """True is objects overlap"""
-
-# FIXME TODO
-#    @abstractmethod
-#    def is_inside(self):
-#        """True is objects are inside"""
-
-    @abstractmethod
-    def spatial_relations(self):
-        """Distances and angles between objects"""
-
-    @abstractmethod
-    def required_displacements(self):
-        """Distances and angles between objects"""
-
-
-class CoordinateCoordinate(object):
-
-    def __init__(self,
-                 a_xy: NDArray,
-                 b_xy: NDArray) -> None:
-        self._xy_diff = np.atleast_2d(b_xy) \
-            - np.atleast_2d(a_xy)  # type: ignore
-        self._spatial_relations = None
-
-    def spatial_relations(self):
-        """distances and angles between coordinates"""
-        # basically cartesian to polar
-        if self._spatial_relations is None:
-            self._spatial_relations = np.array([
-                np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]),
-                np.arctan2(self._xy_diff[:, 1], self._xy_diff[:, 0])]).T
-        return self._spatial_relations
-
-
-class DotDot(CoordinateCoordinate, ABCSpatialRelations):
-
-    def __init__(self,
-                 dots_a: BaseDotArray,
-                 dots_b: BaseDotArray) -> None:
-        super().__init__(a_xy=dots_a.xy, b_xy=dots_b.xy)
-        self._radii_sum = (dots_a.diameter + dots_b.diameter) / 2
-        assert self._xy_diff.shape[0] == self._radii_sum.shape[0]
-
     def distances(self) -> NDArray:
-        """Euclidean distances between dots (a and b)"""
+        """Euclidean distances between objects"""
 
-        # distance between centers minus the radii
-        return self.spatial_relations()[:, 0]
+    @abstractmethod
+    def is_inside(self) -> NDArray:
+        """True is objects are inside"""
 
-    def spatial_relations(self) -> NDArray:
-        """distances and angles between dots (cached return data)"""
-        if self._spatial_relations is None:
-            rel = CoordinateCoordinate.spatial_relations(self)
-            rel[:, 0] = rel[:, 0] - self._radii_sum
-            self._spatial_relations = rel
-        return self._spatial_relations
-
-    def overlaps(self, minimum_distance: float = 0) -> Union[NDArray[np.bool_], np.bool_]:
-        """True if dots overlap"""
-        # columns both negative -> it overlaps
-        comp = self.spatial_relations()[:, 0] < minimum_distance
-        if comp.shape[0] > 1:
-            return np.all(comp, axis=1)
-        else:
-            return np.all(comp)
-
+    @abstractmethod
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Minimum required displacement of rectangle B to have no overlap with
         rectangle A.
@@ -102,19 +57,57 @@ class DotDot(CoordinateCoordinate, ABCSpatialRelations):
             Calculated movement direction (replacements[:, 0]) is always along the
             line between the two object center.
         """
+
+
+class CoordinateCoordinate(ABCSpatialRelations):
+
+    def __init__(self,
+                 a_xy: NDArray[np.floating],
+                 b_xy: NDArray[np.floating]) -> None:
+        super().__init__(a_xy, b_xy)
+
+    def is_inside(self) -> NDArray:
+        return np.full(len(self._xy_diff), np.nan)
+
+    @property
+    def distances(self) -> NDArray:
+        if self._distances is None:
+            self._distances = np.hypot(
+                self._xy_diff[:, 0], self._xy_diff[:, 1])
+        return self._distances
+
+    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
+        raise NotImplementedError()
+
+
+class DotDot(ABCSpatialRelations):
+
+    def __init__(self,
+                 dots_a: BaseDotArray,
+                 dots_b: BaseDotArray) -> None:
+
+        super().__init__(dots_a.xy, dots_b.xy)
+        self._radii_sum = (dots_a.diameter + dots_b.diameter) / 2
+        assert self._xy_diff.shape[0] == self._radii_sum.shape[0]
+
+    @property
+    def distances(self) -> NDArray:
+        if self._distances is None:
+            self._distances = np.hypot(self._xy_diff[:, 0],
+                                       self._xy_diff[:, 1]) - self._radii_sum
+        return self._distances
+
+    def is_inside(self) -> NDArray:
+        raise NotImplementedError()
+
+    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         # FIXME not tested
-        sr = self.spatial_relations()
-        sr[:, 0] = sr[:, 0] - minimum_distance
-
-        i = np.flatnonzero(sr[:, 0] < 0)  # overlaps
-        sr[i, 1] = np.pi + sr[i, 1]  # opposite direction
-        # set all nan and override overlapping relations
-        rtn = np.full(sr.shape, np.nan)
-        rtn[i, :] = polar2cartesian(sr[i, :])
-        return rtn
+        spatrel = np.array(self.distances - minimum_distance,
+                           self.angles).T
+        return _spatial_relation_to_displacement(spatrel)
 
 
-class DotCoordinate(DotDot, ABCSpatialRelations):
+class DotCoordinate(DotDot):
 
     def __init__(self,
                  dots: BaseDotArray,
@@ -124,7 +117,7 @@ class DotCoordinate(DotDot, ABCSpatialRelations):
         super().__init__(dots_a=dots, dots_b=dots_b)
 
 
-class RectangleRectangle(CoordinateCoordinate, ABCSpatialRelations):
+class RectangleRectangle(ABCSpatialRelations):
 
     def __init__(self,
                  rectangles_a: BaseRectangleArray,
@@ -140,16 +133,14 @@ class RectangleRectangle(CoordinateCoordinate, ABCSpatialRelations):
             self._xy_diff_rect = np.abs(self._xy_diff) - \
                 (self.a_sizes + self.b_sizes) / 2
 
-    def overlaps(self, minimum_distance: float = 0) -> Union[NDArray[np.bool_], np.bool_]:
-        """True if rectangles overlap"""
-        # columns both negative -> it overlaps
-        comp = self._xy_diff_rect < minimum_distance
-        if comp.shape[0] > 1:
-            return np.all(comp, axis=1)
-        else:
-            return np.all(comp)
+    def is_inside(self) -> NDArray:
+        return NotImplemented
 
-    def xy_distances(self) -> NDArray:
+    @property
+    def distances(self) -> NDArray:
+        return NotImplemented
+
+    def xy_distances(self) -> NDArray:  # TODO make cached property
         """Shortest distance between rectangles
 
         Note: does not return negative distances for overlap. Overlap-> dist=0
@@ -158,23 +149,6 @@ class RectangleRectangle(CoordinateCoordinate, ABCSpatialRelations):
         xy_dist = np.copy(self._xy_diff_rect)
         xy_dist[np.where(xy_dist < 0)] = 0
         return np.hypot(xy_dist[:, 0], xy_dist[:, 1])
-
-    def spatial_relations(self) -> NDArray:
-        """spatial relation between two rectangles.
-        returns distance and angle long the line of the spatial relation.
-        """
-        if self._spatial_relations is None:
-            rel = CoordinateCoordinate.spatial_relations(self)
-            d_a = _center_edge_distance(angles=rel[:, 1],
-                                        rect_sizes=self.a_sizes)
-            if self.b_sizes is None:
-                d_b = 0
-            else:
-                d_b = _center_edge_distance(angles=rel[:, 1],
-                                            rect_sizes=self.b_sizes)
-            rel[:, 0] = rel[:, 0] - d_a - d_b
-            self._spatial_relations = rel
-        return self._spatial_relations
 
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Minimum required displacement of rectangle B to have no overlap with
@@ -187,27 +161,23 @@ class RectangleRectangle(CoordinateCoordinate, ABCSpatialRelations):
             Calculated movement direction (replacements[:, 0]) is always along the
             line between the two object center.
         """
-
-        # spatial relations, but enlarge first rect by minimum distance
-        sr = CoordinateCoordinate.spatial_relations(self)
-        d_a = _center_edge_distance(angles=sr[:, 1],
+        # spatial relations
+        # but enlarge first rect by minimum distance
+        d_a = _center_edge_distance(angles=self.angles,
                                     rect_sizes=self.a_sizes + 2 * minimum_distance)
         if self.b_sizes is None:
             d_b = 0
         else:
-            d_b = _center_edge_distance(angles=sr[:, 1],
+            d_b = _center_edge_distance(angles=self.angles,
                                         rect_sizes=self.b_sizes)
-        sr[:, 0] = sr[:, 0] - d_a - d_b
+        # distance between center minus inside rectangles
+        dist = np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) - d_a - d_b
+        spatrel = np.array(dist, self.angles).T
 
-        # set all nan and override overlapping relations
-        rtn = np.full(sr.shape, np.nan)
-        i = np.flatnonzero(sr[:, 0] < 0)
-        sr[i, 1] = np.pi + sr[i, 1]  # opposite direction
-        rtn[i, :] = polar2cartesian(sr[i, :])
-        return rtn
+        return _spatial_relation_to_displacement(spatrel)
 
 
-class RectangleCoordinate(RectangleRectangle, ABCSpatialRelations):
+class RectangleCoordinate(RectangleRectangle):
 
     def __init__(self,
                  rectangles: BaseRectangleArray,
@@ -217,7 +187,7 @@ class RectangleCoordinate(RectangleRectangle, ABCSpatialRelations):
         super().__init__(rectangles_a=rectangles, rectangles_b=rects_b)
 
 
-class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
+class RectangleDot(ABCSpatialRelations):
 
     def __init__(self,
                  rectangles: BaseRectangleArray,
@@ -241,7 +211,6 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
         assert self.rect_xy.shape == self.dot_xy.shape
 
         self.__corners = None
-        self._spatial_relations = None
 
         super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy)
 
@@ -330,33 +299,6 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
             ecp_xy_diff[idx_r, 0, idx_c])
         return edge_rel
 
-    def spatial_relations(self, _min: bool = False) -> NDArray:
-        """spatial relation between rectangles and dots.
-
-        returns distance long the line of the spatial relation
-                and angle  (cached result)
-        """
-        if self._spatial_relations is None:
-            # find closer cardinal edge relation
-            corner_rel = self.corner_relations(nearest_corners=_min)
-            edge_rel = self.edge_cardinal_relations()
-            idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
-
-            # spat rel shape =(n, 2=parameter)
-            self._spatial_relations = np.empty(self.rect_xy.shape)
-            self._spatial_relations[idx_ccer, :] = edge_rel[idx_ccer, :]
-            self._spatial_relations[~idx_ccer, :] = corner_rel[~idx_ccer, :]
-
-        return self._spatial_relations
-
-    def overlaps(self, minimum_distance: float = 0) -> Union[np.bool_, NDArray[np.bool_]]:
-        """Check if rectangles overlap with dots"""
-        comp = self.spatial_relations()[:, 0] < minimum_distance
-        if comp.shape[0] > 1:
-            return comp
-        else:
-            return comp[0]
-
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Minimum required displacement of rectangle B to have no overlap with
         rectangle A.
@@ -371,15 +313,19 @@ class RectangleDot(CoordinateCoordinate, ABCSpatialRelations):
             line between the two object center.
         """
 
-        sr = self.spatial_relations()
-        sr[:, 0] = sr[:, 0] - minimum_distance
+        # spatial relations
+        corner_rel = self.corner_relations(nearest_corners=False)
+        edge_rel = self.edge_cardinal_relations()
+        idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
 
-        i = np.flatnonzero(sr[:, 0] < 0)  # overlaps
-        sr[i, 1] = np.pi + sr[i, 1]  # opposite direction
-        # set all nan and override overlapping relations
-        rtn = np.full(sr.shape, np.nan)
-        rtn[i, :] = polar2cartesian(sr[i, :])
-        return rtn
+        # spat rel shape =(n, 2=parameter)
+        spatrel = np.empty(self.rect_xy.shape)
+        spatrel[idx_ccer, :] = edge_rel[idx_ccer, :]
+        spatrel[~idx_ccer, :] = corner_rel[~idx_ccer, :]
+
+        spatrel[:, 0] = spatrel[:, 0] - minimum_distance
+
+        return _spatial_relation_to_displacement(spatrel)
 
 
 def _center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
@@ -400,3 +346,14 @@ def _center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.fl
     i = np.flatnonzero(~v_rel)
     l_inside[i] = rect_sizes[i, 0] / (2 * np.cos(angles[i]))
     return np.abs(l_inside)
+
+
+def _spatial_relation_to_displacement(spatrel: NDArray) -> NDArray:
+    """helper: converts spatial relation to required displacement"""
+
+    i = np.flatnonzero(spatrel[:, 0] < 0)  # overlaps
+    spatrel[i, 1] = np.pi + spatrel[i, 1]  # opposite direction
+    # set all nan and override overlapping relations
+    rtn = np.full(spatrel.shape, np.nan)
+    rtn[i, :] = polar2cartesian(spatrel[i, :])
+    return rtn

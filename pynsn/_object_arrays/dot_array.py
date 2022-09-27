@@ -21,7 +21,7 @@ class BaseDotArray:
         self.diameter = np.array([])
         if xy is not None and diameter is not None:
             self.xy = np.atleast_2d(xy)
-            self.diameter = np.atleast_1d(diameter)
+            self.diameter = np.atleast_1d(diameter).astype(float)
             self.check()
 
     def check(self):

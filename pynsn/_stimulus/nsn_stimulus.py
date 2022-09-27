@@ -597,7 +597,7 @@ class NSNStimulus(TargetArea):
             rel = sprel.DotDot(dots_a=self._objects,
                                dots_b=BaseDotArray(xy=shape.xy,
                                                    diameter=shape.diameter))
-            return rel.distances()
+            return rel.distances
 
         elif isinstance(shape, Rectangle) and \
                 isinstance(self._objects, RectangleArray):
