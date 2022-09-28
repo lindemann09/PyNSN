@@ -1,5 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from copy import copy
 from typing import Optional, Union
 
 import numpy as _np
@@ -58,6 +59,7 @@ class _PILDraw(_array_draw.ABCArrayDraw):
                    opacity: float, scaling_factor: float):
         # FIXME opacity is ignored (not yet supported)
         # draw object
+        shape = copy(shape)
         shape.xy = _c2i_coord(shape.xy * scaling_factor, img.size).tolist()
         col = shape.get_colour()
 

@@ -1,5 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from copy import copy
 from typing import Optional
 
 import numpy as _np
@@ -57,6 +58,7 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
         if isinstance(shape, _shapes.Picture):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
+        shape = copy(shape)
         shape.xy = _c2i_coord(shape.xy,
                               _np.array(svg_image_size(image))).tolist()
         col = shape.get_colour()

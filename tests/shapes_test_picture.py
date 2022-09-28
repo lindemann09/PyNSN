@@ -1,4 +1,5 @@
 
+from copy import copy
 import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
@@ -24,6 +25,7 @@ def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
         _ImageDraw.Draw(img).line(xy_a, fill=shape.colour, width=2)
         return
 
+    shape = copy(shape)
     shape.xy = _c2i_coord(_np.asarray(shape.xy) *
                           scaling_factor, img.size).tolist()
     col = shape.get_colour()
@@ -45,7 +47,8 @@ def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
         shape.size = tmp.tolist()
         # picture
         target_box = _np.round(shape.get_ltrb(), decimals=0)
-        target_box[:, 1] = _np.flip(target_box[:, 1])  # reversed y axes
+        # type: ignore # reversed y axes
+        target_box[:, 1] = _np.flip(target_box[:, 1])
         pict = _Image.open(shape.filename, "r")
         if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
             pict = pict.resize(shape.size, resample=_Image.ANTIALIAS)

@@ -131,9 +131,6 @@ def center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.flo
     in direction of `angle`.
     """
 
-    if rect_sizes.ndim == 1:
-        rect_sizes = np.ones((angles.shape[0], 1)) * rect_sizes
-
     l_inside = np.empty(len(angles))
     # find vertical relations
     v_rel = (np.pi-np.pi/4 >= abs(angles)) & (abs(angles) > np.pi/4)

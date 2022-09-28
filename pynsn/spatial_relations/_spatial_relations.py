@@ -13,7 +13,7 @@ from .._lib import geometry
 
 from .._object_arrays.dot_array import BaseDotArray
 from .._object_arrays.rectangle_array import BaseRectangleArray
-from ._abc_spatial_relations import ABCSpatialRelations, spat_rel2displacement
+from ._abc_spatial_relations import ABCSpatialRelations
 
 
 # all init-functions require 2D arrays
@@ -35,7 +35,7 @@ class CoordinateCoordinate(ABCSpatialRelations):
                 self._xy_diff[:, 0], self._xy_diff[:, 1])
         return self._distances
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
+    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
         raise NotImplementedError()
 
 
@@ -69,14 +69,13 @@ class DotDot(ABCSpatialRelations):
 
     def is_inside(self) -> NDArray:
         if self._reversed_relations:
-            return self.distances < -2 * self._radii_b
-        else:
             return self.distances < -2 * self._radii_a
+        else:
+            return self.distances < -2 * self._radii_b
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        spatrel = np.array(self.distances - minimum_distance,
-                           self.angles).T
-        return spat_rel2displacement(spatrel)
+    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+        # FIXME not tested
+        return self.distances - minimum_distance
 
 
 class RectangleRectangle(ABCSpatialRelations):
@@ -89,59 +88,60 @@ class RectangleRectangle(ABCSpatialRelations):
         super().__init__(a_xy=rectangles_a.xy, b_xy=rectangles_b.xy,
                          reversed_relations=reversed_relations)
         self.a_sizes = rectangles_a.sizes
-        if np.all(rectangles_b.sizes == 0):  # Coordinate
-            self.b_sizes = None
-            self._xy_diff_rect = np.abs(self._xy_diff) - self.a_sizes / 2
-        else:
-            self.b_sizes = rectangles_b.sizes
-            a = len(self.a_sizes)
-            b = len(self.b_sizes)
-            if b == 1:
-                self.b_sizes = rectangles_b.sizes * np.ones((a, 1))
-            elif a == 1:
-                self.a_sizes = rectangles_a.sizes * np.ones((b, 1))
-
-            self._xy_diff_rect = np.abs(self._xy_diff) - \
-                (self.a_sizes + self.b_sizes) / 2
+        self.b_sizes = rectangles_b.sizes
+        a = len(self.a_sizes)
+        b = len(self.b_sizes)
+        if b == 1:
+            self.b_sizes = self.b_sizes * np.ones((a, 1))
+        elif a == 1:
+            self.a_sizes = self.a_sizes * np.ones((b, 1))
+        self._xy_diff_rect = np.abs(self._xy_diff) - \
+            (self.a_sizes + self.b_sizes) / 2
 
     def is_inside(self) -> NDArray:
-        return NotImplemented
+        if self._reversed_relations:
+            sizes = self.a_sizes
+        else:
+            sizes = self.b_sizes
+        return np.all(self._xy_diff_rect < -1*sizes, axis=1)
 
     @property
     def distances(self) -> NDArray:
         if self._distances is None:
-            self._distances = np.hypot(self._xy_diff_rect[:, 0],
-                                       self._xy_diff_rect[:, 1])
+            xy_diff = np.copy(self._xy_diff_rect)
+
+            # find rows with both coordinate positive or negative (i_pn or i_bn)
+            cnt_neg = np.sum(xy_diff < 0, axis=1)
+            i_bn = np.flatnonzero(cnt_neg == 2)
+
+            # make the large (closer to zero) coordinate positive
+            lrg = xy_diff[i_bn, 0] >= xy_diff[i_bn, 1]
+            xy_diff[i_bn[lrg], 0] = -1 * xy_diff[i_bn[lrg], 0]
+            xy_diff[i_bn[~lrg], 1] = -1 * xy_diff[i_bn[~lrg], 1]
+            # and set the other coordinate to zero
+            xy_diff[i_bn[lrg], 1] = 0
+            xy_diff[i_bn[~lrg], 0] = 0
+            # set all remaining negative values to zero, because
+            # the other coordinate are positive and thus define the distance
+            xy_diff[np.where(xy_diff < 0)] = 0
+            self._distances = np.hypot(xy_diff[:, 0],
+                                       xy_diff[:, 1])
+            # set distance with previous both negative to negative
+            self._distances[i_bn] = self._distances[i_bn] * -1
+
         return self._distances
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        """Minimum required displacement of rectangle B to have no overlap with
-        rectangle A.
-
-        Returns:
-            replacements as array of vectors in cartesian coordinates
-            if replacements coordinate is np.nan no replacement required.
-
-            Calculated movement direction (replacements[:, 0]) is always along the
-            line between the two object center.
-        """
+    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
         # calc distance_along_line between rect center
 
         # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.angles,
+        d_a = geometry.center_edge_distance(angles=self.angle,
                                             rect_sizes=self.a_sizes + 2 * minimum_distance)
-        if self.b_sizes is None:
-            d_b = 0
-        else:
-            d_b = geometry.center_edge_distance(angles=self.angles,
-                                                rect_sizes=self.b_sizes)
-
+        d_b = geometry.center_edge_distance(angles=self.angle,
+                                            rect_sizes=self.b_sizes)
         # distance between center minus inside rectangles
-        dist = np.hypot(self._xy_diff[:, 0],
+        return np.hypot(self._xy_diff[:, 0],
                         self._xy_diff[:, 1]) - d_a - d_b
-        spatrel = np.array(dist, self.angles).T
-
-        return spat_rel2displacement(spatrel)
 
 
 class RectangleDot(ABCSpatialRelations):
@@ -265,20 +265,7 @@ class RectangleDot(ABCSpatialRelations):
             ecp_xy_diff[idx_r, 0, idx_c])
         return edge_rel
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        """Minimum required displacement of rectangle B to have no overlap with
-        rectangle A.
-
-        Two objects do not overlap if replacements[:, 0] == 0.
-
-        Returns:
-            replacements as array of vectors in cartesian coordinates
-            if distance (replacements[:, 0]) is 0, no replacement required.
-
-            Calculated movement direction (replacements[:, 0]) is always along the
-            line between the two object center.
-        """
-
+    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
         # spatial relations
         corner_rel = self.corner_relations(nearest_corners=False)
         edge_rel = self.edge_cardinal_relations()
@@ -319,33 +306,33 @@ class RectangleCoordinate(RectangleRectangle):
                          reversed_relations=reversed_relations)
 
 
-SpatRelArrayType = Union[NDArray, BaseDotArray, BaseRectangleArray]
+# SpatRelArrayType = Union[NDArray, BaseDotArray, BaseRectangleArray]
 
 
-def spatial_relations(array_A: SpatRelArrayType,
-                      array_B: SpatRelArrayType) -> ABCSpatialRelations:
-    if isinstance(array_A, BaseRectangleArray):
-        if isinstance(array_B, BaseRectangleArray):
-            return RectangleRectangle(array_A, array_B)
-        elif isinstance(array_B, BaseDotArray):
-            return RectangleDot(array_A, array_B)
-        elif isinstance(array_B, np.ndarray):
-            return RectangleCoordinate(array_A, array_B)
+# def spatial_relations(array_A: SpatRelArrayType,
+#                       array_B: SpatRelArrayType) -> ABCSpatialRelations:
+#     if isinstance(array_A, BaseRectangleArray):
+#         if isinstance(array_B, BaseRectangleArray):
+#             return RectangleRectangle(array_A, array_B)
+#         elif isinstance(array_B, BaseDotArray):
+#             return RectangleDot(array_A, array_B)
+#         elif isinstance(array_B, np.ndarray):
+#             return RectangleCoordinate(array_A, array_B)
 
-    elif isinstance(array_A, BaseDotArray):
-        if isinstance(array_B, BaseDotArray):
-            return DotDot(array_A, array_B)
-        elif isinstance(array_B, BaseRectangleArray):
-            return RectangleDot(array_B, array_A, reversed_relations=False)
-        elif isinstance(array_B, np.ndarray):
-            return DotCoordinate(array_A, array_B)
+#     elif isinstance(array_A, BaseDotArray):
+#         if isinstance(array_B, BaseDotArray):
+#             return DotDot(array_A, array_B)
+#         elif isinstance(array_B, BaseRectangleArray):
+#             return RectangleDot(array_B, array_A, reversed_relations=False)
+#         elif isinstance(array_B, np.ndarray):
+#             return DotCoordinate(array_A, array_B)
 
-    elif isinstance(array_A, np.ndarray):
-        if isinstance(array_B, np.ndarray):
-            return CoordinateCoordinate(array_A, array_B)
-        if isinstance(array_B, BaseDotArray):
-            return DotCoordinate(array_B, array_A, reversed_relations=False)
-        elif isinstance(array_B, BaseRectangleArray):
-            return RectangleCoordinate(array_B, array_A, reversed_relations=False)
+#     elif isinstance(array_A, np.ndarray):
+#         if isinstance(array_B, np.ndarray):
+#             return CoordinateCoordinate(array_A, array_B)
+#         if isinstance(array_B, BaseDotArray):
+#             return DotCoordinate(array_B, array_A, reversed_relations=False)
+#         elif isinstance(array_B, BaseRectangleArray):
+#             return RectangleCoordinate(array_B, array_A, reversed_relations=False)
 
-    raise NotImplementedError()
+#     raise NotImplementedError()
