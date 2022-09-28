@@ -22,8 +22,8 @@ class CoordinateCoordinate(ABCSpatialRelations):
     def __init__(self,
                  a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
-                 reversed_relations: bool = False) -> None:
-        super().__init__(a_xy, b_xy, reversed_relations=reversed_relations)
+                 A_relative_to_B: bool = False) -> None:
+        super().__init__(a_xy, b_xy, A_relative_to_B=A_relative_to_B)
 
     def is_inside(self) -> NDArray:
         return np.full(len(self._xy_diff), np.nan)
@@ -44,10 +44,10 @@ class DotDot(ABCSpatialRelations):
     def __init__(self,
                  dots_a: BaseDotArray,
                  dots_b: BaseDotArray,
-                 reversed_relations: bool = False) -> None:
+                 A_relative_to_B: bool = False) -> None:
 
         super().__init__(dots_a.xy, dots_b.xy,
-                         reversed_relations=reversed_relations)
+                         A_relative_to_B=A_relative_to_B)
         self._radii_a = dots_a.diameter / 2
         self._radii_b = dots_b.diameter / 2
         a = len(self._radii_a)
@@ -59,7 +59,7 @@ class DotDot(ABCSpatialRelations):
 
         assert self._radii_a.shape == self._radii_b.shape
 
-    @ property
+    @property
     def distances(self) -> NDArray:
         if self._distances is None:
             self._distances = np.hypot(self._xy_diff[:, 0],
@@ -68,7 +68,7 @@ class DotDot(ABCSpatialRelations):
         return self._distances
 
     def is_inside(self) -> NDArray:
-        if self._reversed_relations:
+        if self._A_relative_to_B:
             return self.distances < -2 * self._radii_a
         else:
             return self.distances < -2 * self._radii_b
@@ -83,10 +83,10 @@ class RectangleRectangle(ABCSpatialRelations):
     def __init__(self,
                  rectangles_a: BaseRectangleArray,
                  rectangles_b: BaseRectangleArray,
-                 reversed_relations: bool = True) -> None:
+                 A_relative_to_B: bool = True) -> None:
 
         super().__init__(a_xy=rectangles_a.xy, b_xy=rectangles_b.xy,
-                         reversed_relations=reversed_relations)
+                         A_relative_to_B=A_relative_to_B)
         self.a_sizes = rectangles_a.sizes
         self.b_sizes = rectangles_b.sizes
         a = len(self.a_sizes)
@@ -99,7 +99,7 @@ class RectangleRectangle(ABCSpatialRelations):
             (self.a_sizes + self.b_sizes) / 2
 
     def is_inside(self) -> NDArray:
-        if self._reversed_relations:
+        if self._A_relative_to_B:
             sizes = self.a_sizes
         else:
             sizes = self.b_sizes
@@ -149,7 +149,7 @@ class RectangleDot(ABCSpatialRelations):
     def __init__(self,
                  rectangles: BaseRectangleArray,
                  dots: BaseDotArray,
-                 reversed_relations: bool = True) -> None:
+                 A_relative_to_B: bool = True) -> None:
 
         self.rect_xy = rectangles.xy
         self.rect_sizes = rectangles.sizes
@@ -171,7 +171,7 @@ class RectangleDot(ABCSpatialRelations):
         self.__corners = None
 
         super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy,
-                         reversed_relations=reversed_relations)
+                         A_relative_to_B=A_relative_to_B)
 
     @property
     def _corners(self) -> NDArray:
@@ -286,12 +286,12 @@ class DotCoordinate(DotDot):
     def __init__(self,
                  dots: BaseDotArray,
                  coord_xy: NDArray,
-                 reversed_relations: bool = True) -> None:
+                 A_relative_to_B: bool = True) -> None:
 
         dots_b = BaseDotArray(xy=coord_xy,
                               diameter=np.zeros(coord_xy.shape[0]))
         super().__init__(dots_a=dots, dots_b=dots_b,
-                         reversed_relations=reversed_relations)
+                         A_relative_to_B=A_relative_to_B)
 
 
 class RectangleCoordinate(RectangleRectangle):
@@ -299,11 +299,11 @@ class RectangleCoordinate(RectangleRectangle):
     def __init__(self,
                  rectangles: BaseRectangleArray,
                  coord_xy: NDArray,
-                 reversed_relations: bool = True) -> None:
+                 A_relative_to_B: bool = True) -> None:
         rects_b = BaseRectangleArray(xy=coord_xy,
                                      sizes=np.zeros(coord_xy.shape))
         super().__init__(rectangles_a=rectangles, rectangles_b=rects_b,
-                         reversed_relations=reversed_relations)
+                         A_relative_to_B=A_relative_to_B)
 
 
 # SpatRelArrayType = Union[NDArray, BaseDotArray, BaseRectangleArray]
@@ -323,7 +323,7 @@ class RectangleCoordinate(RectangleRectangle):
 #         if isinstance(array_B, BaseDotArray):
 #             return DotDot(array_A, array_B)
 #         elif isinstance(array_B, BaseRectangleArray):
-#             return RectangleDot(array_B, array_A, reversed_relations=False)
+#             return RectangleDot(array_B, array_A, A_relative_to_B=False)
 #         elif isinstance(array_B, np.ndarray):
 #             return DotCoordinate(array_A, array_B)
 
@@ -331,8 +331,8 @@ class RectangleCoordinate(RectangleRectangle):
 #         if isinstance(array_B, np.ndarray):
 #             return CoordinateCoordinate(array_A, array_B)
 #         if isinstance(array_B, BaseDotArray):
-#             return DotCoordinate(array_B, array_A, reversed_relations=False)
+#             return DotCoordinate(array_B, array_A, A_relative_to_B=False)
 #         elif isinstance(array_B, BaseRectangleArray):
-#             return RectangleCoordinate(array_B, array_A, reversed_relations=False)
+#             return RectangleCoordinate(array_B, array_A, A_relative_to_B=False)
 
 #     raise NotImplementedError()

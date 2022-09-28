@@ -14,23 +14,23 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     def __init__(self, a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
-                 reversed_relations: bool):
-        self._radian = None
+                 A_relative_to_B: bool):
+        self._angle = None
         self._distances = None
-        self._reversed_relations = reversed_relations
-        if reversed_relations:
+        self._A_relative_to_B = A_relative_to_B
+        if A_relative_to_B:
             self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
         else:
             self._xy_diff = np.atleast_2d(a_xy) - np.atleast_2d(b_xy)
 
     @property
     def angle(self) -> NDArray:
-        """Angle (in radians) of objects A relative to the objects B
-        (or visa versa if reversed_relations set to True)"""
-        if self._radian is None:
-            self._radian = np.arctan2(self._xy_diff[:, 1],
-                                      self._xy_diff[:, 0])
-        return self._radian
+        """Angle (in radians) of objects B relative to the objects A
+        (or visa versa if A_relative_to_B set to True)"""
+        if self._angle is None:
+            self._angle = np.arctan2(self._xy_diff[:, 1],
+                                     self._xy_diff[:, 0])
+        return self._angle
 
     @property
     @abstractmethod
@@ -40,7 +40,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @abstractmethod
     def is_inside(self) -> NDArray:
         """True if objects of array B are fully(!) inside the object of array A.
-        if reversed_relations set to True, the function checks if arrays
+        if A_relative_to_B set to True, the function checks if arrays
         a objects of A are in B
         """
 
@@ -57,7 +57,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Minimum required displacement of object B in cartesian coordinates
-        to have no overlap with object A. (if reversed_relations = True,
+        to have no overlap with object A. (if A_relative_to_B = True,
         replacements of objects are return)
 
         Returns:
@@ -73,7 +73,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
              self.angle)).T
 
         i = np.flatnonzero(spatrel[:, 0] < 0)  # displacement
-        if self._reversed_relations:
+        if not self._A_relative_to_B:
             spatrel[i, 1] = np.pi + spatrel[i, 1]  # opposite direction
 
         # set all nan and override with overlapping relations
