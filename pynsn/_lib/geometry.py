@@ -124,3 +124,23 @@ def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
         rtn[:, 1, 2] = left_button[:, 1]
 
     return rtn
+
+
+def center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
+    """Distance between rectangle center and rectangle edge along the line
+    in direction of `angle`.
+    """
+
+    if rect_sizes.ndim == 1:
+        rect_sizes = np.ones((angles.shape[0], 1)) * rect_sizes
+
+    l_inside = np.empty(len(angles))
+    # find vertical relations
+    v_rel = (np.pi-np.pi/4 >= abs(angles)) & (abs(angles) > np.pi/4)
+    # vertical relation: in case line cut rectangle at the top or bottom corner
+    i = np.flatnonzero(v_rel)
+    l_inside[i] = rect_sizes[i, 1] / (2 * np.cos(np.pi/2 - angles[i]))
+    # horizontal relation: in case line cut rectangle at the left or right corner
+    i = np.flatnonzero(~v_rel)
+    l_inside[i] = rect_sizes[i, 0] / (2 * np.cos(angles[i]))
+    return np.abs(l_inside)

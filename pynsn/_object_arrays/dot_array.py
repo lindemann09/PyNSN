@@ -105,7 +105,7 @@ class DotArray(BaseDotArray, ABCObjectArray):
 
         for obj in shapes:
             self.xy = np.append(self.xy, np.atleast_2d(obj.xy), axis=0)
-            self.diameter = np.append(self.diameter, obj.diameter, axis=0)
+            self.diameter = np.append(self.diameter, obj.diameter)
             self.attributes = np.append(self.attributes, obj.attribute)
 
     @property
