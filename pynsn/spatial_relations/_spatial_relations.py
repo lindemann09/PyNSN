@@ -2,8 +2,6 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Union
-
 import warnings
 import numpy as np
 from numpy.typing import NDArray

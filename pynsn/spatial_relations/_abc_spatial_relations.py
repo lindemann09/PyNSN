@@ -15,6 +15,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def __init__(self, a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
                  A_relative_to_B: bool):
+        """TODO """
         self._angle = None
         self._distances = None
         self._A_relative_to_B = A_relative_to_B
