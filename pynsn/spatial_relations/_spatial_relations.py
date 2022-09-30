@@ -93,7 +93,7 @@ class RectangleRectangle(ABCSpatialRelations):
             self.b_sizes = self.b_sizes * np.ones((a, 1))
         elif a == 1:
             self.a_sizes = self.a_sizes * np.ones((b, 1))
-        self._xy_diff_rect = np.abs(self._xy_diff) - \
+        self._xy_dist_rect = np.abs(self._xy_diff) - \
             (self.a_sizes + self.b_sizes) / 2
 
     def is_inside(self) -> NDArray:
@@ -101,12 +101,12 @@ class RectangleRectangle(ABCSpatialRelations):
             sizes = self.a_sizes
         else:
             sizes = self.b_sizes
-        return np.all(self._xy_diff_rect < -1*sizes, axis=1)
+        return np.all(self._xy_dist_rect < -1*sizes, axis=1)
 
     @property
     def distances(self) -> NDArray:
         if self._distances is None:
-            xy_diff = np.copy(self._xy_diff_rect)
+            xy_diff = np.copy(self._xy_dist_rect)
 
             # find rows with both coordinate positive or negative (i_pn or i_bn)
             cnt_neg = np.sum(xy_diff < 0, axis=1)
@@ -133,9 +133,9 @@ class RectangleRectangle(ABCSpatialRelations):
         # calc distance_along_line between rect center
 
         # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.angle,
+        d_a = geometry.center_edge_distance(angles=self.angles,
                                             rect_sizes=self.a_sizes + 2 * minimum_distance)
-        d_b = geometry.center_edge_distance(angles=self.angle,
+        d_b = geometry.center_edge_distance(angles=self.angles,
                                             rect_sizes=self.b_sizes)
         # distance between center minus inside rectangles
         return np.hypot(self._xy_diff[:, 0],
@@ -276,20 +276,39 @@ class RectangleDot(ABCSpatialRelations):
             ecp_xy_diff[idx_r, 0, idx_c])
         return edge_rel
 
+    # def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+    #     # spatial relations
+    #     corner_rel = self.corner_relations(nearest_corners=False)
+    #     edge_rel = self.edge_cardinal_relations()
+    #     idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
+
+    #     # spat rel shape =(n, 2=parameter)
+    #     spatrel = np.empty(self.rect_xy.shape)
+    #     spatrel[idx_ccer, :] = edge_rel[idx_ccer, :]
+    #     spatrel[~idx_ccer, :] = corner_rel[~idx_ccer, :]
+
+    #     spatrel[:, 0] = spatrel[:, 0] - minimum_distance
+
+    #     return spatrel
+
     def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
-        # spatial relations
-        corner_rel = self.corner_relations(nearest_corners=False)
-        edge_rel = self.edge_cardinal_relations()
-        idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
-
-        # spat rel shape =(n, 2=parameter)
-        spatrel = np.empty(self.rect_xy.shape)
-        spatrel[idx_ccer, :] = edge_rel[idx_ccer, :]
-        spatrel[~idx_ccer, :] = corner_rel[~idx_ccer, :]
-
-        spatrel[:, 0] = spatrel[:, 0] - minimum_distance
-
-        return spatrel
+        # distances along angle
+        ced = geometry.center_edge_distance(angles=self.angles,
+                                            rect_sizes=self.rect_sizes)
+        print("ang: ", np.rad2deg(self.angles))
+        print(np.rad2deg(self.angles)+180)
+        print(np.hypot(self._xy_diff[:, 1], self._xy_diff[:, 0]))
+        print(self.dot_radii)
+        print(ced)
+        dist_along_axis = np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
+        - ced - self.dot_radii
+        # displacement distance (in direction of the angle ) that dot is
+        #  below or above lower respective top edge
+        # dd = sqrt( x diff**2 + (height+radius)**2 )
+        dd = np.hypot(self._xy_diff[0], self.rect_sizes[1]+self.dot_radii)
+        print(dist_along_axis)
+        # print(dist_along_axis)
+        return dd - dist_along_axis
 
 
 class DotCoordinate(DotDot):

@@ -1,5 +1,4 @@
 
-from xml.etree.ElementTree import TreeBuilder
 import numpy as np
 import pynsn
 from pynsn._lib import np_tools, geometry
@@ -12,13 +11,13 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 arr_dia = np.array([10, 20])
 
 d_big = pynsn.Dot((-8, 9), diameter=120, attribute="#FF0000")
-da = pynsn.Dot((70, 10), diameter=60, attribute="#222800")
-db = pynsn.Dot((-7, -33), diameter=40, attribute="#00FFF0")
+da = pynsn.Dot((100, 90), diameter=60, attribute="#222800")
+db = pynsn.Dot((-70, -13), diameter=40, attribute="#00FFF0")
 
 
 ra = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF000")
 rb = pynsn.Rectangle((-10, 35), size=(40, 40), attribute="#00FF00")
-r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
+r_big = pynsn.Rectangle((0, 0), size=(150, 60), attribute="#000088")
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
 
@@ -39,10 +38,11 @@ shapes_test_picture(a)
 
 sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=A_relative_to_B)
 
-print(sr.is_inside())
+print(np.rad2deg(sr.angles))
+# sr.displacement_distances()
 exit()
 
-print(f"dist: {sr.distances}\nangle {sr.angle}\nis_inside: {sr.is_inside()}\n"
+print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")
 
 print("  ")
@@ -58,5 +58,5 @@ shapes_test_picture(tmp, filename="shape_test2.png")
 
 
 sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=True)
-print(f"dist: {sr.distances}\nangle {sr.angle}\nis_inside: {sr.is_inside()}\n"
+print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")

@@ -20,12 +20,12 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         self._distances = None
         self._A_relative_to_B = A_relative_to_B
         if A_relative_to_B:
-            self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
-        else:
             self._xy_diff = np.atleast_2d(a_xy) - np.atleast_2d(b_xy)
+        else:
+            self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
 
     @property
-    def angle(self) -> NDArray:
+    def angles(self) -> NDArray:
         """Angle (in radians) of objects B relative to the objects A
         (or visa versa if A_relative_to_B set to True)"""
         if self._angle is None:
@@ -71,12 +71,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
         spatrel = np.array(
             (self.displacement_distances(minimum_distance=minimum_distance),
-             self.angle)).T
+             self.angles)).T
 
         i = np.flatnonzero(spatrel[:, 0] < 0)  # displacement
-        if not self._A_relative_to_B:
-            spatrel[i, 1] = np.pi + spatrel[i, 1]  # opposite direction
-
+        spatrel[i, 1] = np.pi + spatrel[i, 1]  # opposite direction
         # set all nan and override with overlapping relations
         rtn = np.zeros(spatrel.shape)
         rtn[i, :] = polar2cartesian(spatrel[i, :])
