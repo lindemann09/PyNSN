@@ -298,23 +298,23 @@ class RectangleDot(ABCSpatialRelations):
     #     return spatrel
 
     def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+        if self._a_relative_to_b:
+            # angle of dot relative to rect
+            angle_of_dot = self.angles + np.pi
+        else:
+            angle_of_dot = self.angles
         # distances along angle
         ced = geometry.center_edge_distance(angles=self.angles,
                                             rect_sizes=self.rect_sizes)
-        print("ang: ", np.rad2deg(self.angles))
-        print(np.rad2deg(self.angles)+180)
-        print(np.hypot(self._xy_diff[:, 1], self._xy_diff[:, 0]))
-        print(self.dot_radii)
-        print(ced)
-        dist_along_axis = np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
-        - ced - self.dot_radii
+        dist_along_axis = np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])\
+            - ced - self.dot_radii
         # displacement distance (in direction of the angle ) that dot is
         #  below or above lower respective top edge
         # dd = sqrt( x diff**2 + (height+radius)**2 )
         dd = np.hypot(self._xy_diff[0], self.rect_sizes[1]+self.dot_radii)
         print(dist_along_axis)
         # print(dist_along_axis)
-        return dd - dist_along_axis
+        return dist_along_axis - dd
 
 
 class DotCoordinate(DotDot):
