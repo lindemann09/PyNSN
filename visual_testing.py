@@ -12,35 +12,35 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 arr_dia = np.array([10, 20])
 
 d_big = pynsn.Dot((-8, 9), diameter=120, attribute="#FF0000")
-da = pynsn.Dot((70, 70), diameter=60, attribute="#222800")
-db = pynsn.Dot((-7, 5), diameter=40, attribute="#000088")
+da = pynsn.Dot((70, 10), diameter=60, attribute="#222800")
+db = pynsn.Dot((-7, -33), diameter=40, attribute="#00FFF0")
 
 
-ra = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF0000")
-rb = pynsn.Rectangle((-50, -45), size=(40, 40), attribute="#ccFF00")
+ra = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF000")
+rb = pynsn.Rectangle((-10, 35), size=(40, 40), attribute="#00FF00")
 r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
-shapes_test_picture((d_big, r_big, ra,  l))
 
+A_relative_to_B = False
+array_rect = pynsn.RectangleArray()
+array_dot = pynsn.DotArray()
 
-# array_a = pynsn.RectangleArray()
-# array_a.add((ra, rb))
-# array_b = pynsn.RectangleArray()
-# array_b.add(r_big)
+if A_relative_to_B:
+    # A_rel_b
+    array_rect.add((r_big, rb))
+    array_dot.add(d_big)
+else:
+    array_rect.add(r_big)
+    array_dot.add((da, db))
 
-# array_a = pynsn.DotArray()
-# array_a.add((da, db))
-# array_b = pynsn.DotArray()
-# array_b.add(d_big)
+a = list(array_rect.iter()) + list(array_dot.iter())
+shapes_test_picture(a)
 
-array_a = pynsn.RectangleArray()
-array_a.add((r_big, ra))
-array_b = pynsn.DotArray()
-array_b.add(d_big)
+sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=A_relative_to_B)
 
-
-sr = sprel.RectangleDot(array_a, array_b, A_relative_to_B=True)
+print(sr.is_inside())
+exit()
 
 print(f"dist: {sr.distances}\nangle {sr.angle}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")
@@ -48,14 +48,15 @@ print(f"dist: {sr.distances}\nangle {sr.angle}\nis_inside: {sr.is_inside()}\n"
 print("  ")
 #print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
+
 displ = sr.required_displacements(minimum_distance=0)
-array_a.xy = array_a.xy + displ
+array_rect.xy = array_rect.xy + displ
 
 tmp = [l, d_big]
-tmp.extend(array_a.iter())
+tmp.extend(array_rect.iter())
 shapes_test_picture(tmp, filename="shape_test2.png")
 
 
-sr = sprel.RectangleDot(array_a, array_b, A_relative_to_B=True)
+sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=True)
 print(f"dist: {sr.distances}\nangle {sr.angle}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")

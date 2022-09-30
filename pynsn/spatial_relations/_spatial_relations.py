@@ -187,7 +187,20 @@ class RectangleDot(ABCSpatialRelations):
         return NotImplemented
 
     def is_inside(self) -> NDArray:
-        return NotImplemented
+        if self._A_relative_to_B:
+            # rectangle in dots?
+            xy_dist = self._corners - \
+                np.atleast_3d(self.dot_xy)  # type: ignore
+            dot_corner_distances = np.hypot(
+                xy_dist[:, 0, :], xy_dist[:, 1, :])  # (n, 4)
+            return np.all(dot_corner_distances <= np.atleast_2d(self.dot_radii).T,
+                          axis=1)
+        else:
+            # dots in rectangle
+            radii2 = self.dot_radii * np.ones((2, 1))
+            radii2 = radii2.T
+            xy_diff_rect = np.abs(self._xy_diff) - self.rect_sizes/2 - radii2
+            return np.all(xy_diff_rect < -2*radii2, axis=1)
 
     def corner_relations(self, nearest_corners: bool = True) -> NDArray:
         """Euclidean distance and angle of nearest or farthest corners and dot centers
@@ -276,7 +289,7 @@ class RectangleDot(ABCSpatialRelations):
 
         spatrel[:, 0] = spatrel[:, 0] - minimum_distance
 
-        return spat_rel2displacement(spatrel)
+        return spatrel
 
 
 class DotCoordinate(DotDot):
