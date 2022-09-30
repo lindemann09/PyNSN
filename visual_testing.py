@@ -21,11 +21,11 @@ r_big = pynsn.Rectangle((0, 0), size=(150, 60), attribute="#000088")
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
 
-A_relative_to_B = False
+a_relative_to_b = False
 array_rect = pynsn.RectangleArray()
 array_dot = pynsn.DotArray()
 
-if A_relative_to_B:
+if a_relative_to_b:
     # A_rel_b
     array_rect.add((r_big, rb))
     array_dot.add(d_big)
@@ -36,10 +36,9 @@ else:
 a = list(array_rect.iter()) + list(array_dot.iter())
 shapes_test_picture(a)
 
-sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=A_relative_to_B)
+sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
 
-print(np.rad2deg(sr.angles))
-# sr.displacement_distances()
+sr.displacement_distances()
 exit()
 
 print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
@@ -57,6 +56,6 @@ tmp.extend(array_rect.iter())
 shapes_test_picture(tmp, filename="shape_test2.png")
 
 
-sr = sprel.RectangleDot(array_rect, array_dot, A_relative_to_B=True)
+sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=True)
 print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")

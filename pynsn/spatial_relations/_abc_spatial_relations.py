@@ -14,12 +14,12 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     def __init__(self, a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
-                 A_relative_to_B: bool):
+                 a_relative_to_b: bool):
         """TODO """
         self._angle = None
         self._distances = None
-        self._A_relative_to_B = A_relative_to_B
-        if A_relative_to_B:
+        self._a_relative_to_b = a_relative_to_b
+        if a_relative_to_b:
             self._xy_diff = np.atleast_2d(a_xy) - np.atleast_2d(b_xy)
         else:
             self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
