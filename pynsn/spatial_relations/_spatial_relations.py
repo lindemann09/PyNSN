@@ -2,6 +2,9 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from sre_constants import AT_LOC_BOUNDARY
+from string import digits
+from unicodedata import digit
 import warnings
 import numpy as np
 from numpy.typing import NDArray
@@ -298,23 +301,37 @@ class RectangleDot(ABCSpatialRelations):
     #     return spatrel
 
     def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+        # TODO check and timeit
+        # TODO too far displacement at edges
         if self._a_relative_to_b:
-            # angle of dot relative to rect
-            angle_of_dot = self.angles + np.pi
+            # position angle of dot as viewed from rect
+            pos_angle_of_dot = self.angles + np.pi
         else:
-            angle_of_dot = self.angles
+            pos_angle_of_dot = self.angles
+
+        # calculate target replacement along the line between center
+        target_xy_dist = self.rect_sizes / 2 + np.atleast_2d(self.dot_radii).T \
+            + minimum_distance
         # distances along angle
-        ced = geometry.center_edge_distance(angles=self.angles,
-                                            rect_sizes=self.rect_sizes)
-        dist_along_axis = np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])\
-            - ced - self.dot_radii
-        # displacement distance (in direction of the angle ) that dot is
-        #  below or above lower respective top edge
-        # dd = sqrt( x diff**2 + (height+radius)**2 )
-        dd = np.hypot(self._xy_diff[0], self.rect_sizes[1]+self.dot_radii)
-        print(dist_along_axis)
-        # print(dist_along_axis)
-        return dist_along_axis - dd
+        distances = geometry.distances_along_polar_radius(
+            rho=pos_angle_of_dot, xy_distances=target_xy_dist)
+        # find short required target displacement and subtract if from the actual
+        # distance between center
+        return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) -\
+            np.min(distances, axis=1)
+
+    def displacement_distances_rect_method(self, minimum_distance: float = 0) -> NDArray:
+        # TODO check and timeit
+        # calc distance_along_line between rect center
+        dot_rect_sizes = np.transpose(self.dot_radii * np.full((2, 1), 2))
+        # but enlarge one rect by minimum distance
+        d_a = geometry.center_edge_distance(angles=self.angles,
+                                            rect_sizes=self.rect_sizes + 2 * minimum_distance)
+        d_b = geometry.center_edge_distance(angles=self.angles,
+                                            rect_sizes=dot_rect_sizes)
+        # distance between center minus inside rectangles
+        return np.hypot(self._xy_diff[:, 0],
+                        self._xy_diff[:, 1]) - d_a - d_b
 
 
 class DotCoordinate(DotDot):

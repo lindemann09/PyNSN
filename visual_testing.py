@@ -11,8 +11,8 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 arr_dia = np.array([10, 20])
 
 d_big = pynsn.Dot((-8, 9), diameter=120, attribute="#FF0000")
-da = pynsn.Dot((100, 90), diameter=60, attribute="#222800")
-db = pynsn.Dot((-70, -13), diameter=40, attribute="#00FFF0")
+da = pynsn.Dot((0, -30), diameter=60, attribute="#222800")
+db = pynsn.Dot((-70, 0), diameter=40, attribute="#00FFF0")
 
 
 ra = pynsn.Rectangle((50, 50), size=(40, 40), attribute="#FF000")
@@ -37,22 +37,19 @@ a = list(array_rect.iter()) + list(array_dot.iter())
 shapes_test_picture(a)
 
 sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
-
-sr.displacement_distances()
-exit()
-
 print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
       f"displ_dist: {sr.displacement_distances()}")
 
 print("  ")
-#print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
+# print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
 
 displ = sr.required_displacements(minimum_distance=0)
-array_rect.xy = array_rect.xy + displ
+array_dot.xy = array_dot.xy + displ
 
-tmp = [l, d_big]
+tmp = []
 tmp.extend(array_rect.iter())
+tmp.extend(array_dot.iter())
 shapes_test_picture(tmp, filename="shape_test2.png")
 
 

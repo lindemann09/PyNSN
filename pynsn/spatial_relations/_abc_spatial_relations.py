@@ -26,8 +26,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @property
     def angles(self) -> NDArray:
-        """Angle (in radians) of objects B relative to the objects A
-        (or visa versa if A_relative_to_B set to True)"""
+        """Position angles (in radians) of objects B relative to (viewed from)
+        the objects A (or visa versa if A_relative_to_B set to True)"""
         if self._angle is None:
             self._angle = np.arctan2(self._xy_diff[:, 1],
                                      self._xy_diff[:, 0])

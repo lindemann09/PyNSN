@@ -130,14 +130,35 @@ def center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.flo
     """Distance between rectangle center and rectangle edge along the line
     in direction of `angle`.
     """
-
     l_inside = np.empty(len(angles))
-    # find vertical relations
-    v_rel = (np.pi-np.pi/4 >= abs(angles)) & (abs(angles) > np.pi/4)
-    # vertical relation: in case line cut rectangle at the top or bottom corner
-    i = np.flatnonzero(v_rel)
-    l_inside[i] = rect_sizes[i, 1] / (2 * np.cos(np.pi/2 - angles[i]))
-    # horizontal relation: in case line cut rectangle at the left or right corner
-    i = np.flatnonzero(~v_rel)
-    l_inside[i] = rect_sizes[i, 0] / (2 * np.cos(angles[i]))
+    rect_sizes2 = rect_sizes / 2
+    # find horizontal relations
+    mod_angle = np.abs(angles) % np.pi  # scale 0 to PI
+    i_h = (mod_angle > np.pi*.75) | (mod_angle < np.pi*.25)
+    # horizontal relation: in case line cut rectangle at the left or right edge
+    l_inside[i_h] = rect_sizes2[i_h, 0] / np.cos(mod_angle[i_h])
+    # vertical relation: in case line cut rectangle at the top or bottom edge
+    l_inside[~i_h] = rect_sizes2[~i_h, 1] / np.cos(np.pi/2 - mod_angle[~i_h])
     return np.abs(l_inside)
+
+
+def distances_along_polar_radius(rho: NDArray, xy_distances: NDArray) -> NDArray:
+    """Calculates the Euclidean distances along the polar radius (rho) that
+    correspond to x and y distances along the cartesian x and y.
+
+    rho: array of n angle
+    xy_distance: array (n, 2) with x ([:,0]) and y ([:, 1]) distances
+
+    Returns 2-D array with Euclidean distance
+    """
+    rtn = np.empty_like(xy_distances)
+    # find the point on the line between center that correspond to the
+    # target displacement distance at x or y axis
+    # to get no overlap vertically:
+    target_x_diff = np.abs(np.tan(np.pi/2 - rho)) * xy_distances[:, 0]
+    rtn[:, 0] = np.hypot(target_x_diff, xy_distances[:, 1])
+    # to get no overlap horizontal: target_y_diff
+    target_y_diff = np.abs(np.tan(rho)) * xy_distances[:, 1]
+    rtn[:, 1] = np.hypot(target_y_diff, xy_distances[:, 0])
+
+    return rtn
