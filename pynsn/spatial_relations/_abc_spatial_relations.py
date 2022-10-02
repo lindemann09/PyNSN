@@ -2,11 +2,12 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
+
 import numpy as np
 from numpy.typing import NDArray
+from pynsn._lib import geometry
 
 from .._lib.geometry import polar2cartesian
-from pynsn._lib import geometry
 
 
 class DisplTypes(Enum):
@@ -21,7 +22,8 @@ class DisplTypes(Enum):
 # all init-functions require 2D arrays
 class ABCSpatialRelations(metaclass=ABCMeta):
 
-    def __init__(self, a_xy: NDArray[np.floating],
+    def __init__(self,
+                 a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
                  a_relative_to_b: bool):
         """TODO """
@@ -47,9 +49,9 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @abstractmethod
     def is_inside(self) -> NDArray:
-        """True if objects of array B are fully(!) inside the object of array A.
-        if A_relative_to_B set to True, the function checks if arrays
-        a objects of A are in B
+        """True if objects B are fully(!) inside the objects A.
+        If a_relative_to_b set to True, the function checks if objects of A
+        are in B.
         """
 
     @abstractmethod
@@ -66,20 +68,20 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @property
     def is_above(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
-        above object center A (or visa versa if A_relative_to_B =True)."""
+        above object center A (or visa versa if a_relative_to_b =True)."""
         return self._xy_diff[:, 0] > 0
 
     @property
     def is_right(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
-        right  of object center A (or visa versa if A_relative_to_B =True)."""
+        right  of object center A (or visa versa if a_relative_to_b =True)."""
         return self._xy_diff[:, 1] > 0
 
     @property
     def rho(self) -> NDArray:
         """Polar coordinate rho of the line between the object centers. That is,
         position angles (in radians) of objects B relative to (viewed from) the
-        objects A (or visa versa if A_relative_to_B =True).
+        objects A (or visa versa if a_relative_to_b =True).
         """
         if self._rho is None:
             self._rho = np.arctan2(self._xy_diff[:, 1],
@@ -144,7 +146,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                                 minimum_gap: float = 0,
                                 only_for_overlapping: bool = True) -> NDArray:
         """Required displacement of object B in cartesian coordinates
-        to have no overlap with object A. (if A_relative_to_B = True,
+        to have no overlap with object A. (if a_relative_to_b = True,
         replacements of objects are return)
 
         Returns:

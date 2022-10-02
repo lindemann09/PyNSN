@@ -52,8 +52,8 @@ class MatrixRectangleSpatRel(CombinationMatrix):
                                     sizes=sizes[self.idx_a, :])
         rect_b = BaseRectangleArray(xy=xy[self.idx_b, :],
                                     sizes=sizes[self.idx_b, :])
-        self._rr = RectangleRectangle(rectangles_a=rect_a,
-                                      rectangles_b=rect_b)
+        self._rr = RectangleRectangle(a_rectangles=rect_a,
+                                      b_rectangles=rect_b)
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""
@@ -78,7 +78,7 @@ class MatrixDotSpatRel(CombinationMatrix):
                               diameter=diameter[self.idx_a, :])
         dots_b = BaseDotArray(xy=xy[self.idx_b, :],
                               diameter=diameter[self.idx_b, :])
-        self._rr = DotDot(dots_a=dots_a, dots_b=dots_b)
+        self._rr = DotDot(a_dots=dots_a, b_dots=dots_b)
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the rectangles"""

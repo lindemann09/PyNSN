@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from typing import Iterable, List, Any, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray

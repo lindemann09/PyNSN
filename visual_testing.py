@@ -43,6 +43,7 @@ print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
 print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
+
 displ = sr.displacements_cartesian(displ_type=sprel.DisplTypes.SHORTEST,
                                    minimum_gap=0,
                                    only_for_overlapping=False)

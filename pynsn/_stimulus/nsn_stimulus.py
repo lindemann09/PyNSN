@@ -594,16 +594,16 @@ class NSNStimulus(TargetArea):
             return np.array([])
 
         if isinstance(shape, Dot) and isinstance(self._objects, DotArray):
-            rel = sprel.DotDot(dots_a=self._objects,
-                               dots_b=BaseDotArray(xy=shape.xy,
+            rel = sprel.DotDot(a_dots=self._objects,
+                               b_dots=BaseDotArray(xy=shape.xy,
                                                    diameter=shape.diameter))
             return rel.distances_rho
 
         elif isinstance(shape, Rectangle) and \
                 isinstance(self._objects, RectangleArray):
             rel = sprel.RectangleRectangle(
-                rectangles_a=self._objects,
-                rectangles_b=BaseRectangleArray(xy=shape.xy, sizes=shape.size))
+                a_rectangles=self._objects,
+                b_rectangles=BaseRectangleArray(xy=shape.xy, sizes=shape.size))
             return rel.xy_distances()
 
         else:
