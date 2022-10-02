@@ -2,21 +2,19 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-import warnings
+#import warnings
 import numpy as np
 from numpy.typing import NDArray
 
-from .._lib.np_tools import find_value_rowwise
+#from .._lib.np_tools import find_value_rowwise
 from .._lib import geometry
 
 from .._object_arrays.dot_array import BaseDotArray
 from .._object_arrays.rectangle_array import BaseRectangleArray
-from ._abc_spatial_relations import ABCSpatialRelations, DisplTypes
+from ._abc_spatial_relations import ABCSpatialRelations
 
 
 # all init-functions require 2D arrays, all properties are cached
-
-
 class DotDot(ABCSpatialRelations):
 
     def __init__(self,
@@ -39,11 +37,11 @@ class DotDot(ABCSpatialRelations):
 
     @property
     def distances_rho(self) -> NDArray:
-        if self._distances_axis is None:
-            self._distances_axis = np.hypot(self._xy_diff[:, 0],
-                                            self._xy_diff[:, 1]) \
+        if self._distances_rho is None:
+            self._distances_rho = np.hypot(self._xy_diff[:, 0],
+                                           self._xy_diff[:, 1]) \
                 - self._radii_a - self._radii_b
-        return self._distances_axis
+        return self._distances_rho
 
     @property
     def distances_xy(self) -> NDArray:
@@ -71,77 +69,51 @@ class RectangleRectangle(ABCSpatialRelations):
 
         super().__init__(a_xy=rectangles_a.xy, b_xy=rectangles_b.xy,
                          a_relative_to_b=a_relative_to_b)
-        self.a_sizes = rectangles_a.sizes
-        self.b_sizes = rectangles_b.sizes
-        a = len(self.a_sizes)
-        b = len(self.b_sizes)
+        self.a_sizes_div2 = rectangles_a.sizes / 2
+        self.b_sizes_div2 = rectangles_b.sizes / 2
+        a = len(self.a_sizes_div2)
+        b = len(self.b_sizes_div2)
         if b == 1:
-            self.b_sizes = self.b_sizes * np.ones((a, 1))
+            self.b_sizes_div2 = self.b_sizes_div2 * np.ones((a, 1))
         elif a == 1:
-            self.a_sizes = self.a_sizes * np.ones((b, 1))
+            self.a_sizes_div2 = self.a_sizes_div2 * np.ones((b, 1))
 
     @property
     def distances_xy(self) -> NDArray:
         if self._distances_xy is None:
             self._distances_xy = np.abs(self._xy_diff) - \
-                (self.a_sizes + self.b_sizes) / 2
+                (self.a_sizes_div2 + self.b_sizes_div2)
 
         return self._distances_xy
 
     def is_inside(self) -> NDArray:
         if self._a_relative_to_b:
-            sizes = self.a_sizes
+            sizes = self.a_sizes_div2
         else:
-            sizes = self.b_sizes
+            sizes = self.b_sizes_div2
         return np.all(self.distances_xy < -1*sizes, axis=1)
 
     @property
     def distances_rho(self) -> NDArray:
 
-        if self._distances_axis is None:
+        if self._distances_rho is None:
             # calc distance_inside rect along_axis between object center
             d_a = geometry.center_edge_distance(angles=self.rho,
-                                                rect_sizes=self.a_sizes)
+                                                rect_sizes_div2=self.a_sizes_div2)
             d_b = geometry.center_edge_distance(angles=self.rho,
-                                                rect_sizes=self.b_sizes)
+                                                rect_sizes_div2=self.b_sizes_div2)
             # distance between center minus inside rectangles
-            self._distances_axis = np.hypot(self._xy_diff[:, 0],
-                                            self._xy_diff[:, 1]) - d_a - d_b
+            self._distances_rho = np.hypot(self._xy_diff[:, 0],
+                                           self._xy_diff[:, 1]) - d_a - d_b
 
-        return self._distances_axis
+        return self._distances_rho
 
-    def displacements_polar_old(self,
-                                displ_type: DisplTypes,
-                                minimum_gap: float = 0) -> NDArray:
-
-        if displ_type is DisplTypes.X:
-            return -1*self.distances_xy[:, 0] + minimum_gap
-
-        elif displ_type is DisplTypes.Y:
-            return -1*self.distances_xy[:, 1] + minimum_gap
-
-        elif displ_type is DisplTypes.RHO:
-            minimum_dist_rho = geometry.center_edge_distance(
-                angles=self.rho,
-                rect_sizes=np.full(self.a_sizes.shape, 2 * minimum_gap))
-            return self.distances_rho - minimum_dist_rho
-        else:
-            # shortest
-            displacements = np.empty((len(self._xy_diff), 3))
-            displacements[:, 0:2] = self.distances_xy - minimum_gap
-            displacements[:, 2] = self.displacements_polar_old(DisplTypes.RHO,
-                                                               minimum_gap)
-
+    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         # calc distance_along_line between rect center
-
-        # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.rho,
-                                            rect_sizes=self.a_sizes + 2 * minimum_gap)
-        d_b = geometry.center_edge_distance(angles=self.rho,
-                                            rect_sizes=self.b_sizes)
-        # distance between center minus inside rectangles
-        return np.hypot(self._xy_diff[:, 0],
-                        self._xy_diff[:, 1]) - d_a - d_b
+        minimum_dist_rho = geometry.center_edge_distance(
+            angles=self.rho,
+            rect_sizes_div2=np.full(self.a_sizes_div2.shape, minimum_gap))
+        return -1*self.distances_rho + minimum_dist_rho
 
 
 class RectangleDot(ABCSpatialRelations):
@@ -152,7 +124,7 @@ class RectangleDot(ABCSpatialRelations):
                  a_relative_to_b: bool = True) -> None:
 
         self.rect_xy = rectangles.xy
-        self.rect_sizes = rectangles.sizes
+        self.rect_sizes_div2 = rectangles.sizes / 2
         self.dot_xy = dots.xy
         self.dot_radii = dots.diameter / 2
 
@@ -164,7 +136,7 @@ class RectangleDot(ABCSpatialRelations):
         elif n_rects == 1:
             ones = np.ones((n_dots, 1))
             self.rect_xy = self.rect_xy * ones
-            self.rect_sizes = self.rect_sizes * ones
+            self.rect_sizes_div2 = self.rect_sizes_div2 * ones
 
         assert self.rect_xy.shape == self.dot_xy.shape
 
@@ -173,20 +145,25 @@ class RectangleDot(ABCSpatialRelations):
         super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy,
                          a_relative_to_b=a_relative_to_b)
 
-    @ property
-    def _corners(self) -> NDArray:
-        """tensor (n, 2, 4) with xy values of the four corners of the rectangles
-        0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
-        """
-        if self.__corners is None:
-            self.__corners = geometry.corners(rect_xy=self.rect_xy,
-                                              rect_sizes=self.rect_sizes,
-                                              lt_rb_only=False)
-        return self.__corners
-
-    @ property
+    @property
     def distances_rho(self) -> NDArray:
-        return NotImplemented
+        if self._distances_rho is None:
+            # calc distance_inside rect along_axis between object center
+            d_a = geometry.center_edge_distance(angles=self.rho,
+                                                rect_sizes_div2=self.rect_sizes_div2)
+            # distance between center minus inside rectangles and radii
+            self._distances_rho = np.hypot(self._xy_diff[:, 0],
+                                           self._xy_diff[:, 1]) \
+                - d_a - self.dot_radii
+
+        return self._distances_rho
+
+    @property
+    def distances_xy(self) -> NDArray:
+        if self._distances_xy is None:
+            self._distances_xy = np.abs(self._xy_diff) - self.rect_sizes_div2 \
+                - np.atleast_2d(self.dot_radii).T
+        return self._distances_xy
 
     def is_inside(self) -> NDArray:
         if self._a_relative_to_b:
@@ -201,130 +178,109 @@ class RectangleDot(ABCSpatialRelations):
             # dots in rectangle
             radii2 = self.dot_radii * np.ones((2, 1))
             # xy_distance + r < rect_size/2
-            return np.all(np.abs(self._xy_diff) + radii2.T < self.rect_sizes/2,
+            return np.all(np.abs(self._xy_diff) + radii2.T < self.rect_sizes_div2,
                           axis=1)
 
-    def corner_relations(self, nearest_corners: bool = True) -> NDArray:
-        """Euclidean distance and angle of nearest or farthest corners and dot centers
-        shape=(n, 2)
-        """
-
-        xy_dist = self._corners - np.atleast_3d(self.dot_xy)  # type: ignore
-
-        distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
-        # find nearest corner per rect dist.shape=(n, 4)
-        # Problem: one rect could have multiple corners with min distance
-        #   --> choose randomly just one near corner of each rect
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', 'All-NaN slice encountered')
-            if nearest_corners:
-                values = np.nanmin(distances, axis=1)
-            else:
-                values = np.nanmax(distances, axis=1)
-
-        # find idx nearest corner
-        idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
-        # spatial relations and nearest corners
-        # return array contains only one nearest corner per rect (n, 2=parameter)
-        distances = distances[idx_r, idx_c] - self.dot_radii[idx_r]
-        directions = np.arctan2(
-            xy_dist[idx_r, 1, idx_c],
-            xy_dist[idx_r, 0, idx_c])
-        return np.array([distances, directions]).T
-
-    def edge_cardinal_relations(self, nearest_edges: bool = True) -> NDArray:
-        """Cardinal spatial relations between nearest or farthest edges and dot center
-
-        returns NaN if no edge is cardinal relation to dot center
-        """
-
-        edge_points = np.array([(0, 1),  # north
-                                (1, 2),  # east
-                                (3, 2),  # south
-                                (0, 3)  # west
-                                ])
-        # find nearest edge cross points to dot centers
-        # (ecp -> project dot center to rect edge)
-        # ecp_xy_diff (n, 2=xy, 4=edges)
-        ecp = np.empty_like(self._corners)
-        for i in range(4):
-            # project of dot center to edge
-            ecp[:, :, i] = geometry.line_point_othogonal(
-                p1_line=self._corners[:, :, edge_points[i, 0]],
-                p2_line=self._corners[:, :, edge_points[i, 1]],
-                p3=self.dot_xy,
-                outside_segment_nan=True)
-
-        # Euclidean distance of each edge with dot center (n, 4=edges)
-        ecp_xy_diff = ecp - np.atleast_3d(self.dot_xy)  # type: ignore
-        distances = np.hypot(ecp_xy_diff[:, 0, :],
-                             ecp_xy_diff[:, 1, :])
-        # find nearest or farthest edge (n, 2=[rect_idx, edge_idx])
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', 'All-NaN slice encountered')
-            if nearest_edges:
-                values = np.nanmin(distances, axis=1)
-            else:
-                values = np.nanmax(distances, axis=1)
-        # idx_nearest edge
-        idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
-        # return array contains nearest edge per rect (n, 2=parameter)
-        edge_rel = np.full(self.rect_xy.shape, np.nan)
-        # distances
-        edge_rel[idx_r, 0] = distances[idx_r, idx_c] - self.dot_radii[idx_r]
-        # directions
-        edge_rel[idx_r, 1] = np.arctan2(
-            ecp_xy_diff[idx_r, 1, idx_c],
-            ecp_xy_diff[idx_r, 0, idx_c])
-        return edge_rel
-
-    # def displacement_distances(self, minimum_gap: float = 0) -> NDArray:
-    #     # spatial relations
-    #     corner_rel = self.corner_relations(nearest_corners=False)
-    #     edge_rel = self.edge_cardinal_relations()
-    #     idx_ccer = corner_rel[:, 0] > edge_rel[:, 0]
-
-    #     # spat rel shape =(n, 2=parameter)
-    #     spatrel = np.empty(self.rect_xy.shape)
-    #     spatrel[idx_ccer, :] = edge_rel[idx_ccer, :]
-    #     spatrel[~idx_ccer, :] = corner_rel[~idx_ccer, :]
-
-    #     spatrel[:, 0] = spatrel[:, 0] - minimum_gap
-
-    #     return spatrel
-
-    def displacements_polar_old(self, minimum_gap: float = 0) -> NDArray:
-        # TODO check and timeit
-        # TODO too far displacement at edges
-        if self._a_relative_to_b:
-            # position angle of dot as viewed from rect
-            pos_angle_of_dot = self.rho + np.pi
-        else:
-            pos_angle_of_dot = self.rho
-
-        # calculate target replacement along the line between center
-        target_xy_dist = self.rect_sizes / 2 + np.atleast_2d(self.dot_radii).T \
+    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+        # Target x and y distance between center to have no overlap at either
+        # X or y axes  (TODO this procedure overestimate when close to corner)
+        td_xy = self.rect_sizes_div2 + np.atleast_2d(self.dot_radii).T \
             + minimum_gap
-        # distances along angle
-        distances = geometry.distances_along_polar_radius(
-            rho=pos_angle_of_dot, xy_distances=target_xy_dist)
-        # find short required target displacement and subtract if from the actual
-        # distance between center
-        return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) -\
-            np.min(distances, axis=1)
+        # Target distances along the line between centers, that is, calculate
+        # Euclidean distances along the polar radius (rho) that
+        # correspond to x and y distances along the cartesian x and y.
+        td_center = np.empty_like(td_xy)
+        td_center[:, 0] = np.abs(td_xy[:, 0] / np.cos(self.rho))
+        td_center[:, 1] = np.abs(td_xy[:, 1] / np.sin(self.rho))
+        # find shortest target distance (horizontal or vertical) and subtract
+        # the actual distance between center
+        return np.min(td_center, axis=1) \
+            - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
-    def displacement_distances_rect_method(self, minimum_gap: float = 0) -> NDArray:
-        # TODO check and timeit
-        # calc distance_along_line between rect center
-        dot_rect_sizes = np.transpose(self.dot_radii * np.full((2, 1), 2))
-        # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.rho,
-                                            rect_sizes=self.rect_sizes + 2 * minimum_gap)
-        d_b = geometry.center_edge_distance(angles=self.rho,
-                                            rect_sizes=dot_rect_sizes)
-        # distance between center minus inside rectangles
-        return np.hypot(self._xy_diff[:, 0],
-                        self._xy_diff[:, 1]) - d_a - d_b
+    @property
+    def _corners(self) -> NDArray:
+        """tensor (n, 2, 4) with xy values of the four corners of the rectangles
+        0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
+        """
+        if self.__corners is None:
+            self.__corners = geometry.corners(rect_xy=self.rect_xy,
+                                              rect_sizes_div2=self.rect_sizes_div2,
+                                              lt_rb_only=False)
+        return self.__corners
+
+    # def corner_relations(self, nearest_corners: bool = True) -> NDArray:
+    #     """Euclidean distance and angle of nearest or farthest corners and dot centers
+    #     shape=(n, 2)
+    #     """
+
+    #     xy_dist = self._corners - np.atleast_3d(self.dot_xy)  # type: ignore
+
+    #     distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
+    #     # find nearest corner per rect dist.shape=(n, 4)
+    #     # Problem: one rect could have multiple corners with min distance
+    #     #   --> choose randomly just one near corner of each rect
+    #     with warnings.catch_warnings():
+    #         warnings.filterwarnings('ignore', 'All-NaN slice encountered')
+    #         if nearest_corners:
+    #             values = np.nanmin(distances, axis=1)
+    #         else:
+    #             values = np.nanmax(distances, axis=1)
+
+    #     # find idx nearest corner
+    #     idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
+    #     # spatial relations and nearest corners
+    #     # return array contains only one nearest corner per rect (n, 2=parameter)
+    #     distances = distances[idx_r, idx_c] - self.dot_radii[idx_r]
+    #     directions = np.arctan2(
+    #         xy_dist[idx_r, 1, idx_c],
+    #         xy_dist[idx_r, 0, idx_c])
+    #     return np.array([distances, directions]).T
+
+    # def edge_cardinal_relations(self, nearest_edges: bool = True) -> NDArray:
+    #     """Cardinal spatial relations between nearest or farthest edges and dot center
+
+    #     returns NaN if no edge is cardinal relation to dot center
+    #     """
+
+    #     edge_points = np.array([(0, 1),  # north
+    #                             (1, 2),  # east
+    #                             (3, 2),  # south
+    #                             (0, 3)  # west
+    #                             ])
+    #     # find nearest edge cross points to dot centers
+    #     # (ecp -> project dot center to rect edge)
+    #     # ecp_xy_diff (n, 2=xy, 4=edges)
+    #     ecp = np.empty_like(self._corners)
+    #     for i in range(4):
+    #         # project of dot center to edge
+    #         ecp[:, :, i] = geometry.line_point_othogonal(
+    #             p1_line=self._corners[:, :, edge_points[i, 0]],
+    #             p2_line=self._corners[:, :, edge_points[i, 1]],
+    #             p3=self.dot_xy,
+    #             outside_segment_nan=True)
+
+    #     # Euclidean distance of each edge with dot center (n, 4=edges)
+    #     ecp_xy_diff = ecp - np.atleast_3d(self.dot_xy)  # type: ignore
+    #     distances = np.hypot(ecp_xy_diff[:, 0, :],
+    #                          ecp_xy_diff[:, 1, :])
+    #     # find nearest or farthest edge (n, 2=[rect_idx, edge_idx])
+    #     with warnings.catch_warnings():
+    #         warnings.filterwarnings('ignore', 'All-NaN slice encountered')
+    #         if nearest_edges:
+    #             values = np.nanmin(distances, axis=1)
+    #         else:
+    #             values = np.nanmax(distances, axis=1)
+    #     # idx_nearest edge
+    #     idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
+    #     # return array contains nearest edge per rect (n, 2=parameter)
+    #     edge_rel = np.full(self.rect_xy.shape, np.nan)
+    #     # distances
+    #     edge_rel[idx_r, 0] = distances[idx_r, idx_c] - self.dot_radii[idx_r]
+    #     # directions
+    #     edge_rel[idx_r, 1] = np.arctan2(
+    #         ecp_xy_diff[idx_r, 1, idx_c],
+    #         ecp_xy_diff[idx_r, 0, idx_c])
+    #     return edge_rel
 
 
 class DotCoordinate(DotDot):

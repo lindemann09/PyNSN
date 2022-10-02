@@ -9,6 +9,11 @@ from . import rng
 
 # all functions are 2D arrays (at least) as fist arguments
 
+NORTH = np.pi/2
+SOUTH = np.pi/-2
+NORTH_WEST = np.pi*.75
+NORTH_EAST = np.pi*.25
+
 
 def center_of_coordinates(xy: NDArray) -> NDArray:
     """ calc center of all positions"""
@@ -92,7 +97,7 @@ def line_point_othogonal(p1_line, p2_line, p3, outside_segment_nan=False):
     return cross_points
 
 
-def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
+def corners(rect_xy: NDArray, rect_sizes_div2: NDArray, lt_rb_only=False) -> NDArray:
     """tensor (n, 2, 4) with xy values of the four corners of the rectangles
     0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
 
@@ -100,9 +105,9 @@ def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
         return only  left-top and right-bottom point (n, 2_xy, 2=(lt, rb)
         """
     rect_xy = np.atleast_2d(rect_xy)
-    rect_sizes2 = np.atleast_2d(rect_sizes) / 2
-    right_top = rect_xy + rect_sizes2
-    left_button = rect_xy - rect_sizes2
+    rect_sizes_div2 = np.atleast_2d(rect_sizes_div2)
+    right_top = rect_xy + rect_sizes_div2
+    left_button = rect_xy - rect_sizes_div2  # type: ignore
 
     if lt_rb_only:
         rtn = np.empty((rect_xy.shape[0], 2, 2))
@@ -126,39 +131,16 @@ def corners(rect_xy: NDArray, rect_sizes: NDArray, lt_rb_only=False) -> NDArray:
     return rtn
 
 
-def center_edge_distance(angles: NDArray, rect_sizes: NDArray) -> NDArray[np.floating]:
+def center_edge_distance(angles: NDArray, rect_sizes_div2: NDArray) -> NDArray[np.floating]:
     """Distance between rectangle center and rectangle edge along the line
     in direction of `angle`.
     """
     l_inside = np.empty(len(angles))
-    rect_sizes2 = rect_sizes / 2
     # find horizontal relations
     mod_angle = np.abs(angles) % np.pi  # scale 0 to PI
-    i_h = (mod_angle > np.pi*.75) | (mod_angle < np.pi*.25)
+    i_h = (mod_angle > NORTH_WEST) | (mod_angle < NORTH_EAST)
     # horizontal relation: in case line cut rectangle at the left or right edge
-    l_inside[i_h] = rect_sizes2[i_h, 0] / np.cos(mod_angle[i_h])
+    l_inside[i_h] = rect_sizes_div2[i_h, 0] / np.cos(mod_angle[i_h])
     # vertical relation: in case line cut rectangle at the top or bottom edge
-    l_inside[~i_h] = rect_sizes2[~i_h, 1] / np.cos(np.pi/2 - mod_angle[~i_h])
+    l_inside[~i_h] = rect_sizes_div2[~i_h, 1] / np.cos(NORTH - mod_angle[~i_h])
     return np.abs(l_inside)
-
-
-def distances_along_polar_radius(rho: NDArray, xy_distances: NDArray) -> NDArray:
-    """Calculates the Euclidean distances along the polar radius (rho) that
-    correspond to x and y distances along the cartesian x and y.
-
-    rho: array of n angle
-    xy_distance: array (n, 2) with x ([:,0]) and y ([:, 1]) distances
-
-    Returns 2-D array with Euclidean distance
-    """
-    rtn = np.empty_like(xy_distances)
-    # find the point on the line between center that correspond to the
-    # target displacement distance at x or y axis
-    # to get no overlap vertically:
-    target_x_diff = np.abs(np.tan(np.pi/2 - rho)) * xy_distances[:, 0]
-    rtn[:, 0] = np.hypot(target_x_diff, xy_distances[:, 1])
-    # to get no overlap horizontal: target_y_diff
-    target_y_diff = np.abs(np.tan(rho)) * xy_distances[:, 1]
-    rtn[:, 1] = np.hypot(target_y_diff, xy_distances[:, 0])
-
-    return rtn

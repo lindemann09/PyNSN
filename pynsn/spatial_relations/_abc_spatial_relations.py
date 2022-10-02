@@ -6,10 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._lib.geometry import polar2cartesian
-
-
-TOP = np.pi/2
-BOTTOM = np.pi/-2
+from pynsn._lib import geometry
 
 
 class DisplTypes(Enum):
@@ -17,6 +14,7 @@ class DisplTypes(Enum):
     X = auto()
     Y = auto()
     RHO = auto()
+    XY_SHORTEST = auto()
     SHORTEST = auto()
 
 
@@ -28,7 +26,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                  a_relative_to_b: bool):
         """TODO """
         self._rho = None
-        self._distances_axis = None
+        self._distances_rho = None
         self._distances_xy = None
         self._a_relative_to_b = a_relative_to_b
         if a_relative_to_b:
@@ -39,7 +37,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @property
     @abstractmethod
     def distances_rho(self) -> NDArray:
-        """Euclidean distances between objects along the axis between the two
+        """Euclidean distances between objects along the line between the two
         object center."""
 
     @property
@@ -79,7 +77,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @property
     def rho(self) -> NDArray:
-        """Polar coordinate rho of the axis between the object centers. That is,
+        """Polar coordinate rho of the line between the object centers. That is,
         position angles (in radians) of objects B relative to (viewed from) the
         objects A (or visa versa if A_relative_to_B =True).
         """
@@ -103,7 +101,14 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         returns 2-d array (distance, angle)
         """
         # parent implements of DisplTypes.X and DisplTypes.Y
-        if displ_type is DisplTypes.SHORTEST:
+        if displ_type is DisplTypes.XY_SHORTEST:
+            rtn = np.empty((len(self._xy_diff), 2, 2))
+            rtn[:, :, 0] = self.displacements_polar(DisplTypes.X, minimum_gap)
+            rtn[:, :, 1] = self.displacements_polar(DisplTypes.Y, minimum_gap)
+            i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
+            all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
+            return rtn[all_rows, :, i]
+        elif displ_type is DisplTypes.SHORTEST:
             rtn = np.empty((len(self._xy_diff), 2, 3))
             rtn[:, :, 0] = self.displacements_polar(DisplTypes.X, minimum_gap)
             rtn[:, :, 1] = self.displacements_polar(DisplTypes.Y, minimum_gap)
@@ -123,8 +128,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             elif displ_type is DisplTypes.Y:
                 rtn[:, 0] = -1*self.distances_xy[:, 1] + minimum_gap
                 is_above = self._xy_diff[:, 1] > 0
-                rtn[is_above, 1] = TOP  # move to top
-                rtn[~is_above, 1] = BOTTOM  # move to bottom
+                rtn[is_above, 1] = geometry.NORTH  # move to top
+                rtn[~is_above, 1] = geometry.SOUTH  # move to bottom
             elif displ_type is DisplTypes.RHO:
                 # RHO
                 rtn[:, 0] = self.displacement_distances_rho(
