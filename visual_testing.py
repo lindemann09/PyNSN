@@ -37,14 +37,14 @@ a = list(array_rect.iter()) + list(array_dot.iter())
 shapes_test_picture(a)
 
 sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
-print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr.displacement_distances()}")
+print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
+      f"displ_dist: {sr.displacements_polar_old()}")
 
 print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
 
-displ = sr.required_displacements(minimum_distance=0)
+displ = sr.displacements_cartesian(minimum_gap=0)
 array_dot.xy = array_dot.xy + displ
 
 tmp = []
@@ -54,5 +54,5 @@ shapes_test_picture(tmp, filename="shape_test2.png")
 
 
 sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=True)
-print(f"dist: {sr.distances}\nangle {sr.angles}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr.displacement_distances()}")
+print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
+      f"displ_dist: {sr.displacements_polar_old()}")

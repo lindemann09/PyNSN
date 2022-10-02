@@ -1,23 +1,35 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-
+from enum import Enum, auto
 import numpy as np
 from numpy.typing import NDArray
 
 from .._lib.geometry import polar2cartesian
 
+
+TOP = np.pi/2
+BOTTOM = np.pi/-2
+
+
+class DisplTypes(Enum):
+    """Displacement Types for spatial relation class """
+    X = auto()
+    Y = auto()
+    RHO = auto()
+    SHORTEST = auto()
+
+
 # all init-functions require 2D arrays
-
-
 class ABCSpatialRelations(metaclass=ABCMeta):
 
     def __init__(self, a_xy: NDArray[np.floating],
                  b_xy: NDArray[np.floating],
                  a_relative_to_b: bool):
         """TODO """
-        self._angle = None
-        self._distances = None
+        self._rho = None
+        self._distances_axis = None
+        self._distances_xy = None
         self._a_relative_to_b = a_relative_to_b
         if a_relative_to_b:
             self._xy_diff = np.atleast_2d(a_xy) - np.atleast_2d(b_xy)
@@ -25,18 +37,15 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy)
 
     @property
-    def angles(self) -> NDArray:
-        """Position angles (in radians) of objects B relative to (viewed from)
-        the objects A (or visa versa if A_relative_to_B set to True)"""
-        if self._angle is None:
-            self._angle = np.arctan2(self._xy_diff[:, 1],
-                                     self._xy_diff[:, 0])
-        return self._angle
+    @abstractmethod
+    def distances_rho(self) -> NDArray:
+        """Euclidean distances between objects along the axis between the two
+        object center."""
 
     @property
     @abstractmethod
-    def distances(self) -> NDArray:
-        """Euclidean distances between objects"""
+    def distances_xy(self) -> NDArray:
+        """X an Y distances between objects."""
 
     @abstractmethod
     def is_inside(self) -> NDArray:
@@ -46,18 +55,90 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         """Distance of the required displacement of objects along the line
-        between the object centers to have the minimum distance.
+        between the object centers (rho) to have the minimum distance.
 
-        negative values indicate overlap and required displacement in the
-        direction of the angle.
-
-        use: required_displacement to get cartesian coordinates
+        Positive distance values indicate overlap and thus a required
+        displacement in the direction rho to remove overlaps. Negative distance
+        values indicate that the required displacement involves to move objects
+        toward each other (not overlapping objects).
         """
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        """Minimum required displacement of object B in cartesian coordinates
+    @property
+    def is_above(self) -> NDArray:
+        """Tests the relation of the object center. True if object center B is
+        above object center A (or visa versa if A_relative_to_B =True)."""
+        return self._xy_diff[:, 0] > 0
+
+    @property
+    def is_right(self) -> NDArray:
+        """Tests the relation of the object center. True if object center B is
+        right  of object center A (or visa versa if A_relative_to_B =True)."""
+        return self._xy_diff[:, 1] > 0
+
+    @property
+    def rho(self) -> NDArray:
+        """Polar coordinate rho of the axis between the object centers. That is,
+        position angles (in radians) of objects B relative to (viewed from) the
+        objects A (or visa versa if A_relative_to_B =True).
+        """
+        if self._rho is None:
+            self._rho = np.arctan2(self._xy_diff[:, 1],
+                                   self._xy_diff[:, 0])
+        return self._rho
+
+    def displacements_polar(self, displ_type: DisplTypes,
+                            minimum_gap: float = 0) -> NDArray:
+        """Distance and angle of the required displacement of objects along the line
+        between the object centers to have the minimum distance.
+
+        Positive distance values indicate overlap and thus a required
+        displacement in the direction rho to remove overlaps. Negative distance
+        values indicate that the required displacement involves to move objects
+        toward each other (not overlapping objects).
+
+        use: required_displacement to get cartesian coordinates
+
+        returns 2-d array (distance, angle)
+        """
+        # parent implements of DisplTypes.X and DisplTypes.Y
+        if displ_type is DisplTypes.SHORTEST:
+            rtn = np.empty((len(self._xy_diff), 2, 3))
+            rtn[:, :, 0] = self.displacements_polar(DisplTypes.X, minimum_gap)
+            rtn[:, :, 1] = self.displacements_polar(DisplTypes.Y, minimum_gap)
+            rtn[:, :, 2] = self.displacements_polar(
+                DisplTypes.RHO, minimum_gap)
+            i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
+            all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
+            return rtn[all_rows, :, i]
+        else:
+            rtn = np.empty(self._xy_diff.shape)
+
+            if displ_type is DisplTypes.X:
+                rtn[:, 0] = -1*self.distances_xy[:, 0] + minimum_gap
+                is_right = self._xy_diff[:, 0] > 0
+                rtn[is_right, 1] = 0  # move to right
+                rtn[~is_right, 1] = np.pi  # move to left
+            elif displ_type is DisplTypes.Y:
+                rtn[:, 0] = -1*self.distances_xy[:, 1] + minimum_gap
+                is_above = self._xy_diff[:, 1] > 0
+                rtn[is_above, 1] = TOP  # move to top
+                rtn[~is_above, 1] = BOTTOM  # move to bottom
+            elif displ_type is DisplTypes.RHO:
+                # RHO
+                rtn[:, 0] = self.displacement_distances_rho(
+                    minimum_gap=minimum_gap)
+                rtn[:, 1] = self.rho
+            else:
+                raise NotImplementedError()
+
+            return rtn
+
+    def displacements_cartesian(self, displ_type: DisplTypes,
+                                minimum_gap: float = 0,
+                                only_for_overlapping: bool = True) -> NDArray:
+        """Required displacement of object B in cartesian coordinates
         to have no overlap with object A. (if A_relative_to_B = True,
         replacements of objects are return)
 
@@ -69,13 +150,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             line between the two object center.
         """
 
-        spatrel = np.array(
-            (self.displacement_distances(minimum_distance=minimum_distance),
-             self.angles)).T
+        displ_polar = self.displacements_polar(displ_type=displ_type,
+                                               minimum_gap=minimum_gap)
+        if only_for_overlapping:
+            # set distance =0, for all non override objects (dist<0)
+            displ_polar[displ_polar[:, 0] < 0, 0] = 0
 
-        i = np.flatnonzero(spatrel[:, 0] < 0)  # displacement
-        spatrel[i, 1] = np.pi + spatrel[i, 1]  # opposite direction
-        # set all nan and override with overlapping relations
-        rtn = np.zeros(spatrel.shape)
-        rtn[i, :] = polar2cartesian(spatrel[i, :])
-        return rtn
+        return polar2cartesian(displ_polar)

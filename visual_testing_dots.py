@@ -35,13 +35,13 @@ array_b.add(d_big)
 
 sr = sprel.DotDot(array_a, array_b, A_relative_to_B=False)
 
-print(f"dist: {sr.distances}\nangle {np.rad2deg(sr.angles)}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr.displacement_distances()}")
+print(f"dist: {sr.distances_rho}\nangle {np.rad2deg(sr.rho)}\nis_inside: {sr.is_inside()}\n"
+      f"displ_dist: {sr.displacements_polar_old()}")
 
 print("  ")
 #print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
-displ = sr.required_displacements(minimum_distance=0)
+displ = sr.displacements_cartesian(minimum_gap=0)
 print(displ)
 array_b.xy = array_b.xy + displ[1, :]
 
@@ -50,5 +50,5 @@ shapes_test_picture(tmp, filename="shape_test2.png")
 
 exit()
 sr = sprel.DotDot(array_a, array_b, A_relative_to_B=True)
-print(f"dist: {sr.distances}\nangle {np.rad2deg(sr.angles)}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr.displacement_distances()}")
+print(f"dist: {sr.distances_rho}\nangle {np.rad2deg(sr.rho)}\nis_inside: {sr.is_inside()}\n"
+      f"displ_dist: {sr.displacements_polar_old()}")

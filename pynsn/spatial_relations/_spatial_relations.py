@@ -2,9 +2,6 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from sre_constants import AT_LOC_BOUNDARY
-from string import digits
-from unicodedata import digit
 import warnings
 import numpy as np
 from numpy.typing import NDArray
@@ -14,10 +11,11 @@ from .._lib import geometry
 
 from .._object_arrays.dot_array import BaseDotArray
 from .._object_arrays.rectangle_array import BaseRectangleArray
-from ._abc_spatial_relations import ABCSpatialRelations
+from ._abc_spatial_relations import ABCSpatialRelations, DisplTypes
 
 
 # all init-functions require 2D arrays, all properties are cached
+
 
 class DotDot(ABCSpatialRelations):
 
@@ -40,21 +38,28 @@ class DotDot(ABCSpatialRelations):
         assert self._radii_a.shape == self._radii_b.shape
 
     @property
-    def distances(self) -> NDArray:
-        if self._distances is None:
-            self._distances = np.hypot(self._xy_diff[:, 0],
-                                       self._xy_diff[:, 1]) \
+    def distances_rho(self) -> NDArray:
+        if self._distances_axis is None:
+            self._distances_axis = np.hypot(self._xy_diff[:, 0],
+                                            self._xy_diff[:, 1]) \
                 - self._radii_a - self._radii_b
-        return self._distances
+        return self._distances_axis
+
+    @property
+    def distances_xy(self) -> NDArray:
+        if self._distances_xy is None:
+            self._distances_xy = np.abs(self._xy_diff) \
+                - np.atleast_2d(self._radii_a + self._radii_b).T
+        return self._distances_xy
 
     def is_inside(self) -> NDArray:
         if self._a_relative_to_b:
-            return self.distances < -2 * self._radii_a
+            return self.distances_rho < -2 * self._radii_a
         else:
-            return self.distances < -2 * self._radii_b
+            return self.distances_rho < -2 * self._radii_b
 
-    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
-        return self.distances - minimum_distance
+    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+        return -1*self.distances_rho + minimum_gap
 
 
 class RectangleRectangle(ABCSpatialRelations):
@@ -74,56 +79,65 @@ class RectangleRectangle(ABCSpatialRelations):
             self.b_sizes = self.b_sizes * np.ones((a, 1))
         elif a == 1:
             self.a_sizes = self.a_sizes * np.ones((b, 1))
-        self.__xy_dist_rect = None
 
     @property
-    def _xy_dist_rect(self) -> NDArray:
-        if self.__xy_dist_rect is None:
-            self.__xy_dist_rect = np.abs(self._xy_diff) - \
+    def distances_xy(self) -> NDArray:
+        if self._distances_xy is None:
+            self._distances_xy = np.abs(self._xy_diff) - \
                 (self.a_sizes + self.b_sizes) / 2
 
-        return self.__xy_dist_rect
+        return self._distances_xy
 
     def is_inside(self) -> NDArray:
         if self._a_relative_to_b:
             sizes = self.a_sizes
         else:
             sizes = self.b_sizes
-        return np.all(self._xy_dist_rect < -1*sizes, axis=1)
+        return np.all(self.distances_xy < -1*sizes, axis=1)
 
     @property
-    def distances(self) -> NDArray:
-        if self._distances is None:
-            xy_dist = np.copy(self._xy_dist_rect)
+    def distances_rho(self) -> NDArray:
 
-            # find rows with both coordinate positive or negative (i_pn or i_bn)
-            cnt_neg = np.sum(xy_dist < 0, axis=1)
-            i_bn = np.flatnonzero(cnt_neg == 2)
+        if self._distances_axis is None:
+            # calc distance_inside rect along_axis between object center
+            d_a = geometry.center_edge_distance(angles=self.rho,
+                                                rect_sizes=self.a_sizes)
+            d_b = geometry.center_edge_distance(angles=self.rho,
+                                                rect_sizes=self.b_sizes)
+            # distance between center minus inside rectangles
+            self._distances_axis = np.hypot(self._xy_diff[:, 0],
+                                            self._xy_diff[:, 1]) - d_a - d_b
 
-            # make the large (closer to zero) coordinate positive
-            lrg = xy_dist[i_bn, 0] >= xy_dist[i_bn, 1]
-            xy_dist[i_bn[lrg], 0] = -1 * xy_dist[i_bn[lrg], 0]
-            xy_dist[i_bn[~lrg], 1] = -1 * xy_dist[i_bn[~lrg], 1]
-            # and set the other coordinate to zero
-            xy_dist[i_bn[lrg], 1] = 0
-            xy_dist[i_bn[~lrg], 0] = 0
-            # set all remaining negative values to zero, because
-            # the other coordinate are positive and thus define the distance
-            xy_dist[np.where(xy_dist < 0)] = 0
-            self._distances = np.hypot(xy_dist[:, 0],
-                                       xy_dist[:, 1])
-            # set distance with previous both negative to negative
-            self._distances[i_bn] = self._distances[i_bn] * -1
+        return self._distances_axis
 
-        return self._distances
+    def displacements_polar_old(self,
+                                displ_type: DisplTypes,
+                                minimum_gap: float = 0) -> NDArray:
 
-    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+        if displ_type is DisplTypes.X:
+            return -1*self.distances_xy[:, 0] + minimum_gap
+
+        elif displ_type is DisplTypes.Y:
+            return -1*self.distances_xy[:, 1] + minimum_gap
+
+        elif displ_type is DisplTypes.RHO:
+            minimum_dist_rho = geometry.center_edge_distance(
+                angles=self.rho,
+                rect_sizes=np.full(self.a_sizes.shape, 2 * minimum_gap))
+            return self.distances_rho - minimum_dist_rho
+        else:
+            # shortest
+            displacements = np.empty((len(self._xy_diff), 3))
+            displacements[:, 0:2] = self.distances_xy - minimum_gap
+            displacements[:, 2] = self.displacements_polar_old(DisplTypes.RHO,
+                                                               minimum_gap)
+
         # calc distance_along_line between rect center
 
         # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.angles,
-                                            rect_sizes=self.a_sizes + 2 * minimum_distance)
-        d_b = geometry.center_edge_distance(angles=self.angles,
+        d_a = geometry.center_edge_distance(angles=self.rho,
+                                            rect_sizes=self.a_sizes + 2 * minimum_gap)
+        d_b = geometry.center_edge_distance(angles=self.rho,
                                             rect_sizes=self.b_sizes)
         # distance between center minus inside rectangles
         return np.hypot(self._xy_diff[:, 0],
@@ -159,7 +173,7 @@ class RectangleDot(ABCSpatialRelations):
         super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy,
                          a_relative_to_b=a_relative_to_b)
 
-    @property
+    @ property
     def _corners(self) -> NDArray:
         """tensor (n, 2, 4) with xy values of the four corners of the rectangles
         0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
@@ -170,8 +184,8 @@ class RectangleDot(ABCSpatialRelations):
                                               lt_rb_only=False)
         return self.__corners
 
-    @property
-    def distances(self) -> NDArray:
+    @ property
+    def distances_rho(self) -> NDArray:
         return NotImplemented
 
     def is_inside(self) -> NDArray:
@@ -264,7 +278,7 @@ class RectangleDot(ABCSpatialRelations):
             ecp_xy_diff[idx_r, 0, idx_c])
         return edge_rel
 
-    # def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+    # def displacement_distances(self, minimum_gap: float = 0) -> NDArray:
     #     # spatial relations
     #     corner_rel = self.corner_relations(nearest_corners=False)
     #     edge_rel = self.edge_cardinal_relations()
@@ -275,22 +289,22 @@ class RectangleDot(ABCSpatialRelations):
     #     spatrel[idx_ccer, :] = edge_rel[idx_ccer, :]
     #     spatrel[~idx_ccer, :] = corner_rel[~idx_ccer, :]
 
-    #     spatrel[:, 0] = spatrel[:, 0] - minimum_distance
+    #     spatrel[:, 0] = spatrel[:, 0] - minimum_gap
 
     #     return spatrel
 
-    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
+    def displacements_polar_old(self, minimum_gap: float = 0) -> NDArray:
         # TODO check and timeit
         # TODO too far displacement at edges
         if self._a_relative_to_b:
             # position angle of dot as viewed from rect
-            pos_angle_of_dot = self.angles + np.pi
+            pos_angle_of_dot = self.rho + np.pi
         else:
-            pos_angle_of_dot = self.angles
+            pos_angle_of_dot = self.rho
 
         # calculate target replacement along the line between center
         target_xy_dist = self.rect_sizes / 2 + np.atleast_2d(self.dot_radii).T \
-            + minimum_distance
+            + minimum_gap
         # distances along angle
         distances = geometry.distances_along_polar_radius(
             rho=pos_angle_of_dot, xy_distances=target_xy_dist)
@@ -299,14 +313,14 @@ class RectangleDot(ABCSpatialRelations):
         return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) -\
             np.min(distances, axis=1)
 
-    def displacement_distances_rect_method(self, minimum_distance: float = 0) -> NDArray:
+    def displacement_distances_rect_method(self, minimum_gap: float = 0) -> NDArray:
         # TODO check and timeit
         # calc distance_along_line between rect center
         dot_rect_sizes = np.transpose(self.dot_radii * np.full((2, 1), 2))
         # but enlarge one rect by minimum distance
-        d_a = geometry.center_edge_distance(angles=self.angles,
-                                            rect_sizes=self.rect_sizes + 2 * minimum_distance)
-        d_b = geometry.center_edge_distance(angles=self.angles,
+        d_a = geometry.center_edge_distance(angles=self.rho,
+                                            rect_sizes=self.rect_sizes + 2 * minimum_gap)
+        d_b = geometry.center_edge_distance(angles=self.rho,
                                             rect_sizes=dot_rect_sizes)
         # distance between center minus inside rectangles
         return np.hypot(self._xy_diff[:, 0],
