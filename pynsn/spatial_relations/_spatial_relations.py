@@ -2,11 +2,9 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-#import warnings
 import numpy as np
 from numpy.typing import NDArray
 
-#from .._lib.np_tools import find_value_rowwise
 from .._lib import geometry
 
 from .._object_arrays.dot_array import BaseDotArray
@@ -208,80 +206,6 @@ class RectangleDot(ABCSpatialRelations):
                                               lt_rb_only=False)
         return self.__corners
 
-    # def corner_relations(self, nearest_corners: bool = True) -> NDArray:
-    #     """Euclidean distance and angle of nearest or farthest corners and dot centers
-    #     shape=(n, 2)
-    #     """
-
-    #     xy_dist = self._corners - np.atleast_3d(self.dot_xy)  # type: ignore
-
-    #     distances = np.hypot(xy_dist[:, 0, :], xy_dist[:, 1, :])
-    #     # find nearest corner per rect dist.shape=(n, 4)
-    #     # Problem: one rect could have multiple corners with min distance
-    #     #   --> choose randomly just one near corner of each rect
-    #     with warnings.catch_warnings():
-    #         warnings.filterwarnings('ignore', 'All-NaN slice encountered')
-    #         if nearest_corners:
-    #             values = np.nanmin(distances, axis=1)
-    #         else:
-    #             values = np.nanmax(distances, axis=1)
-
-    #     # find idx nearest corner
-    #     idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
-    #     # spatial relations and nearest corners
-    #     # return array contains only one nearest corner per rect (n, 2=parameter)
-    #     distances = distances[idx_r, idx_c] - self.dot_radii[idx_r]
-    #     directions = np.arctan2(
-    #         xy_dist[idx_r, 1, idx_c],
-    #         xy_dist[idx_r, 0, idx_c])
-    #     return np.array([distances, directions]).T
-
-    # def edge_cardinal_relations(self, nearest_edges: bool = True) -> NDArray:
-    #     """Cardinal spatial relations between nearest or farthest edges and dot center
-
-    #     returns NaN if no edge is cardinal relation to dot center
-    #     """
-
-    #     edge_points = np.array([(0, 1),  # north
-    #                             (1, 2),  # east
-    #                             (3, 2),  # south
-    #                             (0, 3)  # west
-    #                             ])
-    #     # find nearest edge cross points to dot centers
-    #     # (ecp -> project dot center to rect edge)
-    #     # ecp_xy_diff (n, 2=xy, 4=edges)
-    #     ecp = np.empty_like(self._corners)
-    #     for i in range(4):
-    #         # project of dot center to edge
-    #         ecp[:, :, i] = geometry.line_point_othogonal(
-    #             p1_line=self._corners[:, :, edge_points[i, 0]],
-    #             p2_line=self._corners[:, :, edge_points[i, 1]],
-    #             p3=self.dot_xy,
-    #             outside_segment_nan=True)
-
-    #     # Euclidean distance of each edge with dot center (n, 4=edges)
-    #     ecp_xy_diff = ecp - np.atleast_3d(self.dot_xy)  # type: ignore
-    #     distances = np.hypot(ecp_xy_diff[:, 0, :],
-    #                          ecp_xy_diff[:, 1, :])
-    #     # find nearest or farthest edge (n, 2=[rect_idx, edge_idx])
-    #     with warnings.catch_warnings():
-    #         warnings.filterwarnings('ignore', 'All-NaN slice encountered')
-    #         if nearest_edges:
-    #             values = np.nanmin(distances, axis=1)
-    #         else:
-    #             values = np.nanmax(distances, axis=1)
-    #     # idx_nearest edge
-    #     idx_r, idx_c = find_value_rowwise(distances, np.atleast_2d(values).T)
-    #     # return array contains nearest edge per rect (n, 2=parameter)
-    #     edge_rel = np.full(self.rect_xy.shape, np.nan)
-    #     # distances
-    #     edge_rel[idx_r, 0] = distances[idx_r, idx_c] - self.dot_radii[idx_r]
-    #     # directions
-    #     edge_rel[idx_r, 1] = np.arctan2(
-    #         ecp_xy_diff[idx_r, 1, idx_c],
-    #         ecp_xy_diff[idx_r, 0, idx_c])
-    #     return edge_rel
-
 
 class DotCoordinate(DotDot):
 
@@ -306,35 +230,3 @@ class RectangleCoordinate(RectangleRectangle):
                                      sizes=np.zeros(coord_xy.shape))
         super().__init__(rectangles_a=rectangles, rectangles_b=rects_b,
                          a_relative_to_b=a_relative_to_b)
-
-
-# SpatRelArrayType = Union[NDArray, BaseDotArray, BaseRectangleArray]
-
-
-# def spatial_relations(array_A: SpatRelArrayType,
-#                       array_B: SpatRelArrayType) -> ABCSpatialRelations:
-#     if isinstance(array_A, BaseRectangleArray):
-#         if isinstance(array_B, BaseRectangleArray):
-#             return RectangleRectangle(array_A, array_B)
-#         elif isinstance(array_B, BaseDotArray):
-#             return RectangleDot(array_A, array_B)
-#         elif isinstance(array_B, np.ndarray):
-#             return RectangleCoordinate(array_A, array_B)
-
-#     elif isinstance(array_A, BaseDotArray):
-#         if isinstance(array_B, BaseDotArray):
-#             return DotDot(array_A, array_B)
-#         elif isinstance(array_B, BaseRectangleArray):
-#             return RectangleDot(array_B, array_A, a_relative_to_b=False)
-#         elif isinstance(array_B, np.ndarray):
-#             return DotCoordinate(array_A, array_B)
-
-#     elif isinstance(array_A, np.ndarray):
-#         if isinstance(array_B, np.ndarray):
-#             return CoordinateCoordinate(array_A, array_B)
-#         if isinstance(array_B, BaseDotArray):
-#             return DotCoordinate(array_B, array_A, a_relative_to_b=False)
-#         elif isinstance(array_B, BaseRectangleArray):
-#             return RectangleCoordinate(array_B, array_A, a_relative_to_b=False)
-
-#     raise NotImplementedError()
