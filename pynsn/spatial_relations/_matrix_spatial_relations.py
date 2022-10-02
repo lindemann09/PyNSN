@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._object_arrays import BaseDotArray, BaseRectangleArray
-from ._spatial_relations import CoordinateCoordinate, DotDot, RectangleRectangle
+from ._spatial_relations import DotDot, RectangleRectangle
 
 
 class CombinationMatrix(object):
@@ -68,23 +68,6 @@ class MatrixRectangleSpatRel(CombinationMatrix):
         rtn = self.get_matrix(
             values=self._rr.required_displacements(minimum_distance))
         return rtn[~np.isnan(rtn[:, 2]), :]
-
-
-class MatrixCoordinateSpatRel(CombinationMatrix):
-
-    def __init__(self, xy: NDArray):
-        super().__init__(n_items=xy.shape[0])
-        self._rr = CoordinateCoordinate(a_xy=xy[self.idx_a, :],
-                                        b_xy=xy[self.idx_b, :])
-
-    def distances(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        rel = self._rr.spatial_relations()
-        return self.get_matrix(values=rel[:, 0])
-
-    def spatial_relations(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.spatial_relations())
 
 
 class MatrixDotSpatRel(CombinationMatrix):

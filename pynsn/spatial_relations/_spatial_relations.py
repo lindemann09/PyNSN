@@ -18,27 +18,6 @@ from ._abc_spatial_relations import ABCSpatialRelations
 
 
 # all init-functions require 2D arrays, all properties are cached
-class CoordinateCoordinate(ABCSpatialRelations):
-
-    def __init__(self,
-                 a_xy: NDArray[np.floating],
-                 b_xy: NDArray[np.floating],
-                 a_relative_to_b: bool = False) -> None:
-        super().__init__(a_xy, b_xy, a_relative_to_b=a_relative_to_b)
-
-    def is_inside(self) -> NDArray:
-        return np.full(len(self._xy_diff), np.nan)
-
-    @ property
-    def distances(self) -> NDArray:
-        if self._distances is None:
-            self._distances = np.hypot(
-                self._xy_diff[:, 0], self._xy_diff[:, 1])
-        return self._distances
-
-    def displacement_distances(self, minimum_distance: float = 0) -> NDArray:
-        raise NotImplementedError()
-
 
 class DotDot(ABCSpatialRelations):
 
