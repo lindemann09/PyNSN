@@ -54,7 +54,7 @@ class DotDot(ABCSpatialRelations):
         else:
             return self.distances_rho < -2 * self._b_radii
 
-    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         return -1*self.distances_rho + minimum_gap
 
 
@@ -106,7 +106,7 @@ class RectangleRectangle(ABCSpatialRelations):
 
         return self._distances_rho
 
-    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         # calc distance_along_line between rect center
         minimum_dist_rho = geometry.center_edge_distance(
             angles=self.rho,
@@ -140,7 +140,8 @@ class RectangleDot(ABCSpatialRelations):
 
         assert self.rect_xy.shape == self.dot_xy.shape
 
-        super().__init__(a_xy=self.rect_xy, b_xy=self.dot_xy,
+        super().__init__(a_xy=self.rect_xy,
+                         b_xy=self.dot_xy,
                          a_relative_to_b=a_relative_to_b)
 
     @property
@@ -181,7 +182,7 @@ class RectangleDot(ABCSpatialRelations):
             return np.all(np.abs(self._xy_diff) + radii2.T < self.rect_sizes_div2,
                           axis=1)
 
-    def displacement_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         # Target x and y distance between center to have no overlap at either
         # X or y axes  (TODO this procedure overestimate when close to corner)
         td_xy = self.rect_sizes_div2 + self.dot_radii + minimum_gap

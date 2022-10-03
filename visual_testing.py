@@ -38,15 +38,14 @@ shapes_test_picture(a)
 
 sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
 print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr.displacement_distances_rho()}")
+      f"displ_dist: {sr._spread_distances_rho()}")
 
 print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
 
-displ = sr.displacements_cartesian(displ_type=sprel.DisplTypes.SHORTEST,
-                                   minimum_gap=0,
-                                   only_for_overlapping=False)
+displ = sr.spread(displ_type=sprel.SpreadTypes.SHORTEST,
+                                   minimum_gap=0)
 
 array_dot.xy = array_dot.xy + displ
 

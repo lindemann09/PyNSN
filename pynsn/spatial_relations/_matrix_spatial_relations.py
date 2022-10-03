@@ -66,7 +66,7 @@ class MatrixRectangleSpatRel(CombinationMatrix):
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Return matrix with distance between the rectangles"""
         rtn = self.get_matrix(
-            values=self._rr.displacements_cartesian(minimum_distance))
+            values=self._rr.spread_cartesian(minimum_distance))
         return rtn[~np.isnan(rtn[:, 2]), :]
 
 
@@ -91,5 +91,5 @@ class MatrixDotSpatRel(CombinationMatrix):
     def required_displacements(self, minimum_distance: float = 0) -> NDArray:
         """Return matrix with distance between the rectangles"""
         rtn = self.get_matrix(
-            values=self._rr.displacements_cartesian(minimum_distance))
+            values=self._rr.spread_cartesian(minimum_distance))
         return rtn[~np.isnan(rtn[:, 2]), :]

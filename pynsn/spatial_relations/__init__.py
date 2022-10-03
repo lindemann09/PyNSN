@@ -1,4 +1,4 @@
-from ._abc_spatial_relations import DisplTypes
+from ._abc_spatial_relations import SpreadTypes, GatherTypes
 from ._matrix_spatial_relations import (MatrixDotSpatRel,
                                         MatrixRectangleSpatRel)
 from ._spatial_relations import (DotCoordinate, DotDot,
