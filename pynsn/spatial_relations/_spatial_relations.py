@@ -201,23 +201,23 @@ class RectangleDot(ABCSpatialRelations):
 class DotCoordinate(DotDot):
 
     def __init__(self,
-                 dots: BaseDotArray,
-                 coord_xy: NDArray,
+                 a_dots: BaseDotArray,
+                 b_coord_xy: NDArray,
                  a_relative_to_b: bool = True) -> None:
 
-        dots_b = BaseDotArray(xy=coord_xy,
-                              diameter=np.zeros(coord_xy.shape[0]))
-        super().__init__(a_dots=dots, b_dots=dots_b,
+        dots_b = BaseDotArray(xy=b_coord_xy,
+                              diameter=np.zeros(b_coord_xy.shape[0]))
+        super().__init__(a_dots=a_dots, b_dots=dots_b,
                          a_relative_to_b=a_relative_to_b)
 
 
 class RectangleCoordinate(RectangleRectangle):
 
     def __init__(self,
-                 rectangles: BaseRectangleArray,
-                 coord_xy: NDArray,
+                 a_rectangles: BaseRectangleArray,
+                 b_coord_xy: NDArray,
                  a_relative_to_b: bool = True) -> None:
-        rects_b = BaseRectangleArray(xy=coord_xy,
-                                     sizes=np.zeros(coord_xy.shape))
-        super().__init__(a_rectangles=rectangles, b_rectangles=rects_b,
+        rects_b = BaseRectangleArray(xy=b_coord_xy,
+                                     sizes=np.zeros(b_coord_xy.shape))
+        super().__init__(a_rectangles=a_rectangles, b_rectangles=rects_b,
                          a_relative_to_b=a_relative_to_b)
