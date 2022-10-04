@@ -13,8 +13,9 @@ class SpreadTypes(Enum):
     X = auto()
     Y = auto()
     RHO = auto()
-    CARDINAL = auto() # shortest XY
+    CARDINAL = auto()  # shortest XY
     SHORTEST = auto()
+
 
 class GatherTypes(Enum):
     """Displacement Types for gathering objects """
@@ -33,13 +34,13 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         self._rho = None
         self._distances_rho = None
         self._distances_xy = None
-        self._fits_inside = None
         self._a_relative_to_b = a_relative_to_b
         if a_relative_to_b:
-            self._xy_diff = np.atleast_2d(a_xy) - np.atleast_2d(b_xy)  # type: ignore
+            self._xy_diff = np.atleast_2d(
+                a_xy) - np.atleast_2d(b_xy)  # type: ignore
         else:
-            self._xy_diff = np.atleast_2d(b_xy) - np.atleast_2d(a_xy) # type: ignore
-
+            self._xy_diff = np.atleast_2d(
+                b_xy) - np.atleast_2d(a_xy)  # type: ignore
 
     @property
     @abstractmethod
@@ -59,31 +60,34 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         are in B.
         """
 
-    @property
     @abstractmethod
-    def fits_inside(self) -> NDArray:
+    def fits_inside(self, minimum_gap: float = 0) -> NDArray:
         """True if object B fits potentially inside object a (or visa versa)"""
 
     @abstractmethod
     def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        """Distance of the required displacement of objects along the line
-        between the object centers (rho) to have the minimum distance.
+        """Required displacement distance along the line between the object
+        centers (rho) to have the minimum distance.
 
         Positive distance values indicate overlap and thus a required
         displacement in the direction rho to remove overlaps. Negative distance
-        values indicate that the required displacement involves to move objects
-        toward each other (not overlapping objects).
+        values indicate that the displacement would mean to move objects
+        toward each other (i.e., two not overlapping objects).
         """
 
     @abstractmethod
     def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        """TODO"""
+        """Required displacement distance along the line between the object
+        centers (rho) to move object b inside object a.
+
+        All distances are positive. Zero indicates no displacement required.
+        NaN indicates that objects do not fit in each other.
+        """
 
     @abstractmethod
     def _gather_polar_shortest(self, minimum_gap: float = 0) -> NDArray:
-        """Polar coordinates of the shortest displacement that move object B
+        """Polar coordinates of the shortest displacement that moves object B
         into object A (or visa versa)"""
-
 
     ### generic methods ###
 
@@ -113,7 +117,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def spread(self,
                displ_type: SpreadTypes,
                minimum_gap: float = 0,
-               polar: bool =False) -> NDArray:
+               polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to have the minimum
         distance.
 
@@ -129,8 +133,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         # parent implements of DisplTypes.X and DisplTypes.Y
         if displ_type is SpreadTypes.CARDINAL:
             rtn = np.empty((len(self._xy_diff), 2, 2))
-            rtn[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap,polar=True)
-            rtn[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap,polar=True)
+            rtn[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
+            rtn[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
             i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
             all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
             return rtn[all_rows, :, i]
@@ -138,7 +142,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             rtn = np.empty((len(self._xy_diff), 2, 3))
             rtn[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
             rtn[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
-            rtn[:, :, 2] = self.spread(SpreadTypes.RHO, minimum_gap, polar=True)
+            rtn[:, :, 2] = self.spread(
+                SpreadTypes.RHO, minimum_gap, polar=True)
             i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
             all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
             return rtn[all_rows, :, i]
@@ -172,11 +177,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             else:
                 return rtn
 
-
     def gather(self,
                displ_type: GatherTypes,
                minimum_gap: float = 0,
-               polar: bool =False) -> NDArray:
+               polar: bool = False) -> NDArray:
         """TODO"""
 
         if displ_type is GatherTypes.RHO:
@@ -199,4 +203,3 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             return geometry.polar2cartesian(rtn)
         else:
             return rtn
-

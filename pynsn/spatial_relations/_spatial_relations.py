@@ -2,6 +2,7 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from tkinter import dialog
 import numpy as np
 from numpy.typing import NDArray
 
@@ -32,6 +33,12 @@ class DotDot(ABCSpatialRelations):
             self._a_radii = self._a_radii * np.ones(b)
 
         assert self._a_radii.shape == self._b_radii.shape
+
+    def fits_inside(self, minimum_gap: float = 0) -> NDArray:
+        if self._a_relative_to_b:
+            return self._a_radii <= self._b_radii - minimum_gap
+        else:
+            return self._b_radii <= self._a_radii - minimum_gap
 
     @property
     def distances_rho(self) -> NDArray:
@@ -90,6 +97,13 @@ class RectangleRectangle(ABCSpatialRelations):
         else:
             sizes = self.b_sizes_div2
         return np.all(self.distances_xy < -1*sizes, axis=1)
+
+    def fits_inside(self, minimum_gap: float = 0) -> NDArray:
+        if self._a_relative_to_b:
+            sml = self.a_sizes_div2 <= self.b_sizes_div2 - minimum_gap
+        else:
+            sml = self.b_sizes_div2 <= self.a_sizes_div2 - minimum_gap
+        return np.all(sml, axis=1)
 
     @property
     def distances_rho(self) -> NDArray:
@@ -182,6 +196,18 @@ class RectangleDot(ABCSpatialRelations):
             return np.all(np.abs(self._xy_diff) + radii2.T < self.rect_sizes_div2,
                           axis=1)
 
+    def fits_inside(self, minimum_gap: float = 0) -> NDArray:
+        if self._a_relative_to_b:
+            # rectangles in dots
+            # diagonal of rect fits in circle
+            sml = np.hypot(self.rect_sizes_div2[:, 0], self.rect_sizes_div2[:, 1]) \
+                <= self.dot_radii - minimum_gap
+        else:
+            # dots in rectangle
+            sml = self.dot_radii * np.ones((1, 2)) \
+                <= self.rect_sizes_div2 - minimum_gap
+        return np.all(sml, axis=1)
+
     def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         # Target x and y distance between center to have no overlap at either
         # X or y axes  (TODO this procedure overestimate when close to corner)
@@ -196,6 +222,12 @@ class RectangleDot(ABCSpatialRelations):
         # the actual distance between center
         return np.min(td_center, axis=1) \
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
+
+    def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+        return super()._gather_distances_rho(minimum_gap)
+
+    def _gather_polar_shortest(self, minimum_gap: float = 0) -> NDArray:
+        raise NotImplementedError()
 
 
 class DotCoordinate(DotDot):

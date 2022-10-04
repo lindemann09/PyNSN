@@ -45,7 +45,7 @@ print("  ")
 
 
 displ = sr.spread(displ_type=sprel.SpreadTypes.SHORTEST,
-                                   minimum_gap=0)
+                  minimum_gap=0)
 
 array_dot.xy = array_dot.xy + displ
 
