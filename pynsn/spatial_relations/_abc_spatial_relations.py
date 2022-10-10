@@ -132,55 +132,54 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
         # parent implements of DisplTypes.X and DisplTypes.Y
         if displ_type is SpreadTypes.CARDINAL:
-            rtn = np.empty((len(self._xy_diff), 2, 2))
-            rtn[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
-            rtn[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
-            i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
+            all_spreads = np.empty((len(self._xy_diff), 2, 2))
+            all_spreads[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
+            all_spreads[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
+            i = np.argmin(all_spreads[:, 0, :], axis=1)  # find min distances
             all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
-            return rtn[all_rows, :, i]
+            rtn_polar = all_spreads[all_rows, :, i]
         elif displ_type is SpreadTypes.SHORTEST:
-            rtn = np.empty((len(self._xy_diff), 2, 3))
-            rtn[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
-            rtn[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
-            rtn[:, :, 2] = self.spread(
+            all_spreads = np.empty((len(self._xy_diff), 2, 3))
+            all_spreads[:, :, 0] = self.spread(SpreadTypes.X, minimum_gap, polar=True)
+            all_spreads[:, :, 1] = self.spread(SpreadTypes.Y, minimum_gap, polar=True)
+            all_spreads[:, :, 2] = self.spread(
                 SpreadTypes.RHO, minimum_gap, polar=True)
-            i = np.argmin(rtn[:, 0, :], axis=1)  # find min distances
+            i = np.argmin(all_spreads[:, 0, :], axis=1)  # find min distances
             all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
-            return rtn[all_rows, :, i]
-
+            rtn_polar = all_spreads[all_rows, :, i]
         else:
-            rtn = np.empty(self._xy_diff.shape)
+            rtn_polar = np.empty(self._xy_diff.shape)
 
             if displ_type is SpreadTypes.X:
-                rtn[:, 0] = -1*self.distances_xy[:, 0] + minimum_gap
+                rtn_polar[:, 0] = -1*self.distances_xy[:, 0] + minimum_gap
                 is_right = self._xy_diff[:, 0] > 0
-                rtn[is_right, 1] = 0  # move to right
-                rtn[~is_right, 1] = np.pi  # move to left
+                rtn_polar[is_right, 1] = 0  # move to right
+                rtn_polar[~is_right, 1] = np.pi  # move to left
             elif displ_type is SpreadTypes.Y:
-                rtn[:, 0] = -1*self.distances_xy[:, 1] + minimum_gap
+                rtn_polar[:, 0] = -1*self.distances_xy[:, 1] + minimum_gap
                 is_above = self._xy_diff[:, 1] > 0
-                rtn[is_above, 1] = geometry.NORTH  # move to top
-                rtn[~is_above, 1] = geometry.SOUTH  # move to bottom
+                rtn_polar[is_above, 1] = geometry.NORTH  # move to top
+                rtn_polar[~is_above, 1] = geometry.SOUTH  # move to bottom
             elif displ_type is SpreadTypes.RHO:
                 # RHO
-                rtn[:, 0] = self._spread_distances_rho(
+                rtn_polar[:, 0] = self._spread_distances_rho(
                     minimum_gap=minimum_gap)
-                rtn[:, 1] = self.rho
+                rtn_polar[:, 1] = self.rho
             else:
                 raise NotImplementedError()
 
-            # remove non overlapping relations
-            # set distance = 0, for all non override objects
-            rtn[rtn[:, 0] < 0, 0] = 0
-            if polar:
-                return geometry.polar2cartesian(rtn)
-            else:
-                return rtn
+        # remove non overlapping relations
+        # set distance = 0, for all non override objects
+        rtn_polar[rtn_polar[:, 0] < 0, 0] = 0
+        if not polar:
+            return geometry.polar2cartesian(rtn_polar)
+        else:
+            return rtn_polar
 
     def gather(self,
                displ_type: GatherTypes,
                minimum_gap: float = 0,
-               polar: bool = False) -> NDArray:
+               polar: bool = True) -> NDArray:
         """TODO"""
 
         if displ_type is GatherTypes.RHO:
