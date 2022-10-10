@@ -5,8 +5,9 @@ from enum import Enum, auto
 
 import numpy as np
 from numpy.typing import NDArray
+from sympy import im
 from .._lib import geometry
-
+from .._lib.exceptions import NoSolutionError
 
 class SpreadTypes(Enum):
     """Displacement Types for spreading objects """
@@ -181,6 +182,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                minimum_gap: float = 0,
                polar: bool = True) -> NDArray:
         """TODO"""
+        if np.any(~self.fits_inside()):
+            n = np.sum(~self.fits_inside())
+            raise NoSolutionError("Not all objects can be gathered, "
+                                  f"because some (n={n}) do not fit inside!")
 
         if displ_type is GatherTypes.RHO:
             # RHO
@@ -195,9 +200,6 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         else:
             raise NotImplementedError()
 
-        # remove non overlapping relations
-        # set distance = 0, for all non override objects
-        rtn[rtn[:, 0] < 0, 0] = 0
         if polar:
             return geometry.polar2cartesian(rtn)
         else:

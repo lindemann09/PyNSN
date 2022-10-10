@@ -44,7 +44,7 @@ print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
 
-displ = sr.spread(displ_type=sprel.SpreadTypes.SHORTEST,
+displ = sr.gather(displ_type=sprel.GatherTypes.RHO,
                   minimum_gap=0)
 print(displ)
 array_dot.xy = array_dot.xy + displ

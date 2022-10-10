@@ -224,7 +224,12 @@ class RectangleDot(ABCSpatialRelations):
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
     def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        td_xy = self.rect_sizes_div2 - self.dot_radii - minimum_gap
+        if self._a_relative_to_b:
+            # TODO not yet tested
+            dot_inrect_sizes_div2 = self.dot_radii / np.full((1,2), fill_value=2/np.sqrt(2))
+            td_xy = dot_inrect_sizes_div2 - self.rect_sizes_div2  - minimum_gap
+        else:
+            td_xy = self.rect_sizes_div2 - self.dot_radii - minimum_gap
         # Target distances along the line between centers, that is, calculate
         # Euclidean distances along the polar radius (rho) that
         # correspond to x and y distances along the cartesian x and y.
@@ -233,8 +238,9 @@ class RectangleDot(ABCSpatialRelations):
         td_center[:, 1] = np.abs(td_xy[:, 1] / np.sin(self.rho))
         # find shortest target distance (horizontal or vertical) and subtract
         # the actual distance between center
-        return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) * 0 + 50
-
+        #return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) * 0 + 50
+        return np.min(td_center, axis=1) \
+            - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
     def _gather_polar_shortest(self, minimum_gap: float = 0) -> NDArray:
         raise NotImplementedError()
