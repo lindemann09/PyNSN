@@ -2,14 +2,12 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from tkinter import dialog
 import numpy as np
 from numpy.typing import NDArray
 
 from .._lib import geometry
 
-from .._object_arrays.dot_array import BaseDotArray
-from .._object_arrays.rectangle_array import BaseRectangleArray
+from .._object_arrays import BaseDotArray, BaseRectangleArray
 from ._abc_spatial_relations import ABCSpatialRelations
 
 
@@ -21,7 +19,8 @@ class DotDot(ABCSpatialRelations):
                  b_dots: BaseDotArray,
                  a_relative_to_b: bool = False) -> None:
 
-        super().__init__(a_dots.xy, b_dots.xy,
+        super().__init__(a_array=a_dots,
+                         b_array=b_dots,
                          a_relative_to_b=a_relative_to_b)
         self._a_radii = a_dots.diameter / 2
         self._b_radii = b_dots.diameter / 2
@@ -72,7 +71,8 @@ class RectangleRectangle(ABCSpatialRelations):
                  b_rectangles: BaseRectangleArray,
                  a_relative_to_b: bool = True) -> None:
 
-        super().__init__(a_xy=a_rectangles.xy, b_xy=b_rectangles.xy,
+        super().__init__(a_array=a_rectangles,
+                         b_array=b_rectangles,
                          a_relative_to_b=a_relative_to_b)
         self.a_sizes_div2 = a_rectangles.sizes / 2
         self.b_sizes_div2 = b_rectangles.sizes / 2
@@ -135,6 +135,10 @@ class RectangleDot(ABCSpatialRelations):
                  b_dots: BaseDotArray,
                  a_relative_to_b: bool = True) -> None:
 
+        super().__init__(a_array=a_rectangles,
+                         b_array=b_dots,
+                         a_relative_to_b=a_relative_to_b)
+
         self.rect_xy = a_rectangles.xy
         self.rect_sizes_div2 = a_rectangles.sizes / 2
         self.dot_xy = b_dots.xy
@@ -153,10 +157,6 @@ class RectangleDot(ABCSpatialRelations):
         self.dot_radii = np.atleast_2d(dot_radii).T  # dot radii_column
 
         assert self.rect_xy.shape == self.dot_xy.shape
-
-        super().__init__(a_xy=self.rect_xy,
-                         b_xy=self.dot_xy,
-                         a_relative_to_b=a_relative_to_b)
 
     @property
     def distances_rho(self) -> NDArray:
@@ -226,8 +226,9 @@ class RectangleDot(ABCSpatialRelations):
     def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
         if self._a_relative_to_b:
             # TODO not yet tested
-            dot_inrect_sizes_div2 = self.dot_radii / np.full((1,2), fill_value=2/np.sqrt(2))
-            td_xy = dot_inrect_sizes_div2 - self.rect_sizes_div2  - minimum_gap
+            dot_inrect_sizes_div2 = self.dot_radii * \
+                np.full((1, 2), fill_value=1/np.sqrt(2))
+            td_xy = dot_inrect_sizes_div2 - self.rect_sizes_div2 - minimum_gap
         else:
             td_xy = self.rect_sizes_div2 - self.dot_radii - minimum_gap
         # Target distances along the line between centers, that is, calculate
@@ -238,7 +239,7 @@ class RectangleDot(ABCSpatialRelations):
         td_center[:, 1] = np.abs(td_xy[:, 1] / np.sin(self.rho))
         # find shortest target distance (horizontal or vertical) and subtract
         # the actual distance between center
-        #return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) * 0 + 50
+        # return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) * 0 + 50
         return np.min(td_center, axis=1) \
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
