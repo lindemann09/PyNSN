@@ -76,9 +76,13 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _gather_polar_shortest(self, minimum_gap: float = 0) -> NDArray:
+    def _gather_polar_cardinal(self, minimum_gap: float = 0) -> NDArray:
         """Polar coordinates of the shortest displacement that moves object B
-        into object A (or visa versa)"""
+        into object A (or visa versa)
+
+        nan if not possible TODO?
+
+        """
 
     ### generic methods ###
 
@@ -184,8 +188,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             # if objects moved out of rectangles area (that is, reference objects
             # are rectanglar) and if radial_displacement is not enforced
             # ----> cardinal displacements
-            rtn = self._gather_polar_shortest(
-                minimum_gap=minimum_gap)
+            rtn = self._gather_polar_cardinal(minimum_gap=minimum_gap)
+            print(rtn)
         else:
             # radial displacement
             rtn = np.empty(self._xy_diff.shape)

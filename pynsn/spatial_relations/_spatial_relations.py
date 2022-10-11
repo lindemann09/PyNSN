@@ -192,8 +192,8 @@ class RectangleDot(ABCSpatialRelations):
         else:
             # dots in rectangle
             radii2 = self.dot_radii * np.ones((1, 2))
-            # xy_distance + r < rect_size/2
-            return np.all(np.abs(self._xy_diff) + radii2.T < self.rect_sizes_div2,
+            # xy_difference + r < rect_size/2
+            return np.all(np.abs(self._xy_diff) + radii2 < self.rect_sizes_div2,
                           axis=1)
 
     def fits_inside(self, minimum_gap: float = 0) -> NDArray:
@@ -243,8 +243,36 @@ class RectangleDot(ABCSpatialRelations):
         return np.min(td_center, axis=1) \
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
-    def _gather_polar_shortest(self, minimum_gap: float = 0) -> NDArray:
-        raise NotImplementedError()
+    def _gather_polar_cardinal(self, minimum_gap: float = 0) -> NDArray:
+        if self._a_relative_to_b:
+            raise NotImplementedError()
+        else:
+            radii2 = self.dot_radii * np.ones((1, 2))
+            # xy_movement: neg numbers indicate no movement required, that is,
+            #   there already an overlap on that dimension
+            xy_movement = np.abs(self._xy_diff) - (
+                self.rect_sizes_div2 - radii2 - minimum_gap)
+            # set all negative numbers to nan
+            xy_movement[np.where(xy_movement <= 0)] = np.nan
+            # not possible, if both movement on both axis is required -> set to zero
+            idx = np.sum(xy_movement > 0, axis=1) == 2
+            xy_movement[idx, :] = 0
+
+            xy_rho = np.empty_like(xy_movement)
+            # directions
+            is_right = self._xy_diff[:, 0] > 0
+            xy_rho[is_right, 0] = np.pi  # move to left
+            xy_rho[~is_right, 0] = 0  # move to right
+            is_above = self._xy_diff[:, 1] > 0
+            xy_rho[is_above, 1] = geometry.SOUTH  # move to bottom
+            xy_rho[~is_above, 1] = geometry.NORTH
+
+            # find the movements (> 0)
+            i = np.argmax(xy_movement, axis=1)
+            all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
+            TODO not yet working
+            return np.array((xy_movement[all_rows, i],
+                             xy_rho[all_rows, i])).T
 
 
 class DotCoordinate(DotDot):

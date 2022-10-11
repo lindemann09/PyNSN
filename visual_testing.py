@@ -43,7 +43,7 @@ print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
 print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
-displ = sr.gather(minimum_gap=0, radial_displacements=True)
+displ = sr.gather(minimum_gap=0, radial_displacements=False)
 print(displ)
 array_dot.xy = array_dot.xy + displ
 
