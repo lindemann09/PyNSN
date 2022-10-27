@@ -65,10 +65,13 @@ def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
 
 def shapes_test_picture(shapes,  size=(500, 500),
                         filename="shapes_test.png",
-                        background_colour="#888888"):
+                        background_colour="#888888",
+                        reverse_order=False):
     """makes the shape test picture"""
 
     img = _Image.new("RGBA", size, color=background_colour)
+    if reverse_order:
+        shapes = reversed(shapes)
     for s in shapes:
         _draw_shape(img, s)
     img.save(filename)

@@ -67,42 +67,36 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        """Required displacement distance along the line between the object
-        centers (rho) to move object b inside object a.
-
-        All distances are positive. Zero indicates no displacement required.
-        NaN indicates that objects do not fit in each other.
+    def gather(self,
+               minimum_gap: float = 0,
+               return_polar_coordinates: bool = True) -> NDArray:
+        """Cartesian coordinates of the shortest displacement that moves object B
+        into object A ( or visa versa)
         """
-
-    @abstractmethod
-    def _gather_polar_cardinal(self, minimum_gap: float = 0) -> NDArray:
-        """Polar coordinates of the shortest displacement that moves object B
-        into object A (or visa versa)
-
-        nan if not possible TODO?
-
-        """
+        if np.any(~self.fits_inside()):
+            n = np.sum(~self.fits_inside())
+            raise NoSolutionError("Not all objects can be gathered, "
+                                  f"because some (n={n}) do not fit inside!")
 
     ### generic methods ###
 
     @property
     def is_above(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
-        above object center A (or visa versa if a_relative_to_b =True)."""
+        above object center A ( or visa versa if a_relative_to_b =True)."""
         return self._xy_diff[:, 0] > 0
 
     @property
     def is_right(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
-        right  of object center A (or visa versa if a_relative_to_b =True)."""
+        right  of object center A ( or visa versa if a_relative_to_b =True)."""
         return self._xy_diff[:, 1] > 0
 
     @property
     def rho(self) -> NDArray:
-        """Polar coordinate rho of the line between the object centers. That is,
-        position angles (in radians) of objects B relative to (viewed from) the
-        objects A (or visa versa if a_relative_to_b =True).
+        """Polar coordinate rho of the line between the object centers. That is ,
+        position angles ( in radians) of objects B relative to (viewed from) the
+        objects A ( or visa versa if a_relative_to_b =True).
         """
         if self._rho is None:
             self._rho = np.arctan2(self._xy_diff[:, 1],
@@ -112,26 +106,28 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def spread(self,
                minimum_gap: float = 0,
                radial_displacements: bool = False,
-               polar: bool = False) -> NDArray:
+               return_polar_coordinates: bool = False) -> NDArray:
         """The required displacement coordinates of objects to have the minimum
         distance.
 
         If objects move out of a
-            * circular reference area: displacements will be radial, that is,
+            * circular reference area: displacements will be radial, that is ,
               along the axes of the object center.
             * rectangular reference area: displacements will be the shortest
-              displacements along the one of the cardinal axis (x or y), except
+              displacements along the one of the cardinal axis(x or y), except
               `radial_displacements` is set to True.
 
         Positive distance values indicate overlap and thus a required
         displacement in the direction rho to remove overlaps. Negative distance
         values indicate that the required displacement involves to move objects
-        toward each other (not overlapping objects).
+        toward each other(not overlapping objects).
 
         use: required_displacement to get cartesian coordinates
 
-        returns 2-d array (distance, angle)
+        returns 2-d array(distance, angle)
         """
+        # FIXME A-relative-to-b not implemented
+        # FIXME check logic of radial displacement
 
         if not radial_displacements and \
             ((not self._a_relative_to_b and self._is_rectangle[0]) or
@@ -167,37 +163,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         # remove non overlapping relations
         # set distance = 0, for all non override objects
         rtn_polar[rtn_polar[:, 0] < 0, 0] = 0
-        if not polar:
+        if not return_polar_coordinates:
             return geometry.polar2cartesian(rtn_polar)
         else:
             return rtn_polar
-
-    def gather(self,
-               minimum_gap: float = 0,
-               radial_displacements: bool = False,
-               polar: bool = True) -> NDArray:
-        """TODO"""
-        if np.any(~self.fits_inside()):
-            n = np.sum(~self.fits_inside())
-            raise NoSolutionError("Not all objects can be gathered, "
-                                  f"because some (n={n}) do not fit inside!")
-
-        if not radial_displacements and \
-            ((not self._a_relative_to_b and self._is_rectangle[0]) or
-             (self._a_relative_to_b and not self._is_rectangle[1])):
-            # if objects moved out of rectangles area (that is, reference objects
-            # are rectanglar) and if radial_displacement is not enforced
-            # ----> cardinal displacements
-            rtn = self._gather_polar_cardinal(minimum_gap=minimum_gap)
-            print(rtn)
-        else:
-            # radial displacement
-            rtn = np.empty(self._xy_diff.shape)
-            rtn[:, 0] = self._gather_distances_rho(
-                minimum_gap=minimum_gap)
-            rtn[:, 1] = self.rho
-
-        if polar:
-            return geometry.polar2cartesian(rtn)
-        else:
-            return rtn

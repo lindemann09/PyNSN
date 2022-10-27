@@ -61,22 +61,21 @@ def triu_nan(m: NDArray, k: int = 0) -> NDArray:
     return m + np.tril(np.full(m.shape, np.nan), k=k-1)
 
 
-def find_value_rowwise(array2d: NDArray, values: NDArray) -> Tuple[NDArray, NDArray]:
-    """returns array the indices (row, column) with that value in each row.
-    If more than one cell in a row contains the value, select randomly one
-
-    function ignores nans
+def find_one_rowwise_true(boolean_array2d: NDArray) -> Tuple[NDArray, NDArray]:
+    """returns list of the indices (row, column) with one true cell in each row.
+    That is, if more than one cell in a row contains True, the function select
+    randomly one
 
     returns idx_row, idx_column
     """
-    # (n=rect_id, 2) array of index of "corner with min_dist" (one row -> one cell/corner)
-    idx_value = np.vstack(np.nonzero(array2d == values)).T
-    # Problem: one row could have min values
+    # (n=rect_id, 2) array of index  (one row -> one cell)
+    idx_value = np.vstack(np.nonzero(boolean_array2d)).T
+    # Problem: one row could have the values multiple times
     #   --> choose randomly one
     np.random.shuffle(idx_value)  # shuffle rows
     # return only first unique id (ui-index) (Note: set is sorted)
-    _, ui = np.unique(idx_value[:, 0], return_index=True)
-    return idx_value[ui, 0], idx_value[ui, 1]
+    _, ui_idx = np.unique(idx_value[:, 0], return_index=True)
+    return idx_value[ui_idx, 0], idx_value[ui_idx, 1]
 
 
 def make_vector_fixed_length(values: Optional[ArrayLike], length: int):

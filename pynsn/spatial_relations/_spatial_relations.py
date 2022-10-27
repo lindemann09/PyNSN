@@ -2,8 +2,12 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
+
+from pynsn._lib import np_tools
+
 
 from .._lib import geometry
 
@@ -127,6 +131,27 @@ class RectangleRectangle(ABCSpatialRelations):
             rect_sizes_div2=np.full(self.a_sizes_div2.shape, minimum_gap))
         return -1*self.distances_rho + minimum_dist_rho
 
+    def gather(self, minimum_gap: float = 0,
+               return_polar_coordinates: bool = True) -> NDArray:
+        # FIXME not tested
+        super().gather(minimum_gap, return_polar_coordinates)  # raise error if not possible
+
+        if self._a_relative_to_b:
+            xy_movement = np.abs(self._xy_diff) - (
+                self.b_sizes_div2 - self.a_sizes_div2 - minimum_gap)
+        else:
+            xy_movement = np.abs(self._xy_diff) - (
+                self.a_sizes_div2 - self.b_sizes_div2 - minimum_gap)
+
+        # remove negative distances
+        xy_movement[np.where(xy_movement <= 0)] = 0
+        # adjust direction
+        xy_movement = xy_movement * np.sign(self._xy_diff) * -1
+        if return_polar_coordinates:
+            return geometry.cartesian2polar(xy_movement)
+        else:
+            return xy_movement
+
 
 class RectangleDot(ABCSpatialRelations):
 
@@ -139,6 +164,7 @@ class RectangleDot(ABCSpatialRelations):
                          b_array=b_dots,
                          a_relative_to_b=a_relative_to_b)
 
+        self.__dot_corner_relations = None
         self.rect_xy = a_rectangles.xy
         self.rect_sizes_div2 = a_rectangles.sizes / 2
         self.dot_xy = b_dots.xy
@@ -178,17 +204,25 @@ class RectangleDot(ABCSpatialRelations):
                 - self.dot_radii
         return self._distances_xy
 
-    def is_inside(self) -> NDArray:
-        if self._a_relative_to_b:
-            # rectangles in dots
+    @property
+    def _dot_corner_relations(self) -> Tuple[NDArray, NDArray]:
+        if self.__dot_corner_relations is None:
             xy_dist_crn = geometry.corners(rect_xy=self.rect_xy,
                                            rect_sizes_div2=self.rect_sizes_div2,
                                            lt_rb_only=False) \
                 - np.atleast_3d(self.dot_xy)  # type: ignore
-            dot_corner_distances = np.hypot(xy_dist_crn[:, 0, :],
-                                            xy_dist_crn[:, 1, :])  # (n, 4)
-            return np.all(dot_corner_distances <= self.dot_radii, axis=1)
+            dist = np.hypot(xy_dist_crn[:, 0, :],
+                            xy_dist_crn[:, 1, :]) - self.dot_radii  # (n, 4)
+            rho = np.arctan2(xy_dist_crn[:, 1, :],
+                             xy_dist_crn[:, 0, :])  # (n, 4)
+            self.__dot_corner_relations = (dist, rho)
 
+        return self.__dot_corner_relations
+
+    def is_inside(self) -> NDArray:
+        if self._a_relative_to_b:
+            # rectangles in dots
+            return np.all(self._dot_corner_relations[0] <= self.dot_radii, axis=1)
         else:
             # dots in rectangle
             radii2 = self.dot_radii * np.ones((1, 2))
@@ -223,56 +257,40 @@ class RectangleDot(ABCSpatialRelations):
         return np.min(td_center, axis=1) \
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
-    def _gather_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        if self._a_relative_to_b:
-            # TODO not yet tested
-            dot_inrect_sizes_div2 = self.dot_radii * \
-                np.full((1, 2), fill_value=1/np.sqrt(2))
-            td_xy = dot_inrect_sizes_div2 - self.rect_sizes_div2 - minimum_gap
-        else:
-            td_xy = self.rect_sizes_div2 - self.dot_radii - minimum_gap
-        # Target distances along the line between centers, that is, calculate
-        # Euclidean distances along the polar radius (rho) that
-        # correspond to x and y distances along the cartesian x and y.
-        td_center = np.empty_like(td_xy)
-        td_center[:, 0] = np.abs(td_xy[:, 0] / np.cos(self.rho))
-        td_center[:, 1] = np.abs(td_xy[:, 1] / np.sin(self.rho))
-        # find shortest target distance (horizontal or vertical) and subtract
-        # the actual distance between center
-        # return np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1]) * 0 + 50
-        return np.min(td_center, axis=1) \
-            - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
+    def gather(self, minimum_gap: float = 0,
+               return_polar_coordinates: bool = False) -> NDArray:
+        super().gather(minimum_gap, return_polar_coordinates)  # raise error if not possible
 
-    def _gather_polar_cardinal(self, minimum_gap: float = 0) -> NDArray:
         if self._a_relative_to_b:
-            raise NotImplementedError()
+            # find fares distances (and only one, if multiple)
+            maxima = np.atleast_2d(
+                np.max(self._dot_corner_relations[0], axis=1)).T * np.ones((1, 4))
+            idx = np_tools.find_one_rowwise_true(
+                self._dot_corner_relations[0] == maxima)
+
+            move_polar = np.empty_like(self.rect_xy)
+            move_polar[:, 0] = self._dot_corner_relations[0][idx] + minimum_gap
+            # rho : opposite direction
+            move_polar[:, 1] = self._dot_corner_relations[1][idx] + np.pi
+            if return_polar_coordinates:
+                return move_polar
+            else:
+                return geometry.polar2cartesian(move_polar)
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             # xy_movement: neg numbers indicate no movement required, that is,
-            #   there already an overlap on that dimension
+            #   there already full overlap on that dimension
             xy_movement = np.abs(self._xy_diff) - (
                 self.rect_sizes_div2 - radii2 - minimum_gap)
-            # set all negative numbers to nan
-            xy_movement[np.where(xy_movement <= 0)] = np.nan
-            # not possible, if both movement on both axis is required -> set to zero
-            idx = np.sum(xy_movement > 0, axis=1) == 2
-            xy_movement[idx, :] = 0
+            # remove negative distances
+            xy_movement[np.where(xy_movement <= 0)] = 0
+            # adjust direction
+            xy_movement = xy_movement * np.sign(self._xy_diff) * -1
 
-            xy_rho = np.empty_like(xy_movement)
-            # directions
-            is_right = self._xy_diff[:, 0] > 0
-            xy_rho[is_right, 0] = np.pi  # move to left
-            xy_rho[~is_right, 0] = 0  # move to right
-            is_above = self._xy_diff[:, 1] > 0
-            xy_rho[is_above, 1] = geometry.SOUTH  # move to bottom
-            xy_rho[~is_above, 1] = geometry.NORTH
-
-            # find the movements (> 0)
-            i = np.argmax(xy_movement, axis=1)
-            all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
-            TODO not yet working
-            return np.array((xy_movement[all_rows, i],
-                             xy_rho[all_rows, i])).T
+            if return_polar_coordinates:
+                return geometry.cartesian2polar(xy_movement)
+            else:
+                return xy_movement
 
 
 class DotCoordinate(DotDot):
