@@ -137,20 +137,17 @@ class RectangleRectangle(ABCSpatialRelations):
         super().gather(minimum_gap, return_polar_coordinates)  # raise error if not possible
 
         if self._a_relative_to_b:
-            xy_movement = np.abs(self._xy_diff) - (
-                self.b_sizes_div2 - self.a_sizes_div2 - minimum_gap)
+            return _gather_rectangles(xy_diff=self._xy_diff,
+                                      a_sizes_div2=self.b_sizes_div2,
+                                      b_sizes_div2=self.a_sizes_div2,
+                                      minimum_gap=minimum_gap,
+                                      return_polar_coordinates=return_polar_coordinates)
         else:
-            xy_movement = np.abs(self._xy_diff) - (
-                self.a_sizes_div2 - self.b_sizes_div2 - minimum_gap)
-
-        # remove negative distances
-        xy_movement[np.where(xy_movement <= 0)] = 0
-        # adjust direction
-        xy_movement = xy_movement * np.sign(self._xy_diff) * -1
-        if return_polar_coordinates:
-            return geometry.cartesian2polar(xy_movement)
-        else:
-            return xy_movement
+            return _gather_rectangles(xy_diff=self._xy_diff,
+                                      a_sizes_div2=self.a_sizes_div2,
+                                      b_sizes_div2=self.b_sizes_div2,
+                                      minimum_gap=minimum_gap,
+                                      return_polar_coordinates=return_polar_coordinates)
 
 
 class RectangleDot(ABCSpatialRelations):
@@ -278,19 +275,11 @@ class RectangleDot(ABCSpatialRelations):
                 return geometry.polar2cartesian(move_polar)
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
-            # xy_movement: neg numbers indicate no movement required, that is,
-            #   there already full overlap on that dimension
-            xy_movement = np.abs(self._xy_diff) - (
-                self.rect_sizes_div2 - radii2 - minimum_gap)
-            # remove negative distances
-            xy_movement[np.where(xy_movement <= 0)] = 0
-            # adjust direction
-            xy_movement = xy_movement * np.sign(self._xy_diff) * -1
-
-            if return_polar_coordinates:
-                return geometry.cartesian2polar(xy_movement)
-            else:
-                return xy_movement
+            return _gather_rectangles(xy_diff=self._xy_diff,
+                                      a_sizes_div2=self.rect_sizes_div2,
+                                      b_sizes_div2=radii2,
+                                      minimum_gap=minimum_gap,
+                                      return_polar_coordinates=return_polar_coordinates)
 
 
 class DotCoordinate(DotDot):
@@ -316,3 +305,22 @@ class RectangleCoordinate(RectangleRectangle):
                                      sizes=np.zeros(b_coord_xy.shape))
         super().__init__(a_rectangles=a_rectangles, b_rectangles=rects_b,
                          a_relative_to_b=a_relative_to_b)
+
+
+def _gather_rectangles(xy_diff: NDArray,
+                       a_sizes_div2:  NDArray, b_sizes_div2: NDArray,
+                       minimum_gap: float, return_polar_coordinates: bool):
+    # helper: calculates the required displacement to move rect b into rect a
+
+    # xy_movement: neg numbers indicate no movement required, that is,
+    #   there already full overlap on that dimension
+    xy_movement = np.abs(xy_diff) - (
+        a_sizes_div2 - b_sizes_div2 - minimum_gap)  # type: ignore
+    # remove negative distances
+    xy_movement[np.where(xy_movement <= 0)] = 0
+    # adjust direction
+    xy_movement = xy_movement * np.sign(xy_diff) * -1
+    if return_polar_coordinates:
+        return geometry.cartesian2polar(xy_movement)
+    else:
+        return xy_movement
