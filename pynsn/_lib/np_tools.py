@@ -53,15 +53,15 @@ def round2(arr: NDArray, decimals: int,
         return arr
 
 
-def triu_nan(m: NDArray, k: int = 0) -> NDArray:
+def triu_nan(arr: NDArray, k: int = 0) -> NDArray:
     """helper function
     upper triangular but nan instead of zeros (as in numpy's original function,
     see docu numpy.triu)
     """
-    return m + np.tril(np.full(m.shape, np.nan), k=k-1)
+    return arr + np.tril(np.full(arr.shape, np.nan), k=k-1)
 
 
-def find_one_rowwise_true(boolean_array2d: NDArray) -> Tuple[NDArray, NDArray]:
+def find_rowwise_one_true(boolean_array2d: NDArray) -> Tuple[NDArray, NDArray]:
     """returns list of the indices (row, column) with one true cell in each row.
     That is, if more than one cell in a row contains True, the function select
     randomly one
@@ -95,3 +95,14 @@ def make_vector_fixed_length(values: Optional[ArrayLike], length: int):
                          f"or n_elements ({length})")
 
     return values
+
+
+def abs_maximum(arr, axis=None):
+    """returns the values with the maximum absolute values
+
+    Note: function avoids call of numpy.abs() for efficiency reasons
+    https://stackoverflow.com/questions/17794266/how-to-get-the-highest-element-in-absolute-value-in-a-numpy-matrix
+    """
+    amax = np.max(arr, axis=axis)
+    amin = np.min(arr, axis=axis)
+    return np.where(-amin > amax, amin, amax)
