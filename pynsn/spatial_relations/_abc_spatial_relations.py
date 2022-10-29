@@ -35,6 +35,12 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @property
     @abstractmethod
+    def distances(self) -> NDArray:
+        """Shortest Euclidean distances between objects. Negative distances indicate
+        overlap."""
+
+    @property
+    @abstractmethod
     def distances_rho(self) -> NDArray:
         """Euclidean distances between objects along the line between the two
         object center. Negative distances indicate overlap."""

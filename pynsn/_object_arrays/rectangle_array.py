@@ -29,11 +29,13 @@ class BaseRectangleArray:
             self.sizes = np.atleast_2d(sizes)
             self.check()
 
-    def check(self):
-        """raises value error if badly shaped data"""
+    def check(self) -> None:
         if self.xy.shape != self.sizes.shape:
             raise ValueError("Badly shaped data: " +
                              "xy has not the same shape as sizes array")
+
+    def n_objects(self) -> int:
+        return len(self.xy)
 
 
 class RectangleArray(BaseRectangleArray, ABCObjectArray):

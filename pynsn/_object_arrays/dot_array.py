@@ -1,5 +1,4 @@
 from __future__ import annotations
-from ast import Str
 
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
@@ -24,11 +23,13 @@ class BaseDotArray:
             self.diameter = np.atleast_1d(diameter).astype(float)
             self.check()
 
-    def check(self):
-        """raises value error if badly shaped data"""
+    def check(self) -> None:
         if self.xy.shape[0] != len(self.diameter):
             raise ValueError("Badly shaped data: " +
                              "xy has not the same length as item_diameter")
+
+    def n_objects(self) -> int:
+        return len(self.xy)
 
 
 class DotArray(BaseDotArray, ABCObjectArray):

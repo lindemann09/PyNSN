@@ -23,6 +23,10 @@ class ABCObjectArray(metaclass=ABCMeta):
         """raises value error if badly shaped data"""
 
     @abstractmethod
+    def n_objects(self) -> None:
+        """number of objects"""
+
+    @abstractmethod
     def set_attributes(self, attributes: Optional[ArrayLike]) -> None:
         """Set all attributes
 
@@ -33,6 +37,7 @@ class ABCObjectArray(metaclass=ABCMeta):
     @abstractmethod
     def np_append(self) -> None:
         """ """
+
     @abstractmethod
     def delete(self, index: IntOVector) -> None:
         """ """
@@ -69,7 +74,7 @@ class ABCObjectArray(metaclass=ABCMeta):
             int_type: numpy int type (default=numpy.int16)
         """
 
-    @ abstractmethod
+    @abstractmethod
     def iter(self, indices: Optional[IntOVector] = None) -> Iterator:
         """iterate over all or a part of the objects
 
@@ -84,7 +89,7 @@ class ABCObjectArray(metaclass=ABCMeta):
         >>>    print(obj)
         """
 
-    @ abstractmethod
+    @abstractmethod
     def find(self, diameter: Optional[float] = None,
              attribute: Any = None) -> List[int]:
         """Search for an object
@@ -97,12 +102,12 @@ class ABCObjectArray(metaclass=ABCMeta):
             indices of found objects
         """
 
-    @ abstractmethod
+    @abstractmethod
     def to_dict(self) -> dict:
         """dict representation of the object area"""
 
-    @ classmethod
-    @ abstractmethod
+    @classmethod
+    @abstractmethod
     def from_dict(cls, the_dict: Dict[str, Any]):
         """read Dot collection from dict"""
 

@@ -3,6 +3,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from itertools import combinations
+from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,85 +12,47 @@ from .._object_arrays import BaseDotArray, BaseRectangleArray
 from ._spatial_relations import DotDot, RectangleRectangle
 
 
-class CombinationMatrix(object):
-    """Symmetric combination matrix
-    helper class"""
+class SpatRelMatrix():
 
-    def __init__(self, n_items: int) -> None:
-        idx = np.array(list(combinations(range(n_items), r=2)))
-        self.idx_a = idx[:, 0]
-        self.idx_b = idx[:, 1]
+    def __init__(self, object_array: Union[BaseDotArray, BaseRectangleArray]):
 
-    @property
-    def n_combinations(self) -> float:
-        return len(self.idx_a)
+        if not isinstance(object_array, (BaseRectangleArray, BaseDotArray)):
+            raise TypeError(f"Spatial relations matrix requires for BaseRectangleArray "
+                            f"or BaseDotArray, but not {type(object_array)}.")
 
-    def get_matrix(self, values) -> NDArray:
+        self._ix = np.array(
+            list(combinations(range(len(object_array.xy)), r=2)))
+        if isinstance(object_array, BaseRectangleArray):
+
+            rect_a = BaseRectangleArray(xy=object_array.xy[self._ix[0], :],
+                                        sizes=object_array.sizes[self._ix[0], :])
+            rect_b = BaseRectangleArray(xy=object_array.xy[self._ix[1], :],
+                                        sizes=object_array.sizes[self._ix[1], :])
+            self._rr = RectangleRectangle(a_rectangles=rect_a,
+                                          b_rectangles=rect_b)
+        elif isinstance(object_array, BaseDotArray):
+            dots_a = BaseDotArray(xy=object_array.xy[self._ix[0], :],
+                                  diameter=object_array.diameter[self._ix[0], :])
+            dots_b = BaseDotArray(xy=object_array.xy[self._ix[1], :],
+                                  diameter=object_array.diameter[self._ix[1], :])
+            self._rr = DotDot(a_dots=dots_a, b_dots=dots_b)
+
+    def _matrix(self, values) -> NDArray:
         """returns matrix with [idx_a, idx_b, values, ...]
-
         """
-        idx = np.array([self.idx_a, self.idx_b]).T
         if values.ndim == 1:
             values = values.reshape((len(values), 1))
-        return np.append(idx, values, axis=1)
-
-    def get_squared_matrix(self, values, both_triangle=True) -> NDArray:
-        """returns combination matrix with values
-
-        """
-        rtn = np.full((len(self.idx_a), len(self.idx_a)), np.nan)
-        rtn[self.idx_a, self.idx_b] = values
-        if both_triangle:
-            rtn[self.idx_b, self.idx_a] = values
-        return rtn
-
-
-class MatrixRectangleSpatRel(CombinationMatrix):
-
-    def __init__(self, xy: NDArray, sizes: NDArray):
-        super().__init__(n_items=xy.shape[0])
-        rect_a = BaseRectangleArray(xy=xy[self.idx_a, :],
-                                    sizes=sizes[self.idx_a, :])
-        rect_b = BaseRectangleArray(xy=xy[self.idx_b, :],
-                                    sizes=sizes[self.idx_b, :])
-        self._rr = RectangleRectangle(a_rectangles=rect_a,
-                                      b_rectangles=rect_b)
+        return np.append(self._ix, values, axis=1)
 
     def distances(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.xy_distances())
+        """Return matrix with distance between the objects"""
+        return self._matrix(values=self._rr.distances)
 
-    def spatial_relations(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.spatial_relations())
+    def distances_rho(self) -> NDArray:
+        return self._matrix(values=self._rr.distances_rho)
 
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        rtn = self.get_matrix(
-            values=self._rr.spread_cartesian(minimum_distance))
-        return rtn[~np.isnan(rtn[:, 2]), :]
+    def distances_xy(self) -> NDArray:
+        return self._matrix(values=self._rr.distances_xy)
 
-
-class MatrixDotSpatRel(CombinationMatrix):
-
-    def __init__(self, xy: NDArray, diameter: NDArray):
-        super().__init__(n_items=xy.shape[0])
-        dots_a = BaseDotArray(xy=xy[self.idx_a, :],
-                              diameter=diameter[self.idx_a, :])
-        dots_b = BaseDotArray(xy=xy[self.idx_b, :],
-                              diameter=diameter[self.idx_b, :])
-        self._rr = DotDot(a_dots=dots_a, b_dots=dots_b)
-
-    def distances(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.distances_rho)
-
-    def spatial_relations(self) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        return self.get_matrix(values=self._rr.spatial_relations())
-
-    def required_displacements(self, minimum_distance: float = 0) -> NDArray:
-        """Return matrix with distance between the rectangles"""
-        rtn = self.get_matrix(
-            values=self._rr.spread_cartesian(minimum_distance))
-        return rtn[~np.isnan(rtn[:, 2]), :]
+    def spread(self) -> NDArray:
+        return self._matrix(values=self._rr.spread())

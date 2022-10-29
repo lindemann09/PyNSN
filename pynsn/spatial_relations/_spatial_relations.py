@@ -2,6 +2,7 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from typing import Union
 import numpy as np
 from numpy.typing import NDArray
 
@@ -37,6 +38,10 @@ class DotDot(ABCSpatialRelations):
             return self._a_radii <= self._b_radii - minimum_gap
         else:
             return self._b_radii <= self._a_radii - minimum_gap
+
+    @property
+    def distances(self) -> NDArray:
+        raise NotImplementedError()
 
     @property
     def distances_rho(self) -> NDArray:
@@ -105,6 +110,10 @@ class RectangleRectangle(ABCSpatialRelations):
                 (self.a_sizes_div2 + self.b_sizes_div2)
 
         return self._distances_xy
+
+    @property
+    def distances(self) -> NDArray:
+        raise NotImplementedError()
 
     def is_inside(self) -> NDArray:
         if self._a_relative_to_b:
@@ -211,6 +220,10 @@ class RectangleDot(ABCSpatialRelations):
             self._distances_xy = np.abs(self._xy_diff) - self.rect_sizes_div2 \
                 - self.dot_radii
         return self._distances_xy
+
+    @property
+    def distances(self) -> NDArray:
+        raise NotImplementedError()
 
     @property
     def _corner_rel(self) -> NDArray:
@@ -336,7 +349,7 @@ class RectangleCoordinate(RectangleRectangle):
 
 def _gather_rectangles(xy_diff: NDArray,
                        a_sizes_div2:  NDArray, b_sizes_div2: NDArray,
-                       minimum_gap: float):
+                       minimum_gap: float) -> NDArray:
     """helper: calculates the required displacement to move rect b into rect a
     """
     # xy_movement: neg numbers indicate no movement required, that is,
@@ -347,3 +360,33 @@ def _gather_rectangles(xy_diff: NDArray,
     xy_movement[np.where(xy_movement <= 0)] = 0
     # adjust direction
     return xy_movement * np.sign(xy_diff) * -1
+
+
+def relations(a_array: Union[NDArray, BaseDotArray, BaseRectangleArray],
+              b_array: Union[NDArray, BaseDotArray, BaseRectangleArray],
+              a_relative_to_b: bool = False) -> ABCSpatialRelations:
+    """returns the required objects to calculate the spatial relations between
+    array_a and array_b.
+    """
+    if isinstance(a_array, BaseDotArray):
+        if isinstance(b_array, BaseDotArray):
+            return DotDot(a_array, b_array, a_relative_to_b)
+        elif isinstance(b_array, BaseRectangleArray):
+            return RectangleDot(b_array, a_array, not a_relative_to_b)
+        elif isinstance(b_array, np.ndarray):
+            return DotCoordinate(a_array, b_array, a_relative_to_b)
+    elif isinstance(a_array, BaseRectangleArray):
+        if isinstance(b_array, BaseDotArray):
+            return RectangleDot(a_array, b_array, a_relative_to_b)
+        elif isinstance(b_array, BaseRectangleArray):
+            return RectangleRectangle(b_array, a_array, a_relative_to_b)
+        elif isinstance(b_array, np.ndarray):
+            return RectangleCoordinate(a_array, b_array, a_relative_to_b)
+    elif isinstance(a_array, np.ndarray):
+        if isinstance(b_array, BaseDotArray):
+            return DotCoordinate(b_array, a_array, not a_relative_to_b)
+        elif isinstance(b_array, BaseRectangleArray):
+            return RectangleCoordinate(b_array, a_array, not a_relative_to_b)
+
+    raise TypeError(f"Spatial relations class for {type(a_array)} and "
+                    f"{type(a_array)} does not exist.")
