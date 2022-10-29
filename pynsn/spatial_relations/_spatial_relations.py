@@ -5,11 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 import numpy as np
 from numpy.typing import NDArray
 
-from pynsn._lib import np_tools
-
-
-from .._lib import geometry
-
+from .._lib import geometry, np_tools
 from .._object_arrays import BaseDotArray, BaseRectangleArray
 from ._abc_spatial_relations import ABCSpatialRelations
 
@@ -63,11 +59,24 @@ class DotDot(ABCSpatialRelations):
         else:
             return self.distances_rho < -2 * self._b_radii
 
-    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
-        return -1*self.distances_rho + minimum_gap
+    def _spread_distances_rho(self, minimum_gap: float) -> NDArray:
+        return -1 * self.distances_rho + minimum_gap
 
-    def _gather_xy_displacement(self, minimum_gap: float = 0) -> NDArray:
-        raise NotImplementedError()  # FIXME
+    def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
+        """ FIXME not tested"""
+        displ_polar = np.empty_like(self._xy_diff)
+        displ_polar[:, 1] = np.pi + self.rho
+        if self._a_relative_to_b:
+            displ_polar[:, 0] = self.distances_rho + \
+                minimum_gap + 2 * self._a_radii
+        else:
+            displ_polar[:, 1] = self.distances_rho + \
+                minimum_gap + 2 * self._b_radii
+
+        if polar:
+            return displ_polar
+        else:
+            return geometry.polar2cartesian(displ_polar)
 
 
 class RectangleRectangle(ABCSpatialRelations):
@@ -126,26 +135,30 @@ class RectangleRectangle(ABCSpatialRelations):
 
         return self._distances_rho
 
-    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float) -> NDArray:
         # calc distance_along_line between rect center
         minimum_dist_rho = geometry.center_edge_distance(
             angles=self.rho,
             rect_sizes_div2=np.full(self.a_sizes_div2.shape, minimum_gap))
         return -1*self.distances_rho + minimum_dist_rho
 
-    def _gather_xy_displacement(self, minimum_gap: float = 0) -> NDArray:
+    def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ FIXME not tested"""
 
         if self._a_relative_to_b:
-            return _gather_rectangles(xy_diff=self._xy_diff,
-                                      a_sizes_div2=self.b_sizes_div2,
-                                      b_sizes_div2=self.a_sizes_div2,
-                                      minimum_gap=minimum_gap)
+            xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
+                                             a_sizes_div2=self.b_sizes_div2,
+                                             b_sizes_div2=self.a_sizes_div2,
+                                             minimum_gap=minimum_gap)
         else:
-            return _gather_rectangles(xy_diff=self._xy_diff,
-                                      a_sizes_div2=self.a_sizes_div2,
-                                      b_sizes_div2=self.b_sizes_div2,
-                                      minimum_gap=minimum_gap)
+            xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
+                                             a_sizes_div2=self.a_sizes_div2,
+                                             b_sizes_div2=self.b_sizes_div2,
+                                             minimum_gap=minimum_gap)
+        if polar:
+            return geometry.cartesian2polar(xy_movement)
+        else:
+            return xy_movement
 
 
 class RectangleDot(ABCSpatialRelations):
@@ -252,7 +265,7 @@ class RectangleDot(ABCSpatialRelations):
                 <= self.rect_sizes_div2 - minimum_gap
         return np.all(sml, axis=1)
 
-    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float) -> NDArray:
         # Target x and y distance between center to have no overlap at either
         # X or y axes  (TODO this procedure overestimate when close to corner)
         td_xy = self.rect_sizes_div2 + self.dot_radii + minimum_gap
@@ -267,28 +280,33 @@ class RectangleDot(ABCSpatialRelations):
         return np.min(td_center, axis=1) \
             - np.hypot(self._xy_diff[:, 0], self._xy_diff[:, 1])
 
-    def _gather_xy_displacement(self, minimum_gap: float = 0) -> NDArray:
+    def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ """
         if self._a_relative_to_b:
             # corner relations to polar (n_corner, xy)
-            polar = self._corner_rel
+            polar_rel = self._corner_rel
             # find those requiring a replacement
-            i_r, i_c = np.nonzero(~np.isnan(polar[:, 0, :]))
+            i_r, i_c = np.nonzero(~np.isnan(polar_rel[:, 0, :]))
             # polar-to-cartesian for each required corner movement
-            xy_move_corner = np.zeros_like(polar)
-            rho = np.pi + polar[i_r, 1, i_c]  # move always in opposite direct
-            dist = polar[i_r, 0, i_c] + minimum_gap
+            xy_move_corner = np.zeros_like(polar_rel)
+            # move always in opposite direct
+            rho = np.pi + polar_rel[i_r, 1, i_c]
+            dist = polar_rel[i_r, 0, i_c] + minimum_gap
             xy_move_corner[i_r, 0, i_c] = dist * np.cos(rho)
             xy_move_corner[i_r, 1, i_c] = dist * np.sin(rho)
             # find largest x and y movement required for each rect
             #   -> abs minimum across corners: (n, 2):
-            return np_tools.abs_maximum(xy_move_corner, axis=2)
+            xy_movement = np_tools.abs_maximum(xy_move_corner, axis=2)
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
-            return _gather_rectangles(xy_diff=self._xy_diff,
-                                      a_sizes_div2=self.rect_sizes_div2,
-                                      b_sizes_div2=radii2,
-                                      minimum_gap=minimum_gap)
+            xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
+                                             a_sizes_div2=self.rect_sizes_div2,
+                                             b_sizes_div2=radii2,
+                                             minimum_gap=minimum_gap)
+        if polar:
+            return geometry.cartesian2polar(xy_movement)
+        else:
+            return xy_movement
 
 
 class DotCoordinate(DotDot):

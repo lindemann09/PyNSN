@@ -37,8 +37,7 @@ a = list(array_rect.iter()) + list(array_dot.iter())
 shapes_test_picture(a, reverse_order=True)
 
 sr = sprel.RectangleDot(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
-print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n"
-      f"displ_dist: {sr._spread_distances_rho()}")
+print(f"dist: {sr.distances_rho}\nangle {sr.rho}\nis_inside: {sr.is_inside()}\n")
 
 print("  ")
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")

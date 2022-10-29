@@ -37,7 +37,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @abstractmethod
     def distances_rho(self) -> NDArray:
         """Euclidean distances between objects along the line between the two
-        object center."""
+        object center. Negative distances indicate overlap."""
 
     @property
     @abstractmethod
@@ -52,11 +52,11 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def fits_inside(self, minimum_gap: float = 0) -> NDArray:
+    def fits_inside(self, minimum_gap: float) -> NDArray:
         """True if object B fits potentially inside object a (or visa versa)"""
 
     @abstractmethod
-    def _spread_distances_rho(self, minimum_gap: float = 0) -> NDArray:
+    def _spread_distances_rho(self, minimum_gap: float) -> NDArray:
         """Required displacement distance along the line between the object
         centers (rho) to have the minimum distance.
 
@@ -67,7 +67,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _gather_xy_displacement(self, minimum_gap: float = 0) -> NDArray:
+    def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """Cartesian coordinates of the shortest required displacement that
         moves object B into object A ( or visa versa)
         """
@@ -97,20 +97,16 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                                    self._xy_diff[:, 0])
         return self._rho
 
-    def gather(self, minimum_gap: float = 0,
-               return_polar_coordinates: bool = False) -> NDArray:
+    def gather(self, minimum_gap: float = 0, polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to moves object B
         into object A ( or visa versa)
         """
-        if np.any(~self.fits_inside()):
-            n = np.sum(~self.fits_inside())
+        if np.any(~self.fits_inside(minimum_gap)):
+            n = np.sum(~self.fits_inside(minimum_gap))
             raise NoSolutionError("Not all objects can be gathered, "
                                   f"because some (n={n}) do not fit inside!")
-        xy_movement = self._gather_xy_displacement(minimum_gap)
-        if return_polar_coordinates:
-            return geometry.cartesian2polar(xy_movement)
-        else:
-            return xy_movement
+
+        return self._gather_displacements(minimum_gap=minimum_gap, polar=polar)
 
     def spread(self,
                minimum_gap: float = 0,
