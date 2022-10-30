@@ -21,18 +21,15 @@ class BaseRectangleArray:
 
     def __init__(self, xy: Optional[ArrayLike] = None,
                  sizes: Optional[ArrayLike] = None) -> None:
-        self.xy = np.empty((0, 2))
-        self.sizes = np.empty((0, 2))
-
         if xy is not None and sizes is not None:
             self.xy = np.atleast_2d(xy)
             self.sizes = np.atleast_2d(sizes)
-            self.check()
-
-    def check(self) -> None:
-        if self.xy.shape != self.sizes.shape:
-            raise ValueError("Badly shaped data: " +
-                             "xy has not the same shape as sizes array")
+            if self.xy.shape != self.sizes.shape:
+                raise ValueError("Badly shaped data: " +
+                                 "xy has not the same shape as sizes array")
+        else:
+            self.xy = np.empty((0, 2))
+            self.sizes = np.empty((0, 2))
 
     def n_objects(self) -> int:
         return len(self.xy)
@@ -48,12 +45,6 @@ class RectangleArray(BaseRectangleArray, ABCObjectArray):
         self.attributes = np.array([])
         if xy is not None and sizes is not None:
             self.np_append(xy, sizes, attributes)
-
-    def check(self) -> None:
-        super().check()
-        if len(self.attributes) != self.xy.shape[0]:
-            raise ValueError("Badly shaped data: attributes have not " +
-                             "the correct length.")
 
     def set_attributes(self, attributes: Optional[ArrayLike]) -> None:
         try:
@@ -74,6 +65,10 @@ class RectangleArray(BaseRectangleArray, ABCObjectArray):
         """if attributes comprises only one element all new objects will get
         this attribute """
         xy = np.atleast_2d(xy)
+        sizes = np.atleast_2d(sizes)
+        if xy.shape != sizes.shape:
+            raise ValueError("Badly shaped data: " +
+                             "xy has not the same shape as sizes array")
         try:
             attributes = make_vector_fixed_length(attributes,
                                                   length=xy.shape[0])
@@ -82,9 +77,8 @@ class RectangleArray(BaseRectangleArray, ABCObjectArray):
                              "the correct length.") from err
 
         self.xy = np.append(self.xy, xy, axis=0)
-        self.sizes = np.append(self.sizes, np.atleast_2d(sizes), axis=0)
+        self.sizes = np.append(self.sizes, sizes, axis=0)
         self.attributes = np.append(self.attributes, attributes)
-        self.check()
 
     def delete(self, index: IntOVector) -> None:
         self.xy = np.delete(self.xy, index, axis=0)

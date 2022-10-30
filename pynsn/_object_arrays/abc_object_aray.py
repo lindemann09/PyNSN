@@ -19,10 +19,6 @@ class ABCObjectArray(metaclass=ABCMeta):
     """Class of numpy representation of dot"""
 
     @abstractmethod
-    def check(self) -> None:
-        """raises value error if badly shaped data"""
-
-    @abstractmethod
     def n_objects(self) -> None:
         """number of objects"""
 
@@ -90,7 +86,7 @@ class ABCObjectArray(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def find(self, diameter: Optional[float] = None,
+    def find(self, size_or_diameter: Optional[float] = None,
              attribute: Any = None) -> List[int]:
         """Search for an object
 

@@ -16,17 +16,15 @@ class BaseDotArray:
 
     def __init__(self, xy: Optional[ArrayLike] = None,
                  diameter: Optional[ArrayLike] = None) -> None:
-        self.xy = np.empty((0, 2))
-        self.diameter = np.array([])
         if xy is not None and diameter is not None:
             self.xy = np.atleast_2d(xy)
             self.diameter = np.atleast_1d(diameter).astype(float)
-            self.check()
-
-    def check(self) -> None:
-        if self.xy.shape[0] != len(self.diameter):
-            raise ValueError("Badly shaped data: " +
-                             "xy has not the same length as item_diameter")
+            if self.xy.shape[0] != len(self.diameter):
+                raise ValueError("Badly shaped data: " +
+                                 "xy has not the same length as item_diameter")
+        else:
+            self.xy = np.empty((0, 2))
+            self.diameter = np.array([])
 
     def n_objects(self) -> int:
         return len(self.xy)
@@ -42,13 +40,6 @@ class DotArray(BaseDotArray, ABCObjectArray):
         self.attributes = np.array([])
         if xy is not None and diameter is not None:
             self.np_append(xy, diameter, attributes)
-
-    def check(self) -> None:
-        """raises value error if badly shaped data"""
-        super().check()
-        if len(self.attributes) != self.xy.shape[0]:
-            raise ValueError("Badly shaped data: attributes have not " +
-                             "the correct length.")
 
     def set_attributes(self, attributes: Optional[ArrayLike]) -> None:
         """Set all attributes
@@ -74,6 +65,10 @@ class DotArray(BaseDotArray, ABCObjectArray):
         """if attributes comprises only one element all new objects will get
         this attribute """
         xy = np.atleast_2d(xy)
+        diameter = np.atleast_1d(diameter)
+        if xy.shape[0] != len(diameter):
+            raise ValueError("Badly shaped data: " +
+                             "xy has not the same length as item_diameter")
         try:
             attributes = make_vector_fixed_length(attributes,
                                                   length=xy.shape[0])
@@ -82,10 +77,8 @@ class DotArray(BaseDotArray, ABCObjectArray):
                              "the correct length.") from err
 
         self.xy = np.append(self.xy, xy, axis=0)
-        self.diameter = np.append(self.diameter,
-                                  np.atleast_1d(diameter), axis=0)
+        self.diameter = np.append(self.diameter, diameter, axis=0)
         self.attributes = np.append(self.attributes, attributes)
-        self.check()
 
     def delete(self, index: IntOVector) -> None:
         self.xy = np.delete(self.xy, index, axis=0)
