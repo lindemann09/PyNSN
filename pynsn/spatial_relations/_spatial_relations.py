@@ -358,25 +358,22 @@ class RectangleDot(ABCSpatialRelations):
     def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ """
         if self._a_relative_to_b:
-            # corner relations to polar (n_corner, xy)
+            # corner relations in polar
             corner_rel = self._corner_rel
             # find those requiring a replacement
             i_r, i_c = np.nonzero(corner_rel[:, 0, :] > -1*minimum_gap)
             # polar-to-cartesian for each required corner movement
             xy_move_corner = np.zeros_like(corner_rel)
-            xy_move_corner_all = np.zeros_like(corner_rel)
-            # move always in opposite direct
-            diag = np.atleast_2d(np.hypot(self.rect_sizes_div2[:, 0],
-                                          self.rect_sizes_div2[:, 1])).T
             rho = np.pi + corner_rel[i_r, 1, i_c]
-            dist = corner_rel[i_r, 0, i_c] + minimum_gap
-
+            dist = minimum_gap + corner_rel[i_r, 0, i_c]
             xy_move_corner[i_r, 0, i_c] = dist * np.cos(rho)
             xy_move_corner[i_r, 1, i_c] = dist * np.sin(rho)
+
+            # print(xy_move_corner[:, 0, :])
             # find largest x and y movement required for each rect
             #   -> abs minimum across corners: (n, 2):
-            print(xy_move_corner[:, 1, 0:4])
             xy_movement = np_tools.abs_maximum(xy_move_corner, axis=2)
+            This does not work
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
@@ -418,8 +415,7 @@ def _spread_rectangles(xy_diff: NDArray,
                        distances: NDArray,
                        xy_distances_salted: NDArray,
                        minimum_gap: float) -> NDArray:
-    # 1 dim overlap: max -> distance of not overlapping dimension
-    # 2 dim overlap: max -> largest neg. dist. is closest to edge
+    """helper: move out in one cardinal axes"""
     cardinal_relations = np.array([
         np.where(xy_diff[:, 0] > 0, 0, np.pi),
         np.where(xy_diff[:, 1] > 0,
