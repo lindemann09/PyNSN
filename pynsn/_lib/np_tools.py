@@ -106,3 +106,13 @@ def abs_maximum(arr, axis=None):
     amax = np.max(arr, axis=axis)
     amin = np.min(arr, axis=axis)
     return np.where(-amin > amax, amin, amax)
+
+
+def salted_rows(array: NDArray, salt=1e-30) -> NDArray:
+    """if array (n, 2) has to identical cells in a row, add salt to one
+    randomly chosen cell in that row
+    """
+    rnd_column = np.random.randint(2, size=len(array))
+    array[:, rnd_column] = array[:, rnd_column] + \
+        (array[:, 0] == array[:, 1]) * salt
+    return array

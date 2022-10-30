@@ -51,8 +51,5 @@ class SpatRelMatrix():
     def distances_rho(self) -> NDArray:
         return self._matrix(values=self._rr.distances_rho)
 
-    def distances_xy(self) -> NDArray:
-        return self._matrix(values=self._rr.distances_xy)
-
     def spread(self) -> NDArray:
         return self._matrix(values=self._rr.spread())

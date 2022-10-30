@@ -20,9 +20,9 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                  b_array: Union[BaseDotArray, BaseRectangleArray],
                  a_relative_to_b: bool):
         """TODO """
+        self._distances = None
         self._rho = None
-        self._distances_rho = None
-        self._distances_xy = None
+        self._distances_radial = None
         self._a_relative_to_b = a_relative_to_b
         self._is_rectangle = (isinstance(a_array, BaseRectangleArray),
                               isinstance(b_array, BaseRectangleArray))
@@ -43,15 +43,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @abstractmethod
     def distances_rho(self) -> NDArray:
         """Euclidean distances between objects along the line between the two
-        object center. Negative distances indicate overlap."""
-
-    @property
-    @abstractmethod
-    def distances_xy(self) -> NDArray:
-        """X an Y distances between objects."""
+        object center (rho). Negative distances indicate overlap."""
 
     @abstractmethod
-    def is_inside(self) -> NDArray:
+    def is_inside(self, minimum_gap: float = 0) -> NDArray:
         """True if objects B are fully(!) inside the objects A.
         If a_relative_to_b set to True, the function checks if objects of A
         are in B.
@@ -62,7 +57,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """True if object B fits potentially inside object a (or visa versa)"""
 
     @abstractmethod
-    def _spread_distances_rho(self, minimum_gap: float) -> NDArray:
+    def _spread_radial_displacement_distances(self, minimum_gap: float) -> NDArray:
         """Required displacement distance along the line between the object
         centers (rho) to have the minimum distance.
 
@@ -73,9 +68,15 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         """
 
     @abstractmethod
+    def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
+        """Coordinates (cartesian or polar) of the shortest required
+        displacement that moves object B into object A ( or visa versa)
+        """
+
+    @abstractmethod
     def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
-        """Cartesian coordinates of the shortest required displacement that
-        moves object B into object A ( or visa versa)
+        """Coordinates (cartesian or polar) of the shortest required
+        displacement that moves object B into object A ( or visa versa)
         """
 
     ### generic methods ###
@@ -84,13 +85,13 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def is_above(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
         above object center A ( or visa versa if a_relative_to_b =True)."""
-        return self._xy_diff[:, 0] > 0
+        return self._xy_diff[:, 1] > 0
 
     @property
     def is_right(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
         right  of object center A ( or visa versa if a_relative_to_b =True)."""
-        return self._xy_diff[:, 1] > 0
+        return self._xy_diff[:, 0] > 0
 
     @property
     def rho(self) -> NDArray:
@@ -117,7 +118,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     def spread(self,
                minimum_gap: float = 0,
                radial_displacements: bool = False,
-               return_polar_coordinates: bool = False) -> NDArray:
+               polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to have the minimum
         distance.
 
@@ -137,44 +138,22 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
         returns 2-d array(distance, angle)
         """
-        # FIXME A-relative-to-b not implemented
-        # FIXME check logic of radial displacement
 
         if not radial_displacements and \
             ((not self._a_relative_to_b and self._is_rectangle[0]) or
              (self._a_relative_to_b and not self._is_rectangle[1])):
-            # if objects moved out of rectangles area (that is, reference objects
-            # are rectanglar) and if radial_displacement is not enforced
-            # ----> cardinal displacements
-
-            xy_move = np.empty((len(self._xy_diff), 2, 2))
-            # x -> 0
-            xy_move[:, 0, 0] = -1*self.distances_xy[:, 0] + minimum_gap
-            is_right = self._xy_diff[:, 0] > 0
-            xy_move[is_right, 1, 0] = 0  # move to right
-            xy_move[~is_right, 1, 0] = np.pi  # move to left
-            # y->1
-            xy_move[:, 0, 1] = -1*self.distances_xy[:, 1] + minimum_gap
-            is_above = self._xy_diff[:, 1] > 0
-            xy_move[is_above, 1, 1] = geometry.NORTH  # move to top
-            xy_move[~is_above, 1, 1] = geometry.SOUTH  # move to bottom
-
-            # find shortest
-            i = np.argmin(xy_move[:, 0, :], axis=1)  # find min distances
-            all_rows = np.arange(len(self._xy_diff))  # ":" does not work here
-            rtn_polar = xy_move[all_rows, :, i]
-
+            return self._spread_displacements(minimum_gap, polar)
         else:
             # radial displacement
             rtn_polar = np.empty(self._xy_diff.shape)
-            rtn_polar[:, 0] = self._spread_distances_rho(
+            rtn_polar[:, 0] = self._spread_radial_displacement_distances(
                 minimum_gap=minimum_gap)
             rtn_polar[:, 1] = self.rho
 
-        # remove non overlapping relations
-        # set distance = 0, for all non override objects
-        rtn_polar[rtn_polar[:, 0] < 0, 0] = 0
-        if not return_polar_coordinates:
-            return geometry.polar2cartesian(rtn_polar)
-        else:
-            return rtn_polar
+            # remove non overlapping relations
+            # set distance = 0, for all non override objects
+            rtn_polar[rtn_polar[:, 0] < 0, 0] = 0
+            if not polar:
+                return geometry.polar2cartesian(rtn_polar)
+            else:
+                return rtn_polar
