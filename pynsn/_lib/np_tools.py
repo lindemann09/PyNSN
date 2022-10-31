@@ -116,3 +116,5 @@ def salted_rows(array: NDArray, salt=1e-30) -> NDArray:
     array[:, rnd_column] = array[:, rnd_column] + \
         (array[:, 0] == array[:, 1]) * salt
     return array
+
+

@@ -119,3 +119,16 @@ def center_edge_distance(angles: NDArray, rect_sizes_div2: NDArray) -> NDArray[n
     # vertical relation: in case line cut rectangle at the top or bottom edge
     l_inside[~i_h] = rect_sizes_div2[~i_h, 1] / np.cos(NORTH - mod_angle[~i_h])
     return np.abs(l_inside)
+
+
+def chord_length(r: NDArray[np.floating], d: NDArray[np.floating])-> NDArray[np.floating]:
+    """calculate the length of chord in a circle
+    r: radius
+    d: distance to center"""
+    return 2.0 * np.sqrt(r**2 - d**2)
+
+def chord_distance_to_center(r: NDArray, chord_len: NDArray)-> NDArray[np.floating]:
+    """calculate distance to center of chord with a particular length
+    r: radius
+    d: distance to center"""
+    return np.sqrt(r**2 - 0.25 * chord_len**2)

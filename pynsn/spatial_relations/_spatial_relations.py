@@ -2,10 +2,12 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from asyncio import new_event_loop
 from cmath import nan
 from typing import Union
 import numpy as np
 from numpy.typing import NDArray
+from sympy import GeometryError
 
 from .._lib import geometry, np_tools
 from .._object_arrays import BaseDotArray, BaseRectangleArray
@@ -363,17 +365,36 @@ class RectangleDot(ABCSpatialRelations):
             # find those requiring a replacement
             i_r, i_c = np.nonzero(corner_rel[:, 0, :] > -1*minimum_gap)
             # polar-to-cartesian for each required corner movement
-            xy_move_corner = np.zeros_like(corner_rel)
             rho = np.pi + corner_rel[i_r, 1, i_c]
             dist = minimum_gap + corner_rel[i_r, 0, i_c]
+            xy_move_corner = np.zeros_like(corner_rel)
             xy_move_corner[i_r, 0, i_c] = dist * np.cos(rho)
             xy_move_corner[i_r, 1, i_c] = dist * np.sin(rho)
 
-            # print(xy_move_corner[:, 0, :])
             # find largest x and y movement required for each rect
             #   -> abs minimum across corners: (n, 2):
             xy_movement = np_tools.abs_maximum(xy_move_corner, axis=2)
-            This does not work
+            # Find rectangles that are still not fully inside circle and
+            # place them to the out possible position at the left, right, top or
+            # bottom of the circle.
+            # Explanation: Some are placed to far from center and stick out..
+            # This are the dots that overlap with dot center at one dimension.
+            # Solution: Find max_xy_diff (center differences) by calculating
+            # required chord position and replace these rectangles
+            #
+            # swap xy column for chord len, because width calculates y and height calculates x distance
+            max_xy_diff = geometry.chord_distance_to_center(
+                r = self.dot_radii,
+                chord_len=2*self.rect_sizes_div2[:, [1, 0]]) - self.rect_sizes_div2
+            #find coordinates those too far, by comparing with abs of new position
+            too_far = np.abs(self._xy_diff + xy_movement) > max_xy_diff
+            # take coordinates of the candidates that is too far (i),
+            # keep side by keeping previous sign,
+            # coordinate that is not too far will be zero (False*x=0)
+            i = np.any(too_far, axis=1)
+            target_xy_diff = too_far[i] * max_xy_diff[i] * np.sign(self._xy_diff[i])
+            xy_movement[i] = target_xy_diff - self._xy_diff[i]
+
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
