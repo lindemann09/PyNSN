@@ -21,7 +21,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                  a_relative_to_b: bool):
         """TODO """
         self._cache_distances = None
-        self._cache_distances_rho = None
+        self._cache_distances_radial = None
         self._cache_rho = None
 
         self._is_rectangle = (isinstance(a_array, BaseRectangleArray),
@@ -42,7 +42,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def distances_rho(self) -> NDArray:
+    def distances_radial(self) -> NDArray:
         """Euclidean distances between objects along the line between the two
         object center (rho). Negative distances indicate overlap."""
 

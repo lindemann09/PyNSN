@@ -1,4 +1,4 @@
-"""Numpy optimized function of geometry"""
+"""Numpy optimized  geometry functions for the relations of Dots and Rectangles"""
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -48,7 +48,7 @@ class DotDot(ABCSpatialRelations):
         return self._cache_distances
 
     @property
-    def distances_rho(self) -> NDArray:
+    def distances_radial(self) -> NDArray:
         return self.distances
 
     def is_inside(self, minimum_gap: float = 0) -> NDArray:
@@ -79,7 +79,7 @@ class DotDot(ABCSpatialRelations):
             displ_polar[i, 0] = self.distances + \
                 minimum_gap + 2 * self._a_radii[i]
         else:
-            displ_polar[i, 1] = self.distances[i] + \
+            displ_polar[i, 0] = self.distances[i] + \
                 minimum_gap + 2 * self._b_radii[i]
 
         if polar:
@@ -145,18 +145,18 @@ class RectangleRectangle(ABCSpatialRelations):
         return self._cache_distances
 
     @property
-    def distances_rho(self) -> NDArray:
-        if self._cache_distances_rho is None:
+    def distances_radial(self) -> NDArray:
+        if self._cache_distances_radial is None:
             # calc distance_inside rect along_axis between object center
             d_a = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.a_sizes_div2)
             d_b = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.b_sizes_div2)
             # distance between center minus inside rectangles
-            self._cache_distances_rho = np.hypot(self._xy_diff[:, 0],
-                                                 self._xy_diff[:, 1]) - d_a - d_b
+            self._cache_distances_radial = np.hypot(self._xy_diff[:, 0],
+                                                    self._xy_diff[:, 1]) - d_a - d_b
 
-        return self._cache_distances_rho
+        return self._cache_distances_radial
 
     def is_inside(self, minimum_gap: float = 0) -> NDArray:
         if self._a_relative_to_b:
@@ -177,7 +177,7 @@ class RectangleRectangle(ABCSpatialRelations):
         minimum_dist_rho = geometry.center_edge_distance(
             angles=self.rho,
             rect_sizes_div2=np.full(self.a_sizes_div2.shape, minimum_gap))
-        return -1*self.distances_rho + minimum_dist_rho
+        return -1*self.distances_radial + minimum_dist_rho
 
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
 
@@ -244,17 +244,17 @@ class RectangleDot(ABCSpatialRelations):
         assert self.rect_xy.shape == self.dot_xy.shape
 
     @property
-    def distances_rho(self) -> NDArray:
-        if self._cache_distances_rho is None:
+    def distances_radial(self) -> NDArray:
+        if self._cache_distances_radial is None:
             # calc distance_inside rect along_axis between object center
             d_a = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.rect_sizes_div2)
             # distance between center minus inside rectangles and radii
-            self._cache_distances_rho = np.hypot(self._xy_diff[:, 0],
-                                                 self._xy_diff[:, 1]) \
+            self._cache_distances_radial = np.hypot(self._xy_diff[:, 0],
+                                                    self._xy_diff[:, 1]) \
                 - d_a - self.dot_radii.T  # T-> because it's a column
 
-        return self._cache_distances_rho
+        return self._cache_distances_radial
 
     @property
     def distances(self) -> NDArray:

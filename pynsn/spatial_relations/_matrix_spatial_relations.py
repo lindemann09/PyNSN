@@ -48,8 +48,8 @@ class SpatRelMatrix():
         """Return matrix with distance between the objects"""
         return self._matrix(values=self._rr.distances)
 
-    def distances_rho(self) -> NDArray:
-        return self._matrix(values=self._rr.distances_rho)
+    def distances_radial(self) -> NDArray:
+        return self._matrix(values=self._rr.distances_radial)
 
     def spread(self) -> NDArray:
         return self._matrix(values=self._rr.spread())
