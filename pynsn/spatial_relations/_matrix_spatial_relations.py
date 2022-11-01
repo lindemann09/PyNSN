@@ -20,14 +20,15 @@ class SpatRelMatrix():
             raise TypeError(f"Spatial relations matrix requires for BaseRectangleArray "
                             f"or BaseDotArray, but not {type(object_array)}.")
 
-        self._ix = np.array(
-            list(combinations(range(len(object_array.xy)), r=2)))
+        self.n_objects = len(object_array.xy)
+        self._ix = np.array(list(combinations(range(self.n_objects), r=2)))
+
         if isinstance(object_array, BaseRectangleArray):
 
-            rect_a = BaseRectangleArray(xy=object_array.xy[self._ix[0], :],
-                                        sizes=object_array.sizes[self._ix[0], :])
-            rect_b = BaseRectangleArray(xy=object_array.xy[self._ix[1], :],
-                                        sizes=object_array.sizes[self._ix[1], :])
+            rect_a = BaseRectangleArray(xy=object_array.xy[self._ix[:, 0], :],
+                                        sizes=object_array.sizes[self._ix[:, 0], :])
+            rect_b = BaseRectangleArray(xy=object_array.xy[self._ix[:, 1], :],
+                                        sizes=object_array.sizes[self._ix[:, 1], :])
             self._rr = RectangleRectangle(a_rectangles=rect_a,
                                           b_rectangles=rect_b)
         elif isinstance(object_array, BaseDotArray):
@@ -37,12 +38,20 @@ class SpatRelMatrix():
                                   diameter=object_array.diameter[self._ix[1], :])
             self._rr = DotDot(a_dots=dots_a, b_dots=dots_b)
 
-    def _matrix(self, values) -> NDArray:
-        """returns matrix with [idx_a, idx_b, values, ...]
-        """
-        if values.ndim == 1:
-            values = values.reshape((len(values), 1))
-        return np.append(self._ix, values, axis=1)
+    def _matrix(self, values: NDArray) -> NDArray:
+        """returns matrix with values"""
+        rtn = np.full(shape=(self.n_objects, self.n_objects),
+                      fill_value=np.nan)
+        rtn[self._ix[:, 0], self._ix[:, 1]] = values
+        return rtn
+
+    def is_inside(self, minimum_gap: float = 0) -> NDArray:
+        """Return matrix with distance between the objects"""
+        return self._matrix(values=self._rr.is_inside(minimum_gap))
+
+    def overlaps(self, minimum_gap: float = 0) -> NDArray:
+        """Return matrix with distance between the objects"""
+        return self._matrix(values=self._rr.overlaps(minimum_gap))
 
     def distances(self) -> NDArray:
         """Return matrix with distance between the objects"""
@@ -50,6 +59,3 @@ class SpatRelMatrix():
 
     def distances_radial(self) -> NDArray:
         return self._matrix(values=self._rr.distances_radial)
-
-    def spread(self) -> NDArray:
-        return self._matrix(values=self._rr.spread())
