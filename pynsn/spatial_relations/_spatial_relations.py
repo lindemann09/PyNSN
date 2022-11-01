@@ -2,12 +2,9 @@
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from asyncio import new_event_loop
-from cmath import nan
 from typing import Union
 import numpy as np
 from numpy.typing import NDArray
-from sympy import GeometryError
 
 from .._lib import geometry, np_tools
 from .._object_arrays import BaseDotArray, BaseRectangleArray
@@ -44,11 +41,11 @@ class DotDot(ABCSpatialRelations):
 
     @property
     def distances(self) -> NDArray:
-        if self._distances is None:
-            self._distances = np.hypot(self._xy_diff[:, 0],
-                                       self._xy_diff[:, 1]) \
+        if self._cache_distances is None:
+            self._cache_distances = np.hypot(self._xy_diff[:, 0],
+                                             self._xy_diff[:, 1]) \
                 - self._a_radii - self._b_radii
-        return self._distances
+        return self._cache_distances
 
     @property
     def distances_rho(self) -> NDArray:
@@ -101,7 +98,7 @@ class RectangleRectangle(ABCSpatialRelations):
         super().__init__(a_array=a_rectangles,
                          b_array=b_rectangles,
                          a_relative_to_b=a_relative_to_b)
-        self.__xy_distances_salted = None
+        self._cache_xy_distances_salted = None
         self.a_sizes_div2 = a_rectangles.sizes / 2
         self.b_sizes_div2 = b_rectangles.sizes / 2
         a = len(self.a_sizes_div2)
@@ -117,34 +114,34 @@ class RectangleRectangle(ABCSpatialRelations):
                 preferred cardinal dimension
         """
 
-        if self.__xy_distances_salted is None:
+        if self._cache_xy_distances_salted is None:
             xy_dist = np.abs(self._xy_diff) - \
                 (self.a_sizes_div2 + self.b_sizes_div2)
             # if both dimensions are overlapping identical: choose dimension randomly
             # 'by adding salt'
             i = np.flatnonzero(np.sum(xy_dist < 0, axis=1) == 2)
             xy_dist[i, :] = np_tools.salted_rows(xy_dist[i, :], salt=-1e-30)
-            self.__xy_distances_salted = xy_dist
+            self._cache_xy_distances_salted = xy_dist
 
-        return self.__xy_distances_salted
+        return self._cache_xy_distances_salted
 
     @property
     def distances(self) -> NDArray:
-        if self._distances is None:
+        if self._cache_distances is None:
             xy_dist = self._xy_distances_salted
             n_overlap = np.sum(xy_dist < 0, axis=1)
-            self._distances = np.empty(len(xy_dist.shape))
+            self._cache_distances = np.empty(len(xy_dist))
 
             # 1 dim overlap: max -> distance of not overlapping dimension
             # 2 dim overlap: max -> largest neg. dist. is closest to edge
             i = np.flatnonzero(n_overlap > 0)
             idx = np.argmax(xy_dist[i, :], axis=1)
-            self._distances[i] = xy_dist[i, idx]
+            self._cache_distances[i] = xy_dist[i, idx]
             # no dimension overlap -> take Euclidean distance between edges
             i = n_overlap == 0
-            self._distances[i] = np.hypot(xy_dist[i, 0], xy_dist[i, 1])
+            self._cache_distances[i] = np.hypot(xy_dist[i, 0], xy_dist[i, 1])
 
-        return self._distances
+        return self._cache_distances
 
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
 
@@ -156,9 +153,9 @@ class RectangleRectangle(ABCSpatialRelations):
             displ_polar[:, 1] = displ_polar[:, 1] + np.pi
 
         if polar:
-            return geometry.polar2cartesian(displ_polar)
-        else:
             return displ_polar
+        else:
+            return geometry.polar2cartesian(displ_polar)
 
     def is_inside(self, minimum_gap: float = 0) -> NDArray:
         if self._a_relative_to_b:
@@ -176,17 +173,17 @@ class RectangleRectangle(ABCSpatialRelations):
 
     @property
     def distances_rho(self) -> NDArray:
-        if self._distances_radial is None:
+        if self._cache_distances_radial is None:
             # calc distance_inside rect along_axis between object center
             d_a = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.a_sizes_div2)
             d_b = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.b_sizes_div2)
             # distance between center minus inside rectangles
-            self._distances_radial = np.hypot(self._xy_diff[:, 0],
-                                              self._xy_diff[:, 1]) - d_a - d_b
+            self._cache_distances_radial = np.hypot(self._xy_diff[:, 0],
+                                                    self._xy_diff[:, 1]) - d_a - d_b
 
-        return self._distances_radial
+        return self._cache_distances_radial
 
     def _spread_radial_displacement_distances(self, minimum_gap: float) -> NDArray:
         # calc distance_along_line between rect center
@@ -225,7 +222,7 @@ class RectangleDot(ABCSpatialRelations):
                          b_array=b_dots,
                          a_relative_to_b=a_relative_to_b)
 
-        self.__corner_rel = None
+        self._cache_corner_rel = None
         self.rect_xy = a_rectangles.xy
         self.rect_sizes_div2 = a_rectangles.sizes / 2
         self.dot_xy = b_dots.xy
@@ -247,16 +244,16 @@ class RectangleDot(ABCSpatialRelations):
 
     @property
     def distances_rho(self) -> NDArray:
-        if self._distances_radial is None:
+        if self._cache_distances_radial is None:
             # calc distance_inside rect along_axis between object center
             d_a = geometry.center_edge_distance(angles=self.rho,
                                                 rect_sizes_div2=self.rect_sizes_div2)
             # distance between center minus inside rectangles and radii
-            self._distances_radial = np.hypot(self._xy_diff[:, 0],
-                                              self._xy_diff[:, 1]) \
+            self._cache_distances_radial = np.hypot(self._xy_diff[:, 0],
+                                                    self._xy_diff[:, 1]) \
                 - d_a - self.dot_radii.T  # T-> because it's a column
 
-        return self._distances_radial
+        return self._cache_distances_radial
 
     @property
     def distances(self) -> NDArray:
@@ -267,7 +264,7 @@ class RectangleDot(ABCSpatialRelations):
         """return distances and directions of all corners to dot edge.
         Array dimensions: (n, 2 [dist, rho], 4 [corners])
         """
-        if self.__corner_rel is None:
+        if self._cache_corner_rel is None:
             # xy dist array of corners : n, 2 [x,y], 4 [corner])
             xy_dist_crn = geometry.corners(rect_xy=self.rect_xy,
                                            rect_sizes_div2=self.rect_sizes_div2,
@@ -278,15 +275,15 @@ class RectangleDot(ABCSpatialRelations):
                 - self.dot_radii  # (n_corner, 4)
 
             # n, 2 [dist, rho], 4 [corners]
-            self.__corner_rel = np.full_like(
+            self._cache_corner_rel = np.full_like(
                 xy_dist_crn, fill_value=np.nan)  # all nan
             # distance for corners_outside
-            self.__corner_rel[:, 0, :] = dist_corners
+            self._cache_corner_rel[:, 0, :] = dist_corners
             # rho for corners_outside
-            self.__corner_rel[:, 1, :] = np.arctan2(xy_dist_crn[:, 1, :],
-                                                    xy_dist_crn[:, 0, :])
+            self._cache_corner_rel[:, 1, :] = np.arctan2(xy_dist_crn[:, 1, :],
+                                                         xy_dist_crn[:, 0, :])
 
-        return self.__corner_rel
+        return self._cache_corner_rel
 
     def is_inside(self, minimum_gap: float = 0) -> NDArray:
         if self._a_relative_to_b:
@@ -333,7 +330,7 @@ class RectangleDot(ABCSpatialRelations):
             corner_rel = self._corner_rel
             # find closest corner
             min_dist = np.atleast_2d(np.nanmin(corner_rel[:, 0, :], axis=1)).T
-            i_r, i_c = np_tools.find_rowwise_one_true(
+            i_r, i_c = np_tools.nonzero_one_per_dim(
                 corner_rel[:, 0, :] == min_dist)
 
             displ_polar = np.zeros_like(self._xy_diff)
@@ -353,9 +350,9 @@ class RectangleDot(ABCSpatialRelations):
                                              minimum_gap=minimum_gap)
 
         if polar:
-            return geometry.polar2cartesian(displ_polar)
-        else:
             return displ_polar
+        else:
+            return geometry.polar2cartesian(displ_polar)
 
     def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ """
@@ -384,17 +381,25 @@ class RectangleDot(ABCSpatialRelations):
             #
             # swap xy column for chord len, because width calculates y and height calculates x distance
             max_xy_diff = geometry.chord_distance_to_center(
-                r = self.dot_radii,
-                chord_len=2*self.rect_sizes_div2[:, [1, 0]]) - self.rect_sizes_div2
-            #find coordinates those too far, by comparing with abs of new position
-            too_far = np.abs(self._xy_diff + xy_movement) > max_xy_diff
-            # take coordinates of the candidates that is too far (i),
+                r=self.dot_radii,
+                chord_len=2*self.rect_sizes_div2[:, (1, 0)]) - self.rect_sizes_div2  # type: ignore
+            # find coordinates those too far, by comparing max_xy_diff
+            # with abs of new position
+            # take candidates that have at least one  too far (i),
+            i = np.any(np.abs(self._xy_diff + xy_movement) > max_xy_diff,
+                       axis=1)
+            # target xy_diff is maximum diff,
+            target_xy_diff = max_xy_diff[i, :]
+            # take target_xy_diff is corresponds to large xy_movement,
+            # that is, set min(move_set) to zero (take randomly one in case of
+            # identical values)
+            move_size = np.abs(xy_movement[i, :])
+            idx = np_tools.nonzero_one_per_dim(
+                move_size == np.atleast_2d(np.min(move_size, axis=1)).T)
+            target_xy_diff[idx] = 0
             # keep side by keeping previous sign,
-            # coordinate that is not too far will be zero (False*x=0)
-            i = np.any(too_far, axis=1)
-            target_xy_diff = too_far[i] * max_xy_diff[i] * np.sign(self._xy_diff[i])
-            xy_movement[i] = target_xy_diff - self._xy_diff[i]
-
+            xy_movement[i] = np.sign(self._xy_diff[i]) * target_xy_diff \
+                - self._xy_diff[i]
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_movement = _gather_rectangles(xy_diff=self._xy_diff,
@@ -437,19 +442,17 @@ def _spread_rectangles(xy_diff: NDArray,
                        xy_distances_salted: NDArray,
                        minimum_gap: float) -> NDArray:
     """helper: move out in one cardinal axes"""
-    cardinal_relations = np.array([
-        np.where(xy_diff[:, 0] > 0, 0, np.pi),
-        np.where(xy_diff[:, 1] > 0,
-                 geometry.NORTH, geometry.SOUTH)
-    ]).T
 
     i = np.flatnonzero(distances < minimum_gap)
     idx = np.argmax(xy_distances_salted[i, :], axis=1)
 
-    displ_polar = np.zeros_like((len(xy_diff), 2))
-    displ_polar[i, 0] = -1*distances[i] + minimum_gap
-    displ_polar[i, 1] = cardinal_relations[i, idx]
-    return displ_polar
+    cardinal_relations = np.array([
+        np.where(xy_diff[i, 0] > 0, 0, np.pi),
+        np.where(xy_diff[i, 1] > 0, geometry.NORTH, geometry.SOUTH)]).T
+
+    return np.array([
+        -1*distances[i] + minimum_gap,
+        cardinal_relations[:, idx]]).T
 
 
 def _gather_rectangles(xy_diff: NDArray,

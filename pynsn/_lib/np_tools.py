@@ -61,21 +61,23 @@ def triu_nan(arr: NDArray, k: int = 0) -> NDArray:
     return arr + np.tril(np.full(arr.shape, np.nan), k=k-1)
 
 
-def find_rowwise_one_true(boolean_array2d: NDArray) -> Tuple[NDArray, NDArray]:
-    """returns list of the indices (row, column) with one true cell in each row.
+def nonzero_one_per_dim(boolean_array2d: NDArray[np.bool_],
+                        columnwise: bool = False) -> Tuple[NDArray, NDArray]:
+    """returns list of the indices (row, column) with one true cell in each row (default) or each column (columnwise=True).
     That is, if more than one cell in a row contains True, the function select
     randomly one
 
     returns idx_row, idx_column
     """
     # (n=rect_id, 2) array of index  (one row -> one cell)
-    idx_value = np.vstack(np.nonzero(boolean_array2d)).T
+    indices = np.array(np.nonzero(boolean_array2d)).T
     # Problem: one row could have the values multiple times
     #   --> choose randomly one
-    np.random.shuffle(idx_value)  # shuffle rows
-    # return only first unique id (ui-index) (Note: set is sorted)
-    _, ui_idx = np.unique(idx_value[:, 0], return_index=True)
-    return idx_value[ui_idx, 0], idx_value[ui_idx, 1]
+    np.random.shuffle(indices)  # shuffle rows
+    # return only first unique id (uni-row or unique column
+    _, unique_idx = np.unique(indices[:, int(columnwise)], return_index=True)
+    # (Note: set is sorted)
+    return indices[unique_idx, 0], indices[unique_idx, 1]
 
 
 def make_vector_fixed_length(values: Optional[ArrayLike], length: int):
@@ -116,5 +118,3 @@ def salted_rows(array: NDArray, salt=1e-30) -> NDArray:
     array[:, rnd_column] = array[:, rnd_column] + \
         (array[:, 0] == array[:, 1]) * salt
     return array
-
-

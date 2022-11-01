@@ -20,12 +20,13 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                  b_array: Union[BaseDotArray, BaseRectangleArray],
                  a_relative_to_b: bool):
         """TODO """
-        self._distances = None
-        self._rho = None
-        self._distances_radial = None
-        self._a_relative_to_b = a_relative_to_b
+        self._cache_distances = None
+        self._cache_rho = None
+        self._cache_distances_radial = None
+
         self._is_rectangle = (isinstance(a_array, BaseRectangleArray),
                               isinstance(b_array, BaseRectangleArray))
+        self._a_relative_to_b = a_relative_to_b
         if a_relative_to_b:
             self._xy_diff = np.atleast_2d(
                 a_array.xy) - np.atleast_2d(b_array.xy)  # type: ignore
@@ -99,10 +100,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
         position angles ( in radians) of objects B relative to (viewed from) the
         objects A ( or visa versa if a_relative_to_b =True).
         """
-        if self._rho is None:
-            self._rho = np.arctan2(self._xy_diff[:, 1],
-                                   self._xy_diff[:, 0])
-        return self._rho
+        if self._cache_rho is None:
+            self._cache_rho = np.arctan2(self._xy_diff[:, 1],
+                                         self._xy_diff[:, 0])
+        return self._cache_rho
 
     def gather(self, minimum_gap: float = 0, polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to moves object B
