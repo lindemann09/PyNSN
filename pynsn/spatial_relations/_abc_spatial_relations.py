@@ -21,8 +21,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                  a_relative_to_b: bool):
         """TODO """
         self._cache_distances = None
+        self._cache_distances_rho = None
         self._cache_rho = None
-        self._cache_distances_radial = None
 
         self._is_rectangle = (isinstance(a_array, BaseRectangleArray),
                               isinstance(b_array, BaseRectangleArray))
@@ -104,6 +104,10 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             self._cache_rho = np.arctan2(self._xy_diff[:, 1],
                                          self._xy_diff[:, 0])
         return self._cache_rho
+
+    def overlaps(self, minimum_gap: float = 0) -> NDArray:
+        """True if object B overlaps (distance<minimum_gap) with object a (or visa versa)."""
+        return self.distances < minimum_gap
 
     def gather(self, minimum_gap: float = 0, polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to moves object B

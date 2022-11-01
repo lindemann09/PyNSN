@@ -40,6 +40,9 @@ shapes_test_picture(a, reverse_order=True)
 sr = sprel.relations(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
+print(sr.overlaps())
+exit()
+
 displ = sr.gather(minimum_gap=0)
 # print("---")
 # print(displ)
