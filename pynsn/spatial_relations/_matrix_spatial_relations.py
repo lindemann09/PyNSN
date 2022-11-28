@@ -22,7 +22,6 @@ class SpatRelMatrix():
 
         self.n_objects = len(object_array.xy)
         self._ix = np.array(list(combinations(range(self.n_objects), r=2)))
-
         if isinstance(object_array, BaseRectangleArray):
 
             rect_a = BaseRectangleArray(xy=object_array.xy[self._ix[:, 0], :],
@@ -32,10 +31,10 @@ class SpatRelMatrix():
             self._rr = RectangleRectangle(a_rectangles=rect_a,
                                           b_rectangles=rect_b)
         elif isinstance(object_array, BaseDotArray):
-            dots_a = BaseDotArray(xy=object_array.xy[self._ix[0], :],
-                                  diameter=object_array.diameter[self._ix[0], :])
-            dots_b = BaseDotArray(xy=object_array.xy[self._ix[1], :],
-                                  diameter=object_array.diameter[self._ix[1], :])
+            dots_a = BaseDotArray(xy=object_array.xy[self._ix[:, 0], :],
+                                  diameter=object_array.diameter[self._ix[:, 0]])
+            dots_b = BaseDotArray(xy=object_array.xy[self._ix[:, 1], :],
+                                  diameter=object_array.diameter[self._ix[:, 1]])
             self._rr = DotDot(a_dots=dots_a, b_dots=dots_b)
 
     def _matrix(self, values: NDArray) -> NDArray:

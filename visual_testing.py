@@ -14,6 +14,7 @@ arr_dia = np.array([10, 20])
 d_big = pynsn.Dot((-10, 90), diameter=120, attribute="black")
 da = pynsn.Dot((35, -40), diameter=60, attribute="#002800")
 db = pynsn.Dot((-120, 55), diameter=40, attribute="#00FFF0")
+dc = pynsn.Dot((20, -55), diameter=20, attribute="#FFFFF0")
 
 ra = pynsn.Rectangle((50, 50), size=(50, 40), attribute="blue")
 rb = pynsn.Rectangle((-20, 55), size=(50, 90), attribute="green")
@@ -21,7 +22,7 @@ rc = pynsn.Rectangle((-75, -32), size=(40, 40), attribute="yellow")
 rd = pynsn.Rectangle((0, -45), size=(100, 40), attribute="magenta")
 r_big = pynsn.Rectangle((0, 0), size=(150, 60), attribute="#000FF0")
 
-a_relative_to_b = True
+a_relative_to_b = False
 array_rect = pynsn.RectangleArray()
 array_dot = pynsn.DotArray()
 
@@ -31,18 +32,17 @@ if a_relative_to_b:
     array_dot.add(d_big)
 else:
     array_rect.add(r_big)
-    array_dot.add((da, db))
+    array_dot.add((da, db, dc))
 
 a = list(array_rect.iter()) + list(array_dot.iter())
-shapes_test_picture(a, reverse_order=True)
+shapes_test_picture(a, reverse_order=False)
 
 
 sr = sprel.relations(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
-mtx = sprel.SpatRelMatrix(array_rect)
-
-print(mtx.distances())
+mtx = sprel.SpatRelMatrix(array_dot)
+print(mtx.overlaps())
 exit()
 
 displ = sr.gather(minimum_gap=0)
