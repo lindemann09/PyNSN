@@ -17,12 +17,12 @@ db = pynsn.Dot((-120, 55), diameter=40, attribute="#00FFF0")
 dc = pynsn.Dot((20, -55), diameter=20, attribute="#FFFFF0")
 
 ra = pynsn.Rectangle((50, 50), size=(50, 40), attribute="blue")
-rb = pynsn.Rectangle((-20, 55), size=(50, 90), attribute="green")
+rb = pynsn.Rectangle((-10, 25), size=(90, 90), attribute="green")
 rc = pynsn.Rectangle((-75, -32), size=(40, 40), attribute="yellow")
 rd = pynsn.Rectangle((0, -45), size=(100, 40), attribute="magenta")
 r_big = pynsn.Rectangle((0, 0), size=(150, 60), attribute="#000FF0")
 
-a_relative_to_b = False
+a_relative_to_b = True
 array_rect = pynsn.RectangleArray()
 array_dot = pynsn.DotArray()
 
@@ -35,17 +35,16 @@ else:
     array_dot.add((da, db, dc))
 
 a = list(array_rect.iter()) + list(array_dot.iter())
-shapes_test_picture(a, reverse_order=False)
+shapes_test_picture(a, reverse_order=True)
 
 
-sr = sprel.relations(array_rect, array_dot, a_relative_to_b=a_relative_to_b)
+sr = sprel.relations(array_rect, array_dot, a_relative_to_b=False)
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
 
-mtx = sprel.SpatRelMatrix(array_dot)
-print(mtx.overlaps())
-exit()
 
-displ = sr.gather(minimum_gap=0)
+displ = sr.spread(polar=False, minimum_gap=1)
+print(displ)
+#displ = sr.gather(minimum_gap=0)
 # print("---")
 # print(displ)
 array_rect.xy = array_rect.xy + displ

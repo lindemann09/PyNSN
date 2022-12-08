@@ -183,7 +183,7 @@ class RectangleRectangle(ABCSpatialRelations):
 
         displ_polar = _spread_rectangles(xy_diff=self._xy_diff,
                                          distances=self.distances,
-                                         xy_distances_salted=self._xy_distances_salted,
+                                         xy_dist=self._xy_distances_salted,
                                          minimum_gap=minimum_gap)
         if self._a_relative_to_b:
             displ_polar[:, 1] = displ_polar[:, 1] + np.pi
@@ -369,15 +369,10 @@ class RectangleDot(ABCSpatialRelations):
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_dist = np.abs(self._xy_diff) - (self.rect_sizes_div2 + radii2)
-            # if both dimensions are overlapping identical: choose dimension randomly
-            # 'by adding salt'
-            i = np.flatnonzero(np.sum(xy_dist < 0, axis=1) == 2)
-            xy_dist[i, :] = np_tools.salted_rows(xy_dist[i, :], salt=-1e-30)
             displ_polar = _spread_rectangles(xy_diff=self._xy_diff,
                                              distances=self.distances,
-                                             xy_distances_salted=xy_dist,
+                                             xy_dist=xy_dist,
                                              minimum_gap=minimum_gap)
-
         if polar:
             return displ_polar
         else:
@@ -468,20 +463,28 @@ class RectangleCoordinate(RectangleRectangle):
 
 def _spread_rectangles(xy_diff: NDArray,
                        distances: NDArray,
-                       xy_distances_salted: NDArray,
+                       xy_dist: NDArray,
                        minimum_gap: float) -> NDArray:
     """helper: move out in one cardinal axes"""
 
+    rtn = np.zeros_like(xy_diff)
+    # if both dimensions are overlapping to an identical extend:
+    # choose dimension randomly
+    # 'by adding salt'
+    i = (xy_dist[:, 0]<0) & (xy_dist[:, 0] == xy_dist[:, 1])
+    xy_dist[i, :] = np_tools.salted_rows(xy_dist[i, :], salt=-1e-30)
+
     i = np.flatnonzero(distances < minimum_gap)
-    idx = np.argmax(xy_distances_salted[i, :], axis=1)
-
     cardinal_relations = np.array([
-        np.where(xy_diff[i, 0] > 0, 0, np.pi),
-        np.where(xy_diff[i, 1] > 0, geometry.NORTH, geometry.SOUTH)]).T
-
-    return np.array([
-        -1*distances[i] + minimum_gap,
-        cardinal_relations[:, idx]]).T
+        np.where(xy_diff[i, 0] < 0, 0, np.pi),
+        np.where(xy_diff[i, 1] < 0, geometry.NORTH, geometry.SOUTH)]).T
+    all_col = range(cardinal_relations.shape[0]) # all columns
+    which_coord = np.argmax(xy_dist[i, :], axis=1) # where is the max displacement
+    print(which_coord)
+    print(xy_dist[i, which_coord])
+    rtn[i, 0] = minimum_gap - xy_dist[i, which_coord]
+    rtn[i, 1] = cardinal_relations[all_col, which_coord]
+    return rtn
 
 
 def _gather_rectangles(xy_diff: NDArray,

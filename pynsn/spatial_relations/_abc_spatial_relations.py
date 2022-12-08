@@ -34,11 +34,16 @@ class ABCSpatialRelations(metaclass=ABCMeta):
             self._xy_diff = np.atleast_2d(
                 b_array.xy) - np.atleast_2d(a_array.xy)  # type: ignore
 
+    def __str__(self):
+        rtn = f"Type: {type(self).__name__}\n"
+        rtn += f"  rho     : {self.rho}\n"
+        rtn += f"  distance: {self.distances}"
+        return rtn
+
     @property
     @abstractmethod
     def distances(self) -> NDArray:
-        """Shortest Euclidean distances between objects. Negative distances indicate
-        overlap."""
+        """Shortest Euclidean distances between objects. Negative distances indicate overlap."""
 
     @property
     @abstractmethod
