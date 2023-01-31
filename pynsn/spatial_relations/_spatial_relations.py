@@ -480,8 +480,6 @@ def _spread_rectangles(xy_diff: NDArray,
         np.where(xy_diff[i, 1] < 0, geometry.NORTH, geometry.SOUTH)]).T
     all_col = range(cardinal_relations.shape[0]) # all columns
     which_coord = np.argmax(xy_dist[i, :], axis=1) # where is the max displacement
-    print(which_coord)
-    print(xy_dist[i, which_coord])
     rtn[i, 0] = minimum_gap - xy_dist[i, which_coord]
     rtn[i, 1] = cardinal_relations[all_col, which_coord]
     return rtn
