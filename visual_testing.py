@@ -11,7 +11,7 @@ arr_sizes = np.array([[10, 2], [10, 100], [23, 4]])
 
 arr_dia = np.array([10, 20])
 
-d_big = pynsn.Dot((-10, 90), diameter=120, attribute="black")
+d_big = pynsn.Dot((-10, 90), diameter=220, attribute="black")
 da = pynsn.Dot((35, -40), diameter=60, attribute="#002800")
 db = pynsn.Dot((-120, 55), diameter=40, attribute="#00FFF0")
 dc = pynsn.Dot((20, -55), diameter=20, attribute="#FFFFF0")
@@ -29,6 +29,7 @@ array_dot = pynsn.DotArray()
 if a_relative_to_b:
     # A_rel_b
     array_rect.add((ra, rb, rc, rd))
+    #array_rect.add((ra, rb))
     array_dot.add(d_big)
 else:
     array_rect.add(r_big)
@@ -38,11 +39,11 @@ a = list(array_rect.iter()) + list(array_dot.iter())
 shapes_test_picture(a, reverse_order=True)
 
 
-sr = sprel.relations(array_rect, array_dot, a_relative_to_b=False)
+sr = sprel.relations(a_array=array_rect, b_array=array_dot,
+                     a_relative_to_b=True)
 # print(f"{np.round(geometry.polar2cartesian(x), decimals=2)}")
-
-
-displ = sr.spread(polar=False, minimum_gap=1)
+displ = sr.spread(polar=False, minimum_gap=1, cardinal_axis_only=False)
+#displ = sr.gather(polar=False, minimum_gap=1)
 print(displ)
 #displ = sr.gather(minimum_gap=0)
 # print("---")

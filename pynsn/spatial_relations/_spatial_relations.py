@@ -281,7 +281,9 @@ class RectangleDot(ABCSpatialRelations):
         """return distances and directions(angle) of all corners to dot edge.
         Array dimensions: (n, 2 [dist, angle], 4 [corners])
 
-        if angle=False, angle will not be calculated if it does not exist (for efficiently)
+        negative distance indicate corner inside dot
+
+        if angles=False, angles will not be calculated (for efficiently)
         """
         # angles desired and required,
         # because angles missing or nothing calculated so far?
@@ -357,15 +359,22 @@ class RectangleDot(ABCSpatialRelations):
         if self._a_relative_to_b:
             # corner relations to polar (n_corner, xy)
             corner_rel = self._corner_relations(angles=True)
-            # find closest corner
+
+            # find fastest corner (largest negative)
             min_dist = np.atleast_2d(np.nanmin(corner_rel[:, 0, :], axis=1)).T
             i_r, i_c = np_tools.nonzero_one_per_dim(
                 corner_rel[:, 0, :] == min_dist)
 
             displ_polar = np.zeros_like(self._xy_diff)
             displ_polar[i_r, :] = corner_rel[i_r, :, i_c]
+            displ_polar[i_r, :] = self.rho
+
             # adapt distances
             displ_polar[:, 0] = -1*displ_polar[:, 0] + minimum_gap
+            # set negative distances to zero --> no displacment
+            displ_polar[displ_polar[:, 0] < 0, 0] = 0
+            print(displ_polar[:, 0])
+            print(np.rad2deg(displ_polar[:, 1]))
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_dist = np.abs(self._xy_diff) - (self.rect_sizes_div2 + radii2)
@@ -471,15 +480,16 @@ def _spread_rectangles(xy_diff: NDArray,
     # if both dimensions are overlapping to an identical extend:
     # choose dimension randomly
     # 'by adding salt'
-    i = (xy_dist[:, 0]<0) & (xy_dist[:, 0] == xy_dist[:, 1])
+    i = (xy_dist[:, 0] < 0) & (xy_dist[:, 0] == xy_dist[:, 1])
     xy_dist[i, :] = np_tools.salted_rows(xy_dist[i, :], salt=-1e-30)
 
     i = np.flatnonzero(distances < minimum_gap)
     cardinal_relations = np.array([
         np.where(xy_diff[i, 0] < 0, 0, np.pi),
         np.where(xy_diff[i, 1] < 0, geometry.NORTH, geometry.SOUTH)]).T
-    all_col = range(cardinal_relations.shape[0]) # all columns
-    which_coord = np.argmax(xy_dist[i, :], axis=1) # where is the max displacement
+    all_col = range(cardinal_relations.shape[0])  # all columns
+    # where is the max displacement
+    which_coord = np.argmax(xy_dist[i, :], axis=1)
     rtn[i, 0] = minimum_gap - xy_dist[i, which_coord]
     rtn[i, 1] = cardinal_relations[all_col, which_coord]
     return rtn

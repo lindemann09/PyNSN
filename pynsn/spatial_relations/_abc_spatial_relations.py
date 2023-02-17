@@ -76,7 +76,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @abstractmethod
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """Coordinates (cartesian or polar) of the shortest required
-        displacement that moves object B into object A ( or visa versa)
+        displacement that moves object B into object A (or visa versa)
         """
 
     @abstractmethod
@@ -90,7 +90,7 @@ class ABCSpatialRelations(metaclass=ABCMeta):
     @property
     def is_above(self) -> NDArray:
         """Tests the relation of the object center. True if object center B is
-        above object center A ( or visa versa if a_relative_to_b =True)."""
+        above object center A (or visa versa if a_relative_to_b =True)."""
         return self._xy_diff[:, 1] > 0
 
     @property
@@ -127,33 +127,23 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     def spread(self,
                minimum_gap: float = 0,
-               radial_displacements: bool = False,
+               cardinal_axis_only: bool = False,
                polar: bool = False) -> NDArray:
         """The required displacement coordinates of objects to have the minimum
         distance.
 
-        If objects move out of a
-            * circular reference area: displacements will be radial, that is ,
-              along the axes of the object center.
-            * rectangular reference area: displacements will be the shortest
-              displacements along the one of the cardinal axis(x or y), except
-              `radial_displacements` is set to True.
+        if `cardinal_axis_only` is set to True, displacements will be
+        the shortest displacements along the one of the cardinal axis(x or y)
 
         Positive distance values indicate overlap and thus a required
         displacement in the direction rho to remove overlaps. Negative distance
         values indicate that the required displacement involves to move objects
         toward each other(not overlapping objects).
 
-        use: required_displacement to get cartesian coordinates
-
-        returns 2-d array(distance, angle)
+        returns 2-d array(distances, angles)
         """
 
-        if not radial_displacements and \
-            ((not self._a_relative_to_b and self._is_rectangle[0]) or
-             (self._a_relative_to_b and not self._is_rectangle[1])):
-            return self._spread_displacements(minimum_gap, polar)
-        else:
+        if cardinal_axis_only:
             # radial displacement
             rtn_polar = np.empty(self._xy_diff.shape)
             rtn_polar[:, 0] = self._spread_radial_displacement_distances(
@@ -167,3 +157,5 @@ class ABCSpatialRelations(metaclass=ABCMeta):
                 return geometry.polar2cartesian(rtn_polar)
             else:
                 return rtn_polar
+        else:
+            return self._spread_displacements(minimum_gap, polar)

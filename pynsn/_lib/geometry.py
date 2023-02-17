@@ -121,14 +121,31 @@ def center_edge_distance(angles: NDArray, rect_sizes_div2: NDArray) -> NDArray[n
     return np.abs(l_inside)
 
 
-def chord_length(r: NDArray[np.floating], d: NDArray[np.floating])-> NDArray[np.floating]:
+def chord_length(r: NDArray[np.floating], d: NDArray[np.floating]) -> NDArray[np.floating]:
     """calculate the length of chord in a circle
     r: radius
     d: distance to center"""
     return 2.0 * np.sqrt(r**2 - d**2)
 
-def chord_distance_to_center(r: NDArray, chord_len: NDArray)-> NDArray[np.floating]:
+
+def chord_distance_to_center(r: NDArray, chord_len: NDArray) -> NDArray[np.floating]:
     """calculate distance to center of chord with a particular length
     r: radius
     d: distance to center"""
     return np.sqrt(r**2 - 0.25 * chord_len**2)
+
+
+def point_in_circle_distance(points_polar: NDArray,
+                             radii: NDArray[np.floating],
+                             rho: NDArray) -> NDArray[np.floating]:
+    """Returns distances of points (inside a circle) to the circle edge in the
+    direction rho.
+
+    points_polar: polar coordinates relative to circle center
+    radii: circle radii
+    rho: direction towards the edge
+    """
+
+    dist = points_polar[:, 0]  # distance points circle center
+    angle = 0.5*(rho - points_polar[:, 1])
+    return np.sqrt(radii**2 + dist**2 - 2 * radii * dist * np.cos(angle))
