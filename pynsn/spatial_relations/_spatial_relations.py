@@ -358,23 +358,24 @@ class RectangleDot(ABCSpatialRelations):
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         if self._a_relative_to_b:
             # corner relations to polar (n_corner, xy)
-            corner_rel = self._corner_relations(angles=True)
+            points_polar = self._corner_relations(angles=True)
+            # remove corner outside
+            i_r, i_c = np.nonzero(points_polar[:, 0, :] >= minimum_gap)
+            points_polar[i_r, :, i_c] = np.nan
+            points_polar[:, 0, :] = self.dot_radii + points_polar[:, 0, :]
 
-            # find fastest corner (largest negative)
-            min_dist = np.atleast_2d(np.nanmin(corner_rel[:, 0, :], axis=1)).T
-            i_r, i_c = np_tools.nonzero_one_per_dim(
-                corner_rel[:, 0, :] == min_dist)
-
+            # distance each corner to circle edge in direction rho
+            tmp = np.empty(shape=(self.rho.shape[0], 4))
+            for c in range(4):
+                tmp[:, c] = geometry.point_in_circle_distance(
+                    points_polar=points_polar[:, :, c],
+                    radii=self.dot_radii + minimum_gap,
+                    rho=self.rho)
             displ_polar = np.zeros_like(self._xy_diff)
-            displ_polar[i_r, :] = corner_rel[i_r, :, i_c]
-            displ_polar[i_r, :] = self.rho
-
-            # adapt distances
-            displ_polar[:, 0] = -1*displ_polar[:, 0] + minimum_gap
-            # set negative distances to zero --> no displacment
-            displ_polar[displ_polar[:, 0] < 0, 0] = 0
-            print(displ_polar[:, 0])
-            print(np.rad2deg(displ_polar[:, 1]))
+            displ_polar[:, 0] = np.nanmax(tmp, axis=1)
+            displ_polar[:, 1] = self.rho
+            displ_polar[np.isnan(displ_polar)] = 0
+            print(displ_polar)
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_dist = np.abs(self._xy_diff) - (self.rect_sizes_div2 + radii2)
@@ -390,7 +391,8 @@ class RectangleDot(ABCSpatialRelations):
     def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ """
         if self._a_relative_to_b:
-            # corner relations in polar
+            # distance points circle edge
+
             corner_rel = self._corner_relations(angles=True)
             # find those requiring a replacement
             i_r, i_c = np.nonzero(corner_rel[:, 0, :] > -1*minimum_gap)

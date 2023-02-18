@@ -148,4 +148,80 @@ def point_in_circle_distance(points_polar: NDArray,
 
     dist = points_polar[:, 0]  # distance points circle center
     angle = 0.5*(rho - points_polar[:, 1])
+
+    radii = np.squeeze(radii)
     return np.sqrt(radii**2 + dist**2 - 2 * radii * dist * np.cos(angle))
+
+
+def line_circle_intersection(line_points: NDArray[np.floating],
+                             line_directions: NDArray[np.floating],
+                             circle_center: NDArray[np.floating],
+                             circle_radii: NDArray,
+                             both_intersections: bool = False) -> NDArray[np.floating]:
+    """
+    Intersections of lines with the circles in one or both directions of the
+    line.
+
+    Parameters
+    ----------
+    line_points : 2d-array
+    line_rho : 1d-array of directions
+    circle_center : 2d-array
+    circle_radii: radius of circle
+    both_intersections: boolean (default=False)
+        if True, it returns both intersection points, otherwise only the
+        intersection in line direction
+
+    Returns
+    -------
+    intersecting points: NDArray
+        if both_intersections == True:
+            NDArray (n, 4)
+            The two points [x_1,y_1, x_2, y_2] per row
+
+        if both_intersections == False:
+            NDArray (n, 2)
+            only intersection points in the direction of rho
+
+    References
+    ----------
+    http://mathworld.wolfram.com/Circle-LineIntersection.html
+
+    https://github.com/ajhynes7/scikit-spatial/blob/master/src/skspatial/objects/circle.py
+
+
+    """
+
+    circle_center = np.atleast_2d(circle_center)
+    points_a = np.atleast_2d(line_points) - circle_center
+    points_b = points_a + polar2cartesian(
+        np.column_stack((np.ones_like(line_directions), line_directions)))
+
+    d = points_b - points_a
+
+    # Pre-compute variables common to x and y equations.
+    d_r_squared = d[:, 0]**2 + d[:, 1]**2
+    determinant = points_a[:, 0] * points_b[:, 1] - \
+        points_a[:, 1] * points_b[:, 0]
+    discriminant = circle_radii**2 * d_r_squared - determinant**2
+    discriminant[discriminant < 0] = np.nan
+
+    root = np.sqrt(discriminant)
+    x_sign = np.sign(d[:, 1])
+
+    if both_intersections:
+        points_ab = np.column_stack((
+            determinant * d[:, 1] - x_sign * d[:, 0] * root,  # x1
+            -determinant * d[:, 0] - np.abs(d[:, 1]) * root,  # y1
+            determinant * d[:, 1] + x_sign * d[:, 0] * root,  # x2
+            -determinant * d[:, 0] + np.abs(d[:, 1]) * root  # y2
+        ))
+        circle_center = np.column_stack((circle_center, circle_center))
+    else:
+        sign = np.sign(np.sin(line_directions))  # which point
+        points_ab = np.column_stack((
+            determinant * d[:, 1] - sign * x_sign * d[:, 0] * root,
+            -determinant * d[:, 0] - sign * np.abs(d[:, 1]) * root
+        ))
+
+    return (points_ab / np.atleast_2d(d_r_squared).T) + circle_center
