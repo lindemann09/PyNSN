@@ -118,3 +118,11 @@ def salted_rows(array: NDArray, salt=1e-30) -> NDArray:
     array[:, rnd_column] = array[:, rnd_column] + \
         (array[:, 0] == array[:, 1]) * salt
     return array
+
+
+def sign(arr: NDArray) -> NDArray:
+    """returns 1 if value >=0 and
+              -1 if value < 0
+    that is, unlike numpy.sign, it returns 1 for 0"""
+
+    return np.where(arr < 0, -1, 1)

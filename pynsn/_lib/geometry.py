@@ -207,7 +207,7 @@ def line_circle_intersection(line_points: NDArray[np.floating],
     discriminant[discriminant < 0] = np.nan
 
     root = np.sqrt(discriminant)
-    x_sign = np.sign(d[:, 1])
+    x_sign = np.where(d[:, 1] < 0, -1, 1)  # sign with zero -> 1
 
     if both_intersections:
         points_ab = np.column_stack((
@@ -218,10 +218,10 @@ def line_circle_intersection(line_points: NDArray[np.floating],
         ))
         circle_center = np.column_stack((circle_center, circle_center))
     else:
-        sign = np.sign(np.sin(line_directions))  # which point
+        sign = np.where(np.sin(line_directions) < 0, -1, 1)  # which point
         points_ab = np.column_stack((
-            determinant * d[:, 1] - sign * x_sign * d[:, 0] * root,
-            -determinant * d[:, 0] - sign * np.abs(d[:, 1]) * root
+            determinant * d[:, 1] + sign * x_sign * d[:, 0] * root,
+            -determinant * d[:, 0] + sign * np.abs(d[:, 1]) * root
         ))
 
     return (points_ab / np.atleast_2d(d_r_squared).T) + circle_center

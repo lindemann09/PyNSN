@@ -433,7 +433,7 @@ class RectangleDot(ABCSpatialRelations):
                 move_size == np.atleast_2d(np.min(move_size, axis=1)).T)
             target_xy_diff[idx] = 0
             # keep side by keeping previous sign,
-            xy_movement[i] = np.sign(self._xy_diff[i]) * target_xy_diff \
+            xy_movement[i] = np_tools.sign(self._xy_diff[i]) * target_xy_diff \
                 - self._xy_diff[i]
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
@@ -510,7 +510,7 @@ def _gather_rectangles(xy_diff: NDArray,
     # remove negative distances
     xy_movement[np.where(xy_movement <= 0)] = 0
     # adjust direction
-    return xy_movement * np.sign(xy_diff) * -1
+    return xy_movement * np_tools.sign(xy_diff) * -1
 
 
 def relations(a_array: Union[NDArray, BaseDotArray, BaseRectangleArray],
