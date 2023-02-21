@@ -278,7 +278,7 @@ class RectangleDot(ABCSpatialRelations):
         return self._cache_distances
 
     def _corner_relations(self, angles=True) -> NDArray:
-        """return distances and directions(angle) of all corners to dot edge.
+        """return radial distances and directions(angle) of all corners to dot edge.
         Array dimensions: (n, 2 [dist, angle], 4 [corners])
 
         negative distance indicate corner inside dot
@@ -357,25 +357,40 @@ class RectangleDot(ABCSpatialRelations):
 
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         if self._a_relative_to_b:
-            # corner relations to polar (n_corner, xy)
-            points_polar = self._corner_relations(angles=True)
-            # remove corner outside
-            i_r, i_c = np.nonzero(points_polar[:, 0, :] >= minimum_gap)
-            points_polar[i_r, :, i_c] = np.nan
-            points_polar[:, 0, :] = self.dot_radii + points_polar[:, 0, :]
+            # get corner
+            corner = geometry.corners(rect_xy=self.rect_xy,
+                                      rect_sizes_div2=self.rect_sizes_div2,
+                                      lt_rb_only=False)
+            # get relations and set corners outside to nan
+            idx_rect, idx_corner = np.nonzero(
+                self._corner_relations(angles=False)[:, 0, :] > minimum_gap)
+            corner[idx_rect, :, idx_corner] = np.nan
 
-            # distance each corner to circle edge in direction rho
-            tmp = np.empty(shape=(self.rho.shape[0], 4))
-            for c in range(4):
-                tmp[:, c] = geometry.point_in_circle_distance(
-                    points_polar=points_polar[:, :, c],
-                    radii=self.dot_radii + minimum_gap,
-                    rho=self.rho)
-            displ_polar = np.zeros_like(self._xy_diff)
-            displ_polar[:, 0] = np.nanmax(tmp, axis=1)
-            displ_polar[:, 1] = self.rho
-            displ_polar[np.isnan(displ_polar)] = 0
-            print(displ_polar)
+            intersections = [geometry.line_circle_intersection(
+                line_points=corner[:, :, x],
+                line_directions=self.rho,
+                circle_center=self.dot_xy,
+                circle_radii=self.dot_radii) for x in range(4)]
+            intersections = np.stack(intersections, axis=2)
+
+            # get idx of corner with maximum distance
+            dist_xy = intersections - corner
+            distances = np.hypot(dist_xy[:, 0, :],
+                                 dist_xy[:, 1, :])  # distance to intersection
+
+            idx_rect, idx_corner = np_tools.nonzero_one_per_dim(
+                distances == np.atleast_2d(np.nanmax(distances, axis=1)).T)
+
+            # get respective intersections and calc displacement (cartesian)
+            displ_cart = np.zeros_like(self.rect_sizes_div2)
+            displ_cart[idx_rect, :] = intersections[idx_rect, :, idx_corner] - \
+                corner[idx_rect, :, idx_corner]
+
+            if polar:
+                return geometry.cartesian2polar(displ_cart)
+            else:
+                return displ_cart
+
         else:
             radii2 = self.dot_radii * np.ones((1, 2))
             xy_dist = np.abs(self._xy_diff) - (self.rect_sizes_div2 + radii2)
@@ -383,10 +398,10 @@ class RectangleDot(ABCSpatialRelations):
                                              distances=self.distances,
                                              xy_dist=xy_dist,
                                              minimum_gap=minimum_gap)
-        if polar:
-            return displ_polar
-        else:
-            return geometry.polar2cartesian(displ_polar)
+            if polar:
+                return displ_polar
+            else:
+                return geometry.polar2cartesian(displ_polar)
 
     def _gather_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
         """ """

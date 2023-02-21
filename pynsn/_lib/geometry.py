@@ -77,7 +77,7 @@ def corners(rect_xy: NDArray, rect_sizes_div2: NDArray, lt_rb_only=False) -> NDA
     0=left-top, 1=right-top, 2=right-bottom, 3=left-bottom
 
     if lt_rb_only=True,
-        return only  left-top and right-bottom point (n, 2_xy, 2=(lt, rb)
+        return only  left-top and right-bottom point (n, 2_xy, 2=[lt, rb])
         """
     rect_xy = np.atleast_2d(rect_xy)
     rect_sizes_div2 = np.atleast_2d(rect_sizes_div2)
@@ -135,24 +135,6 @@ def chord_distance_to_center(r: NDArray, chord_len: NDArray) -> NDArray[np.float
     return np.sqrt(r**2 - 0.25 * chord_len**2)
 
 
-def point_in_circle_distance(points_polar: NDArray,
-                             radii: NDArray[np.floating],
-                             rho: NDArray) -> NDArray[np.floating]:
-    """Returns distances of points (inside a circle) to the circle edge in the
-    direction rho.
-
-    points_polar: polar coordinates relative to circle center
-    radii: circle radii
-    rho: direction towards the edge
-    """
-
-    dist = points_polar[:, 0]  # distance points circle center
-    angle = 0.5*(rho - points_polar[:, 1])
-
-    radii = np.squeeze(radii)
-    return np.sqrt(radii**2 + dist**2 - 2 * radii * dist * np.cos(angle))
-
-
 def line_circle_intersection(line_points: NDArray[np.floating],
                              line_directions: NDArray[np.floating],
                              circle_center: NDArray[np.floating],
@@ -203,7 +185,7 @@ def line_circle_intersection(line_points: NDArray[np.floating],
     d_r_squared = d[:, 0]**2 + d[:, 1]**2
     determinant = points_a[:, 0] * points_b[:, 1] - \
         points_a[:, 1] * points_b[:, 0]
-    discriminant = circle_radii**2 * d_r_squared - determinant**2
+    discriminant = np.squeeze(circle_radii)**2 * d_r_squared - determinant**2
     discriminant[discriminant < 0] = np.nan
 
     root = np.sqrt(discriminant)

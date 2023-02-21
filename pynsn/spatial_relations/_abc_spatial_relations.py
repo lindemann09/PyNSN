@@ -75,8 +75,8 @@ class ABCSpatialRelations(metaclass=ABCMeta):
 
     @abstractmethod
     def _spread_displacements(self, minimum_gap: float, polar: bool) -> NDArray:
-        """Coordinates (cartesian or polar) of the shortest required
-        displacement that moves object B into object A (or visa versa)
+        """Coordinates (cartesian or polar) of the required displacement that
+        moves object B into object A (or visa versa). Movement direction is rho.
         """
 
     @abstractmethod
