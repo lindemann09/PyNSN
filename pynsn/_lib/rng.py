@@ -1,7 +1,6 @@
 """NOTE:
-import always entire module and call `rng.generator` to ensure always the
-access of the newly initialized random generator if  `init_random_generator` has
-been called
+import always the entire module and call `rng.generator` to ensure that you
+access of the newly initialized random generator, after calling `init_random_generator`
 """
 
 from typing import Sequence, Union

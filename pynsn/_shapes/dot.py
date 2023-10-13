@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from typing import Any
 
-import numpy as np
-from numpy.typing import ArrayLike
+from math import pi
+from shapely import Polygon, Point
 
-from .. import _shapes
-from .abc_shape import ABCShape
-from .coordinate import Coordinate
+from .abc_shape import ShapeType
+from .._lib.geometry import Coord2DLike
 
 
-class Dot(ABCShape):
-    __slots__ = ("_diameter",)
+class Dot(ShapeType):
+    __slots__ = "_diameter"
 
-    def __init__(self, xy: ArrayLike = (0, 0),
-                 diameter: float = 0,
-                 attribute: Any = None) -> None:
+    QUAD_SEGS = 32  #  line segments used to approximate dot
+
+    def __init__(
+        self, xy: Coord2DLike = (0, 0), diameter: float = 0, attribute: Any = None
+    ) -> None:
         """Initialize a dot
 
         Parameters
@@ -29,41 +30,29 @@ class Dot(ABCShape):
         super().__init__(xy, attribute)
         self._diameter = diameter
 
+    def _make_polygon(self, buffer: int = 0) -> Polygon:
+        bf = self.diameter / 2 + buffer
+        return Point(self._xy).buffer(bf, quad_segs=Dot.QUAD_SEGS)
+
     def __repr__(self):
-        return f"Dot(xy={self.xy}, diameter={self._diameter}, " \
-            + "attribute = '{self.attribute}')"
+        return (
+            f"Dot(xy={self.xy}, diameter={self._diameter}, "
+            + f"attribute = {self.attribute})"
+        )
 
     @property
     def diameter(self) -> float:
         return self._diameter
 
     @diameter.setter
-    def diameter(self, value: float) -> None:
-        self._diameter = value
+    def diameter(self, val: float):
+        self._diameter = val
+        self._clear_cached_polygons()
 
     @property
     def area(self) -> float:
-        return np.pi * (self._diameter ** 2) / 4.0
+        return pi * (self._diameter**2) / 4.0
 
     @property
     def perimeter(self) -> float:
-        return np.pi * self._diameter
-
-    def is_inside(self, other: _shapes.ShapeType) -> bool:
-        # FIXME remove this function
-
-        if isinstance(other, _shapes.Dot):
-            return Coordinate.distance(self, other) \
-                < (other.diameter - self._diameter)/2.0
-
-        elif isinstance(other, _shapes.Rectangle):
-            left_buttom = self._xy - self._diameter / 2
-            right_top = self._xy + self._diameter / 2
-            ltrb = other.get_ltrb().flatten()
-            if left_buttom[0] < ltrb[0] \
-                    or right_top[1] > ltrb[1] \
-                    or right_top[0] > ltrb[2] \
-                    or left_buttom[1] < ltrb[3]:
-                return False
-            else:
-                return True
+        return pi * self._diameter

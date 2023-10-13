@@ -1,76 +1,87 @@
 from __future__ import annotations
 
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Tuple, Union
 
-from numpy.typing import ArrayLike
+from shapely import Polygon
 
 from ..image._image_colours import Colour
-from .coordinate import Coordinate
+from .._lib.geometry import Coord2DLike
 
 
-class ABCShape(Coordinate, metaclass=ABCMeta):
-    """Handles polar and cartesian representation (optimised processing, i.e.,
-    conversions between coordinates systems will be done only once if needed)
-    """
+class ShapeType(metaclass=ABCMeta):
+    """Abstract Shape Type Class"""
 
-    __slots__ = ("_attribute",)
+    __slots__ = ("attribute", "_xy", "_polyg", "_polyg_buffered", "_buffer")
 
-    def __init__(self, xy: ArrayLike,
-                 attribute: Any) -> None:
-        Coordinate.__init__(self, xy=xy)
-        self._attribute = None
-        self.attribute = attribute  # call setter
+    def __init__(self, xy: Coord2DLike, attribute: Any) -> None:
+        self._xy = tuple(xy)
+        if len(self._xy) != 2:
+            raise ValueError(
+                "size has be an iterable object of two numerals (width, height)"
+            )
+        self.attribute = attribute
+        # caches polygons
+        self._polyg = None
+        self._polyg_buffered = None
+        self._buffer = 0  # last buffer size for poly_buffered
 
     @property
-    def attribute(self) -> Any:
-        return self._attribute
+    def xy(self) -> Tuple:
+        return self._xy
 
-    @attribute.setter
-    def attribute(self, attr: Any) -> None:
-        """set attribute
+    @xy.setter
+    def xy(self, val: Coord2DLike):
+        self._xy = tuple(val)
+        if len(self._xy) != 2:
+            raise ValueError(
+                "size has be an iterable object of two numerals (width, height)"
+            )
+        self._clear_cached_polygons()
 
-        Parameters
-        ----------
-        attr : anything
-            can be, in principle, anything.
-            If Colour or PictureFile, it will convert it to their string
-            representation
-        """
-        if isinstance(attr, Colour):
-            self._attribute = attr.colour
+    def polygon(self, buffer: int = 0) -> Polygon:
+        """return shapely polygon of this object"""
+
+        if buffer == 0:
+            if isinstance(self._polyg, Polygon):
+                return self._polyg
+            else:
+                self._polyg = self._make_polygon(0)
+                return self._polyg
         else:
-            self._attribute = attr
+            if isinstance(self._polyg_buffered, Polygon) and self._buffer == buffer:
+                return self._polyg_buffered
+            else:
+                self._polyg_buffered = self._make_polygon(buffer)
+                self._buffer = buffer
+                return self._polyg_buffered
 
-    def get_colour(self) -> Colour:
+    def _clear_cached_polygons(self):
+        self._polyg = None
+        self._polyg_buffered = None  # caches polygons
+
+    @property
+    def colour(self) -> Colour:
         """Class instance of the attribute, if possible
 
         Returns
         -------
         rtn : Colour
         """
-
-        if isinstance(self._attribute, str):
-            # check if colour or picture
-            col = Colour(self._attribute)
-            if col.colour is not None:
-                return col
-        return Colour(None)
+        try:
+            return Colour(self.attribute)
+        except TypeError:
+            return Colour(None)
 
     @abstractmethod
     def __repr__(self) -> str:
         """"""
 
-#    @abstractmethod
-#    def spatial_relation(self, other: ABCShape) -> float:
-#        """Spatial Relation to another object
-#
-#        Notes:
-#            Negative distances indicate an overlap and represent minimum distance
-#            between outer shape boarders
-#        """
+    @abstractmethod
+    def _make_polygon(self, buffer: int = 0) -> Polygon:
+        """make a polygon"""
 
     @property
     @abstractmethod
@@ -81,3 +92,12 @@ class ABCShape(Coordinate, metaclass=ABCMeta):
     @abstractmethod
     def perimeter(self) -> float:
         """perimeter"""
+
+    def intersects(self, other: Union[ShapeType, Polygon]) -> bool:
+        """Returns True if geometries intersect, else False
+
+        The function wraps shapes.polygon.intersects
+        """
+        if isinstance(other, ShapeType):
+            other = other.polygon()
+        return self.polygon().intersects(other)

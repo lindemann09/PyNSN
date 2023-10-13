@@ -1,26 +1,27 @@
 from __future__ import annotations
 
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import Any, Iterator
+from typing import Any, List, Tuple
+from math import sqrt
 
-import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from shapely import Polygon
 
-from .. import _shapes
-from .abc_shape import ABCShape
-from .coordinate import Coordinate
-
-# TODO doc "basic properities" is all classes (like width)
+from .abc_shape import ShapeType
+from .._lib.geometry import Coord2DLike
 
 
-class Rectangle(ABCShape):
+class Rectangle(ShapeType):
+    __slots__ = ("_geo", "_size")
 
-    __slots__ = ("_size", )
+    QUAD_SEGS = 16  #  line segments used to approximate buffer
 
-    def __init__(self, xy: ArrayLike = (0, 0),
-                 size: ArrayLike = (0, 0),
-                 attribute: Any = None):
+    def __init__(
+        self,
+        xy: Coord2DLike = (0, 0),
+        size: Coord2DLike = (0, 0),
+        attribute: Any = None,
+    ):
         """Initialize a Rectangle
 
         Rectangle can also consist of a picture
@@ -35,12 +36,39 @@ class Rectangle(ABCShape):
         """
 
         super().__init__(xy, attribute)
-        self._size = np.empty(2)
-        self.size = size  # call setter
+        self._size = tuple(size)
+        if len(self._size) != 2:
+            raise ValueError("size has be an tuple of two numerals (width, height)")
+
+    def _make_polygon(self, buffer: int = 0) -> Polygon:
+        l = self._xy[0] - self._size[0] / 2
+        r = self._xy[0] + self._size[0] / 2
+        t = self._xy[1] + self._size[1] / 2
+        b = self._xy[1] - self._size[1] / 2
+        rtn = Polygon(((l, b), (l, t), (r, t), (r, b)))
+        if buffer == 0:
+            return rtn
+        else:
+            return rtn.buffer(buffer, quad_segs=Rectangle.QUAD_SEGS)
 
     def __repr__(self):
-        return f"Rectangle(xy={self.xy}, size={self.size}, " \
+        return (
+            f"Rectangle(xy={self._xy}, size={self._size}, "
             + f"attribute='{self.attribute}')"
+        )
+
+    @property
+    def size(self) -> Tuple:
+        return self._size
+
+    @size.setter
+    def size(self, val: Coord2DLike):
+        self._size = tuple(val)
+        if len(self._size) != 2:
+            raise ValueError(
+                "size has be an iterable object of two numerals (width, height)"
+            )
+        self._clear_cached_polygons()
 
     @property
     def width(self) -> float:
@@ -52,69 +80,28 @@ class Rectangle(ABCShape):
 
     @property
     def area(self) -> float:
-        return self.width * self.height
+        return self._size[0] * self._size[1]
 
     @property
     def perimeter(self) -> float:
-        return 2 * (self.width + self.height)
+        return 2 * (self._size[0] + self._size[1])
 
     @property
-    def left(self) -> float:
-        return self._xy[0] - 0.5 * self._size[0]
+    def left_top(self) -> Tuple:
+        return self.polygon().exterior.coords[1]
 
     @property
-    def top(self) -> float:
-        return self._xy[1] + 0.5 * self._size[1]
+    def right_bottom(self) -> Tuple:
+        return self.polygon().exterior.coords[3]
 
     @property
-    def right(self) -> float:
-        return self._xy[0] + 0.5 * self._size[0]
-
-    @property
-    def bottom(self) -> float:
-        return self._xy[1] - 0.5 * self._size[1]
-
-    def get_ltrb(self) -> NDArray:
-        '''returns coordinates of Left-Top and Right-Bottom corners
+    def edges(self) -> List:
+        """returns coordinates of all four edges clockwise starting with Left-Top
 
         Returns:
-            NDArray with coordinates [[left, top],
-                                      [right, bottom]]
-        '''
-        rtn = np.array([self._xy - (self._size / 2),
-                        self._xy + (self._size / 2)])
-        rtn[:, 1] = np.flip(rtn[:, 1])
-        return rtn
-
-    def iter_corners(self) -> Iterator[Coordinate]:
-        """iterator over all four corners
-
-        Returns
-        -------
-        iterator over Coordinates or tuple (x,y)
+            2DArray with xy-coordinates
         """
-
-        corners = self.get_ltrb()
-        # left left, top
-        yield Coordinate(xy=corners[0, :])
-        # right, top
-        yield Coordinate(xy=np.array((corners[1, 0], corners[0, 1])))
-        # right, bottom
-        yield Coordinate(xy=corners[1, :])
-        #  left, bottom
-        yield Coordinate(xy=corners.diagonal())
-
-    @property
-    def size(self) -> NDArray:
-        return self._size
-
-    @size.setter
-    def size(self, values: ArrayLike) -> None:
-        values = np.asarray(values)
-        if values.shape != (2,):
-            raise ValueError(
-                "size has be an iterable object with two elements (width, height)")
-        self._size = values
+        return self.polygon().exterior.coords[1:]
 
     @property
     def proportion(self) -> float:
@@ -122,26 +109,6 @@ class Rectangle(ABCShape):
         return self._size[0] / self._size[1]
 
     @property
-    def diagonal(self) -> None:
-        '''size of the diagonal'''
-        return np.sqrt(self._size[0] ** 2 + self._size[1] ** 2)
-
-    def is_inside(self, other: _shapes.ShapeType) -> bool:
-        # FIXME remove this function
-        if isinstance(other, _shapes.Dot):
-            r_other = other.diameter / 2.0
-            for corner in self.iter_corners():
-                # distance between other center & corner > radius
-                if Coordinate.distance(other, corner) > r_other:
-                    return False
-            return True
-
-        elif isinstance(other, _shapes.Rectangle):
-            is_smaller = self.get_ltrb() < other.get_ltrb()
-            if is_smaller[0, 0] \
-                    or not is_smaller[0, 1] \
-                    or not is_smaller[1, 0] \
-                    or is_smaller[1, 1]:
-                return False
-            else:
-                return True
+    def diagonal(self) -> float:
+        """size of the diagonal"""
+        return sqrt(self._size[0] ** 2 + self._size[1] ** 2)

@@ -2,13 +2,11 @@
 Draw a random number from a beta dirstribution
 """
 
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import sys
 from collections import OrderedDict
 from typing import Any
-
-import numpy as np
 
 
 def join_dict_list(list_of_dicts):
@@ -20,22 +18,6 @@ def join_dict_list(list_of_dicts):
                 rtn[k].append(v)
             else:
                 rtn[k] = [v]
-    return rtn
-
-
-def dict_to_csv(dictionary, variable_names=False, dict_of_lists=False):
-    d = OrderedDict(dictionary.items())
-    rtn = ""
-    if variable_names:
-        rtn += ",".join(d.keys()) + "\n"
-
-    if dict_of_lists:
-        prop_np = np.asarray(list(d.values())).T  # list is requires in PY3
-        for x in prop_np:
-            rtn += ", ".join(map(str, x)) + "\n"
-    else:
-        rtn += ",".join(map(str, d.values())) + "\n"
-
     return rtn
 
 
@@ -52,7 +34,6 @@ def key_value_format(key: str, value: Any) -> str:
 
 
 def dict_to_text(the_dict: dict) -> str:
-
     rtn = ""
     for k, v in the_dict.items():
         if len(rtn) == 0:
