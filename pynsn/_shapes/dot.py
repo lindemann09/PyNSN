@@ -2,7 +2,7 @@ from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import Any
+from typing import Any, Optional
 
 from math import pi
 from shapely import Polygon, Point
@@ -30,6 +30,21 @@ class Dot(ShapeType):
         super().__init__(xy, attribute)
         self._diameter = diameter
 
+    def variant(
+        self,
+        xy: Optional[Coord2DLike] = None,
+        diameter: Optional[float] = None,
+        attribute: Optional[Any] = None,
+    ) -> Dot:
+        """return a variant of this Rectangle"""
+        if xy is None:
+            xy = self.xy
+        if diameter is None:
+            diameter = self.diameter
+        if attribute is None:
+            attribute = self.attribute
+        return Dot(xy, diameter, attribute)
+
     def _make_polygon(self, buffer: int = 0) -> Polygon:
         bf = self.diameter / 2 + buffer
         return Point(self._xy).buffer(bf, quad_segs=Dot.QUAD_SEGS)
@@ -43,11 +58,6 @@ class Dot(ShapeType):
     @property
     def diameter(self) -> float:
         return self._diameter
-
-    @diameter.setter
-    def diameter(self, val: float):
-        self._diameter = val
-        self._clear_cached_polygons()
 
     @property
     def area(self) -> float:

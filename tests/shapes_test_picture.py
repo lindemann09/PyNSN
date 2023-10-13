@@ -1,4 +1,3 @@
-from copy import copy
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 from pynsn import Colour, _shapes
@@ -21,23 +20,24 @@ def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
         _ImageDraw.Draw(img).line((xy_a, xy_b), fill=shape.colour.value, width=2)
         return
 
-    shape = copy(shape)
-    shape.xy = _c2i_coord(
+    xy = _c2i_coord(
         (shape.xy[0] * scaling_factor, shape.xy[1] * scaling_factor), img.size
     )
-    col = shape.colour.value
     if isinstance(shape, _shapes.Dot):
-        shape.diameter = shape.diameter * scaling_factor
-        r = shape.diameter / 2
-        x, y = shape.xy
-        _ImageDraw.Draw(img).ellipse((x - r, y - r, x + r, y + r), fill=col)
+        r = (shape.diameter * scaling_factor) / 2
+        x, y = xy
+        _ImageDraw.Draw(img).ellipse(
+            (x - r, y - r, x + r, y + r), fill=shape.colour.value
+        )
     elif isinstance(shape, _shapes.Rectangle):
-        shape.size = (shape.size[0] * scaling_factor, shape.size[1] * scaling_factor)
+        shape = shape.variant(
+            xy=xy, size=(shape.size[0] * scaling_factor, shape.size[1] * scaling_factor)
+        )
         left, top = shape.left_top
         right, bottom = shape.right_bottom
         # rectangle shape
         _ImageDraw.Draw(img).rectangle(
-            (left, top, right, bottom), fill=col
+            (left, top, right, bottom), fill=shape.colour.value
         )  # TODO decentral _shapes seems to be bit larger than with pyplot
     # elif isinstance(shape, _shapes.Picture):
     #     tmp = _np.asarray(shape.size) * scaling_factor

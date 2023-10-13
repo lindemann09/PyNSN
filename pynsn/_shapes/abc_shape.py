@@ -3,12 +3,12 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Tuple, Union
+from typing import Any, Union
 
 from shapely import Polygon
 
 from ..image._image_colours import Colour
-from .._lib.geometry import Coord2DLike
+from .._lib.geometry import Coord2DLike, Coord2D
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -17,11 +17,11 @@ class ShapeType(metaclass=ABCMeta):
     __slots__ = ("attribute", "_xy", "_polyg", "_polyg_buffered", "_buffer")
 
     def __init__(self, xy: Coord2DLike, attribute: Any) -> None:
-        self._xy = tuple(xy)
-        if len(self._xy) != 2:
+        if len(xy) != 2:
             raise ValueError(
                 "size has be an iterable object of two numerals (width, height)"
             )
+        self._xy = xy
         self.attribute = attribute
         # caches polygons
         self._polyg = None
@@ -29,38 +29,21 @@ class ShapeType(metaclass=ABCMeta):
         self._buffer = 0  # last buffer size for poly_buffered
 
     @property
-    def xy(self) -> Tuple:
-        return self._xy
-
-    @xy.setter
-    def xy(self, val: Coord2DLike):
-        self._xy = tuple(val)
-        if len(self._xy) != 2:
-            raise ValueError(
-                "size has be an iterable object of two numerals (width, height)"
-            )
-        self._clear_cached_polygons()
+    def xy(self) -> Coord2D:
+        return self._xy  # type: ignore
 
     def polygon(self, buffer: int = 0) -> Polygon:
         """return shapely polygon of this object"""
 
         if buffer == 0:
-            if isinstance(self._polyg, Polygon):
-                return self._polyg
-            else:
+            if not isinstance(self._polyg, Polygon):
                 self._polyg = self._make_polygon(0)
-                return self._polyg
+            return self._polyg
         else:
-            if isinstance(self._polyg_buffered, Polygon) and self._buffer == buffer:
-                return self._polyg_buffered
-            else:
+            if not isinstance(self._polyg_buffered, Polygon) or self._buffer != buffer:
                 self._polyg_buffered = self._make_polygon(buffer)
                 self._buffer = buffer
-                return self._polyg_buffered
-
-    def _clear_cached_polygons(self):
-        self._polyg = None
-        self._polyg_buffered = None  # caches polygons
+            return self._polyg_buffered
 
     @property
     def colour(self) -> Colour:
@@ -93,11 +76,29 @@ class ShapeType(metaclass=ABCMeta):
     def perimeter(self) -> float:
         """perimeter"""
 
-    def intersects(self, other: Union[ShapeType, Polygon]) -> bool:
+    def intersects(self, other: Union[ShapeType, Polygon], buffer: int = 0) -> bool:
         """Returns True if geometries intersect, else False
 
         The function wraps shapes.polygon.intersects
         """
         if isinstance(other, ShapeType):
             other = other.polygon()
-        return self.polygon().intersects(other)
+        return self.polygon(buffer).intersects(other)
+
+    def is_inside(self, other: Union[ShapeType, Polygon], buffer: int = 0) -> bool:
+        """Returns True if the shape is fully inside the other, else False
+
+        The function wraps shapes.polygon.covered_by
+        """
+        if isinstance(other, ShapeType):
+            other = other.polygon()
+        return self.polygon(buffer).covered_by(other)
+
+    def distance(self, other: Union[ShapeType, Polygon]) -> float:
+        """Unitless distance to other geometry (float)
+
+        The function wraps shapes.polygon.distance
+        """
+        if isinstance(other, ShapeType):
+            other = other.polygon()
+        return self.polygon().distance(other)

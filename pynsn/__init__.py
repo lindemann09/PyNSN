@@ -20,6 +20,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
 
 from ._shapes import Dot, Rectangle, Picture, ShapeType
 from ._lib.colour import Colour, ColourType
+from ._stimulus.nsn_stimulus import NSNStimulus
 
 
 def _print_version_info():

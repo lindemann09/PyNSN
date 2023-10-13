@@ -2,13 +2,13 @@ from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Optional
 from math import sqrt
 
 from shapely import Polygon
 
 from .abc_shape import ShapeType
-from .._lib.geometry import Coord2DLike
+from .._lib.geometry import Coord2DLike, Coord2D
 
 
 class Rectangle(ShapeType):
@@ -40,6 +40,21 @@ class Rectangle(ShapeType):
         if len(self._size) != 2:
             raise ValueError("size has be an tuple of two numerals (width, height)")
 
+    def variant(
+        self,
+        xy: Optional[Coord2DLike] = None,
+        size: Optional[Coord2DLike] = None,
+        attribute: Optional[Any] = None,
+    ) -> Rectangle:
+        """return a variant of this Rectangle"""
+        if xy is None:
+            xy = self.xy
+        if size is None:
+            size = self.size
+        if attribute is None:
+            attribute = self.attribute
+        return Rectangle(xy, size, attribute)
+
     def _make_polygon(self, buffer: int = 0) -> Polygon:
         l = self._xy[0] - self._size[0] / 2
         r = self._xy[0] + self._size[0] / 2
@@ -58,17 +73,8 @@ class Rectangle(ShapeType):
         )
 
     @property
-    def size(self) -> Tuple:
-        return self._size
-
-    @size.setter
-    def size(self, val: Coord2DLike):
-        self._size = tuple(val)
-        if len(self._size) != 2:
-            raise ValueError(
-                "size has be an iterable object of two numerals (width, height)"
-            )
-        self._clear_cached_polygons()
+    def size(self) -> Coord2D:
+        return self._size  # type: ignore
 
     @property
     def width(self) -> float:
