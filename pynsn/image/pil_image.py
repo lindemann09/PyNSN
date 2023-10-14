@@ -1,27 +1,23 @@
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from copy import copy
-from typing import Optional, Union
+import typing as _tp
 
 import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .._lib.np_tools import round2
-from .. import _shapes
+from .._lib .geometry import cartesian2image_coordinates as _c2i_coord
 from . import _array_draw
 from .. import _stimulus
 from ._image_colours import ImageColours
-
 
 # TODO pillow supports no alpha/opacity
 
 
 def create(
     nsn_stimulus: _stimulus.NSNStimulus,
-    colours: Optional[ImageColours] = None,
-    antialiasing: Union[bool, int] = True,
+    colours: _tp.Optional[ImageColours] = None,
+    antialiasing: _tp.Union[bool, int] = True,
 ) -> _Image.Image:
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
@@ -59,42 +55,44 @@ class _PILDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
     def draw_shape(
-        img, shape: _shapes.ShapeType, opacity: float, scaling_factor: float
+        img, shape: _stimulus.ShapeType, opacity: float, scaling_factor: float
     ):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        shape = copy(shape)
-        shape.xy = _c2i_coord(shape.xy * scaling_factor, img.size).tolist()
-        col = shape.get_colour()
+        xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size)
+        shape = shape.variant(xy=xy)
 
-        if isinstance(shape, _shapes.Dot):
-            shape.diameter = shape.diameter * scaling_factor
-            r = shape.diameter / 2
+        if isinstance(shape, _stimulus.Dot):
+            r = (shape.diameter * scaling_factor) / 2
+            x, y = shape.xy
             _ImageDraw.Draw(img).ellipse(
-                (shape.x - r, shape.y - r, shape.x + r, shape.y + r), fill=col.value
+                (x - r, y - r, x + r, y + r), fill=shape.colour.value
             )
-        elif isinstance(shape, _shapes.Picture):
-            tmp = round2(_np.asarray(shape.size) * scaling_factor, decimals=0)
-            shape.size = tmp.tolist()
+
+        elif isinstance(shape, _stimulus.Picture):
+            shape = shape.variant(size=_np.asarray(
+                shape.size) * scaling_factor)
             # picture
-            target_box = round2(shape.get_ltrb(), decimals=0)
+            target_box = _np.array([shape.left, shape.top,
+                                   shape.right, shape.bottom])
             target_box[:, 1] = _np.flip(target_box[:, 1])  # reversed y axes
             pict = _Image.open(shape.filename, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
-                pict = pict.resize(shape.size.tolist(), resample=_Image.ANTIALIAS)
+                pict = pict.resize((int(shape.size[0]), int(shape.size[1])),
+                                   resample=_Image.ANTIALIAS)
 
             tr_layer = _Image.new("RGBA", img.size, (0, 0, 0, 0))
             tr_layer.paste(pict, target_box.flatten().tolist())
             res = _Image.alpha_composite(img, tr_layer)
             img.paste(res)
 
-        elif isinstance(shape, _shapes.Rectangle):
-            tmp = _np.asarray(shape.size) * scaling_factor
-            shape.size = tmp.tolist()
+        elif isinstance(shape, _stimulus.Rectangle):
+            shape = shape.variant(size=_np.asarray(
+                shape.size) * scaling_factor)
             # rectangle shape
-            _ImageDraw.Draw(img).rectangle(
-                (shape.left, shape.top, shape.right, shape.bottom), fill=col.value
-            )  # TODO decentral _shapes seems to be bit larger than with pyplot
+            _ImageDraw.Draw(img).rectangle((shape.left, shape.bottom,
+                                            shape.right, shape.top),
+                                           fill=shape.colour.value)  # TODO decentral _shapes seems to be bit larger than with pyplot
 
         else:
             raise NotImplementedError(

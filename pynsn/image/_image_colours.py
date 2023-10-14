@@ -23,15 +23,10 @@ class ImageColours(object):
         opacity_object: Optional[float] = None,
         opacity_guides: Optional[float] = None,
     ):
-        self.target_area = Colour(target_area, default=ImageColours.COL_TARGET_AREA)
-        self.field_area_positions = Colour(field_area_positions, default=None)
-        self.field_area = Colour(field_area, default=None)
-        self.center_of_field_area = Colour(center_of_field_area, default=None)
-        self.center_of_mass = Colour(center_of_mass, default=None)
-        self.background = Colour(background, default=None)
-        self.default_object_colour = Colour(
-            default_object_colour, default=ImageColours.COL_DEFAULT_OBJECT
-        )
+        if target_area is None:
+            target_area = ImageColours.COL_TARGET_AREA
+        if default_object_colour is None:
+            default_object_colour = ImageColours.COL_DEFAULT_OBJECT
         if opacity_guides is None:
             opacity_guides = ImageColours.OPACITY_GUIDES
         if opacity_guides < 0 or opacity_guides > 1:
@@ -44,6 +39,14 @@ class ImageColours(object):
             raise ValueError(
                 f"opacity_object ({opacity_object}) has to be between 0 and 1"
             )
+
+        self.target_area = Colour(target_area)
+        self.field_area_positions = Colour(field_area_positions)
+        self.field_area = Colour(field_area)
+        self.center_of_field_area = Colour(center_of_field_area)
+        self.center_of_mass = Colour(center_of_mass)
+        self.background = Colour(background)
+        self.default_object_colour = Colour(default_object_colour)
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 

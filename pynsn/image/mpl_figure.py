@@ -7,7 +7,6 @@ from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
 from .. import _stimulus
-from .. import _shapes
 from . import _array_draw
 from ._image_colours import ImageColours
 
@@ -58,16 +57,18 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         pass
 
     @staticmethod
-    def draw_shape(img, shape: _shapes.ShapeType, opacity, scaling_factor):
+    def draw_shape(img, shape: _stimulus.ShapeType, opacity, scaling_factor):
         attr = shape.get_colour()
 
-        if isinstance(shape, _shapes.Picture):
-            raise RuntimeError("Pictures are not supported for matplotlib files.")
+        if isinstance(shape, _stimulus.Picture):
+            raise RuntimeError(
+                "Pictures are not supported for matplotlib files.")
 
-        if isinstance(shape, _shapes.Dot):
+        if isinstance(shape, _stimulus.Dot):
             r = shape.diameter / 2
-            plt_shape = _plt.Circle(xy=shape.xy, radius=r, color=attr.value, lw=0)
-        elif isinstance(shape, _shapes.Rectangle):
+            plt_shape = _plt.Circle(
+                xy=shape.xy, radius=r, color=attr.value, lw=0)
+        elif isinstance(shape, _stimulus.Rectangle):
             xy = (shape.left, shape.bottom)
             plt_shape = _plt.Rectangle(
                 xy=xy, width=shape.width, height=shape.height, color=attr.value, lw=0
@@ -85,8 +86,8 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         hull = _np.append(points, [points[0]], axis=0)
         for i in range(1, hull.shape[0]):
             line = _plt.Line2D(
-                xdata=hull[i - 1 : i + 1, 0],
-                ydata=hull[i - 1 : i + 1, 1],
+                xdata=hull[i - 1: i + 1, 0],
+                ydata=hull[i - 1: i + 1, 1],
                 linewidth=1,
                 color=convex_hull_colour.colour,
             )

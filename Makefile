@@ -46,3 +46,5 @@ clean:
 		examples\pynsn
 	cd documentation && make clean
 	py3clean .
+
+venv:

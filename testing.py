@@ -8,3 +8,15 @@ print(d)
 d.xy = [100, 100]
 print(r.left_top)
 print(r.right_bottom)
+
+a = np.array(
+    [
+        [10, 12.43],
+        [10, 12.43],
+        [np.nan, np.nan],
+        [10, 12.43],
+        [np.nan, n.nan],
+        [10, 12.43],
+        [10, 12.43],
+    ]
+)

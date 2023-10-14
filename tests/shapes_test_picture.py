@@ -1,6 +1,8 @@
+import numpy as np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
-from pynsn import Colour, _shapes
+
+from pynsn import Colour, Dot, Rectangle, ShapeType
 from pynsn._lib.geometry import cartesian2image_coordinates as _c2i_coord
 
 
@@ -13,31 +15,30 @@ class Line(object):
         self.colour = Colour(colour)
 
 
-def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
+def _draw_shape(img, shape: ShapeType, scaling_factor=1):
     if isinstance(shape, Line):
-        xy_a = _c2i_coord(shape.xy_a, img.size)
-        xy_b = _c2i_coord(shape.xy_b, img.size)
-        _ImageDraw.Draw(img).line((xy_a, xy_b), fill=shape.colour.value, width=2)
+        xy_a = _c2i_coord(np.asarray(shape.xy_a), img.size).tolist()
+        xy_b = _c2i_coord(np.asarray(shape.xy_b), img.size).tolist()
+        xy_a.extend(xy_b)
+        _ImageDraw.Draw(img).line(xy_a, fill=shape.colour.value, width=2)
         return
 
-    xy = _c2i_coord(
-        (shape.xy[0] * scaling_factor, shape.xy[1] * scaling_factor), img.size
-    )
-    if isinstance(shape, _shapes.Dot):
+    xy = _c2i_coord(np.asarray(shape.xy) * scaling_factor, img.size).tolist()
+    if isinstance(shape, Dot):
         r = (shape.diameter * scaling_factor) / 2
         x, y = xy
         _ImageDraw.Draw(img).ellipse(
             (x - r, y - r, x + r, y + r), fill=shape.colour.value
         )
-    elif isinstance(shape, _shapes.Rectangle):
+    elif isinstance(shape, Rectangle):
         shape = shape.variant(
-            xy=xy, size=(shape.size[0] * scaling_factor, shape.size[1] * scaling_factor)
+            xy=xy, size=(shape.size[0] * scaling_factor,
+                         shape.size[1] * scaling_factor)
         )
-        left, top = shape.left_top
-        right, bottom = shape.right_bottom
         # rectangle shape
         _ImageDraw.Draw(img).rectangle(
-            (left, top, right, bottom), fill=shape.colour.value
+            (shape.left, shape.bottom, shape.right,
+             shape.top), fill=shape.colour.value
         )  # TODO decentral _shapes seems to be bit larger than with pyplot
     # elif isinstance(shape, _shapes.Picture):
     #     tmp = _np.asarray(shape.size) * scaling_factor
@@ -57,7 +58,8 @@ def _draw_shape(img, shape: _shapes.ShapeType, scaling_factor=1):
     #     pass
 
     else:
-        raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+        raise NotImplementedError(
+            "Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
 
 def shapes_test_picture(

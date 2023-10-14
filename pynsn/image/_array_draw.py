@@ -6,7 +6,7 @@ from typing import Any, Optional
 import numpy as _np
 
 from .._lib.colour import Colour
-from .._shapes import Dot, Rectangle, Picture
+from .._stimulus.shapes import Dot, Rectangle, Picture
 from .._stimulus import NSNStimulus
 from ._image_colours import ImageColours
 
@@ -15,7 +15,8 @@ from ._image_colours import ImageColours
 
 def check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
     if not isinstance(obj, (NSNStimulus)):
-        raise TypeError("NSNStimulus expected, but not {}".format(type(obj).__name__))
+        raise TypeError(
+            "NSNStimulus expected, but not {}".format(type(obj).__name__))
 
 
 class ABCArrayDraw(metaclass=ABCMeta):
@@ -111,15 +112,16 @@ class ABCArrayDraw(metaclass=ABCMeta):
                 aaf = 1
 
         # prepare the image, make target area if required
-        if isinstance(nsn_stimulus.target_area_shape, Dot):
-            tmp = int(_np.ceil(nsn_stimulus.target_area_shape.diameter) * aaf)
+        if isinstance(nsn_stimulus.target_area, Dot):
+            tmp = int(_np.ceil(nsn_stimulus.target_area.diameter) * aaf)
             target_area_shape = Dot(
                 xy=(0, 0), diameter=tmp, attribute=colours.target_area.value
             )
             image_size = _np.ones(2) * tmp
 
-        elif isinstance(nsn_stimulus.target_area_shape, Rectangle):
-            tmp = _np.int16(_np.ceil(nsn_stimulus.target_area_shape.size) * aaf)
+        elif isinstance(nsn_stimulus.target_area, Rectangle):
+            tmp = _np.int16(
+                _np.ceil(nsn_stimulus.target_area.size) * aaf)
             target_area_shape = Rectangle(
                 xy=(0, 0), size=tmp, attribute=colours.target_area.value
             )
@@ -133,31 +135,29 @@ class ABCArrayDraw(metaclass=ABCMeta):
         )
 
         if colours.target_area.value is not None:
-            self.draw_shape(img, target_area_shape, opacity=1, scaling_factor=1)
+            self.draw_shape(img, target_area_shape,
+                            opacity=1, scaling_factor=1)
 
         if nsn_stimulus.properties.numerosity > 0:
             # draw objects
-            for obj in nsn_stimulus.objects.iter():
-                att = obj.get_colour()
-                if att.colour is None and not isinstance(obj, Picture):
+            for obj in nsn_stimulus.shapes.get_list():
+                col = obj.colour
+                if col.value is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour
-                    obj.attribute = Colour(None, colours.default_object_colour.value)
+                    obj = obj.variant(attribute=colours.default_object_colour)
                 self.draw_shape(
-                    img, obj, opacity=colours.opacity_object, scaling_factor=aaf
-                )
+                    img, obj, opacity=colours.opacity_object, scaling_factor=aaf)
 
             # draw convex hulls
-            if (
-                colours.field_area_positions.value is not None
-                and nsn_stimulus.properties.field_area_positions > 0
-            ):
-                self.draw_convex_hull(
-                    img,
-                    points=nsn_stimulus.properties.convex_hull_positions.xy,
-                    convex_hull_colour=colours.field_area_positions,
-                    opacity=colours.opacity_guides,
-                    scaling_factor=aaf,
-                )
+            if colours.field_area_positions.value is not None:
+                coords = nsn_stimulus.properties.convex_hull.coordinates
+                if len(coords) > 1:
+                    self.draw_convex_hull(
+                        img,
+                        points=coords,
+                        convex_hull_colour=colours.field_area_positions,
+                        opacity=colours.opacity_guides,
+                        scaling_factor=aaf)
             if (
                 colours.field_area.value is not None
                 and nsn_stimulus.properties.field_area > 0
@@ -172,18 +172,18 @@ class ABCArrayDraw(metaclass=ABCMeta):
             #  and center of mass
             if colours.center_of_field_area.value is not None:
                 obj = Dot(
-                    xy=nsn_stimulus.properties.convex_hull.center,
+                    xy=nsn_stimulus.properties.convex_hull.centroid,
                     diameter=10,
-                    attribute=colours.center_of_field_area.value,
+                    attribute=colours.center_of_field_area,
                 )
                 self.draw_shape(
                     img, obj, opacity=colours.opacity_guides, scaling_factor=aaf
                 )
             if colours.center_of_mass.value is not None:
                 obj = Dot(
-                    xy=nsn_stimulus.objects.center_of_mass,
+                    xy=nsn_stimulus.shapes.center_of_mass,
                     diameter=10,
-                    attribute=colours.center_of_mass.value,
+                    attribute=colours.center_of_mass,
                 )
                 self.draw_shape(
                     img, obj, opacity=colours.opacity_guides, scaling_factor=aaf

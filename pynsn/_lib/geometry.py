@@ -2,31 +2,71 @@
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import List, Tuple, Union
-import math
+from typing import Sequence, Tuple, Union
+import numpy as np
+from numpy.typing import NDArray, ArrayLike
+
+# from . import rng
+
+# all functions are 2D arrays (at least) as fist arguments
+
+NORTH = np.pi/2
+SOUTH = np.pi/-2
+NORTH_WEST = np.pi*.75
+NORTH_EAST = np.pi*.25
 
 Coord2D = Tuple[float, float]
-Coord2DLike = Union[Coord2D, List[float]]
+Coord2DLike = Union[Coord2D, Sequence[float], NDArray]
 
 
-def polar2cartesian(polar: Coord2DLike) -> Coord2D:
-    """cartesian coordinates (x,y)
-    polar has to be tuple representing polar coordinates (radius, angle)"""
-    return polar[0] * math.cos(polar[1]), polar[0] * math.sin(polar[1])
+def center_of_coordinates(xy: NDArray) -> NDArray:
+    """ calc center of all positions"""
+    min_max = np.array((np.min(xy, axis=0), np.max(xy, axis=0)))
+    return np.reshape(min_max[1, :] - np.diff(min_max, axis=0) / 2, 2)
 
 
-def cartesian2polar(xy: Coord2DLike) -> Coord2D:
+def polar2cartesian(polar: ArrayLike) -> NDArray:
+    """polar has to be an 2D-array representing polar coordinates (radius, angle)"""
+    polar = np.atleast_2d(polar)
+    return np.array([polar[:, 0] * np.cos(polar[:, 1]),
+                    polar[:, 0] * np.sin(polar[:, 1])]).T
+
+
+def cartesian2polar(xy: ArrayLike,
+                    radii_only: bool = False) -> NDArray[np.floating]:
     """polar coordinates (radius, angle)
-    xy has to be a tuple of two numerals
+
+    if only radii required you may consider radii_only=True for faster
+    processing
+
+    xy has to be a 2D array
     """
-    return math.hypot(xy[0], xy[1]), math.atan2(xy[1], xy[0])
+    xy = np.atleast_2d(xy)
+    rtn = np.hypot(xy[:, 0], xy[:, 1])
+    if not radii_only:
+        # add angle column
+        rtn = np.array([rtn, np.arctan2(xy[:, 1], xy[:, 0])]).T
+    return rtn
 
 
-def cartesian2image_coordinates(xy: Coord2DLike, image_size: Coord2DLike) -> Coord2D:
-    """convert 2D cartesian to image coordinates with (0,0) at top left and
+def cartesian2image_coordinates(xy: ArrayLike,
+                                image_size: ArrayLike) -> NDArray:
+    """convert cartesian to image coordinates with (0,0) at top left and
     reversed y axis
+
+    xy has to be a 2D array
+
     """
-    return xy[0] + image_size[0] / 2, xy[1] * -1 + image_size[1] / 2
+    return (np.asarray(xy) * [1, -1]) + np.asarray(image_size) / 2
+
+
+def round2(arr: NDArray, decimals: int, int_type: type = np.int64) -> NDArray:
+    """rounds and changes to int type if decimals == 0"""
+    arr = np.round(arr, decimals=decimals)
+    if decimals == 0:
+        return arr.astype(int_type)
+    else:
+        return arr
 
 
 # def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArray:
