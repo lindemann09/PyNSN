@@ -13,6 +13,11 @@ from ._image_colours import ImageColours
 
 # TODO pillow supports no alpha/opacity
 
+try:
+    RESAMPLING = _Image.Resampling.LANCZOS  # type: ignore (old versions)
+except AttributeError:
+    RESAMPLING = _Image.LANCZOS
+
 
 def create(
     nsn_stimulus: _stimulus.NSNStimulus,
@@ -34,7 +39,7 @@ def create(
     )
 
 
-class _PILDraw(_array_draw.ABCArrayDraw):
+class _PILDraw(_array_draw.AbstractArrayDraw):
     @staticmethod
     def get_image(image_size, background_colour: str, **kwargs) -> _Image.Image:
         # filename not used for pil images
@@ -42,16 +47,11 @@ class _PILDraw(_array_draw.ABCArrayDraw):
 
     @staticmethod
     def scale_image(image, scaling_factor):
-        try:
-            resample = _Image.Resampling.LANCZOS  # type: ignore (old versions)
-        except AttributeError:
-            resample = _Image.LANCZOS
-
         im_size = (
             int(image.size[0] / scaling_factor),
             int(image.size[1] / scaling_factor),
         )
-        return image.resize(im_size, resample=resample)
+        return image.resize(im_size, resample=RESAMPLING)
 
     @staticmethod
     def draw_shape(
@@ -79,7 +79,7 @@ class _PILDraw(_array_draw.ABCArrayDraw):
             pict = _Image.open(shape.filename, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
                 pict = pict.resize((int(shape.size[0]), int(shape.size[1])),
-                                   resample=_Image.ANTIALIAS)
+                                   resample=RESAMPLING)
 
             tr_layer = _Image.new("RGBA", img.size, (0, 0, 0, 0))
             tr_layer.paste(pict, target_box.flatten().tolist())
@@ -107,9 +107,6 @@ class _PILDraw(_array_draw.ABCArrayDraw):
         draw = _ImageDraw.Draw(img)
         for p in _np.append(points, [points[0]], axis=0):
             if last is not None:
-                draw.line(
-                    _np.append(last, p).tolist(),
-                    width=2,
-                    fill=convex_hull_colour.colour,
-                )
+                draw.line(_np.append(last, p).tolist(),
+                          width=2, fill=convex_hull_colour.value)
             last = p

@@ -26,7 +26,6 @@ class VisualPropertyFlags(enum.IntFlag):
     TOTAL_PERIMETER = enum.auto()
     SPARSITY = enum.auto()
     FIELD_AREA = enum.auto()
-    FIELD_AREA_POSITIONS = enum.auto()
     COVERAGE = enum.auto()
 
     LOG_SPACING = enum.auto()

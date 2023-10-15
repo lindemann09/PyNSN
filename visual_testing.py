@@ -2,7 +2,6 @@ import pynsn
 from pynsn.image import pil_image
 
 from tests.shapes_test_picture import shapes_test_picture, Line
-import shapely
 import numpy as np
 
 d_big = pynsn.Dot((-8, -67), diameter=120, attribute="#00FF00")
@@ -18,34 +17,12 @@ nsn = pynsn.NSNStimulus(
 )
 
 nsn.shapes.add([da, db, ra, rb])
-a = pil_image.create(nsn)
+col = pil_image.ImageColours(field_area="red")
+a = pil_image.create(nsn, colours=col)
 a.save("shapes_test2.png")
 
 
 l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
 objects = [d_big, ra, rb]
 
-
-# print([shapely.Point(o.xy) for o in objects])
-# polys = shapely.Polygon([o.xy for o in objects])
-# ch = polys.convex_hull
-
-ch = nsn.properties.convex_hull.polygon
-
-
-first = None
-last = None
-for xy in shapely.get_coordinates(ch):
-    if first is None:
-        first = xy
-        last = xy
-    else:
-        l = Line(xy_a=last, xy_b=xy, colour="red")
-        objects.append(l)
-        last = xy
-l = Line(xy_a=last, xy_b=first, colour="red")
-objects.append(l)
-
 shapes_test_picture(objects)
-
-print(ch.centroid.x)

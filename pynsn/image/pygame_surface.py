@@ -9,6 +9,8 @@ from . import pil_image as _pil_image
 from ._array_draw import check_nsn_stimulus
 from ._image_colours import ImageColours
 
+# FIXME check pygame2 compatibility
+
 
 def create(nsn_stimulus: _stimulus.NSNStimulus,
            colours: Optional[ImageColours] = None,

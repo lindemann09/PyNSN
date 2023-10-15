@@ -10,6 +10,8 @@ from .. import _stimulus
 from . import _array_draw
 from ._image_colours import ImageColours
 
+# FIXME broken module
+
 
 def create(
     nsn_stimulus: _stimulus.NSNStimulus,
@@ -33,7 +35,7 @@ def create(
     )
 
 
-class _MatplotlibDraw(_array_draw.ABCArrayDraw):
+class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
     @staticmethod
     def get_image(image_size, background_colour, **kwargs) -> _Figure:
         dpi = kwargs["dpi"]
@@ -52,12 +54,7 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         return figure
 
     @staticmethod
-    def scale_image(figure, scaling_factor):
-        # not used
-        pass
-
-    @staticmethod
-    def draw_shape(img, shape: _stimulus.ShapeType, opacity, scaling_factor):
+    def draw_shape(img, shape: _stimulus.ShapeType, opacity):
         attr = shape.get_colour()
 
         if isinstance(shape, _stimulus.Picture):
@@ -82,7 +79,7 @@ class _MatplotlibDraw(_array_draw.ABCArrayDraw):
         img.axes[0].add_artist(plt_shape)
 
     @staticmethod
-    def draw_convex_hull(img, points, convex_hull_colour, opacity, scaling_factor):
+    def draw_convex_hull(img, points, convex_hull_colour, opacity):
         hull = _np.append(points, [points[0]], axis=0)
         for i in range(1, hull.shape[0]):
             line = _plt.Line2D(

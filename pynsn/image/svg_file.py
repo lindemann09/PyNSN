@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as _np
 import svgwrite as _svg
 
-from .. import _shapes, _stimulus
+from .. import _stimulus
 from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
 from . import _array_draw
 from ._image_colours import ImageColours
@@ -31,7 +31,7 @@ def create(filename: str,
                                    filename=filename)
 
 
-class _SVGDraw(_array_draw.ABCArrayDraw):
+class _SVGDraw(_array_draw.AbstractArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
@@ -40,8 +40,8 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
         size = (f"{image_size[0]}px", f"{image_size[1]}px")
         image = _svg.Drawing(size=size, filename=kwargs['filename'])
         if background_colour is not None:
-            bkg_rect = _shapes.Rectangle(xy=(0, 0), size=image_size,
-                                         attribute=background_colour)
+            bkg_rect = _stimulus.Rectangle(xy=(0, 0), size=image_size,
+                                           attribute=background_colour)
             _SVGDraw.draw_shape(image=image, shape=bkg_rect, opacity=100,
                                 scaling_factor=None)
         return image
@@ -55,7 +55,7 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
     def draw_shape(image, shape, opacity, scaling_factor):
         """"""
         assert isinstance(image, _svg.Drawing)
-        if isinstance(shape, _shapes.Picture):
+        if isinstance(shape, _stimulus.Picture):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
         shape = copy(shape)
@@ -63,16 +63,15 @@ class _SVGDraw(_array_draw.ABCArrayDraw):
                               _np.array(svg_image_size(image))).tolist()
         col = shape.get_colour()
 
-        if isinstance(shape, _shapes.Dot):
+        if isinstance(shape, _stimulus.Dot):
             image.add(image.circle(center=shape.xy,
                                    r=shape.diameter / 2,
                                    # stroke_width="0", stroke="black",
                                    fill=col.colour,
                                    opacity=opacity))
-        elif isinstance(shape, _shapes.Rectangle):
-            size = (float(shape.width), float(shape.height))
+        elif isinstance(shape, _stimulus.Rectangle):
             image.add(image.rect(insert=(shape.left, shape.bottom),
-                                 size=size,
+                                 size=shape.size,
                                  fill=col.colour,
                                  opacity=opacity))
         else:

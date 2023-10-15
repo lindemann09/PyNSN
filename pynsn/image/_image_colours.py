@@ -14,7 +14,6 @@ class ImageColours(object):
     def __init__(
         self,
         target_area: ColourType = None,
-        field_area_positions: ColourType = None,
         field_area: ColourType = None,
         center_of_field_area: ColourType = None,
         center_of_mass: ColourType = None,
@@ -41,7 +40,6 @@ class ImageColours(object):
             )
 
         self.target_area = Colour(target_area)
-        self.field_area_positions = Colour(field_area_positions)
         self.field_area = Colour(field_area)
         self.center_of_field_area = Colour(center_of_field_area)
         self.center_of_mass = Colour(center_of_mass)
@@ -54,7 +52,6 @@ class ImageColours(object):
         return OrderedDict(
             {
                 "total_area": self.target_area.value,
-                "field_area_positions": self.field_area_positions.value,
                 "field_area": self.field_area.value,
                 "center_of_field_area": self.center_of_field_area.value,
                 "center_of_mass": self.center_of_mass.value,

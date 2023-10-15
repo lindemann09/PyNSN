@@ -5,7 +5,6 @@ from typing import Any, Optional
 
 import numpy as _np
 
-from .._lib.colour import Colour
 from .._stimulus.shapes import Dot, Rectangle, Picture
 from .._stimulus import NSNStimulus
 from ._image_colours import ImageColours
@@ -19,7 +18,7 @@ def check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
             "NSNStimulus expected, but not {}".format(type(obj).__name__))
 
 
-class ABCArrayDraw(metaclass=ABCMeta):
+class AbstractArrayDraw(metaclass=ABCMeta):
     """Generic array draw with abstract static methods
 
     To develop a plotter for other graphic system, inherit the abstract class
@@ -120,8 +119,7 @@ class ABCArrayDraw(metaclass=ABCMeta):
             image_size = _np.ones(2) * tmp
 
         elif isinstance(nsn_stimulus.target_area, Rectangle):
-            tmp = _np.int16(
-                _np.ceil(nsn_stimulus.target_area.size) * aaf)
+            tmp = _np.ceil(nsn_stimulus.target_area.size) * aaf
             target_area_shape = Rectangle(
                 xy=(0, 0), size=tmp, attribute=colours.target_area.value
             )
@@ -149,26 +147,13 @@ class ABCArrayDraw(metaclass=ABCMeta):
                     img, obj, opacity=colours.opacity_object, scaling_factor=aaf)
 
             # draw convex hulls
-            if colours.field_area_positions.value is not None:
+            if colours.field_area.value is not None:
                 coords = nsn_stimulus.properties.convex_hull.coordinates
                 if len(coords) > 1:
-                    self.draw_convex_hull(
-                        img,
-                        points=coords,
-                        convex_hull_colour=colours.field_area_positions,
-                        opacity=colours.opacity_guides,
-                        scaling_factor=aaf)
-            if (
-                colours.field_area.value is not None
-                and nsn_stimulus.properties.field_area > 0
-            ):
-                self.draw_convex_hull(
-                    img,
-                    points=nsn_stimulus.properties.convex_hull.xy,
-                    convex_hull_colour=colours.field_area,
-                    opacity=colours.opacity_guides,
-                    scaling_factor=aaf,
-                )
+                    self.draw_convex_hull(img, points=coords,
+                                          convex_hull_colour=colours.field_area,
+                                          opacity=colours.opacity_guides,
+                                          scaling_factor=aaf)
             #  and center of mass
             if colours.center_of_field_area.value is not None:
                 obj = Dot(
