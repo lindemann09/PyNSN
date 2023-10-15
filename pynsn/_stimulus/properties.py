@@ -16,7 +16,9 @@ from .. import _stimulus
 from .convex_hull import ConvexHull
 
 
-class VisualPropertyFlags(enum.IntFlag):
+class VisProp(enum.Flag):  # visual properties
+    NUMEROSITY = enum.auto()
+
     AV_DOT_DIAMETER = enum.auto()
     AV_SURFACE_AREA = enum.auto()
     AV_PERIMETER = enum.auto()
@@ -31,40 +33,45 @@ class VisualPropertyFlags(enum.IntFlag):
     LOG_SPACING = enum.auto()
     LOG_SIZE = enum.auto()
 
-    NUMEROSITY = enum.auto()
+    @staticmethod
+    def size_properties() -> tuple:
+        return (VisProp.LOG_SIZE,
+                VisProp.TOTAL_SURFACE_AREA,
+                VisProp.AV_DOT_DIAMETER,
+                VisProp.AV_SURFACE_AREA,
+                VisProp.AV_PERIMETER,
+                VisProp.AV_RECT_SIZE,
+                VisProp.TOTAL_PERIMETER)
 
-    def is_dependent_from(self, other_property: Any) -> bool:
+    @staticmethod
+    def space_properties() -> tuple:
+        return (VisProp.LOG_SPACING,
+                VisProp.SPARSITY,
+                VisProp.FIELD_AREA)
+
+    def is_dependent_from(self, other: Any) -> bool:
         """returns true if both properties are not independent"""
-        return (self.is_size_property() and other_property.is_size_property()) or \
-               (self.is_space_property() and other_property.is_space_property())
-
-    def is_size_property(self) -> bool:
-        return self in (VisualPropertyFlags.LOG_SIZE,
-                        VisualPropertyFlags.TOTAL_SURFACE_AREA,
-                        VisualPropertyFlags.AV_DOT_DIAMETER,
-                        VisualPropertyFlags.AV_SURFACE_AREA,
-                        VisualPropertyFlags.AV_PERIMETER,
-                        VisualPropertyFlags.TOTAL_PERIMETER)
-
-    def is_space_property(self) -> bool:
-        return self in (VisualPropertyFlags.LOG_SPACING,
-                        VisualPropertyFlags.SPARSITY,
-                        VisualPropertyFlags.FIELD_AREA)
+        is_size_prop = self in VisProp.size_properties()
+        is_space_prop = self in VisProp.space_properties()
+        other_size_prop = other in VisProp.size_properties()
+        other_space_prop = other in VisProp.space_properties()
+        return (is_size_prop and other_size_prop) or \
+            (is_space_prop and other_space_prop)
 
     def label(self) -> str:
         labels = {
-            VisualPropertyFlags.NUMEROSITY: "Numerosity",
-            VisualPropertyFlags.LOG_SIZE: "Log size",
-            VisualPropertyFlags.TOTAL_SURFACE_AREA: "Total surface area",
-            VisualPropertyFlags.AV_DOT_DIAMETER: "Av. dot diameter",
-            VisualPropertyFlags.AV_SURFACE_AREA: "Av. surface area",
-            VisualPropertyFlags.AV_PERIMETER: "Av. perimeter",
-            VisualPropertyFlags.TOTAL_PERIMETER: "Total perimeter",
-            VisualPropertyFlags.AV_RECT_SIZE: "Av. rectangle Size",
-            VisualPropertyFlags.LOG_SPACING: "Log spacing",
-            VisualPropertyFlags.SPARSITY: "Sparsity",
-            VisualPropertyFlags.FIELD_AREA: "Field area",
-            VisualPropertyFlags.COVERAGE: "Coverage"}
+            VisProp.NUMEROSITY: "Numerosity",
+            VisProp.LOG_SIZE: "Log size",
+            VisProp.TOTAL_SURFACE_AREA: "Total surface area",
+            VisProp.AV_DOT_DIAMETER: "Av. dot diameter",
+            VisProp.AV_SURFACE_AREA: "Av. surface area",
+            VisProp.AV_PERIMETER: "Av. perimeter",
+            VisProp.TOTAL_PERIMETER: "Total perimeter",
+            VisProp.AV_RECT_SIZE: "Av. rectangle Size",
+            VisProp.LOG_SPACING: "Log spacing",
+            VisProp.SPARSITY: "Sparsity",
+            VisProp.FIELD_AREA: "Field area",
+            VisProp.COVERAGE: "Coverage"}
         return labels[self]
 
 
@@ -160,67 +167,50 @@ class ArrayProperties(object):
     def field_area(self) -> float:
         return self.convex_hull.area
 
-    # def get(self, property_flag: VisualPropertyFlags) -> Any:
-    #     """returns a visual property"""
+    def get(self, prop: VisProp) -> Any:
+        """returns a visual property"""
+        if prop == VisProp.AV_DOT_DIAMETER:
+            return self.average_dot_diameter
 
-    #     assert isinstance(property_flag, VisualPropertyFlags)
+        elif prop == VisProp.AV_RECT_SIZE:
+            return self.average_rectangle_size
 
-    #     # Adapt
-    #     if property_flag == VisualPropertyFlags.AV_DOT_DIAMETER:
-    #         return self.average_dot_diameter
+        elif prop == VisProp.AV_PERIMETER:
+            return self.average_perimeter
 
-    #     elif property_flag == VisualPropertyFlags.AV_RECT_SIZE:
-    #         return self.average_rectangle_size
+        elif prop == VisProp.TOTAL_PERIMETER:
+            return self.total_perimeter
 
-    #     elif property_flag == VisualPropertyFlags.AV_PERIMETER:
-    #         return self.average_perimeter
+        elif prop == VisProp.AV_SURFACE_AREA:
+            return self.average_surface_area
 
-    #     elif property_flag == VisualPropertyFlags.TOTAL_PERIMETER:
-    #         return self.total_perimeter
+        elif prop == VisProp.TOTAL_SURFACE_AREA:
+            return self.total_surface_area
 
-    #     elif property_flag == VisualPropertyFlags.AV_SURFACE_AREA:
-    #         return self.average_surface_area
+        elif prop == VisProp.LOG_SIZE:
+            return self.log_size
 
-    #     elif property_flag == VisualPropertyFlags.TOTAL_SURFACE_AREA:
-    #         return self.total_surface_area
+        elif prop == VisProp.LOG_SPACING:
+            return self.log_spacing
 
-    #     elif property_flag == VisualPropertyFlags.LOG_SIZE:
-    #         return self.log_size
+        elif prop == VisProp.SPARSITY:
+            return self.sparsity
 
-    #     elif property_flag == VisualPropertyFlags.LOG_SPACING:
-    #         return self.log_spacing
+        elif prop == VisProp.FIELD_AREA:
+            return self.field_area
 
-    #     elif property_flag == VisualPropertyFlags.SPARSITY:
-    #         return self.sparsity
+        elif prop == VisProp.COVERAGE:
+            return self.coverage
 
-    #     elif property_flag == VisualPropertyFlags.FIELD_AREA:
-    #         return self.field_area
+        elif prop == VisProp.NUMEROSITY:
+            return self.numerosity
 
-    #     elif property_flag == VisualPropertyFlags.COVERAGE:
-    #         return self.coverage
-
-    #     elif property_flag == VisualPropertyFlags.NUMEROSITY:
-    #         return self.numerosity
-
-    #     else:
-    #         raise ValueError("f{property_flag} is a unknown visual feature")
+        else:
+            raise ValueError("f{property_flag} is a unknown visual feature")
 
     def to_dict(self) -> dict:
         """Dictionary with the visual properties"""
-        rtn = [
-            ("Hash", self._shapes.hash()),
-            ("Numerosity", self.numerosity),
-            (VisualPropertyFlags.AV_DOT_DIAMETER.label(), self.average_dot_diameter),
-            (VisualPropertyFlags.AV_RECT_SIZE.label(),
-             self.average_rectangle_size.tolist()),
-            (VisualPropertyFlags.AV_PERIMETER.label(), self.average_perimeter),
-            (VisualPropertyFlags.AV_SURFACE_AREA.label(), self.average_surface_area),
-            (VisualPropertyFlags.TOTAL_PERIMETER.label(), self.total_perimeter),
-            (VisualPropertyFlags.TOTAL_SURFACE_AREA.label(), self.total_surface_area),
-            (VisualPropertyFlags.FIELD_AREA.label(), self.field_area),
-            (VisualPropertyFlags.SPARSITY.label(), self.sparsity),
-            (VisualPropertyFlags.COVERAGE.label(), self.coverage),
-            (VisualPropertyFlags.LOG_SIZE.label(), self.log_size),
-            (VisualPropertyFlags.LOG_SPACING.label(), self.log_spacing),
-        ]
+        rtn = [("Hash", self._shapes.hash()),]
+        rtn.extend([(x.label(), self.get(x))
+                   for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)

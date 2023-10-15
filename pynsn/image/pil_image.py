@@ -15,7 +15,7 @@ from ._image_colours import ImageColours
 
 try:
     RESAMPLING = _Image.Resampling.LANCZOS  # type: ignore (old versions)
-except AttributeError:
+except:
     RESAMPLING = _Image.LANCZOS
 
 
