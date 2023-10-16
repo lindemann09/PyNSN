@@ -65,7 +65,7 @@ class ShapeArray(object):
             else:
                 raise TypeError(f"Unknown ShapeType. type={type(shapes)}")
 
-            poly = shapes.make_polygon()
+            poly = shapes.polygon
             self._polygons = np.append(self._polygons, poly)
             self._xy = np.append(self._xy, np.atleast_2d(shapes.xy), axis=0)
             self._attributes = np.append(self._attributes, shapes.attribute)
@@ -95,7 +95,7 @@ class ShapeArray(object):
         else:
             raise TypeError(f"Unknown ShapeType. type={type(shape)}")
 
-        poly = shape.make_polygon()
+        poly = shape.polygon
         self._polygons[index] = poly
         self._xy[index, :] = shape.xy
         self._attributes[index] = shape.attribute
@@ -141,7 +141,7 @@ class ShapeArray(object):
 
         if rebuild_polygons:
             for i, shape in enumerate(self.get_list()):
-                poly = shape.make_polygon()
+                poly = shape.polygon
                 self._polygons[i] = poly
             self.properties.reset_convex_hull()
 

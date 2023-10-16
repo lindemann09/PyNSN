@@ -1,3 +1,5 @@
+"""
+"""
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import typing as _tp
@@ -13,10 +15,7 @@ from ._image_colours import ImageColours
 
 # TODO pillow supports no alpha/opacity
 
-try:
-    RESAMPLING = _Image.Resampling.LANCZOS  # type: ignore (old versions)
-except:
-    RESAMPLING = _Image.LANCZOS
+RESAMPLING = _Image.Resampling.LANCZOS
 
 
 def create(
@@ -55,23 +54,23 @@ class _PILDraw(_array_draw.AbstractArrayDraw):
 
     @staticmethod
     def draw_shape(
-        img, shape: _stimulus.ShapeType, opacity: float, scaling_factor: float
+        image, shape: _stimulus.ShapeType, opacity: float, scaling_factor: float
     ):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size)
-        shape = shape.variant(xy=xy)
+        shape.copy()
+        shape.xy = _c2i_coord(_np.asarray(shape.xy) *
+                              scaling_factor, image.size)
 
         if isinstance(shape, _stimulus.Dot):
             r = (shape.diameter * scaling_factor) / 2
             x, y = shape.xy
-            _ImageDraw.Draw(img).ellipse(
+            _ImageDraw.Draw(image).ellipse(
                 (x - r, y - r, x + r, y + r), fill=shape.colour.value
             )
 
         elif isinstance(shape, _stimulus.Picture):
-            shape = shape.variant(size=_np.asarray(
-                shape.size) * scaling_factor)
+            shape.size = _np.asarray(shape.size) * scaling_factor
             # picture
             target_box = _np.array([shape.left, shape.top,
                                    shape.right, shape.bottom])
@@ -81,30 +80,28 @@ class _PILDraw(_array_draw.AbstractArrayDraw):
                 pict = pict.resize((int(shape.size[0]), int(shape.size[1])),
                                    resample=RESAMPLING)
 
-            tr_layer = _Image.new("RGBA", img.size, (0, 0, 0, 0))
+            tr_layer = _Image.new("RGBA", image.size, (0, 0, 0, 0))
             tr_layer.paste(pict, target_box.flatten().tolist())
-            res = _Image.alpha_composite(img, tr_layer)
-            img.paste(res)
+            res = _Image.alpha_composite(image, tr_layer)
+            image.paste(res)
 
         elif isinstance(shape, _stimulus.Rectangle):
-            shape = shape.variant(size=_np.asarray(
-                shape.size) * scaling_factor)
+            shape.size = _np.asarray(shape.size) * scaling_factor
             # rectangle shape
-            _ImageDraw.Draw(img).rectangle((shape.left, shape.bottom,
-                                            shape.right, shape.top),
-                                           fill=shape.colour.value)  # TODO decentral _shapes seems to be bit larger than with pyplot
+            _ImageDraw.Draw(image).rectangle((shape.left, shape.bottom,
+                                              shape.right, shape.top),
+                                             fill=shape.colour.value)  # TODO decentral _shapes seems to be bit larger than with pyplot
 
         else:
             raise NotImplementedError(
-                "Shape {} NOT YET IMPLEMENTED".format(type(shape))
-            )
+                f"Shape {type(shape)} NOT YET IMPLEMENTED")
 
     @staticmethod
-    def draw_convex_hull(img, points, convex_hull_colour, opacity, scaling_factor):
+    def draw_convex_hull(image, points, convex_hull_colour, opacity, scaling_factor):
         # FIXME opacity is ignored (not yet supported)
-        points = _c2i_coord(points * scaling_factor, img.size)
+        points = _c2i_coord(points * scaling_factor, image.size)
         last = None
-        draw = _ImageDraw.Draw(img)
+        draw = _ImageDraw.Draw(image)
         for p in _np.append(points, [points[0]], axis=0):
             if last is not None:
                 draw.line(_np.append(last, p).tolist(),

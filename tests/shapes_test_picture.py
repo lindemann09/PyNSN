@@ -22,19 +22,18 @@ def _draw_shape(img, shape: ShapeType, scaling_factor=1):
         xy_a.extend(xy_b)
         _ImageDraw.Draw(img).line(xy_a, fill=shape.colour.value, width=2)
         return
-
-    xy = _c2i_coord(np.asarray(shape.xy) * scaling_factor, img.size).tolist()
+    shape = shape.copy()
+    shape.xy = _c2i_coord(np.array(shape.xy) * scaling_factor, img.size)
     if isinstance(shape, Dot):
         r = (shape.diameter * scaling_factor) / 2
-        x, y = xy
+        x, y = shape.xy
         _ImageDraw.Draw(img).ellipse(
             (x - r, y - r, x + r, y + r), fill=shape.colour.value
         )
     elif isinstance(shape, Rectangle):
-        shape = shape.variant(
-            xy=xy, size=(shape.size[0] * scaling_factor,
-                         shape.size[1] * scaling_factor)
-        )
+        shape.size = (shape.size[0] * scaling_factor,
+                      shape.size[1] * scaling_factor)
+
         # rectangle shape
         _ImageDraw.Draw(img).rectangle(
             (shape.left, shape.bottom, shape.right,

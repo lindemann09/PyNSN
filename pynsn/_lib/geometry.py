@@ -3,10 +3,9 @@
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from typing import Sequence, Tuple, Union
-import numpy as np
-from numpy.typing import NDArray, ArrayLike
 
-# from . import rng
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 # all functions are 2D arrays (at least) as fist arguments
 
@@ -67,7 +66,6 @@ def round2(arr: NDArray, decimals: int, int_type: type = np.int64) -> NDArray:
         return arr.astype(int_type)
     else:
         return arr
-
 
 # def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArray:
 #     """jitters points with identical position"""

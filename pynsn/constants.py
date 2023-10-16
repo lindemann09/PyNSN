@@ -1,6 +1,5 @@
 # stimuli
-DEFAULT_min_dist_between_objects = 2
-DEFAULT_min_dist_area_edge = 1
+DEFAULT_MIN_DIST = 2  # minim distance between objects and
 
 # iterations
 MAX_ITERATIONS = 1000

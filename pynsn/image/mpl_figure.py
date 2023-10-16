@@ -55,7 +55,7 @@ class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
 
     @staticmethod
     def draw_shape(img, shape: _stimulus.ShapeType, opacity):
-        attr = shape.get_colour()
+        col = shape.colour
 
         if isinstance(shape, _stimulus.Picture):
             raise RuntimeError(
@@ -64,11 +64,11 @@ class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
         if isinstance(shape, _stimulus.Dot):
             r = shape.diameter / 2
             plt_shape = _plt.Circle(
-                xy=shape.xy, radius=r, color=attr.value, lw=0)
+                xy=shape.xy, radius=r, color=col.value, lw=0)
         elif isinstance(shape, _stimulus.Rectangle):
             xy = (shape.left, shape.bottom)
             plt_shape = _plt.Rectangle(
-                xy=xy, width=shape.width, height=shape.height, color=attr.value, lw=0
+                xy=xy, width=shape.width, height=shape.height, color=col.value, lw=0
             )
         else:
             raise NotImplementedError(

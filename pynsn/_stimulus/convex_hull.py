@@ -1,8 +1,5 @@
-import numpy as np
 from numpy.typing import NDArray
 from shapely import MultiPolygon, Polygon, get_coordinates
-
-from .._lib.geometry import Coord2D
 
 
 class ConvexHull(object):
@@ -21,7 +18,7 @@ class ConvexHull(object):
         """Coordinates that shape the convex hull
 
         Returns:
-            np.array of coordinates
+            numpy array (x, y) of coordinates
         """
         return get_coordinates(self._ch_polygon)
 
@@ -31,11 +28,10 @@ class ConvexHull(object):
         return self._ch_polygon.area
 
     @property
-    def centroid(self) -> Coord2D:
+    def centroid(self) -> NDArray:
         """Geometric Center of convex hull
 
         Returns:
-            Coordinate of center position
+            numpy array (x, y) of center position
         """
-        cent = self._ch_polygon.centroid
-        return cent.x, cent.y
+        return get_coordinates(self._ch_polygon.centroid)

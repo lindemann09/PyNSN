@@ -139,10 +139,9 @@ class AbstractArrayDraw(metaclass=ABCMeta):
         if nsn_stimulus.properties.numerosity > 0:
             # draw objects
             for obj in nsn_stimulus.shapes.get_list():
-                col = obj.colour
-                if col.value is None and not isinstance(obj, Picture):
+                if obj.colour.value is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour
-                    obj = obj.variant(attribute=colours.default_object_colour)
+                    obj.attribute = colours.default_object_colour
                 self.draw_shape(
                     img, obj, opacity=colours.opacity_object, scaling_factor=aaf)
 
