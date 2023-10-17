@@ -16,8 +16,8 @@ from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .. import _stimulus, constants
 from .._lib.misc import key_value_format
-from .._lib import rng
 from .._lib.exceptions import NoSolutionError
+from ..random._rng import BrownianMotion
 
 
 class NSNStimulus(object):
@@ -179,8 +179,8 @@ class NSNStimulus(object):
             buffer=constants.DEFAULT_MIN_DIST)
         if in_neighbourhood:
             # start random walk
-            random_walk = rng.BrownianMotion(reference_polygon,
-                                             walk_area=search_area, delta=2)
+            random_walk = BrownianMotion(reference_polygon,
+                                         walk_area=search_area, delta=2)
         else:
             random_walk = None
         candidate_pos = np.zeros(2)
@@ -193,7 +193,7 @@ class NSNStimulus(object):
 
             if random_walk is None:
                 # propose a random position
-                candidate_pos = rng.generator.random(size=2) * search_bounds_size \
+                candidate_pos = generator.random(size=2) * search_bounds_size \
                     - (search_bounds_size/2)
                 candidate_polygon = shapely.transform(reference_polygon,
                                                       lambda x: x + candidate_pos)
@@ -221,3 +221,53 @@ class NSNStimulus(object):
         else:
             target.xy = candidate_pos
         return target
+
+    def fix_overlap(self, object_index: int,
+                    inside_convex_hull: bool = False,
+                    occupied_space=None) -> bool:
+        """move an selected object that overlaps to an free position in the
+        neighbourhood.
+
+        returns True if position has been changed
+
+        raise exception if not found
+        occupied space: see generator generate
+        """
+
+        target = self._shapes.pop(object_index)
+
+        if inside_convex_hull:
+            search_area = self.properties.convex_hull.polygon
+        else:
+            search_area = self.target_area.polygon
+        shapely.prepare(search_area)
+
+        random_walk = BrownianMotion(
+            target.make_polygon(buffer=constants.DEFAULT_MIN_DIST),
+            walk_area=search_area, delta=2)
+
+        while True:
+
+            for p in self.shapes.polygons:
+                if p.overlaps(random_walk.polygon):  # polygons p are prepared
+                    continue  # try another position
+            if occupied_space is not None:
+                # check for overlap occupied space
+                raise NotImplementedError("Not yet implemented")  # FIXME
+
+            random_walk.next()
+
+            if random_walk.counter > constants.MAX_ITERATIONS:
+                raise NoSolutionError("Can't find a free position: "
+                                      + f"Current n={self.shapes.n_objects}")
+
+            break
+
+        target.xy = random_walk.walk
+        self._shapes.add(target)
+
+    def get_overlaps(self, polygon: shapely.Polygon):
+
+        rtn = shapely.distance(self.shapes.polygons, polygon)
+        return rtn
+        # return np.nonzero(rtn)

@@ -48,6 +48,17 @@ class AbstractShape(metaclass=ABCMeta):
             shapely.prepare(self._polygon)  # FIXME required?
         return self._polygon
 
+    def delete_polygon(self):
+        self._polygon = None
+
+    def set_polygon(self, polygon: Polygon) -> None:
+        """This method should usually not been used, unless you know what you do.
+
+        Polygon is automatically created, if required. Please use the property
+        `polygon.
+        """
+        self._polygon = polygon
+
     @property
     def colour(self) -> Colour:
         """Class instance of the attribute, if possible

@@ -141,24 +141,25 @@ class ShapeArray(object):
 
         if rebuild_polygons:
             for i, shape in enumerate(self.get_list()):
-                poly = shape.polygon
-                self._polygons[i] = poly
+                shape.delete_polygon()
+                self._polygons[i] = shape.polygon
             self.properties.reset_convex_hull()
 
     def get(self, index: int) -> Union[Dot, Rectangle]:
         """Returns  selected object"""
         if np.isnan(self._dot_diameter[index]):
-            return Rectangle(
+            rtn = Rectangle(
                 xy=self._xy[index, :],
                 size=self._rect_sizes[index, :],
-                attribute=self._attributes[index],
-            )
+                attribute=self._attributes[index])
         else:
-            return Dot(
+            rtn = Dot(
                 xy=self._xy[index, :],
                 diameter=self._dot_diameter[index],
-                attribute=self._attributes[index],
-            )
+                attribute=self._attributes[index])
+
+        rtn.set_polygon(self._polygons[index])
+        return rtn
 
     def get_list(
         self, index: Optional[IntOVector] = None

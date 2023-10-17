@@ -19,12 +19,9 @@ nsn = pynsn.NSNStimulus(
 print(nsn.properties_txt(extended_format=True))
 
 nsn.shapes.add([da, db, ra, rb])
+
 col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)
 a.save("shapes_test2.png")
 
-
-l = Line(xy_a=(200, 200), xy_b=(-300, 0), colour="red")
-objects = [d_big, ra, rb]
-
-shapes_test_picture(objects)
+print(nsn.get_overlaps(rb.polygon))

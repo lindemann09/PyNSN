@@ -72,6 +72,7 @@ class BrownianMotion(object):
 
         self.scale = delta ** 2
         self.bounce = bounce_boarder
+        self.counter: int = 0
         self._position = np.zeros(2)
 
     @property
@@ -97,6 +98,7 @@ class BrownianMotion(object):
 
     def next(self, dt=1) -> None:
         """do the next step in the random walk"""
+        self.counter += 1
         while True:
             step = generator.normal(loc=0, scale=self.scale * dt, size=2)
             new_geom = shapely.transform(self._geom, lambda x: x + step)
