@@ -138,7 +138,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
 
         if nsn_stimulus.properties.numerosity > 0:
             # draw objects
-            for obj in nsn_stimulus.shapes.get_list():
+            for obj in nsn_stimulus.get_list():
                 if obj.colour.value is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour
                     obj.attribute = colours.default_object_colour
@@ -165,7 +165,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                 )
             if colours.center_of_mass.value is not None:
                 obj = Dot(
-                    xy=nsn_stimulus.shapes.center_of_mass,
+                    xy=nsn_stimulus.properties.center_of_mass,
                     diameter=10,
                     attribute=colours.center_of_mass,
                 )

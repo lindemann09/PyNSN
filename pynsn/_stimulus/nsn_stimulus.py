@@ -4,23 +4,23 @@
 from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-from numpy.typing import NDArray
-
 import warnings
-from typing import Union
-import shapely
+from hashlib import md5
+from typing import Sequence, Tuple, Union
+
 import numpy as np
+import shapely
 
-from .shapes import Dot, Rectangle, Picture
-from .properties import ArrayProperties
-from .shape_array import ShapeArray
-from .. import _stimulus, constants
-from .._lib.misc import key_value_format
+from .. import constants
 from .._lib.exceptions import NoSolutionError
+from .._lib.misc import key_value_format
 from ..random._rng import BrownianMotion
+from .properties import ArrayProperties
+from .shape_array import IntOVector, ShapeArray, ShapeType
+from .shapes import Dot, Picture, Rectangle
 
 
-class NSNStimulus(object):
+class NSNStimulus(ShapeArray):
     """Non-Symbolic Number Stimulus
 
     NSN-Stimulus are restricted to a certain target area. The classes are
@@ -54,15 +54,8 @@ class NSNStimulus(object):
 
         self.min_dist_between_objects = min_dist_between_shapes
         self.min_dist_area_edge = min_dist_area_edge
-        self._shapes = ShapeArray()
+        self._properties = ArrayProperties(self)
 
-    @property
-    def shapes(self) -> ShapeArray:
-        """ShapeArray of the stimulus
-
-        see documentation ``ShapeArray``
-        """
-        return self._shapes
 
     @property
     def properties(self) -> ArrayProperties:
@@ -84,7 +77,7 @@ class NSNStimulus(object):
         * log_size
         * coverage
         """
-        return self._shapes.properties
+        return self._properties
 
     def copy(self) -> NSNStimulus:
         """A copy of the nsn stimulus.
@@ -97,27 +90,28 @@ class NSNStimulus(object):
             min_dist_between_shapes=self.min_dist_area_edge,
             min_dist_area_edge=self.min_dist_area_edge
         )
-        rtn.shapes.add(self._shapes)
+        rtn.add(self.get_list())
         return rtn
 
     def properties_txt(self, with_hash: bool = False, extended_format: bool = False) -> str:
         prop = self.properties
         if extended_format:
-            rtn = None
-            for k, v in prop.to_dict().items():
-                if rtn is None:
-                    if with_hash:
-                        rtn = f"-{k}  {v}\n "
-                    else:
-                        rtn = "-"
-                else:
-                    rtn += key_value_format(k, v) + "\n "
-
-            if rtn is None:
+            if with_hash:
+                rtn = f"- Hash {self.hash()}\n "
+            else:
                 rtn = ""
+            first = True
+            for k, v in prop.to_dict().items():
+                if first and len(rtn) == 0:
+                    rtn = "- "
+                    first = False
+                else:
+                    rtn += " "
+                rtn += key_value_format(k, v) + "\n "
+
         else:
             if with_hash:
-                rtn = "ID: {} ".format(self._shapes.hash())
+                rtn = "HASH: {} ".format(self.hash())
             else:
                 rtn = ""
             rtn += (f"N: {prop.numerosity}, "
@@ -141,12 +135,66 @@ class NSNStimulus(object):
     #         if self.target_area.polygon.covers(shapely.Point(pos)):
     #             return pos
 
+    def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
+        super().add(shapes)
+        self._properties.reset_convex_hull()
+
+    def replace(self, index: int, shape: ShapeType):
+        super().replace(index, shape)
+        self._properties.reset_convex_hull()
+
+    def delete(self, index: IntOVector) -> None:
+        super().delete(index)
+        self._properties.reset_convex_hull()
+
+    def pop(self, index: int) -> Union[Dot, Rectangle]:
+        """Remove and return item at index"""
+        rtn = self.get(index)
+        self.delete(index)
+        self._properties.reset_convex_hull()
+        return rtn
+
+    def clear(self):
+        """ """
+        super().clear()
+        self._properties.reset_convex_hull()
+
+    def hash(self) -> str:
+        """Hash (MD5 hash) of the array
+
+        The hash can be used as an unique identifier of the nsn stimulus.
+
+        Notes:
+            Hashing is based on the byte representations of the positions, perimeter
+            and attributes.
+        """
+
+        rtn = md5()
+        # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
+        rtn.update(self._xy.tobytes())
+        try:
+            rtn.update(self.properties.perimeter.tobytes())
+        except AttributeError:
+            pass
+        rtn.update(self._attributes.tobytes())
+        return rtn.hexdigest()
+
+
+
+    def round_values(self, decimals: int = 0, int_type: type = np.int64,
+                     rebuild_polygons=True) -> None:
+        """rounds all values"""
+        super().round_values(decimals=decimals, int_type=int_type,
+                             rebuild_polygons=rebuild_polygons)
+        if rebuild_polygons:
+            self._properties.reset_convex_hull()
+
     def find_position(self,
                       ref_object: Union[Dot, Rectangle, Picture],
                       in_neighbourhood: bool = False,
                       ignore_overlaps: bool = False,
                       inside_convex_hull: bool = False,
-                      occupied_space=None) -> _stimulus.ShapeType:
+                      occupied_space=None) -> ShapeType:
         """returns the copy of the object of at a randomly choose free position
 
         raise exception if not found
@@ -188,7 +236,7 @@ class NSNStimulus(object):
         while True:
             if cnt > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a free position: "
-                                      + f"Current n={self.shapes.n_objects}")
+                                      + f"Current n={self.n_objects}")
             cnt += 1
 
             if random_walk is None:
@@ -207,7 +255,7 @@ class NSNStimulus(object):
 
             if not ignore_overlaps:
                 # find overlaps
-                for p in self.shapes.polygons:
+                for p in self.polygons:
                     if p.overlaps(candidate_polygon):  # polygons p are prepared
                         continue  # try another position
                 if occupied_space is not None:
@@ -234,40 +282,39 @@ class NSNStimulus(object):
         occupied space: see generator generate
         """
 
-        target = self._shapes.pop(object_index)
+        target = self.pop(object_index)
 
         if inside_convex_hull:
             search_area = self.properties.convex_hull.polygon
         else:
             search_area = self.target_area.polygon
-        shapely.prepare(search_area)
 
         random_walk = BrownianMotion(
             target.make_polygon(buffer=constants.DEFAULT_MIN_DIST),
             walk_area=search_area, delta=2)
 
         while True:
-
-            for p in self.shapes.polygons:
-                if p.overlaps(random_walk.polygon):  # polygons p are prepared
-                    continue  # try another position
+            overlaps = shapely.intersects(self.polygons, random_walk.polygon) # polygons list is prepared
             if occupied_space is not None:
                 # check for overlap occupied space
                 raise NotImplementedError("Not yet implemented")  # FIXME
-
-            random_walk.next()
-
+            if not np.any(overlaps):
+                break # good position
             if random_walk.counter > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a free position: "
-                                      + f"Current n={self.shapes.n_objects}")
+                                      + f"Current n={self.n_objects}")
+            random_walk.next()
 
-            break
+        changes = random_walk.counter>0
+        if changes:
+            target.xy = np.array(target.xy) + random_walk.walk
 
-        target.xy = random_walk.walk
-        self._shapes.add(target)
+        self.add(target)
+        return changes
+
 
     def get_overlaps(self, polygon: shapely.Polygon):
 
-        rtn = shapely.distance(self.shapes.polygons, polygon)
+        rtn = shapely.distance(self.polygons, polygon)
         return rtn
         # return np.nonzero(rtn)

@@ -16,9 +16,9 @@ nsn = pynsn.NSNStimulus(
     target_area=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF")
 )
 
+nsn.add([da, db, ra, rb])
 print(nsn.properties_txt(extended_format=True))
 
-nsn.shapes.add([da, db, ra, rb])
 
 col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)

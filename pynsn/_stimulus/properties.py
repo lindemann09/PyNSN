@@ -12,8 +12,8 @@ from typing import Any, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from .. import _stimulus
 from .convex_hull import ConvexHull
+from .shape_array import ShapeArray
 
 
 class VisProp(enum.Flag):  # visual properties
@@ -78,9 +78,37 @@ class VisProp(enum.Flag):  # visual properties
 class ArrayProperties(object):
     """Non-Symbolic Number Stimulus"""
 
-    def __init__(self, shape_array: _stimulus.ShapeArray) -> None:
+    def __init__(self, shape_array: ShapeArray) -> None:
         self._shapes = shape_array
         self._ch = None
+
+    @property
+    def areas(self) -> NDArray:
+        """area of each object"""
+        rect_areas = self._shapes.rect_sizes[:, 0] * self._shapes.rect_sizes[:, 1]
+        # dot areas: a = pi r**2 = pi d**2 / 4
+        rtn = np.pi * (self._shapes.dot_diameter**2) / 4.0
+        # replace no dot areas with rects areas
+        idx = np.isnan(rtn)
+        rtn[idx] = rect_areas[idx]
+        return rtn
+
+    @property
+    def perimeter(self) -> NDArray:
+        """Perimeter for each dot"""
+        rect_perimeter = 2 * (self._shapes.rect_sizes[:, 0] + self._shapes.rect_sizes[:, 1])
+        rtn = np.pi * self._shapes.dot_diameter  # dot perimeter
+        # replace no dot perimeter with rect perimeter
+        idx = np.isnan(rtn)
+        rtn[idx] = rect_perimeter[idx]
+        return rtn
+
+    @property
+    def center_of_mass(self) -> NDArray:
+        """center of mass of all objects"""
+        areas = self.areas
+        weighted_sum = np.sum(self._shapes.xy * np.atleast_2d(areas).T, axis=0)
+        return weighted_sum / np.sum(areas)
 
     @property
     def numerosity(self) -> int:
@@ -99,37 +127,37 @@ class ArrayProperties(object):
 
     @property
     def average_dot_diameter(self) -> float:
-        rtn = np.nanmean(self._shapes.dot_diameter)
-        if np.isnan(rtn):
+        if self._shapes.contains_dots:
+            return float(np.nanmean(self._shapes.dot_diameter))
+        else:
             return 0.0
-        return float(rtn)
 
     @property
     def average_rectangle_size(self) -> NDArray:
-        rtn = np.nanmean(self._shapes.rect_sizes, axis=0)
-        if np.isnan(rtn[0]):
+        if self._shapes.contains_rectangles:
+            return np.nanmean(self._shapes.rect_sizes, axis=0)
+        else:
             return np.array([0.0, 0.0])
-        return rtn
 
     @property
     def total_surface_area(self) -> float:
-        return np.nansum(self._shapes.areas)
+        return np.nansum(self.areas)
 
     @property
     def average_surface_area(self) -> float:
         if self._shapes.n_objects == 0:
             return 0.0
-        return np.nanmean(self._shapes.areas)
+        return np.nanmean(self.areas)
 
     @property
     def total_perimeter(self) -> float:
-        return np.nansum(self._shapes.perimeter)
+        return np.nansum(self.perimeter)
 
     @property
     def average_perimeter(self) -> float:
         if self._shapes.n_objects == 0:
             return 0.0
-        return np.nanmean(self._shapes.perimeter)
+        return np.nanmean(self.perimeter)
 
     @property
     def coverage(self) -> Union[np.floating, float]:
@@ -210,7 +238,7 @@ class ArrayProperties(object):
 
     def to_dict(self) -> dict:
         """Dictionary with the visual properties"""
-        rtn = [("Hash", self._shapes.hash()),]
+        rtn = []
         rtn.extend([(x.label(), self.get(x))
                    for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)

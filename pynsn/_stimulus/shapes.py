@@ -6,8 +6,9 @@ from abc import ABCMeta, abstractmethod
 from os import path
 from typing import Any, Tuple, Union
 
-from shapely import Point, Polygon
 import shapely
+from shapely import Point, Polygon
+
 from .._lib.colour import Colour
 from .._lib.geometry import Coord2DLike
 

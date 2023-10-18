@@ -6,17 +6,16 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
-from hashlib import md5
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .. import _stimulus
 from .._lib.geometry import round2
-from .shapes import Dot, Rectangle
+from .shapes import Dot, Picture, Rectangle
 
 IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
+ShapeType = Union[Dot, Rectangle, Picture]
 
 
 class ShapeArray(object):
@@ -28,7 +27,7 @@ class ShapeArray(object):
         self._rect_sizes = np.empty((0, 2), dtype=np.float64)
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
-        self._properties = _stimulus.ArrayProperties(self)
+
 
     @property
     def xy(self) -> NDArray:
@@ -51,11 +50,15 @@ class ShapeArray(object):
         return self._attributes
 
     @property
-    def properties(self) -> _stimulus.ArrayProperties:
-        return self._properties
+    def contains_dots(self):
+        return np.any(self._dot_diameter)
 
-    def add(self, shapes: Union[_stimulus.ShapeType, Tuple, Sequence, ShapeArray]):
-        if isinstance(shapes, _stimulus.ShapeType):
+    @property
+    def contains_rectangles(self):
+        return np.any(self._rect_sizes[:,0])
+
+    def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
+        if isinstance(shapes, ShapeType):
             if isinstance(shapes, Dot):
                 dia = shapes.diameter
                 size = np.full((1, 2), np.nan)
@@ -71,7 +74,6 @@ class ShapeArray(object):
             self._attributes = np.append(self._attributes, shapes.attribute)
             self._rect_sizes = np.append(self._rect_sizes, size, axis=0)
             self._dot_diameter = np.append(self._dot_diameter, dia)
-            self._properties.reset_convex_hull()
 
         elif isinstance(shapes, (list, tuple)):
             for x in shapes:
@@ -85,7 +87,7 @@ class ShapeArray(object):
                 f"Can't add '{type(shapes)}', that's not a ShapeType or list of ShapeTypes."
             )
 
-    def replace(self, index: int, shape: _stimulus.ShapeType):
+    def replace(self, index: int, shape: ShapeType):
         if isinstance(shape, Dot):
             dia = self._dot_diameter
             size = [np.nan, np.nan]
@@ -101,7 +103,6 @@ class ShapeArray(object):
         self._attributes[index] = shape.attribute
         self._dot_diameter[index] = dia
         self._rect_sizes[index, :] = size
-        self._properties.reset_convex_hull()
 
     def delete(self, index: IntOVector) -> None:
         self._polygons = np.delete(self._polygons, index)
@@ -109,14 +110,6 @@ class ShapeArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._dot_diameter = np.delete(self._dot_diameter, index)
         self._rect_sizes = np.delete(self._rect_sizes, index, axis=0)
-        self._properties.reset_convex_hull()
-
-    def pop(self, index: int) -> Union[Dot, Rectangle]:
-        """Remove and return item at index"""
-        rtn = self.get(index)
-        self.delete(index)
-        self._properties.reset_convex_hull()
-        return rtn
 
     def clear(self):
         """ """
@@ -125,7 +118,6 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._dot_diameter = np.empty(0, dtype=np.float64)
         self._rect_sizes = np.empty((0, 2), dtype=np.float64)
-        self._properties.reset_convex_hull()
 
     def round_values(self, decimals: int = 0, int_type: type = np.int64,
                      rebuild_polygons=True) -> None:
@@ -143,7 +135,6 @@ class ShapeArray(object):
             for i, shape in enumerate(self.get_list()):
                 shape.delete_polygon()
                 self._polygons[i] = shape.polygon
-            self.properties.reset_convex_hull()
 
     def get(self, index: int) -> Union[Dot, Rectangle]:
         """Returns  selected object"""
@@ -180,33 +171,6 @@ class ShapeArray(object):
         """number of shapes"""
         return len(self._attributes)
 
-    @property
-    def areas(self) -> NDArray:
-        """area of each object"""
-        rect_areas = self._rect_sizes[:, 0] * self._rect_sizes[:, 1]
-        # dot areas: a = pi r**2 = pi d**2 / 4
-        rtn = np.pi * (self._dot_diameter**2) / 4.0
-        # replace no dot areas with rects areas
-        idx = np.isnan(rtn)
-        rtn[idx] = rect_areas[idx]
-        return rtn
-
-    @property
-    def perimeter(self) -> NDArray:
-        """Perimeter for each dot"""
-        rect_perimeter = 2 * (self._rect_sizes[:, 0] + self._rect_sizes[:, 1])
-        rtn = np.pi * self._dot_diameter  # dot perimeter
-        # replace no dot perimeter with rect perimeter
-        idx = np.isnan(rtn)
-        rtn[idx] = rect_perimeter[idx]
-        return rtn
-
-    @property
-    def center_of_mass(self) -> NDArray:
-        """center of mass of all objects"""
-        areas = self.areas
-        weighted_sum = np.sum(self.xy * np.atleast_2d(areas).T, axis=0)
-        return weighted_sum / np.sum(areas)
 
     def to_dict(self) -> OrderedDict:
         """dict representation of the object array
@@ -215,7 +179,7 @@ class ShapeArray(object):
 
         Examples
         --------
-        >>> df_dict = stimulus.shapes.dataframe_dict()
+        >>> df_dict = stimulus.dataframe_dict()
         >>> df = pandas.DataFame(df_dict) # Pandas dataframe
 
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
@@ -274,27 +238,6 @@ class ShapeArray(object):
     #     >>>    print(obj)
     #     """
     #     pass
-
-    def hash(self) -> str:
-        """Hash (MD5 hash) of the array
-
-        The hash can be used as an unique identifier of the nsn stimulus.
-
-        Notes:
-            Hashing is based on the byte representations of the positions, perimeter
-            and attributes.
-        """
-
-        rtn = md5()
-        # to_byte required: https://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array
-        rtn.update(self._xy.tobytes())
-        try:
-            rtn.update(self.perimeter.tobytes())
-        except AttributeError:
-            pass
-        rtn.update(self._attributes.tobytes())
-        return rtn.hexdigest()
-
 
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
     """read shape array from dict"""
