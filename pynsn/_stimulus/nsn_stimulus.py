@@ -56,7 +56,6 @@ class NSNStimulus(ShapeArray):
         self.min_dist_area_edge = min_dist_area_edge
         self._properties = ArrayProperties(self)
 
-
     @property
     def properties(self) -> ArrayProperties:
         """Properties of the nsn stimulus.
@@ -179,8 +178,6 @@ class NSNStimulus(ShapeArray):
         rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
-
-
     def round_values(self, decimals: int = 0, int_type: type = np.int64,
                      rebuild_polygons=True) -> None:
         """rounds all values"""
@@ -294,27 +291,25 @@ class NSNStimulus(ShapeArray):
             walk_area=search_area, delta=2)
 
         while True:
-            overlaps = shapely.intersects(self.polygons, random_walk.polygon) # polygons list is prepared
+            # polygons list is prepared
+            overlaps = shapely.intersects(self.polygons, random_walk.polygon)
             if occupied_space is not None:
                 # check for overlap occupied space
                 raise NotImplementedError("Not yet implemented")  # FIXME
             if not np.any(overlaps):
-                break # good position
+                break  # good position
             if random_walk.counter > constants.MAX_ITERATIONS:
                 raise NoSolutionError("Can't find a free position: "
                                       + f"Current n={self.n_objects}")
             random_walk.next()
 
-        changes = random_walk.counter>0
+        changes = random_walk.counter > 0
         if changes:
             target.xy = np.array(target.xy) + random_walk.walk
 
         self.add(target)
         return changes
 
+    def get_overlaps(self, polygon: shapely.Polygon, distance=constants.DEFAULT_MIN_DIST):
 
-    def get_overlaps(self, polygon: shapely.Polygon):
-
-        rtn = shapely.distance(self.polygons, polygon)
-        return rtn
-        # return np.nonzero(rtn)
+        return shapely.dwithin(self.polygons, polygon, distance=distance)

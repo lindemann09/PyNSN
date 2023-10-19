@@ -1,11 +1,11 @@
 import pynsn
 from pynsn.image import pil_image
-
+import shapely
 from tests.shapes_test_picture import shapes_test_picture, Line
 import numpy as np
 
 d_big = pynsn.Dot((-8, -67), diameter=120, attribute="#00FF00")
-da = pynsn.Dot((-20, 70), diameter=60, attribute="#222800")
+da = pynsn.Dot((-20, 120), diameter=60, attribute="#222800")
 db = pynsn.Dot((-70, -50), diameter=40, attribute="#000088")
 
 ra = pynsn.Rectangle(np.array((120, -25)), size=(40, 40), attribute="#FF0000")
@@ -24,4 +24,8 @@ col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)
 a.save("shapes_test2.png")
 
-print(nsn.get_overlaps(rb.polygon))
+x = shapely.dwithin(nsn.polygons,
+                    nsn.polygons, distance=2)
+
+# x = shapely.dwithin(nsn.target_area.polygon, distance=2)
+print(pynsn.spatial_relations.dwithin(nsn, dist=2))

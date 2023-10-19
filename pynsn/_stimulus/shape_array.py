@@ -6,8 +6,8 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
-
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+import shapely
 import numpy as np
 from numpy.typing import NDArray
 
@@ -28,7 +28,6 @@ class ShapeArray(object):
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
 
-
     @property
     def xy(self) -> NDArray:
         return self._xy
@@ -42,7 +41,7 @@ class ShapeArray(object):
         return self._rect_sizes
 
     @property
-    def polygons(self) -> NDArray:
+    def polygons(self) -> NDArray[shapely.Polygon]:
         return self._polygons
 
     @property
@@ -55,7 +54,7 @@ class ShapeArray(object):
 
     @property
     def contains_rectangles(self):
-        return np.any(self._rect_sizes[:,0])
+        return np.any(self._rect_sizes[:, 0])
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
         if isinstance(shapes, ShapeType):
@@ -171,7 +170,6 @@ class ShapeArray(object):
         """number of shapes"""
         return len(self._attributes)
 
-
     def to_dict(self) -> OrderedDict:
         """dict representation of the object array
 
@@ -238,6 +236,7 @@ class ShapeArray(object):
     #     >>>    print(obj)
     #     """
     #     pass
+
 
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
     """read shape array from dict"""
