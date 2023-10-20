@@ -31,5 +31,5 @@ def intersects(shape_array: ShapeArray):
     return _spatial_relations(shape_array, shapely.intersects)
 
 
-def covers(shape_array: ShapeArray):
-    return _spatial_relations(shape_array, shapely.covers)
+def contains_properly(shape_array: ShapeArray):
+    return _spatial_relations(shape_array, shapely.contains_properly)

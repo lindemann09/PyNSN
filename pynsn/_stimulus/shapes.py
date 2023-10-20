@@ -122,6 +122,7 @@ class Dot(AbstractShape):
         return Dot(self._xy, self._diameter, self._attribute)
 
     def make_polygon(self, buffer: int = 0) -> Polygon:
+        # efficient buffer (and not buffer of dot polygon)
         bf = self._diameter / 2 + buffer
         return Point(self._xy).buffer(bf, quad_segs=Dot.QUAD_SEGS)
 

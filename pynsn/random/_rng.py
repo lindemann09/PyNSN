@@ -61,7 +61,7 @@ class BrownianMotion(object):
 
         if isinstance(walk_area, shapely.Polygon):
             shapely.prepare(walk_area)
-            if not walk_area.covers(point_or_polygon):
+            if not walk_area.contains_properly(point_or_polygon):
                 raise ValueError("start shape is outside walk area")
             self.area = walk_area
         else:
@@ -103,7 +103,7 @@ class BrownianMotion(object):
             step = generator.normal(loc=0, scale=self.scale * dt, size=2)
             new_geom = shapely.transform(self._geom, lambda x: x + step)
             if not isinstance(self.area, shapely.Polygon) or \
-                    self.area.covers(new_geom):
+                    self.area.contains_properly(new_geom):
                 # unbounded area or inside area -> good step
                 self._geom = new_geom
                 self._position = self._position + step
