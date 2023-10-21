@@ -31,3 +31,8 @@ a.save("shapes_test2.png")
 
 # print(nsn.target_area.polygon.covers(nsn.polygons))
 # print(pynsn.spatial_relations.dwithin(nsn, dist=nsn.min_distance))
+
+
+r_big.move((100, 200))
+
+x = d_big.copy()

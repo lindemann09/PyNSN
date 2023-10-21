@@ -42,16 +42,15 @@ class NSNStimulus(ShapeArray):
             raise RuntimeError(
                 f"Target area is too small. Size={target_area.size}")
 
+        self.target_area = target_area
         if tuple(target_area.xy) != (0, 0):
             warnings.warn("TargetArea does not use shape position. "
                           "Shape Position will be set to (0, 0).",
                           UserWarning)
+            self.target_area.xy = (0, 0)
 
-        self.target_area = target_area
-        self.target_area.xy = (0, 0)
-        self._area_polygon = self.target_area.polygon
-        self._area_ring = self.target_area.polygon.exterior
-        shapely.prepare(self._area_polygon)
+        self._area_ring = shapely.get_exterior_ring(self.target_area.polygon)
+        shapely.prepare(self.target_area.polygon)
         shapely.prepare(self._area_ring)
 
         self.min_distance = min_distance
@@ -203,7 +202,7 @@ class NSNStimulus(ShapeArray):
         ctr_object = ref_object.copy()
         ctr_object.xy = (0, 0)  # ensure centred position
         while n > 0:
-            new_object = ref_object.copy()
+            new_object = ctr_object.copy()
             new_object.xy = self._random_free_position(
                 centred_polygon=ctr_object.polygon,
                 ignore_overlaps=ignore_overlaps,
@@ -227,7 +226,7 @@ class NSNStimulus(ShapeArray):
         #     shapely.prepare(search_area)
         #     shapely.prepare(search_area_ring)
         # else:
-        #     search_area = self._area_polygon
+        #     search_area = self.target_area.polygon
         #     search_area_ring = self._area_ring
         # FIXME inside convex hull not yet implemented, Problem: ch must be centred
         if inside_convex_hull:
@@ -240,7 +239,7 @@ class NSNStimulus(ShapeArray):
 
         try:
             xy = move_to_free_position(polygon=centred_polygon,
-                                       target_area=self._area_polygon,
+                                       target_area=self.target_area.polygon,
                                        other_polygons=other_polygons,
                                        min_distance=self.min_distance,
                                        min_dist_area_boarder=self.min_distance_target_area,

@@ -5,6 +5,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 from abc import ABCMeta, abstractmethod
 from os import path
 from typing import Any, Tuple, Union
+from copy import deepcopy
 
 import shapely
 from shapely import Point, Polygon
@@ -31,8 +32,13 @@ class AbstractShape(metaclass=ABCMeta):
     def xy(self, val: Coord2DLike):
         if len(val) != 2:
             raise ValueError("xy has be an list of two numerals (x, y)")
-        self._xy = tuple(val)
-        self._polygon = None
+
+        xy = tuple(val)
+        if self._polygon is not None:
+            move_xy = (xy[0] - self._xy[0], xy[1] - self._xy[1])
+            self._polygon = shapely.transform(self._polygon,
+                                              lambda x: x + move_xy)
+        self._xy = xy
 
     @property
     def attribute(self) -> Any:
@@ -90,6 +96,18 @@ class AbstractShape(metaclass=ABCMeta):
         cached polygon will not be copied and recreated with the next call
         """
 
+    def move(self, move_xy: Coord2DLike):
+        """moves the xy position of the shape
+        """
+
+        if len(move_xy) != 2:
+            raise ValueError("move_xy has be an list of two numerals (x, y)")
+        self._xy = (self._xy[0] + move_xy[0],
+                    self._xy[1] + move_xy[1])
+        if self._polygon is not None:
+            self._polygon = shapely.transform(self._polygon,
+                                              lambda x: x + move_xy)
+
 
 class Dot(AbstractShape):
     QUAD_SEGS = 32  # line segments used to approximate dot
@@ -119,7 +137,7 @@ class Dot(AbstractShape):
 
     def copy(self) -> Dot:
         # inherited doc
-        return Dot(self._xy, self._diameter, self._attribute)
+        return deepcopy(self)
 
     def make_polygon(self, buffer: int = 0) -> Polygon:
         # efficient buffer (and not buffer of dot polygon)
@@ -203,7 +221,7 @@ class Rectangle(AbstractShape):
                 + f"attribute='{self._attribute}')")
 
     def copy(self) -> Rectangle:
-        return Rectangle(self._xy, self._size, self._attribute)
+        return deepcopy(self)
 
 
 class Picture(Rectangle):
@@ -254,4 +272,4 @@ class Picture(Rectangle):
             return None
 
     def copy(self) -> Picture:
-        return Picture(self._xy, self._size, self.filename)
+        return deepcopy(self)
