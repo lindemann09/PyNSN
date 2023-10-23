@@ -27,6 +27,8 @@ class ShapeArray(object):
         self._rect_sizes = np.empty((0, 2), dtype=np.float64)
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
+        self._dot_ids = np.empty(0, dtype=bool)
+        self._rect_ids = np.empty(0, dtype=bool)
 
     @property
     def xy(self) -> NDArray:
@@ -49,12 +51,16 @@ class ShapeArray(object):
         return self._attributes
 
     @property
-    def contains_dots(self):
-        return np.any(self._dot_diameter)
+    def dot_ids(self) -> NDArray[np.bool_]:
+        return self._dot_ids
 
     @property
-    def contains_rectangles(self):
-        return np.any(self._rect_sizes[:, 0])
+    def rect_ids(self) -> NDArray[np.bool_]:
+        return self._rect_ids
+
+    def _find_shape_ids(self):
+        self._rect_ids = np.logical_not(np.isnan(self._rect_sizes[:, 0]))
+        self._dot_ids = np.logical_not(np.isnan(self._dot_diameter))
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
         if isinstance(shapes, ShapeType):
@@ -73,6 +79,7 @@ class ShapeArray(object):
             self._attributes = np.append(self._attributes, shapes.attribute)
             self._rect_sizes = np.append(self._rect_sizes, size, axis=0)
             self._dot_diameter = np.append(self._dot_diameter, dia)
+            self._find_shape_ids()
 
         elif isinstance(shapes, (list, tuple)):
             for x in shapes:
@@ -102,6 +109,8 @@ class ShapeArray(object):
         self._attributes[index] = shape.attribute
         self._dot_diameter[index] = dia
         self._rect_sizes[index, :] = size
+        self._find_shape_ids()
+
 
     def delete(self, index: IntOVector) -> None:
         self._polygons = np.delete(self._polygons, index)
@@ -109,6 +118,8 @@ class ShapeArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._dot_diameter = np.delete(self._dot_diameter, index)
         self._rect_sizes = np.delete(self._rect_sizes, index, axis=0)
+        self._find_shape_ids()
+
 
     def clear(self):
         """ """
@@ -117,6 +128,8 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._dot_diameter = np.empty(0, dtype=np.float64)
         self._rect_sizes = np.empty((0, 2), dtype=np.float64)
+        self._find_shape_ids()
+
 
     def round_values(self, decimals: int = 0, int_type: type = np.int64,
                      rebuild_polygons=True) -> None:

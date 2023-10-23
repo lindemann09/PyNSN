@@ -289,7 +289,7 @@ class NSNStimulus(ShapeArray):
 
         while True:
             # polygons list is prepared
-            overlaps = shapely.intersects(self.polygons, random_walk.polygon)
+            overlaps = shapely.dwithin(self.polygons, random_walk.polygon, distance=0)
             if not np.any(overlaps):
                 break  # good position
             if random_walk.counter > constants.MAX_ITERATIONS:
