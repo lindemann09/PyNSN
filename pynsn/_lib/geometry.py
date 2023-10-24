@@ -67,6 +67,15 @@ def round2(arr: NDArray, decimals: int, int_type: type = np.int64) -> NDArray:
     else:
         return arr
 
+
+def ellipse_perimeter(sizes: NDArray) -> NDArray[np.float_]:
+    """Ramanujan's second approximation of the ellipse perimeter"""
+    s = np.atleast_2d(sizes)
+    a = s[:, 0]
+    b = s[:, 1]
+    return np.pi * ((a+b) + (3*(a-b)**2) / (10*(a+b) + np.sqrt(a**2 + 14*a*b + b**2)))
+
+
 # def jitter_identical_coordinates(xy: NDArray, jitter_size: float = 0.1) -> NDArray:
 #     """jitters points with identical position"""
 

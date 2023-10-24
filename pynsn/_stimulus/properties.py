@@ -8,21 +8,21 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import enum
 from collections import OrderedDict
 from typing import Any, Union
-
+import shapely
 import numpy as np
 from numpy.typing import NDArray
 
 from .convex_hull import ConvexHull
 from .shape_array import ShapeArray
+from .shapes import Dot, Rectangle, Ellipse, Picture, PolygonShape
+from .._lib.geometry import ellipse_perimeter
 
 
 class VisProp(enum.Flag):  # visual properties
     NUMEROSITY = enum.auto()
 
-    AV_DOT_DIAMETER = enum.auto()
     AV_SURFACE_AREA = enum.auto()
     AV_PERIMETER = enum.auto()
-    AV_RECT_SIZE = enum.auto()
 
     TOTAL_SURFACE_AREA = enum.auto()
     TOTAL_PERIMETER = enum.auto()
@@ -37,10 +37,8 @@ class VisProp(enum.Flag):  # visual properties
     def size_properties() -> tuple:
         return (VisProp.LOG_SIZE,
                 VisProp.TOTAL_SURFACE_AREA,
-                VisProp.AV_DOT_DIAMETER,
                 VisProp.AV_SURFACE_AREA,
                 VisProp.AV_PERIMETER,
-                VisProp.AV_RECT_SIZE,
                 VisProp.TOTAL_PERIMETER)
 
     @staticmethod
@@ -63,11 +61,9 @@ class VisProp(enum.Flag):  # visual properties
             VisProp.NUMEROSITY: "Numerosity",
             VisProp.LOG_SIZE: "Log size",
             VisProp.TOTAL_SURFACE_AREA: "Total surface area",
-            VisProp.AV_DOT_DIAMETER: "Av. dot diameter",
             VisProp.AV_SURFACE_AREA: "Av. surface area",
             VisProp.AV_PERIMETER: "Av. perimeter",
             VisProp.TOTAL_PERIMETER: "Total perimeter",
-            VisProp.AV_RECT_SIZE: "Av. rectangle Size",
             VisProp.LOG_SPACING: "Log spacing",
             VisProp.SPARSITY: "Sparsity",
             VisProp.FIELD_AREA: "Field area",
@@ -85,22 +81,46 @@ class ArrayProperties(object):
     @property
     def areas(self) -> NDArray:
         """area of each object"""
-        rect_areas = self._shapes.rect_sizes[:, 0] * self._shapes.rect_sizes[:, 1]
-        # dot areas: a = pi r**2 = pi d**2 / 4
-        rtn = np.pi * (self._shapes.dot_diameter**2) / 4.0
-        # replace no dot areas with rects areas
-        idx = np.isnan(rtn)
-        rtn[idx] = rect_areas[idx]
+
+        rtn = np.full(self._shapes.n_objects, np.nan)
+        # rects and polygons
+        idx = np.append(self._shapes.ids[Rectangle.ID],
+                        self._shapes.ids[Picture.ID])
+        if len(idx) > 0:
+            rtn[idx] = self._shapes.sizes[idx, 0] * self._shapes.sizes[idx, 1]
+        # circular shapes area
+        # Area = pi * r_x * r_y
+        idx = np.append(self._shapes.ids[Dot.ID],
+                        self._shapes.ids[Ellipse.ID])
+        if len(idx) > 0:
+            r = self._shapes.sizes[idx, :] / 2
+            rtn[idx] = np.pi * r[:, 0] * r[:, 1]
+        # polygons area
+        idx = self._shapes.ids[PolygonShape.ID]
+        if len(idx) > 0:
+            rtn[idx] = shapely.area(self._shapes.polygons[idx])
         return rtn
 
     @property
     def perimeter(self) -> NDArray:
         """Perimeter for each dot"""
-        rect_perimeter = 2 * (self._shapes.rect_sizes[:, 0] + self._shapes.rect_sizes[:, 1])
-        rtn = np.pi * self._shapes.dot_diameter  # dot perimeter
-        # replace no dot perimeter with rect perimeter
-        idx = np.isnan(rtn)
-        rtn[idx] = rect_perimeter[idx]
+
+        rtn = np.full(self._shapes.n_objects, np.nan)
+        # rects and polygons
+        idx = np.append(self._shapes.ids[Rectangle.ID],
+                        self._shapes.ids[Picture.ID],
+                        self._shapes.ids[PolygonShape.ID])
+        if len(idx) > 0:
+            rtn[idx] = shapely.length(self._shapes.polygons[idx])
+        # dots perimeter
+        idx = self._shapes.ids[Dot.ID]
+        if len(idx) > 0:
+            rtn[idx] = np.pi * self._shapes.sizes[idx, 0]
+        # ellipse perimeter
+        idx = self._shapes.ids[Ellipse.ID]
+        if len(idx) > 0:
+            rtn[idx] = ellipse_perimeter(self._shapes.sizes[idx, :])
+
         return rtn
 
     @property
@@ -124,20 +144,6 @@ class ArrayProperties(object):
         if not isinstance(self._ch, ConvexHull):
             self._ch = ConvexHull(self._shapes.polygons)
         return self._ch
-
-    @property
-    def average_dot_diameter(self) -> float:
-        if self._shapes.contains_dots:
-            return float(np.nanmean(self._shapes.dot_diameter))
-        else:
-            return 0.0
-
-    @property
-    def average_rectangle_size(self) -> NDArray:
-        if self._shapes.contains_rectangles:
-            return np.nanmean(self._shapes.rect_sizes, axis=0)
-        else:
-            return np.array([0.0, 0.0])
 
     @property
     def total_surface_area(self) -> float:
@@ -197,13 +203,7 @@ class ArrayProperties(object):
 
     def get(self, prop: VisProp) -> Any:
         """returns a visual property"""
-        if prop == VisProp.AV_DOT_DIAMETER:
-            return self.average_dot_diameter
-
-        elif prop == VisProp.AV_RECT_SIZE:
-            return self.average_rectangle_size
-
-        elif prop == VisProp.AV_PERIMETER:
+        if prop == VisProp.AV_PERIMETER:
             return self.average_perimeter
 
         elif prop == VisProp.TOTAL_PERIMETER:

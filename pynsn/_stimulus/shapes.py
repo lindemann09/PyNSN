@@ -1,3 +1,13 @@
+"""Shape Classes
+
+Rectanglur shapes and Polygons are based on shapely.Polygon.
+For performance reasons, circular shapes (Dot & Ellipse) are represented merely by
+positions and radii. Polygons will be created if required only.
+
+Note: For performance reasons, spatial relations module based the calculation of
+relations between circular shapes not on shapely.polygons.
+"""
+
 from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
@@ -17,6 +27,7 @@ from .._lib.geometry import Coord2DLike, Coord2D
 
 class ShapeType(metaclass=ABCMeta):
     """Abstract Shape Type Class"""
+    ID = -1
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -119,6 +130,7 @@ class ShapeType(metaclass=ABCMeta):
 
 
 class PolygonShape(ShapeType):
+    ID = 5
 
     def __init__(self, polygon: Polygon, attribute: Any = None):
         ctr = polygon.centroid
@@ -142,6 +154,7 @@ class PolygonShape(ShapeType):
 
 class Ellipse(ShapeType):
     QUAD_SEGS = 32  # line segments used to approximate dot
+    ID = 3
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -182,7 +195,7 @@ class Ellipse(ShapeType):
 
 
 class Dot(Ellipse):
-    QUAD_SEGS = 32  # line segments used to approximate dot
+    ID = 1
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -221,6 +234,7 @@ class Dot(Ellipse):
 
 
 class Rectangle(ShapeType):
+    ID = 2
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -273,6 +287,7 @@ class Rectangle(ShapeType):
 
 
 class Picture(Rectangle):
+    ID = 4
     ATTR_PREFIX = "p:"
 
     def __init__(self, xy: Coord2DLike, size: Coord2DLike, filename: str) -> None:
@@ -316,3 +331,11 @@ class Picture(Rectangle):
             return txt[len(Picture.ATTR_PREFIX):]
         else:
             return None
+
+
+SHAPE_LABEL = {
+    Dot.ID: "Dot",
+    Rectangle.ID: "Rectangle",
+    Picture.ID: "Picture",
+    Ellipse.ID: "Ellipse",
+    PolygonShape.ID: "Polygon"}

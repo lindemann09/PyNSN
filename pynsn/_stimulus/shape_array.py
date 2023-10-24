@@ -12,7 +12,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._lib.geometry import round2
-from .shapes import Dot, Picture, Rectangle, ShapeType
+from .shapes import (Dot, Ellipse, Picture, PolygonShape,
+                     Rectangle, ShapeType, SHAPE_LABEL)
 
 IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
@@ -22,24 +23,28 @@ class ShapeArray(object):
 
     def __init__(self) -> None:
         self._xy = np.empty((0, 2), dtype=np.float64)
-        self._dot_diameter = np.empty(0, dtype=np.float64)
-        self._rect_sizes = np.empty((0, 2), dtype=np.float64)
+        self._sizes = np.empty((0, 2), dtype=np.float64)
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
-        self._dot_ids = np.empty(0, dtype=bool)
-        self._rect_ids = np.empty(0, dtype=bool)
+        self._types = np.empty(0, dtype=int)
+        self._ids = {}
+        self._update_ids()
 
     @property
     def xy(self) -> NDArray:
         return self._xy
 
     @property
-    def dot_diameter(self) -> NDArray:
-        return self._dot_diameter
+    def sizes(self) -> NDArray:
+        return self._sizes
 
     @property
-    def rect_sizes(self) -> NDArray:
-        return self._rect_sizes
+    def shape_types(self) -> List[str]:
+        return [SHAPE_LABEL[x] for x in self._types]
+
+    @property
+    def shape_types_ids(self) -> NDArray[np.int_]:
+        return self._types
 
     @property
     def polygons(self) -> NDArray[shapely.Polygon]:
@@ -50,35 +55,24 @@ class ShapeArray(object):
         return self._attributes
 
     @property
-    def dot_ids(self) -> NDArray[np.bool_]:
-        return self._dot_ids
+    def ids(self) -> Dict[int, NDArray]:
+        """Dictionary of ids for the different shape types"""
+        return self._ids
 
-    @property
-    def rect_ids(self) -> NDArray[np.bool_]:
-        return self._rect_ids
-
-    def _find_shape_ids(self):
-        self._rect_ids = np.logical_not(np.isnan(self._rect_sizes[:, 0]))
-        self._dot_ids = np.logical_not(np.isnan(self._dot_diameter))
+    def _update_ids(self):
+        self._ids = {}
+        for st in [Dot.ID, Rectangle.ID, Ellipse.ID, Picture.ID, PolygonShape.ID]:
+            self._ids[st] = np.flatnonzero(self._types == st)
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
         if isinstance(shapes, ShapeType):
-            if isinstance(shapes, Dot):
-                dia = shapes.diameter
-                size = np.full((1, 2), np.nan)
-            elif isinstance(shapes, Rectangle):
-                dia = np.nan
-                size = np.atleast_2d(shapes.size)
-            else:
-                raise TypeError(f"Unknown ShapeType. type={type(shapes)}")
-
-            poly = shapes.polygon
-            self._polygons = np.append(self._polygons, poly)
             self._xy = np.append(self._xy, np.atleast_2d(shapes.xy), axis=0)
+            self._sizes = np.append(
+                self._sizes, np.atleast_2d(shapes.size), axis=0)
             self._attributes = np.append(self._attributes, shapes.attribute)
-            self._rect_sizes = np.append(self._rect_sizes, size, axis=0)
-            self._dot_diameter = np.append(self._dot_diameter, dia)
-            self._find_shape_ids()
+            self._types = np.append(self._types, shapes.ID)
+            self._polygons = np.append(self._polygons, shapes.polygon)
+            self._update_ids()
 
         elif isinstance(shapes, (list, tuple)):
             for x in shapes:
@@ -93,39 +87,30 @@ class ShapeArray(object):
             )
 
     def replace(self, index: int, shape: ShapeType):
-        if isinstance(shape, Dot):
-            dia = self._dot_diameter
-            size = [np.nan, np.nan]
-        elif isinstance(shape, Rectangle):
-            dia = np.nan
-            size = shape.size
-        else:
-            raise TypeError(f"Unknown ShapeType. type={type(shape)}")
 
-        poly = shape.polygon
-        self._polygons[index] = poly
+        self._polygons[index] = shape.polygon
         self._xy[index, :] = shape.xy
         self._attributes[index] = shape.attribute
-        self._dot_diameter[index] = dia
-        self._rect_sizes[index, :] = size
-        self._find_shape_ids()
+        self._sizes[index, :] = shape.size
+        self._types[index] = shape.ID
+        self._update_ids()
 
     def delete(self, index: IntOVector) -> None:
         self._polygons = np.delete(self._polygons, index)
         self._xy = np.delete(self._xy, index, axis=0)
         self._attributes = np.delete(self._attributes, index)
-        self._dot_diameter = np.delete(self._dot_diameter, index)
-        self._rect_sizes = np.delete(self._rect_sizes, index, axis=0)
-        self._find_shape_ids()
+        self._types = np.delete(self._types, index)
+        self._sizes = np.delete(self._sizes, index, axis=0)
+        self._update_ids()
 
     def clear(self):
         """ """
         self._polygons = np.empty(0, dtype=object)
         self._xy = np.empty((0, 2), dtype=np.float64)
         self._attributes = np.empty(0, dtype=object)
-        self._dot_diameter = np.empty(0, dtype=np.float64)
-        self._rect_sizes = np.empty((0, 2), dtype=np.float64)
-        self._find_shape_ids()
+        self._types = np.empty(0, dtype=int)
+        self._sizes = np.empty((0, 2), dtype=np.float64)
+        self._update_ids()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -144,25 +129,39 @@ class ShapeArray(object):
     #             shape.delete_polygon()
     #             self._polygons[i] = shape.polygon
 
-    def get(self, index: int) -> Union[Dot, Rectangle]:
-        """Returns  selected object"""
-        if np.isnan(self._dot_diameter[index]):
-            rtn = Rectangle(
-                xy=self._xy[index, :],
-                size=self._rect_sizes[index, :],
-                attribute=self._attributes[index])
-        else:
+    def get(self, index: int) -> ShapeType:
+        """Returns selected object"""
+        type_id = self._types[index]
+        if type_id == Dot.ID:
             rtn = Dot(
                 xy=self._xy[index, :],
-                diameter=self._dot_diameter[index],
+                diameter=self._sizes[index, 0],
                 attribute=self._attributes[index])
+        elif type_id == Rectangle.ID:
+            return Rectangle(
+                xy=self._xy[index, :],
+                size=self._sizes[index, :],
+                attribute=self._attributes[index])
+        elif type_id == Picture.ID:
+            return Picture(
+                xy=self._xy[index, :],
+                size=self._sizes[index, :],
+                filename=Picture.extract_filename(self._attributes[index]))  # type: ignore
+        elif type_id == Ellipse.ID:
+            return Ellipse(
+                xy=self._xy[index, :],
+                size=self._sizes[index, :],
+                attribute=self._attributes[index])
+        elif type_id == PolygonShape.ID:
+            return PolygonShape(polygon=self._polygons[index],
+                                attribute=self._attributes[index])
+        else:
+            raise TypeError(f"{type_id}: Unknown shape type id.")
 
         # rtn.set_polygon(self._polygons[index])
         return rtn
 
-    def get_list(
-        self, index: Optional[IntOVector] = None
-    ) -> List[Union[Dot, Rectangle]]:
+    def get_list(self, index: Optional[IntOVector] = None) -> List[ShapeType]:
         """Returns list with selected objects
         """
         if index is None:
@@ -170,7 +169,7 @@ class ShapeArray(object):
         elif isinstance(index, int):
             ids = (index,)
         else:
-            ids = list(index)
+            ids = index
 
         return [self.get(x) for x in ids]
 
@@ -195,9 +194,8 @@ class ShapeArray(object):
         d = OrderedDict()
         d.update({"x": self._xy[:, 0].tolist(),
                   "y": self._xy[:, 1].tolist(),
-                  "diameter": self._dot_diameter.tolist(),
-                  "width": self._rect_sizes[:, 0].tolist(),
-                  "height": self._rect_sizes[:, 1].tolist(),
+                  "width": self._sizes[:, 0].tolist(),
+                  "height": self._sizes[:, 1].tolist(),
                   "attributes": self._attributes.tolist()})
         return d
 
