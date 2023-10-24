@@ -16,8 +16,8 @@ from .._lib.exceptions import NoSolutionError
 from .._lib.misc import key_value_format
 from ..random._rng import BrownianMotion, generator
 from .properties import ArrayProperties
-from .shape_array import IntOVector, ShapeArray, ShapeType
-from .shapes import Dot, Picture, Rectangle
+from .shape_array import IntOVector, ShapeArray
+from .shapes import Dot, Picture, Rectangle, ShapeType
 
 
 class NSNStimulus(ShapeArray):
@@ -289,7 +289,8 @@ class NSNStimulus(ShapeArray):
 
         while True:
             # polygons list is prepared
-            overlaps = shapely.dwithin(self.polygons, random_walk.polygon, distance=0)
+            overlaps = shapely.dwithin(
+                self.polygons, random_walk.polygon, distance=0)
             if not np.any(overlaps):
                 break  # good position
             if random_walk.counter > constants.MAX_ITERATIONS:

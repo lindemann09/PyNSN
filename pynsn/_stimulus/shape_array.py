@@ -12,10 +12,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._lib.geometry import round2
-from .shapes import Dot, Picture, Rectangle
+from .shapes import Dot, Picture, Rectangle, ShapeType
 
 IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
-ShapeType = Union[Dot, Rectangle, Picture]
 
 
 class ShapeArray(object):
@@ -111,7 +110,6 @@ class ShapeArray(object):
         self._rect_sizes[index, :] = size
         self._find_shape_ids()
 
-
     def delete(self, index: IntOVector) -> None:
         self._polygons = np.delete(self._polygons, index)
         self._xy = np.delete(self._xy, index, axis=0)
@@ -119,7 +117,6 @@ class ShapeArray(object):
         self._dot_diameter = np.delete(self._dot_diameter, index)
         self._rect_sizes = np.delete(self._rect_sizes, index, axis=0)
         self._find_shape_ids()
-
 
     def clear(self):
         """ """
@@ -130,23 +127,22 @@ class ShapeArray(object):
         self._rect_sizes = np.empty((0, 2), dtype=np.float64)
         self._find_shape_ids()
 
+    # def round_values(self, decimals: int = 0, int_type: type = np.int64,
+    #                  rebuild_polygons=True) -> None: #FIXME rounding
+    #     """rounds all values"""
 
-    def round_values(self, decimals: int = 0, int_type: type = np.int64,
-                     rebuild_polygons=True) -> None:
-        """rounds all values"""
+    #     if decimals is None:
+    #         return
+    #     self._xy = round2(self._xy, decimals=decimals, int_type=int_type)
+    #     self._dot_diameter = round2(self._dot_diameter, decimals=decimals,
+    #                                 int_type=int_type)
+    #     self._rect_sizes = round2(self._rect_sizes, decimals=decimals,
+    #                               int_type=int_type)
 
-        if decimals is None:
-            return
-        self._xy = round2(self._xy, decimals=decimals, int_type=int_type)
-        self._dot_diameter = round2(self._dot_diameter, decimals=decimals,
-                                    int_type=int_type)
-        self._rect_sizes = round2(self._rect_sizes, decimals=decimals,
-                                  int_type=int_type)
-
-        if rebuild_polygons:
-            for i, shape in enumerate(self.get_list()):
-                shape.delete_polygon()
-                self._polygons[i] = shape.polygon
+    #     if rebuild_polygons:
+    #         for i, shape in enumerate(self.get_list()):
+    #             shape.delete_polygon()
+    #             self._polygons[i] = shape.polygon
 
     def get(self, index: int) -> Union[Dot, Rectangle]:
         """Returns  selected object"""
@@ -161,7 +157,7 @@ class ShapeArray(object):
                 diameter=self._dot_diameter[index],
                 attribute=self._attributes[index])
 
-        rtn.set_polygon(self._polygons[index])
+        # rtn.set_polygon(self._polygons[index])
         return rtn
 
     def get_list(
