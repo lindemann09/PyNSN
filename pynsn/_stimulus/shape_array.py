@@ -6,20 +6,28 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
-import shapely
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
+import shapely
 from numpy.typing import NDArray
 
-from .._lib.geometry import round2
+from . import shape_geometry as sgeo
 from .shapes import (Dot, Ellipse, Picture, PolygonShape,
-                     Rectangle, ShapeType, SHAPE_LABEL)
+                     Rectangle, ShapeType, CircularShapeType)
 
 IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
 
 class ShapeArray(object):
     """Numpy Optimizes Representation of Array of shapes"""
+
+    SHAPE_LABELS = {
+        Dot.ID: "Dot",
+        Rectangle.ID: "Rectangle",
+        Picture.ID: "Picture",
+        Ellipse.ID: "Ellipse",
+        PolygonShape.ID: "Polygon"}
 
     def __init__(self) -> None:
         self._xy = np.empty((0, 2), dtype=np.float64)
@@ -40,7 +48,7 @@ class ShapeArray(object):
 
     @property
     def shape_types(self) -> List[str]:
-        return [SHAPE_LABEL[x] for x in self._types]
+        return [ShapeArray.SHAPE_LABELS[x] for x in self._types]
 
     @property
     def shape_types_ids(self) -> NDArray[np.int_]:
@@ -146,7 +154,7 @@ class ShapeArray(object):
             return Picture(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
-                filename=Picture.extract_filename(self._attributes[index]))  # type: ignore
+                path=self._attributes[index])  # type: ignore
         elif type_id == Ellipse.ID:
             return Ellipse(
                 xy=self._xy[index, :],
@@ -243,6 +251,36 @@ class ShapeArray(object):
     #     >>>    print(obj)
     #     """
     #     pass
+
+    def distances(self, shape: ShapeType) -> NDArray[np.float_]:
+        """distances of a shape to the elements in the shape array"""
+
+        if isinstance(shape, CircularShapeType):
+            rtn = np.full(self.n_objects, np.nan)
+
+            idx = self._ids[Dot.ID]
+            if len(idx) > 0:
+                # circular -> dots in shape array
+                rtn[idx] = sgeo.distance_circ_dots(circ_shape=shape,
+                                                   dots_xy=self._xy[idx, :],
+                                                   dots_diameter=self._sizes[idx, 0])
+
+            idx = self._ids[Ellipse.ID]
+            if len(idx) > 0:
+                # circular -> ellipses in shape array
+                rtn[idx] = sgeo.distance_circ_ellipses(circ_shape=shape,
+                                                       ellipses_xy=self._xy[idx, :],
+                                                       ellipse_sizes=self._sizes[idx, :])
+
+            # check if non-circular shapes are in shape_array
+            idx = np.flatnonzero(np.isnan(rtn))
+            if len(idx) > 0:
+                rtn[idx] = shapely.distance(shape.polygon, self._polygons[idx])
+            return rtn
+
+        else:
+            # non-circular shape
+            return shapely.distance(shape.polygon, self._polygons)
 
 
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:

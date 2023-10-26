@@ -7,7 +7,7 @@ import pygame as _pygame
 from expyriment.misc import Clock as _Clock
 from expyriment.stimuli import Canvas as _Canvas
 
-from . import _array_draw
+from . import _base
 from . import pil_image as _pil_image
 from ._image_colours import ImageColours
 
@@ -19,7 +19,7 @@ class ExprimentNSNStimulus(_Canvas):
                  position=(0, 0),
                  antialiasing=True):
 
-        _array_draw.check_nsn_stimulus(nsn_stimulus)
+        _base.check_nsn_stimulus(nsn_stimulus)
         if colours is None:
             colours = ImageColours()
         if not isinstance(colours, ImageColours):

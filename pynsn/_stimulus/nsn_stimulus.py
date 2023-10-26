@@ -6,7 +6,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import warnings
 from hashlib import md5
-from typing import Optional, Sequence, Tuple, Union
+from typing import Sequence, Tuple, Union
 from numpy.typing import NDArray
 import numpy as np
 import shapely
@@ -17,7 +17,8 @@ from .._lib.misc import key_value_format
 from ..random._rng import BrownianMotion, generator
 from .properties import ArrayProperties
 from .shape_array import IntOVector, ShapeArray
-from .shapes import Dot, Picture, Rectangle, ShapeType
+from .shapes import CircularShapeType, Dot, Ellipse,  Rectangle, ShapeType, PolygonShape
+from . import shape_geometry as sgeo
 
 
 class NSNStimulus(ShapeArray):
@@ -190,81 +191,6 @@ class NSNStimulus(ShapeArray):
         if rebuild_polygons:
             self._properties.reset_convex_hull()
 
-    def add_somewhere(self,
-                      ref_object: ShapeType,
-                      n: int = 1,
-                      ignore_overlaps: bool = False,
-                      inside_convex_hull: bool = False):
-
-        if not isinstance(ref_object, (Dot, Rectangle, Picture)):
-            raise NotImplementedError("Not implemented for "
-                                      f"{type(ref_object).__name__}")
-        ctr_object = ref_object.copy()
-        ctr_object.xy = (0, 0)  # ensure centred position
-        while n > 0:
-            new_object = ctr_object.copy()
-            new_object.xy = self._random_free_position(
-                centred_polygon=ctr_object.polygon,
-                ignore_overlaps=ignore_overlaps,
-                inside_convex_hull=inside_convex_hull)
-            self.add(new_object)
-            n = n - 1
-
-    def _random_free_position(self,
-                              centred_polygon: shapely.Polygon,
-                              ignore_overlaps: bool = False,
-                              inside_convex_hull: bool = False) -> NDArray:
-        """returns random free position for this object or polygon
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-        # TODO could be improved by return a Shape with created polygon
-        # if inside_convex_hull:
-        #     search_area = self.properties.convex_hull.polygon
-        #     search_area_ring = search_area.exterior
-        #     shapely.prepare(search_area)
-        #     shapely.prepare(search_area_ring)
-        # else:
-        #     search_area = self.target_area.polygon
-        #     search_area_ring = self._area_ring
-        # FIXME inside convex hull not yet implemented, Problem: ch must be centred
-        if inside_convex_hull:
-            raise NotImplementedError()
-
-        if ignore_overlaps:
-            other_polygons = None
-        else:
-            other_polygons = self.polygons
-
-        try:
-            xy = move_to_free_position(polygon=centred_polygon,
-                                       target_area=self.target_area.polygon,
-                                       other_polygons=other_polygons,
-                                       min_distance=self.min_distance,
-                                       min_dist_area_boarder=self.min_distance_target_area,
-                                       target_area_ring=self._area_ring)
-        except NoSolutionError as err:
-            raise NoSolutionError("Can't find a free position: "
-                                  + f"Current n={self.n_objects}") from err
-
-        return xy
-
-    def random_free_position(self,
-                             ref_object: ShapeType,
-                             ignore_overlaps: bool = False,
-                             inside_convex_hull: bool = False) -> NDArray:
-        """returns random free position for this object or polygon
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-        ctr_object = ref_object.copy()
-        ctr_object.xy = (0, 0)  # ensure centred position
-        return self._random_free_position(centred_polygon=ctr_object.polygon,
-                                          ignore_overlaps=ignore_overlaps,
-                                          inside_convex_hull=inside_convex_hull)
-
     def fix_overlap(self, object_index: int,
                     inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
         """move an selected object that overlaps to an free position in the
@@ -285,7 +211,8 @@ class NSNStimulus(ShapeArray):
 
         random_walk = BrownianMotion(
             target.make_polygon(buffer=self.min_distance),
-            walk_area=search_area, delta=2)
+            walk_area=search_area,
+            delta=2)
 
         while True:
             # polygons list is prepared
@@ -305,65 +232,131 @@ class NSNStimulus(ShapeArray):
         self.add(target)
         return changes
 
-    def get_overlaps(self, polygon: shapely.Polygon):
+    def get_overlaps(self, shape: ShapeType) -> NDArray[np.int_]:
+        """Returns indices of all overlapping elements of the array with this shape.
 
-        return shapely.dwithin(self.polygons, polygon, distance=self.min_distance)
+        Note
+        -----
+        Using this function is more efficient than computing the distance and comparing the result.
+        """
+        if isinstance(shape, CircularShapeType):
+            rtn = np.full(self.n_objects, np.nan)
 
+            idx = self._ids[Dot.ID]
+            if len(idx) > 0:
+                # circular -> dots in shape array
+                dists = sgeo.distance_circ_dots(circ_shape=shape,
+                                                dots_xy=self._xy[idx, :],
+                                                dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = dists < self.min_distance
 
-def move_to_free_position(polygon: shapely.Polygon,
-                          target_area: shapely.Polygon,
-                          other_polygons: Optional[NDArray[shapely.Polygon]] = None,
-                          min_distance: int = 0,
-                          min_dist_area_boarder: Optional[int] = None,
-                          target_area_ring: Optional[shapely.Polygon] = None
-                          ) -> NDArray:
-    """returns the required movement (x, y) of the polygon to a randomly chosen
-    position in the target area.
+            idx = self._ids[Ellipse.ID]
+            if len(idx) > 0:
+                # circular -> ellipses in shape array
+                dists = sgeo.distance_circ_ellipses(circ_shape=shape,
+                                                    ellipses_xy=self._xy[idx, :],
+                                                    ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = dists < self.min_distance
 
-    target_ring: the exterior of target_area
-        it can be explicitly specified to avoid generation of exterior polygon and
-        thus improve performance with reoccurring function calls
+            # check if non-circular shapes are in shape_array
+            idx = np.flatnonzero(np.isnan(rtn))
+            if len(idx) > 0:
+                rtn[idx] = shapely.dwithin(
+                    shape.polygon, self._polygons[idx],  distance=self.min_distance)
 
-    Note:
+        else:
+            # non-circular shape
+            rtn = shapely.dwithin(
+                shape.polygon, self._polygons, distance=self.min_distance)
 
+        return np.flatnonzero(rtn)
 
-     search performance is better if `target_area`, `target_area_ring` and
-     `other_polygons` are prepared (see `shapely.prepare()`)
-    """
+    def add_somewhere(self,
+                      ref_object: ShapeType,
+                      n: int = 1,
+                      ignore_overlaps: bool = False,
+                      inside_convex_hull: bool = False):
+        # TODO could be improved by return a Shape with created polygon
+        # if inside_convex_hull:
+        #     search_area = self.properties.convex_hull.polygon
+        #     search_area_ring = search_area.exterior
+        #     shapely.prepare(search_area)
+        #     shapely.prepare(search_area_ring)
+        # else:
+        #     search_area = self.target_area.polygon
+        #     search_area_ring = self._area_ring
+        # FIXME inside convex hull not yet implemented, Problem: ch must be centred
 
-    if not shapely.contains_properly(target_area, polygon):
-        raise RuntimeError("Polygon has to been inside target_area")
+        if not isinstance(ref_object, (ShapeType)):
+            raise NotImplementedError("Not implemented for "
+                                      f"{type(ref_object).__name__}")
+        while n > 0:
+            try:
+                new_object = self._move_to_free_position(shape=ref_object,
+                                                         ignore_overlaps=ignore_overlaps,
+                                                         inside_convex_hull=inside_convex_hull)
+            except NoSolutionError as err:
+                raise NoSolutionError("Can't find a free position: "
+                                      + f"Current n={self.n_objects}") from err
 
-    if min_dist_area_boarder is None:
-        min_dist_area_boarder = min_distance
-    if target_area_ring is None:
-        target_area_ring = target_area.exterior
+            self.add(new_object)
+            n = n - 1
 
-    b = target_area.bounds  # l, b, r, t
-    search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
-    movement = np.zeros(2)
-    cnt = 0
-    while True:
-        if cnt > constants.MAX_ITERATIONS:
-            raise NoSolutionError(
-                "Can't find a free position for this polygon")
-        cnt += 1
+    def random_free_position(self,
+                             ref_object: ShapeType,
+                             ignore_overlaps: bool = False,
+                             inside_convex_hull: bool = False) -> Tuple[float, float]:
+        """returns random free position for this object or polygon
 
-        # propose a random position
-        movement = generator.random(size=2) * search_bounds_size \
-            - (search_bounds_size/2)
-        candidate_polygon = shapely.transform(polygon,
-                                              lambda x: x + movement)
-        # target is inside if covered and not too close to target_area_ring
-        if target_area.contains_properly(candidate_polygon) and not \
-            shapely.dwithin(target_area_ring, candidate_polygon,
-                            distance=min_dist_area_boarder):
+        raise exception if not found
+        occupied space: see generator generate
+        """
+        if not isinstance(ref_object, (ShapeType)):
+            raise NotImplementedError("Not implemented for "
+                                      f"{type(ref_object).__name__}")
+        new_object = self._move_to_free_position(shape=ref_object,
+                                                 ignore_overlaps=ignore_overlaps,
+                                                 inside_convex_hull=inside_convex_hull)
+        return new_object.xy
 
-            if other_polygons is None:
-                return movement
+    def _move_to_free_position(self,
+                               shape: ShapeType,
+                               ignore_overlaps: bool = False,
+                               inside_convex_hull: bool = False) -> ShapeType:
+        """returns shape moved to a new free position in the target area
+        """
+
+        if inside_convex_hull:
+            area = PolygonShape(self.properties.convex_hull.polygon)
+            area_ring = area.polygon.exterior
+            shapely.prepare(area_ring)
+            raise NotImplementedError("Needs testing")  # FIXME
+        else:
+            area = self.target_area
+            area_ring = self._area_ring
+
+        b = area.polygon.bounds  # l, b, r, t
+        search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
+
+        candidate = shape.copy()
+        cnt = 0
+        while True:
+            if cnt > constants.MAX_ITERATIONS:
+                raise NoSolutionError(
+                    "Can't find a free position for this polygon")
+            cnt += 1
+            # propose a random position
+            candidate.xy = generator.random(size=2) * search_bounds_size \
+                - (search_bounds_size/2)
+
+            if not sgeo.is_inside(a=candidate, b=area, b_exterior_ring=area_ring,
+                                  min_dist_boarder=self.min_distance_target_area):
+                continue
+
+            if ignore_overlaps:
+                return candidate
             else:
                 # find overlaps
-                overlaps = shapely.dwithin(
-                    candidate_polygon, other_polygons, distance=min_distance)
-                if not np.any(overlaps):
-                    return movement
+                overlaps = self.get_overlaps(candidate)
+                if len(overlaps) == 0:
+                    return candidate

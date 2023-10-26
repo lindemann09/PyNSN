@@ -3,10 +3,11 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 from abc import ABCMeta, abstractmethod
 from typing import Any, Optional
 
-import numpy as _np
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
-from .._stimulus.shapes import Dot, Rectangle, Picture
 from .._stimulus import NSNStimulus
+from .._stimulus.shapes import Dot, Picture, Rectangle
 from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
@@ -16,6 +17,17 @@ def check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
     if not isinstance(obj, (NSNStimulus)):
         raise TypeError(
             "NSNStimulus expected, but not {}".format(type(obj).__name__))
+
+
+def cartesian2image_coordinates(xy: ArrayLike,
+                                image_size: ArrayLike) -> NDArray:
+    """convert cartesian to image coordinates with (0,0) at top left and
+    reversed y axis
+
+    xy has to be a 2D array
+
+    """
+    return (np.asarray(xy) * [1, -1]) + np.asarray(image_size) / 2
 
 
 class AbstractArrayDraw(metaclass=ABCMeta):
@@ -112,14 +124,14 @@ class AbstractArrayDraw(metaclass=ABCMeta):
 
         # prepare the image, make target area if required
         if isinstance(nsn_stimulus.target_area, Dot):
-            tmp = int(_np.ceil(nsn_stimulus.target_area.diameter) * aaf)
+            tmp = int(np.ceil(nsn_stimulus.target_area.diameter) * aaf)
             target_area_shape = Dot(
                 xy=(0, 0), diameter=tmp, attribute=colours.target_area.value
             )
-            image_size = _np.ones(2) * tmp
+            image_size = np.ones(2) * tmp
 
         elif isinstance(nsn_stimulus.target_area, Rectangle):
-            tmp = _np.ceil(nsn_stimulus.target_area.size) * aaf
+            tmp = np.ceil(nsn_stimulus.target_area.size) * aaf
             target_area_shape = Rectangle(
                 xy=(0, 0), size=tmp, attribute=colours.target_area.value
             )

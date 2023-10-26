@@ -13,16 +13,18 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
-from os import path
-from typing import Any, Tuple, Union
 from copy import deepcopy
+from pathlib import Path
+from typing import Any, Optional, Tuple, Union
 
 import shapely
+import numpy as np
+from numpy.typing import NDArray
+from shapely import Point, Polygon
 from shapely.affinity import scale
-from shapely import Polygon, Point
 
 from .._lib.colour import Colour
-from .._lib.geometry import Coord2DLike, Coord2D
+from .._lib.geometry import Coord2D, Coord2DLike
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -52,7 +54,8 @@ class ShapeType(metaclass=ABCMeta):
         if isinstance(self._polygon, Polygon):
             move_xy = (xy[0] - self._xy[0], xy[1] - self._xy[1])
             self._polygon = shapely.transform(self._polygon,
-                                              lambda x: x + move_xy)  # FIXME Are transformed polygons still prepared?
+                                              lambda x: x + move_xy)
+            shapely.prepare(self._polygon)
         self._xy = xy
 
     @property
@@ -98,10 +101,17 @@ class ShapeType(metaclass=ABCMeta):
             self._polygon = shapely.transform(self._polygon,
                                               lambda x: x + move_xy)
 
-    def copy(self):
+    @abstractmethod
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> ShapeType:
         """returns a copy of the object
         """
-        return deepcopy(self)
+
+    def make_polygon(self) -> None:
+        """enforce the creation of polygon, if it does not exist yet
+        """
+        if self._polygon is None:
+            self._polygon = self.polygon
 
     @property
     @abstractmethod
@@ -129,31 +139,11 @@ class ShapeType(metaclass=ABCMeta):
         """"""
 
 
-class PolygonShape(ShapeType):
-    ID = 5
-
-    def __init__(self, polygon: Polygon, attribute: Any = None):
-        ctr = polygon.centroid
-        super().__init__(xy=(ctr.x, ctr.y), attribute=attribute)
-        shapely.prepare(polygon)
-        self._polygon = polygon
-
-    @property
-    def polygon(self) -> Polygon:
-        return self._polygon
-
-    @property
-    def size(self) -> Tuple[float, float]:
-        b = shapely.bounds(self._polygon)
-        return b[2:4] - b[0:2]  # [bound width, bound height]
-
-    def __repr__(self):
-        return (f"PolygonShape(xy={self._xy}, size={self.size}, "
-                + f"attribute='{self._attribute}')")
-
-
-class Ellipse(ShapeType):
+class CircularShapeType(ShapeType):
     QUAD_SEGS = 32  # line segments used to approximate dot
+
+
+class Ellipse(CircularShapeType):
     ID = 3
 
     def __init__(self,
@@ -189,12 +179,25 @@ class Ellipse(ShapeType):
 
     def __repr__(self):
         return (
-            f"Ellipse(xy={self._xy}, size={self.size}, "
-            + f"attribute = {self._attribute})"
+            f"Ellipse(xy={self.xy}, size={self.size}, "
+            + f"attribute = {self.attribute})"
         )
 
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> Ellipse:
 
-class Dot(Ellipse):
+        if copy_polygon:
+            new = deepcopy(self)
+            if new_xy is not None:
+                new.xy = new_xy
+            return new
+        elif new_xy is None:
+            return Ellipse(xy=self._xy, size=self._size, attribute=self._attribute)
+        else:
+            return Ellipse(xy=new_xy, size=self._size, attribute=self._attribute)
+
+
+class Dot(CircularShapeType):
     ID = 1
 
     def __init__(self,
@@ -211,26 +214,43 @@ class Dot(Ellipse):
         attribute : attribute (string, optional)
         """
         super().__init__(xy=xy,
-                         size=(diameter, diameter),
                          attribute=attribute)
+        self._diameter = diameter
+
+    @property
+    def size(self) -> Tuple[float, float]:
+        return (self._diameter, self._diameter)
 
     @property
     def diameter(self) -> float:
-        return self._size[0]
+        return self._diameter
 
     @property
     def polygon(self) -> Polygon:  # lazy polygon creation
         if self._polygon is None:
-            r = self.diameter / 2
+            r = self._diameter / 2
             self._polygon = Point(self._xy).buffer(r, quad_segs=Dot.QUAD_SEGS)
             shapely.prepare(self._polygon)  # FIXME needed?
         return self._polygon
 
     def __repr__(self):
         return (
-            f"Dot(xy={self._xy}, diameter={self.diameter}, "
+            f"Dot(xy={self._xy}, diameter={self._diameter}, "
             + f"attribute = {self._attribute})"
         )
+
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> Dot:
+
+        if copy_polygon:
+            new = deepcopy(self)
+            if new_xy is not None:
+                new.xy = new_xy
+            return new
+        elif new_xy is None:
+            return Dot(xy=self._xy, diameter=self.diameter, attribute=self._attribute)
+        else:
+            return Dot(xy=new_xy, diameter=self.diameter, attribute=self._attribute)
 
 
 class Rectangle(ShapeType):
@@ -266,31 +286,55 @@ class Rectangle(ShapeType):
         return self.size[0] / self.size[1]
 
     @property
-    def left_bottom(self) -> Coord2D:
+    def left_bottom(self) -> NDArray:
+        """Returns (left, bottom) as ndarray (x,y)"""
         return shapely.get_coordinates(self._polygon)[0]
 
     @property
-    def left_top(self) -> Coord2D:
-        return shapely.get_coordinates(self._polygon)[1]
-
-    @property
-    def right_top(self) -> Coord2D:
+    def right_top(self) -> NDArray:
+        """Returns (right, top) as ndarray (x,y)"""
         return shapely.get_coordinates(self._polygon)[2]
 
     @property
-    def right_bottom(self) -> Coord2D:
+    def left_top(self) -> NDArray[np.float_]:
+        """Returns (left, top) as ndarray (x,y)"""
+        return shapely.get_coordinates(self._polygon)[1]
+
+    @property
+    def right_bottom(self) -> NDArray[np.float_]:
+        """Returns (right, bottom) as ndarray (x,y)"""
         return shapely.get_coordinates(self._polygon)[3]
+
+    @property
+    def box(self) -> NDArray[np.float_]:
+        """Returns (left, bottom, right, top) as NDArray (x0, y0, x1, y1)"""
+        return np.append(
+            shapely.get_coordinates(self._polygon)[0],
+            shapely.get_coordinates(self._polygon)[2])
 
     def __repr__(self):
         return (f"Rectangle(xy={self._xy}, size={self.size}, "
                 + f"attribute='{self._attribute}')")
 
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> Rectangle:
+
+        if copy_polygon:
+            new = deepcopy(self)
+            if new_xy is not None:
+                new.xy = new_xy
+            return new
+        elif new_xy is None:
+            return Rectangle(xy=self._xy, size=self.size, attribute=self._attribute)
+        else:
+            return Rectangle(xy=new_xy, size=self.size, attribute=self._attribute)
+
 
 class Picture(Rectangle):
     ID = 4
-    ATTR_PREFIX = "p:"
 
-    def __init__(self, xy: Coord2DLike, size: Coord2DLike, filename: str) -> None:
+    def __init__(self, xy: Coord2DLike, size: Coord2DLike,
+                 path: Union[Path, str]) -> None:
         """Initialize a Picture
 
         Rectangle can also consist of a picture
@@ -301,41 +345,70 @@ class Picture(Rectangle):
             tuple of two numeric
         size : tuple
             tuple of two numeric
-        filename : str
+        path : pathlib.path or str
             path the picture file
         """
 
-        super().__init__(xy=xy, size=size, attribute=Picture.ATTR_PREFIX + filename)
+        super().__init__(xy=xy, size=size, attribute=Path(path))
 
     def __repr__(self):
         return (f"Picture(xy={self._xy}, size={self.size}, " +
-                f"filename='{self.filename}')")
+                f"path='{str(self.path)}')")
 
     @property
-    def filename(self) -> str:
-        return self._attribute[len(Picture.ATTR_PREFIX):]
+    def path(self) -> Path:
+        return self._attribute
 
     def file_exists(self) -> bool:
         """Checks if the file exists"""
-        return path.isfile(self.filename)
+        return self.path.isfile()  # type: ignore
 
-    @staticmethod
-    def extract_filename(txt: str) -> Union[str, None]:
-        """Check if text string is a picture attribute and returns the filename.
-        Otherwise, returns None
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> Picture:
 
-        Args:
-            txt: string to be checked
-        """
-        if isinstance(txt, str) and txt.startswith(Picture.ATTR_PREFIX):
-            return txt[len(Picture.ATTR_PREFIX):]
+        if copy_polygon:
+            new = deepcopy(self)
+            if new_xy is not None:
+                new.xy = new_xy
+            return new
+        elif new_xy is None:
+            return Picture(xy=self._xy, size=self.size,
+                           path=self.path)
         else:
-            return None
+            return Picture(xy=new_xy, size=self.size,
+                           path=self.path)
 
 
-SHAPE_LABEL = {
-    Dot.ID: "Dot",
-    Rectangle.ID: "Rectangle",
-    Picture.ID: "Picture",
-    Ellipse.ID: "Ellipse",
-    PolygonShape.ID: "Polygon"}
+class PolygonShape(ShapeType):
+    ID = 5
+
+    def __init__(self, polygon: Polygon, attribute: Any = None):
+        ctr = polygon.centroid
+        super().__init__(xy=(ctr.x, ctr.y), attribute=attribute)
+        shapely.prepare(polygon)
+        self._polygon = polygon
+
+    @property
+    def polygon(self) -> Polygon:
+        return self._polygon
+
+    @property
+    def size(self) -> Tuple[float, float]:
+        b = shapely.bounds(self._polygon)
+        return b[2:4] - b[0:2]  # [bound width, bound height]
+
+    def __repr__(self):
+        return (f"PolygonShape(xy={self._xy}, size={self.size}, "
+                + f"attribute='{self._attribute}')")
+
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> PolygonShape:
+
+        if not copy_polygon:
+            raise RuntimeError(
+                "copy_polygon = False not is possible for PolygonShape")
+
+        new = deepcopy(self)
+        if new_xy is not None:
+            new.xy = new_xy
+        return new

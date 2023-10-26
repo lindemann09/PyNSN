@@ -6,7 +6,7 @@ import pygame as _pygame
 
 from .. import _stimulus
 from . import pil_image as _pil_image
-from ._array_draw import check_nsn_stimulus
+from ._base import check_nsn_stimulus
 from ._image_colours import ImageColours
 
 # FIXME check pygame2 compatibility

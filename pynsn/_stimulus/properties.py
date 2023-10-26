@@ -14,8 +14,8 @@ from numpy.typing import NDArray
 
 from .convex_hull import ConvexHull
 from .shape_array import ShapeArray
-from .shapes import Dot, Rectangle, Ellipse, Picture, PolygonShape
-from .._lib.geometry import ellipse_perimeter
+from .shapes import Dot, Rectangle, Ellipse, Picture, PolygonShape, CircularShapeType
+from .shape_geometry import ellipse_perimeter
 
 
 class VisProp(enum.Flag):  # visual properties

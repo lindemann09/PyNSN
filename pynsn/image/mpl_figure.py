@@ -7,7 +7,7 @@ from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
 from .. import _stimulus
-from . import _array_draw
+from . import _base
 from ._image_colours import ImageColours
 
 # FIXME broken module
@@ -35,7 +35,7 @@ def create(
     )
 
 
-class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
+class _MatplotlibDraw(_base.AbstractArrayDraw):
     @staticmethod
     def get_image(image_size, background_colour, **kwargs) -> _Figure:
         dpi = kwargs["dpi"]
@@ -62,18 +62,15 @@ class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
                 "Pictures are not supported for matplotlib files.")
 
         if isinstance(shape, _stimulus.Dot):
-            r = shape.diameter / 2
             plt_shape = _plt.Circle(
-                xy=shape.xy, radius=r, color=col.value, lw=0)
+                xy=shape.xy, radius=shape.diameter / 2, color=col.value, lw=0)
         elif isinstance(shape, _stimulus.Rectangle):
-            xy = (shape.left, shape.bottom)
             plt_shape = _plt.Rectangle(
-                xy=xy, width=shape.width, height=shape.height, color=col.value, lw=0
-            )
+                xy=shape.left_bottom, width=shape.width, height=shape.height,
+                color=col.value, lw=0)
         else:
             raise NotImplementedError(
-                "Shape {} NOT YET IMPLEMENTED".format(type(shape))
-            )
+                "Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
         plt_shape.set_alpha(opacity)
         img.axes[0].add_artist(plt_shape)

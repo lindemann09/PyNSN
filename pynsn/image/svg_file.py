@@ -7,8 +7,7 @@ import numpy as _np
 import svgwrite as _svg
 
 from .. import _stimulus
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from . import _array_draw
+from . import _base
 from ._image_colours import ImageColours
 
 
@@ -31,7 +30,7 @@ def create(filename: str,
                                    filename=filename)
 
 
-class _SVGDraw(_array_draw.AbstractArrayDraw):
+class _SVGDraw(_base.AbstractArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
@@ -59,8 +58,8 @@ class _SVGDraw(_array_draw.AbstractArrayDraw):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
         shape = copy(shape)
-        shape.xy = _c2i_coord(shape.xy,
-                              _np.array(svg_image_size(image))).tolist()
+        shape.xy = _base.cartesian2image_coordinates(shape.xy,
+                                                     _np.array(svg_image_size(image))).tolist()
         col = shape.get_colour()
 
         if isinstance(shape, _stimulus.Dot):
@@ -70,7 +69,7 @@ class _SVGDraw(_array_draw.AbstractArrayDraw):
                                    fill=col.colour,
                                    opacity=opacity))
         elif isinstance(shape, _stimulus.Rectangle):
-            image.add(image.rect(insert=(shape.left, shape.bottom),
+            image.add(image.rect(insert=shape.left_bottom,
                                  size=shape.size,
                                  fill=col.colour,
                                  opacity=opacity))
@@ -83,8 +82,8 @@ class _SVGDraw(_array_draw.AbstractArrayDraw):
                          scaling_factor):
         """"""
 
-        points = _c2i_coord(_np.asarray(points),
-                            _np.array(svg_image_size(image)))
+        points = _base.cartesian2image_coordinates(
+            _np.asarray(points), _np.array(svg_image_size(image)))
 
         last = None
         for p in _np.append(points, [points[0]], axis=0):
