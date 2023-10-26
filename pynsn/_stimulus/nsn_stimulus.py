@@ -17,7 +17,7 @@ from .._lib.misc import key_value_format
 from ..random._rng import BrownianMotion, generator
 from .properties import ArrayProperties
 from .shape_array import IntOVector, ShapeArray
-from .shapes import Dot, Picture, Rectangle, ShapeType
+from .shapes import Dot, Ellipse, Picture, Rectangle, ShapeType
 
 
 class NSNStimulus(ShapeArray):
@@ -195,30 +195,6 @@ class NSNStimulus(ShapeArray):
                       n: int = 1,
                       ignore_overlaps: bool = False,
                       inside_convex_hull: bool = False):
-
-        if not isinstance(ref_object, (Dot, Rectangle, Picture)):
-            raise NotImplementedError("Not implemented for "
-                                      f"{type(ref_object).__name__}")
-        ctr_object = ref_object.copy()
-        ctr_object.xy = (0, 0)  # ensure centred position
-        while n > 0:
-            new_object = ctr_object.copy()
-            new_object.xy = self._random_free_position(
-                centred_polygon=ctr_object.polygon,
-                ignore_overlaps=ignore_overlaps,
-                inside_convex_hull=inside_convex_hull)
-            self.add(new_object)
-            n = n - 1
-
-    def _random_free_position(self,
-                              centred_polygon: shapely.Polygon,
-                              ignore_overlaps: bool = False,
-                              inside_convex_hull: bool = False) -> NDArray:
-        """returns random free position for this object or polygon
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
         # TODO could be improved by return a Shape with created polygon
         # if inside_convex_hull:
         #     search_area = self.properties.convex_hull.polygon
@@ -229,6 +205,61 @@ class NSNStimulus(ShapeArray):
         #     search_area = self.target_area.polygon
         #     search_area_ring = self._area_ring
         # FIXME inside convex hull not yet implemented, Problem: ch must be centred
+
+        if not isinstance(ref_object, (ShapeType)):
+            raise NotImplementedError("Not implemented for "
+                                      f"{type(ref_object).__name__}")
+        ctr_object = ref_object.copy()
+        ctr_object.xy = (0, 0)  # ensure centred position
+        while n > 0:
+            if inside_convex_hull:
+                raise NotImplementedError()
+
+            if ignore_overlaps:
+                other_polygons = None
+            else:
+                other_polygons = self.polygons
+
+            new_object = ctr_object.copy()
+            if isinstance(new_object, (Dot, Ellipse)) :
+                try:
+                    new_object.xy = move_free_position_cricular_shape(
+                                        shape=new_object,
+                                        target_area=self.target_area.polygon,
+                                        other_polygons=other_polygons,
+                                        min_distance=self.min_distance,
+                                        min_dist_area_boarder=self.min_distance_target_area,
+                                        target_area_ring=self._area_ring)
+                except NoSolutionError as err:
+                    raise NoSolutionError("Can't find a free position: "
+                                        + f"Current n={self.n_objects}") from err
+            else:
+                # all other shapes
+                try:
+                    new_object.xy = move_free_position_polygon(
+                                            polygon=new_object.polygon,
+                                            target_area=self.target_area.polygon,
+                                            other_polygons=other_polygons,
+                                            min_distance=self.min_distance,
+                                            min_dist_area_boarder=self.min_distance_target_area,
+                                            target_area_ring=self._area_ring)
+                except NoSolutionError as err:
+                    raise NoSolutionError("Can't find a free position: "
+                                        + f"Current n={self.n_objects}") from err
+
+            self.add(new_object)
+            n = n - 1
+
+    def random_free_position(self,
+                             ref_object: ShapeType,
+                             ignore_overlaps: bool = False,
+                             inside_convex_hull: bool = False) -> NDArray:
+        """returns random free position for this object or polygon
+
+
+        raise exception if not found
+        occupied space: see generator generate
+        """
         if inside_convex_hull:
             raise NotImplementedError()
 
@@ -237,33 +268,25 @@ class NSNStimulus(ShapeArray):
         else:
             other_polygons = self.polygons
 
-        try:
-            xy = move_to_free_position(polygon=centred_polygon,
-                                       target_area=self.target_area.polygon,
-                                       other_polygons=other_polygons,
-                                       min_distance=self.min_distance,
-                                       min_dist_area_boarder=self.min_distance_target_area,
-                                       target_area_ring=self._area_ring)
-        except NoSolutionError as err:
-            raise NoSolutionError("Can't find a free position: "
-                                  + f"Current n={self.n_objects}") from err
-
-        return xy
-
-    def random_free_position(self,
-                             ref_object: ShapeType,
-                             ignore_overlaps: bool = False,
-                             inside_convex_hull: bool = False) -> NDArray:
-        """returns random free position for this object or polygon
-
-        raise exception if not found
-        occupied space: see generator generate
-        """
-        ctr_object = ref_object.copy()
-        ctr_object.xy = (0, 0)  # ensure centred position
-        return self._random_free_position(centred_polygon=ctr_object.polygon,
-                                          ignore_overlaps=ignore_overlaps,
-                                          inside_convex_hull=inside_convex_hull)
+        if isinstance(ref_object, (Dot, Ellipse)) and False:
+            return move_free_position_cricular_shape(shape=ref_object,
+                                        target_area=self.target_area.polygon,
+                                        other_polygons=other_polygons,
+                                        min_distance=self.min_distance,
+                                        min_dist_area_boarder=self.min_distance_target_area,
+                                        target_area_ring=self._area_ring)
+        else:
+            # all other ShapeTypes
+            if ref_object.xy != (0, 0):
+                # enforce centred polygon
+                ref_object = ref_object.copy()
+                ref_object.xy = (0,0)
+            return move_free_position_polygon(polygon=ref_object.polygon,
+                                        target_area=self.target_area.polygon,
+                                        other_polygons=other_polygons,
+                                        min_distance=self.min_distance,
+                                        min_dist_area_boarder=self.min_distance_target_area,
+                                        target_area_ring=self._area_ring)
 
     def fix_overlap(self, object_index: int,
                     inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
@@ -285,7 +308,8 @@ class NSNStimulus(ShapeArray):
 
         random_walk = BrownianMotion(
             target.make_polygon(buffer=self.min_distance),
-            walk_area=search_area, delta=2)
+                                walk_area=search_area,
+                                delta=2)
 
         while True:
             # polygons list is prepared
@@ -310,7 +334,26 @@ class NSNStimulus(ShapeArray):
         return shapely.dwithin(self.polygons, polygon, distance=self.min_distance)
 
 
-def move_to_free_position(polygon: shapely.Polygon,
+def move_free_position_cricular_shape(shape:Union[Dot, Ellipse],
+                          target_area: shapely.Polygon,
+                          other_polygons: Optional[NDArray[shapely.Polygon]] = None,
+                          min_distance: int = 0,
+                          min_dist_area_boarder: Optional[int] = None,
+                          target_area_ring: Optional[shapely.Polygon] = None
+                          ) -> NDArray:
+    """returns the required movement (x, y) of the shape to a randomly chosen
+    position in the target area.
+
+    target_ring: the exterior of target_area
+        it can be explicitly specified to avoid generation of exterior polygon and
+        thus improve performance with reoccurring function calls
+    """
+
+
+    raise NotImplementedError()
+    return np.empty(0)
+
+def move_free_position_polygon(polygon: shapely.Polygon,
                           target_area: shapely.Polygon,
                           other_polygons: Optional[NDArray[shapely.Polygon]] = None,
                           min_distance: int = 0,
@@ -325,7 +368,6 @@ def move_to_free_position(polygon: shapely.Polygon,
         thus improve performance with reoccurring function calls
 
     Note:
-
 
      search performance is better if `target_area`, `target_area_ring` and
      `other_polygons` are prepared (see `shapely.prepare()`)
