@@ -12,11 +12,10 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from . import shape_geometry as sgeo
-from .shapes import (Dot, Ellipse, Picture, PolygonShape,
-                     Rectangle, ShapeType, CircularShapeType)
-
-IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
+from ..types import IntOVector
+from .._shapes import shape_geometry as sgeo
+from .._shapes import (Dot, Ellipse, Picture, PolygonShape,
+                       Rectangle, ShapeType, CircularShapeType)
 
 
 class ShapeArray(object):
@@ -286,4 +285,4 @@ class ShapeArray(object):
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
     """read shape array from dict"""
     ##
-    pass  # FIXME
+    raise NotImplementedError()

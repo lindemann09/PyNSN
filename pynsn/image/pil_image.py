@@ -9,6 +9,7 @@ from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
 from . import _base
+from .. import _shapes
 from .. import _stimulus
 from ._image_colours import ImageColours
 
@@ -53,7 +54,7 @@ class _PILDraw(_base.AbstractArrayDraw):
 
     @staticmethod
     def draw_shape(
-        image, shape: _stimulus.ShapeType, opacity: float, scaling_factor: float
+        image, shape: _shapes.ShapeType, opacity: float, scaling_factor: float
     ):
         # FIXME opacity is ignored (not yet supported)
         # draw object
@@ -61,17 +62,17 @@ class _PILDraw(_base.AbstractArrayDraw):
         shape.xy = _base.cartesian2image_coordinates(
             _np.asarray(shape.xy) * scaling_factor, image.size)
 
-        if isinstance(shape, _stimulus.Dot):
+        if isinstance(shape, _shapes.Dot):
             r = (shape.diameter * scaling_factor) / 2
             x, y = shape.xy
             _ImageDraw.Draw(image).ellipse(
                 (x - r, y - r, x + r, y + r), fill=shape.colour.value
             )
 
-        elif isinstance(shape, _stimulus.Picture):
-            rect = _stimulus.Rectangle(xy=shape.xy,
-                                       size=(shape.size[0] * scaling_factor,
-                                             shape.size[1] * scaling_factor))
+        elif isinstance(shape, _shapes.Picture):
+            rect = _shapes.Rectangle(xy=shape.xy,
+                                     size=(shape.size[0] * scaling_factor,
+                                           shape.size[1] * scaling_factor))
             upper_left = _np.flip(rect.left_top).tolist()
             pict = _Image.open(shape.path, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
@@ -83,10 +84,10 @@ class _PILDraw(_base.AbstractArrayDraw):
             res = _Image.alpha_composite(image, tr_layer)
             image.paste(res)
 
-        elif isinstance(shape, _stimulus.Rectangle):
-            rect = _stimulus.Rectangle(xy=shape.xy,
-                                       size=(shape.size[0] * scaling_factor,
-                                             shape.size[1] * scaling_factor))
+        elif isinstance(shape, _shapes.Rectangle):
+            rect = _shapes.Rectangle(xy=shape.xy,
+                                     size=(shape.size[0] * scaling_factor,
+                                           shape.size[1] * scaling_factor))
             # rectangle shape TODO decentral _shapes seems to be bit larger than with pyplot
             _ImageDraw.Draw(image).rectangle(tuple(rect.box),  # type: ignore
                                              fill=shape.colour.value)

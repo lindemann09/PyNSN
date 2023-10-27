@@ -17,14 +17,14 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Optional, Tuple, Union
 
-import shapely
 import numpy as np
+import shapely
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 from shapely.affinity import scale
 
-from .._lib.colour import Colour
-from .._lib.geometry import Coord2D, Coord2DLike
+from ..types import Coord2D, Coord2DLike
+from .colour import Colour
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -101,17 +101,17 @@ class ShapeType(metaclass=ABCMeta):
             self._polygon = shapely.transform(self._polygon,
                                               lambda x: x + move_xy)
 
-    @abstractmethod
-    def copy(self, new_xy: Optional[Coord2DLike] = None,
-             copy_polygon: bool = True) -> ShapeType:
-        """returns a copy of the object
-        """
-
     def make_polygon(self) -> None:
         """enforce the creation of polygon, if it does not exist yet
         """
         if self._polygon is None:
             self._polygon = self.polygon
+
+    @abstractmethod
+    def copy(self, new_xy: Optional[Coord2DLike] = None,
+             copy_polygon: bool = True) -> ShapeType:
+        """returns a copy of the object
+        """
 
     @property
     @abstractmethod
@@ -123,23 +123,13 @@ class ShapeType(metaclass=ABCMeta):
     def polygon(self) -> Polygon:
         pass
 
-    # def delete_polygon(self):
-    #     self._polygon = None
-
-    # def set_polygon(self, polygon: Polygon) -> None:
-    #     """This method should usually not been used, unless you know what you do.
-
-    #     Polygon is automatically created, if required. Please use the property
-    #     `polygon.
-    #     """
-    #     self._polygon = polygon
-
     @abstractmethod
     def __repr__(self) -> str:
         """"""
 
 
 class CircularShapeType(ShapeType):
+    """Abstract Class for Circular Shapes"""
     QUAD_SEGS = 32  # line segments used to approximate dot
 
 

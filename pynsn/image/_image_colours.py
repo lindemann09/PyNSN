@@ -1,8 +1,9 @@
 from collections import OrderedDict
 from typing import Optional
 
-from .._lib import misc
-from .._lib.colour import Colour, ColourType
+from .. import _misc
+from .._shapes import Colour
+from ..types import ColourType
 
 
 class ImageColours(object):
@@ -63,4 +64,4 @@ class ImageColours(object):
         )
 
     def __str__(self) -> str:
-        return misc.dict_to_text(self.to_dict())
+        return _misc.dict_to_text(self.to_dict())

@@ -19,11 +19,11 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
     )
 
 from ._stimulus import *
-from ._lib.colour import Colour, ColourType
+from ._shapes import *
 
 
 def _print_version_info():
-    from ._lib.misc import is_interactive_mode
+    from ._misc import is_interactive_mode
 
     if is_interactive_mode():
         print(f"PyNSN {__version__}")

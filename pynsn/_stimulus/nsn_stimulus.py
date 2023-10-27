@@ -7,18 +7,20 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import warnings
 from hashlib import md5
 from typing import Sequence, Tuple, Union
-from numpy.typing import NDArray
+
 import numpy as np
 import shapely
+from numpy.typing import NDArray
 
 from .. import constants
-from .._lib.exceptions import NoSolutionError
-from .._lib.misc import key_value_format
+from .._misc import key_value_format
+from .._shapes import (CircularShapeType, Dot, Ellipse, PolygonShape,
+                       Rectangle, ShapeType)
+from .._shapes import shape_geometry as sgeo
 from ..random._rng import BrownianMotion, generator
+from ..types import IntOVector, NoSolutionError
+from .shape_array import ShapeArray
 from .properties import ArrayProperties
-from .shape_array import IntOVector, ShapeArray
-from .shapes import CircularShapeType, Dot, Ellipse,  Rectangle, ShapeType, PolygonShape
-from . import shape_geometry as sgeo
 
 
 class NSNStimulus(ShapeArray):
@@ -151,7 +153,7 @@ class NSNStimulus(ShapeArray):
         super().delete(index)
         self._properties.reset_convex_hull()
 
-    def pop(self, index: int) -> Union[Dot, Rectangle]:
+    def pop(self, index: int) -> ShapeType:
         """Remove and return item at index"""
         rtn = self.get(index)
         self.delete(index)

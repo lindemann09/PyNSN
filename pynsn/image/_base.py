@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .._stimulus import NSNStimulus
-from .._stimulus.shapes import Dot, Picture, Rectangle
+from .._shapes import Dot, Picture, Rectangle
 from ._image_colours import ImageColours
 
 # helper for type checking and error raising error

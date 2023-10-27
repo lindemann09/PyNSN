@@ -8,14 +8,15 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import enum
 from collections import OrderedDict
 from typing import Any, Union
-import shapely
+
 import numpy as np
+import shapely
 from numpy.typing import NDArray
 
+from .._shapes import Dot, Ellipse, Picture, PolygonShape, Rectangle
+from .._shapes.shape_geometry import ellipse_perimeter
 from .convex_hull import ConvexHull
 from .shape_array import ShapeArray
-from .shapes import Dot, Rectangle, Ellipse, Picture, PolygonShape, CircularShapeType
-from .shape_geometry import ellipse_perimeter
 
 
 class VisProp(enum.Flag):  # visual properties

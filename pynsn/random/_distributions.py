@@ -24,7 +24,7 @@ def _round_samples(samples: NDArray,
         return np.asarray(samples)
 
 
-class PyNSNDistribution(metaclass=ABCMeta):
+class DistributionType(metaclass=ABCMeta):
 
     def __init__(self, min_max):
         if not isinstance(min_max, (list, tuple)) or len(min_max) != 2 or \
@@ -77,7 +77,7 @@ class PyNSNDistribution(metaclass=ABCMeta):
             return hist(samples, bins=100)[2]
 
 
-class Uniform(PyNSNDistribution):
+class Uniform(DistributionType):
     """
     """
 
@@ -97,7 +97,7 @@ class Uniform(PyNSNDistribution):
         return _round_samples(rtn, round_to_decimals)
 
 
-class Levels(PyNSNDistribution):
+class Levels(DistributionType):
     """Levels
     """
 
@@ -154,7 +154,7 @@ class Levels(PyNSNDistribution):
         return d
 
 
-class Triangle(PyNSNDistribution):
+class Triangle(DistributionType):
     """Triangle
     """
 
@@ -178,7 +178,7 @@ class Triangle(PyNSNDistribution):
         return d
 
 
-class _PyNSNDistributionMuSigma(PyNSNDistribution):
+class _PyNSNDistributionMuSigma(DistributionType):
 
     def __init__(self, mu, sigma, min_max):
         super().__init__(min_max)
@@ -231,7 +231,7 @@ class Normal(_PyNSNDistributionMuSigma):
         return _round_samples(rtn, round_to_decimals)
 
 
-class Normal2D(PyNSNDistribution):
+class Normal2D(DistributionType):
 
     def __init__(self, mu, sigma, correlation, max_radius=None):
         """Two dimensional normal distribution with optional radial cut-off
@@ -384,7 +384,7 @@ class Beta(_PyNSNDistributionMuSigma):
         return mu, sigma
 
 
-class _Constant(PyNSNDistribution):
+class _Constant(DistributionType):
 
     def __init__(self, value: float) -> None:
         """Helper class to "sample" constance.
