@@ -44,7 +44,7 @@ if True:
     nsn.add_somewhere(da, n=400, ignore_overlaps=False)
     end = timer()
     print(f"adding :{end - start}")
-    # print(nsn.properties_txt(extended_format=True))
+    print(nsn.properties_txt(extended_format=True))
 
 
 col = pil_image.ImageColours(field_area="red")

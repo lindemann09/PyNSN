@@ -107,10 +107,10 @@ class ArrayProperties(object):
         """Perimeter for each dot"""
 
         rtn = np.full(self._shapes.n_objects, np.nan)
-        # rects and polygons
-        idx = np.append(self._shapes.ids[Rectangle.ID],
-                        self._shapes.ids[Picture.ID],
-                        self._shapes.ids[PolygonShape.ID])
+
+        idx = np.concatenate((self._shapes.ids[Rectangle.ID],
+                              self._shapes.ids[Picture.ID],
+                              self._shapes.ids[PolygonShape.ID]))
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shapes.polygons[idx])
         # dots perimeter
