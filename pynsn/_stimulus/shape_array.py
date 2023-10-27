@@ -3,6 +3,8 @@
 """
 from __future__ import annotations
 
+from pynsn._shapes.shapes import CircularShapeType
+
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
@@ -13,9 +15,9 @@ import shapely
 from numpy.typing import NDArray
 
 from ..types import IntOVector
-from .._shapes import shape_geometry as sgeo
 from .._shapes import (Dot, Ellipse, Picture, PolygonShape,
-                       Rectangle, ShapeType, CircularShapeType)
+                       Rectangle, ShapeType)
+from .._shapes import shape_geometry as sgeo
 
 
 class ShapeArray(object):
@@ -280,6 +282,45 @@ class ShapeArray(object):
         else:
             # non-circular shape
             return shapely.distance(shape.polygon, self._polygons)
+
+    def overlaps(self, shape: ShapeType,  min_distance: float = 0) -> NDArray[np.int_]:
+        """Returns indices of all overlapping elements of the array with this shape.
+
+        Note
+        -----
+        Using this function is more efficient than computing the distance and comparing the result.
+        """
+        if isinstance(shape, CircularShapeType):
+            rtn = np.full(self.n_objects, np.nan)
+
+            idx = self._ids[Dot.ID]
+            if len(idx) > 0:
+                # circular -> dots in shape array
+                dists = sgeo.distance_circ_dots(circ_shape=shape,
+                                                dots_xy=self._xy[idx, :],
+                                                dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = dists < min_distance
+
+            idx = self._ids[Ellipse.ID]
+            if len(idx) > 0:
+                # circular -> ellipses in shape array
+                dists = sgeo.distance_circ_ellipses(circ_shape=shape,
+                                                    ellipses_xy=self._xy[idx, :],
+                                                    ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = dists < min_distance
+
+            # check if non-circular shapes are in shape_array
+            idx = np.flatnonzero(np.isnan(rtn))
+            if len(idx) > 0:
+                rtn[idx] = shapely.dwithin(
+                    shape.polygon, self._polygons[idx],  distance=min_distance)
+
+        else:
+            # non-circular shape
+            rtn = shapely.dwithin(
+                shape.polygon, self._polygons, distance=min_distance)
+
+        return np.flatnonzero(rtn)
 
 
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:

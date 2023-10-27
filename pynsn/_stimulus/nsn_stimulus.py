@@ -14,13 +14,12 @@ from numpy.typing import NDArray
 
 from .. import constants
 from .._misc import key_value_format
-from .._shapes import (CircularShapeType, Dot, Ellipse, PolygonShape,
-                       Rectangle, ShapeType)
+from .._shapes import Dot, PolygonShape, Rectangle, ShapeType
 from .._shapes import shape_geometry as sgeo
 from ..random._rng import BrownianMotion, generator
 from ..types import IntOVector, NoSolutionError
-from .shape_array import ShapeArray
 from .properties import ArrayProperties
+from .shape_array import ShapeArray
 
 
 class NSNStimulus(ShapeArray):
@@ -234,44 +233,21 @@ class NSNStimulus(ShapeArray):
         self.add(target)
         return changes
 
-    def get_overlaps(self, shape: ShapeType) -> NDArray[np.int_]:
+    def overlaps(self, shape: ShapeType) -> NDArray[np.int_]:
         """Returns indices of all overlapping elements of the array with this shape.
 
         Note
         -----
         Using this function is more efficient than computing the distance and comparing the result.
         """
-        if isinstance(shape, CircularShapeType):
-            rtn = np.full(self.n_objects, np.nan)
+        return super().overlaps(shape, min_distance=self.min_distance)
 
-            idx = self._ids[Dot.ID]
-            if len(idx) > 0:
-                # circular -> dots in shape array
-                dists = sgeo.distance_circ_dots(circ_shape=shape,
-                                                dots_xy=self._xy[idx, :],
-                                                dots_diameter=self._sizes[idx, 0])
-                rtn[idx] = dists < self.min_distance
-
-            idx = self._ids[Ellipse.ID]
-            if len(idx) > 0:
-                # circular -> ellipses in shape array
-                dists = sgeo.distance_circ_ellipses(circ_shape=shape,
-                                                    ellipses_xy=self._xy[idx, :],
-                                                    ellipse_sizes=self._sizes[idx, :])
-                rtn[idx] = dists < self.min_distance
-
-            # check if non-circular shapes are in shape_array
-            idx = np.flatnonzero(np.isnan(rtn))
-            if len(idx) > 0:
-                rtn[idx] = shapely.dwithin(
-                    shape.polygon, self._polygons[idx],  distance=self.min_distance)
-
-        else:
-            # non-circular shape
-            rtn = shapely.dwithin(
-                shape.polygon, self._polygons, distance=self.min_distance)
-
-        return np.flatnonzero(rtn)
+    def inside_target_area(self, shape: ShapeType) -> bool:
+        """Returns True if shape is inside target area.
+        """
+        return sgeo.is_inside(a=shape, b=self.target_area,
+                              b_exterior_ring=self._area_ring,
+                              min_dist_boarder=self.min_distance_target_area)
 
     def add_somewhere(self,
                       ref_object: ShapeType,
@@ -359,6 +335,6 @@ class NSNStimulus(ShapeArray):
                 return candidate
             else:
                 # find overlaps
-                overlaps = self.get_overlaps(candidate)
+                overlaps = self.overlaps(candidate)
                 if len(overlaps) == 0:
                     return candidate
