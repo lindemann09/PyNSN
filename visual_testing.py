@@ -30,12 +30,13 @@ if False:
     b = dc
     sp_result = shapely.distance(a.polygon, b.polygon)
     geo_result = sgeo.distance(a, b)
-    arr_result = sgeo.distance_circ_dots(a,
-                                         dots_xy=np.atleast_2d(b.xy),
-                                         dots_diameter=np.atleast_2d(b.diameter))
-    arr_result2 = sgeo.distance_circ_ellipses(a,
-                                              ellipses_xy=np.atleast_2d(b.xy),
-                                              ellipse_sizes=np.atleast_2d(b.size))
+    arr_result = sgeo.distance_circ_dot_array(a,
+                                              dots_xy=np.atleast_2d(b.xy),
+                                              dots_diameter=np.atleast_2d(b.diameter))
+    arr_result2 = sgeo.distance_circ_ellipse_array(a,
+                                                   ellipses_xy=np.atleast_2d(
+                                                       b.xy),
+                                                   ellipse_sizes=np.atleast_2d(b.size))
     print((sp_result, geo_result, arr_result, arr_result2))
 
 # random dot

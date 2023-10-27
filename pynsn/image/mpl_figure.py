@@ -6,7 +6,8 @@ import numpy as _np
 from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
-from .. import _stimulus
+from .. import _shapes
+from .._stimulus import NSNStimulus
 from . import _base
 from ._image_colours import ImageColours
 
@@ -14,7 +15,7 @@ from ._image_colours import ImageColours
 
 
 def create(
-    nsn_stimulus: _stimulus.NSNStimulus,
+    nsn_stimulus: NSNStimulus,
     colours: Optional[ImageColours] = None,
     dpi: float = 100,
 ) -> _Figure:
@@ -54,19 +55,19 @@ class _MatplotlibDraw(_base.AbstractArrayDraw):
         return figure
 
     @staticmethod
-    def draw_shape(img, shape: _stimulus.ShapeType, opacity):
+    def draw_shape(img, shape: _shapes.ShapeType, opacity):
         col = shape.colour
 
-        if isinstance(shape, _stimulus.Picture):
+        if isinstance(shape, _shapes.Picture):
             raise RuntimeError(
                 "Pictures are not supported for matplotlib files.")
 
-        if isinstance(shape, _stimulus.Dot):
+        if isinstance(shape, _shapes.Dot):
             plt_shape = _plt.Circle(
                 xy=shape.xy, radius=shape.diameter / 2, color=col.value, lw=0)
-        elif isinstance(shape, _stimulus.Rectangle):
+        elif isinstance(shape, _shapes.Rectangle):
             plt_shape = _plt.Rectangle(
-                xy=shape.left_bottom, width=shape.width, height=shape.height,
+                xy=shape.left_bottom.tolist(), width=shape.width, height=shape.height,
                 color=col.value, lw=0)
         else:
             raise NotImplementedError(

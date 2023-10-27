@@ -16,7 +16,7 @@ from .. import constants
 from .._misc import key_value_format
 from .._shapes import Dot, PolygonShape, Rectangle, ShapeType
 from .._shapes import shape_geometry as sgeo
-from ..random._rng import BrownianMotion, generator
+from ..random._rng import WalkAround, generator
 from ..types import IntOVector, NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
@@ -142,27 +142,22 @@ class NSNStimulus(ShapeArray):
         see `add_somewhere` for adding shape at a random position
         """
         super().add(shapes)
-        self._properties.reset_convex_hull()
 
     def replace(self, index: int, shape: ShapeType):
         super().replace(index, shape)
-        self._properties.reset_convex_hull()
 
     def delete(self, index: IntOVector) -> None:
         super().delete(index)
-        self._properties.reset_convex_hull()
 
     def pop(self, index: int) -> ShapeType:
         """Remove and return item at index"""
         rtn = self.get(index)
         self.delete(index)
-        self._properties.reset_convex_hull()
         return rtn
 
     def clear(self):
         """ """
         super().clear()
-        self._properties.reset_convex_hull()
 
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
@@ -190,7 +185,7 @@ class NSNStimulus(ShapeArray):
         super().round_values(decimals=decimals, int_type=int_type,
                              rebuild_polygons=rebuild_polygons)
         if rebuild_polygons:
-            self._properties.reset_convex_hull()
+            self._convex_hull = None  # reset convex hull
 
     def fix_overlap(self, object_index: int,
                     inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
@@ -206,14 +201,13 @@ class NSNStimulus(ShapeArray):
         target = self.pop(object_index)
 
         if inside_convex_hull:
-            search_area = self.properties.convex_hull.polygon
+            search_area = self.convex_hull.polygon
         else:
             search_area = self.target_area.polygon
 
-        random_walk = BrownianMotion(
-            target.make_polygon(buffer=self.min_distance),
-            walk_area=search_area,
-            delta=2)
+        random_walk = WalkAround(target.polygon,
+                                 walk_area=search_area,
+                                 delta=2)
 
         while True:
             # polygons list is prepared
@@ -305,7 +299,7 @@ class NSNStimulus(ShapeArray):
         """
 
         if inside_convex_hull:
-            area = PolygonShape(self.properties.convex_hull.polygon)
+            area = PolygonShape(self.convex_hull.polygon)
             area_ring = area.polygon.exterior
             shapely.prepare(area_ring)
             raise NotImplementedError("Needs testing")  # FIXME

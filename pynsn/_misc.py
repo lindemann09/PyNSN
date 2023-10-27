@@ -7,6 +7,8 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import sys
 from collections import OrderedDict
 from typing import Any
+import numpy as np
+from numpy.typing import NDArray, ArrayLike
 
 
 def join_dict_list(list_of_dicts):
@@ -61,3 +63,27 @@ def is_interactive_mode():
     is_idle = "idlelib.run" in sys.modules
     # ps2 is only defined in interactive mode
     return is_idle or hasattr(sys, "ps2")
+
+
+def polar2cartesian(polar: ArrayLike) -> NDArray:
+    """polar has to be an 2D-array representing polar coordinates (radius, angle)"""
+    polar = np.atleast_2d(polar)
+    return np.array([polar[:, 0] * np.cos(polar[:, 1]),
+                    polar[:, 0] * np.sin(polar[:, 1])]).T
+
+
+def cartesian2polar(xy: ArrayLike,
+                    radii_only: bool = False) -> NDArray[np.floating]:
+    """polar coordinates (radius, angle)
+
+    if only radii required you may consider radii_only=True for faster
+    processing
+
+    xy has to be a 2D array
+    """
+    xy = np.atleast_2d(xy)
+    rtn = np.hypot(xy[:, 0], xy[:, 1])
+    if not radii_only:
+        # add angle column
+        rtn = np.array([rtn, np.arctan2(xy[:, 1], xy[:, 0])]).T
+    return rtn

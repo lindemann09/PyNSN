@@ -18,6 +18,7 @@ from ..types import IntOVector
 from .._shapes import (Dot, Ellipse, Picture, PolygonShape,
                        Rectangle, ShapeType)
 from .._shapes import shape_geometry as sgeo
+from .convex_hull import ConvexHull
 
 
 class ShapeArray(object):
@@ -37,6 +38,7 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=int)
         self._ids = {}
+        self._convex_hull = None
         self._update_ids()
 
     @property
@@ -81,6 +83,7 @@ class ShapeArray(object):
             self._attributes = np.append(self._attributes, shapes.attribute)
             self._types = np.append(self._types, shapes.ID)
             self._polygons = np.append(self._polygons, shapes.polygon)
+            self._convex_hull = None
             self._update_ids()
 
         elif isinstance(shapes, (list, tuple)):
@@ -102,6 +105,7 @@ class ShapeArray(object):
         self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
         self._types[index] = shape.ID
+        self._convex_hull = None
         self._update_ids()
 
     def delete(self, index: IntOVector) -> None:
@@ -110,6 +114,7 @@ class ShapeArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._types = np.delete(self._types, index)
         self._sizes = np.delete(self._sizes, index, axis=0)
+        self._convex_hull = None
         self._update_ids()
 
     def clear(self):
@@ -119,7 +124,13 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=int)
         self._sizes = np.empty((0, 2), dtype=np.float64)
+        self._convex_hull = None
         self._update_ids()
+
+    def sort_by_excentricity(self):
+        ctr = self.convex_hull.centroid
+
+        raise NotImplementedError()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -186,6 +197,13 @@ class ShapeArray(object):
     def n_objects(self) -> int:
         """number of shapes"""
         return len(self._attributes)
+
+    @property
+    def convex_hull(self) -> ConvexHull:
+        """Convex hull poygon of the Shape Array"""
+        if not isinstance(self._convex_hull, ConvexHull):
+            self._convex_hull = ConvexHull(self._polygons)
+        return self._convex_hull
 
     def to_dict(self) -> OrderedDict:
         """dict representation of the object array
@@ -262,16 +280,16 @@ class ShapeArray(object):
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                rtn[idx] = sgeo.distance_circ_dots(circ_shape=shape,
-                                                   dots_xy=self._xy[idx, :],
-                                                   dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = sgeo.distance_circ_dot_array(circ_shape=shape,
+                                                        dots_xy=self._xy[idx, :],
+                                                        dots_diameter=self._sizes[idx, 0])
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                rtn[idx] = sgeo.distance_circ_ellipses(circ_shape=shape,
-                                                       ellipses_xy=self._xy[idx, :],
-                                                       ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = sgeo.distance_circ_ellipse_array(circ_shape=shape,
+                                                            ellipses_xy=self._xy[idx, :],
+                                                            ellipse_sizes=self._sizes[idx, :])
 
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
@@ -296,17 +314,17 @@ class ShapeArray(object):
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                dists = sgeo.distance_circ_dots(circ_shape=shape,
-                                                dots_xy=self._xy[idx, :],
-                                                dots_diameter=self._sizes[idx, 0])
+                dists = sgeo.distance_circ_dot_array(circ_shape=shape,
+                                                     dots_xy=self._xy[idx, :],
+                                                     dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < min_distance
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                dists = sgeo.distance_circ_ellipses(circ_shape=shape,
-                                                    ellipses_xy=self._xy[idx, :],
-                                                    ellipse_sizes=self._sizes[idx, :])
+                dists = sgeo.distance_circ_ellipse_array(circ_shape=shape,
+                                                         ellipses_xy=self._xy[idx, :],
+                                                         ellipse_sizes=self._sizes[idx, :])
                 rtn[idx] = dists < min_distance
 
             # check if non-circular shapes are in shape_array

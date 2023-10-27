@@ -15,7 +15,6 @@ from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Picture, PolygonShape, Rectangle
 from .._shapes.shape_geometry import ellipse_perimeter
-from .convex_hull import ConvexHull
 from .shape_array import ShapeArray
 
 
@@ -80,7 +79,7 @@ class ArrayProperties(object):
         self._ch = None
 
     @property
-    def areas(self) -> NDArray:
+    def areas(self) -> NDArray[np.float_]:
         """area of each object"""
 
         rtn = np.full(self._shapes.n_objects, np.nan)
@@ -103,7 +102,7 @@ class ArrayProperties(object):
         return rtn
 
     @property
-    def perimeter(self) -> NDArray:
+    def perimeter(self) -> NDArray[np.float_]:
         """Perimeter for each dot"""
 
         rtn = np.full(self._shapes.n_objects, np.nan)
@@ -136,34 +135,24 @@ class ArrayProperties(object):
         """number of shapes"""
         return self._shapes.n_objects
 
-    def reset_convex_hull(self) -> None:
-        """reset to enforce recalculation of convex hull"""
-        self._ch = None  # convex_hull
-
     @property
-    def convex_hull(self) -> ConvexHull:
-        if not isinstance(self._ch, ConvexHull):
-            self._ch = ConvexHull(self._shapes.polygons)
-        return self._ch
-
-    @property
-    def total_surface_area(self) -> float:
+    def total_surface_area(self) -> np.floating:
         return np.nansum(self.areas)
 
     @property
-    def average_surface_area(self) -> float:
+    def average_surface_area(self) -> Union[np.floating, float]:
         if self._shapes.n_objects == 0:
-            return 0.0
+            return np.nan
         return np.nanmean(self.areas)
 
     @property
-    def total_perimeter(self) -> float:
+    def total_perimeter(self) -> np.floating:
         return np.nansum(self.perimeter)
 
     @property
-    def average_perimeter(self) -> float:
+    def average_perimeter(self) -> Union[np.floating, float]:
         if self._shapes.n_objects == 0:
-            return 0.0
+            return np.nan
         return np.nanmean(self.perimeter)
 
     @property
@@ -200,7 +189,7 @@ class ArrayProperties(object):
 
     @property
     def field_area(self) -> float:
-        return self.convex_hull.area
+        return self._shapes.convex_hull.area
 
     def get(self, prop: VisProp) -> Any:
         """returns a visual property"""

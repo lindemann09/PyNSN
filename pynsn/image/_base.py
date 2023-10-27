@@ -159,7 +159,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
 
             # draw convex hulls
             if colours.field_area.value is not None:
-                coords = nsn_stimulus.properties.convex_hull.coordinates
+                coords = nsn_stimulus.convex_hull.coordinates
                 if len(coords) > 1:
                     self.draw_convex_hull(img, points=coords,
                                           convex_hull_colour=colours.field_area,
@@ -168,7 +168,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
             #  and center of mass
             if colours.center_of_field_area.value is not None:
                 obj = Dot(
-                    xy=nsn_stimulus.properties.convex_hull.centroid,
+                    xy=nsn_stimulus.convex_hull.centroid,
                     diameter=10,
                     attribute=colours.center_of_field_area,
                 )

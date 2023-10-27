@@ -10,6 +10,7 @@ relations between circular shapes not on shapely.polygons.
 
 from __future__ import annotations
 
+
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
@@ -25,6 +26,57 @@ from shapely.affinity import scale
 
 from ..types import Coord2D, Coord2DLike
 from .colour import Colour
+from .. import _shapes
+
+INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
+
+
+class Point2D(object):
+
+    def __init__(self, xy: Coord2DLike):
+        if len(xy) != 2:
+            raise ValueError(INCORRECT_COORDINATE)
+        self._xy = np.asarray(xy)
+
+    @property
+    def xy(self) -> NDArray:
+        return self._xy
+
+    @xy.setter
+    def xy(self, val: Coord2DLike):
+        if len(val) != 2:
+            raise ValueError(INCORRECT_COORDINATE)
+        self._xy = np.asarray(val)
+
+    def xy_point(self) -> Point:
+        return Point(self._xy)
+
+    def distance(self, shape: Union[Point2D, ShapeType]) -> float:
+        """Distance to another shape
+
+        Note: Returns negative distances only for circular shapes, otherwise
+        overlapping distances are 0.
+        """
+        if isinstance(shape, Point2D):
+            return _shapes.shape_geometry.distance_point_point(self, shape)
+
+        elif isinstance(shape, CircularShapeType):
+            return _shapes.shape_geometry.distance_point_circ(self, shape)
+
+        else:
+            return shapely.distance(self.xy_point, shape.polygon)
+
+    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+        """True if point is in given distance to a shape (dist)
+
+        Using this function is more efficient for non-circular shapes than
+        computing the distance and comparing it with dist.
+        """
+
+        if isinstance(shape, Point2D):
+            return shapely.dwithin(self.xy_point, shape.xy_point, distance=dist)
+        else:
+            return shapely.dwithin(self.xy_point, shape.polygon, distance=dist)
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -35,8 +87,7 @@ class ShapeType(metaclass=ABCMeta):
                  xy: Coord2DLike,
                  attribute: Any) -> None:
         if len(xy) != 2:
-            raise ValueError("xy has be an list of two numerals (x, y)")
-
+            raise ValueError(INCORRECT_COORDINATE)
         self._xy = tuple(xy)
         self._attribute = attribute
         self._polygon = None
@@ -48,7 +99,7 @@ class ShapeType(metaclass=ABCMeta):
     @xy.setter
     def xy(self, val: Coord2DLike):
         if len(val) != 2:
-            raise ValueError("xy has be an list of two numerals (x, y)")
+            raise ValueError(INCORRECT_COORDINATE)
 
         xy = tuple(val)
         if isinstance(self._polygon, Polygon):
@@ -107,6 +158,8 @@ class ShapeType(metaclass=ABCMeta):
         if self._polygon is None:
             self._polygon = self.polygon
 
+    ## abstract methods ###
+
     @abstractmethod
     def copy(self, new_xy: Optional[Coord2DLike] = None,
              copy_polygon: bool = True) -> ShapeType:
@@ -127,10 +180,42 @@ class ShapeType(metaclass=ABCMeta):
     def __repr__(self) -> str:
         """"""
 
+    @abstractmethod
+    def distance(self, shape: Union[Point2D, ShapeType]) -> float:
+        """Distance to another shape
 
-class CircularShapeType(ShapeType):
+        Note: Returns negative distances only for circular shapes, otherwise
+        overlapping distances are 0.
+        """
+
+    @abstractmethod
+    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+        """True iis shapes are within a given distance (dist)
+
+        Using this function is more efficient for non-circular shapes than
+        computing the distance and comparing it with dist.
+        """
+
+
+class CircularShapeType(ShapeType, metaclass=ABCMeta):
     """Abstract Class for Circular Shapes"""
     QUAD_SEGS = 32  # line segments used to approximate dot
+
+    def distance(self, shape: Union[Point2D, ShapeType]) -> float:
+        if isinstance(shape, Point2D):
+            return _shapes.shape_geometry.distance_point_circ(shape, self)
+
+        elif isinstance(shape, CircularShapeType):
+            return _shapes.shape_geometry.distance_circ_circ(self, shape)
+
+        else:
+            return shapely.distance(self.polygon, shape.polygon)
+
+    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+        if isinstance(shape, (Point2D, CircularShapeType)):
+            return self.distance(shape) < dist
+        else:
+            return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
 
 
 class Ellipse(CircularShapeType):
@@ -158,6 +243,12 @@ class Ellipse(CircularShapeType):
     @property
     def size(self) -> Coord2D:
         return self._size  # type: ignore
+
+    def diameter(self, theta: float) -> float:
+        """Returns the diameter at a certain angle (theta)"""
+        d = self._size
+        return (d[0] * d[1]) / np.sqrt((d[0] * np.sin(theta))**2
+                                       + (d[1] * np.cos(theta))**2)
 
     @property
     def polygon(self) -> Polygon:  # lazy polygon creation
@@ -319,6 +410,18 @@ class Rectangle(ShapeType):
         else:
             return Rectangle(xy=new_xy, size=self.size, attribute=self._attribute)
 
+    def distance(self, shape: Union[Point2D, ShapeType]) -> float:
+        if isinstance(shape, Point2D):
+            return shapely.distance(self.polygon, shape.xy_point)
+        else:
+            return shapely.distance(self.polygon, shape.polygon)
+
+    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+        if isinstance(shape, Point2D):
+            return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
+        else:
+            return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
+
 
 class Picture(Rectangle):
     ID = 4
@@ -402,3 +505,15 @@ class PolygonShape(ShapeType):
         if new_xy is not None:
             new.xy = new_xy
         return new
+
+    def distance(self, shape: Union[Point2D, ShapeType]) -> float:
+        if isinstance(shape, Point2D):
+            return shapely.distance(self.polygon, shape.xy_point)
+        else:
+            return shapely.distance(self.polygon, shape.polygon)
+
+    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+        if isinstance(shape, Point2D):
+            return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
+        else:
+            return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
