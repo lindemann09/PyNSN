@@ -321,8 +321,9 @@ class NSNStimulus(ShapeArray):
             candidate.xy = generator.random(size=2) * search_bounds_size \
                 - (search_bounds_size/2)
 
-            if not sgeo.is_inside(a=candidate, b=area, b_exterior_ring=area_ring,
-                                  min_dist_boarder=self.min_distance_target_area):
+            if not candidate.is_inside(shape=area,
+                                       shape_exterior_ring=area_ring,
+                                       min_dist_boarder=self.min_distance_target_area):
                 continue
 
             if ignore_overlaps:

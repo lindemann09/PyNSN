@@ -23,10 +23,9 @@ import shapely
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 from shapely.affinity import scale
-
+from .. import _shapes
 from ..types import Coord2D, Coord2DLike
 from .colour import Colour
-from .. import _shapes
 
 INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
 
@@ -77,6 +76,20 @@ class Point2D(object):
             return shapely.dwithin(self.xy_point, shape.xy_point, distance=dist)
         else:
             return shapely.dwithin(self.xy_point, shape.polygon, distance=dist)
+
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        """True is shapes fully inside the shapes (dist)
+        """
+        if isinstance(shape, (Dot, Ellipse)):
+            return _shapes.shape_geometry.is_point_in_circ(self, shape=shape,
+                                                           min_dist_boarder=min_dist_boarder)
+        else:
+            return _shapes.shape_geometry.is_point_in_shape(self,
+                                                            b=shape.polygon,
+                                                            b_exterior_ring=shape_exterior_ring,
+                                                            min_dist_boarder=min_dist_boarder)
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -190,10 +203,17 @@ class ShapeType(metaclass=ABCMeta):
 
     @abstractmethod
     def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
-        """True iis shapes are within a given distance (dist)
+        """True is shapes are within a given distance (dist)
 
         Using this function is more efficient for non-circular shapes than
         computing the distance and comparing it with dist.
+        """
+
+    @abstractmethod
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        """True is shapes fully inside the shapes (dist)
         """
 
 
@@ -211,7 +231,7 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: Union[Point2D, ShapeType], dist: float) -> bool:
+    def dwithin(self, shape: ShapeType, dist: float) -> bool:
         if isinstance(shape, (Point2D, CircularShapeType)):
             return self.distance(shape) < dist
         else:
@@ -277,6 +297,17 @@ class Ellipse(CircularShapeType):
         else:
             return Ellipse(xy=new_xy, size=self._size, attribute=self._attribute)
 
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        if isinstance(shape, (Dot, Ellipse)):
+            return _shapes.shape_geometry.is_circ_in_circ(self, b=shape,
+                                                          min_dist_boarder=min_dist_boarder)
+        else:
+            return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
+                                                            b_exterior_ring=shape_exterior_ring,
+                                                            min_dist_boarder=min_dist_boarder)
+
 
 class Dot(CircularShapeType):
     ID = 1
@@ -332,6 +363,20 @@ class Dot(CircularShapeType):
             return Dot(xy=self._xy, diameter=self.diameter, attribute=self._attribute)
         else:
             return Dot(xy=new_xy, diameter=self.diameter, attribute=self._attribute)
+
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        if isinstance(shape, Dot):
+            return _shapes.shape_geometry.is_dot_in_dot(self, b=shape,
+                                                        min_dist_boarder=min_dist_boarder)
+        elif isinstance(shape, Dot):
+            return _shapes.shape_geometry.is_circ_in_circ(self, b=shape,
+                                                          min_dist_boarder=min_dist_boarder)
+        else:
+            return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
+                                                            b_exterior_ring=shape_exterior_ring,
+                                                            min_dist_boarder=min_dist_boarder)
 
 
 class Rectangle(ShapeType):
@@ -421,6 +466,13 @@ class Rectangle(ShapeType):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
+
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
+                                                        b_exterior_ring=shape_exterior_ring,
+                                                        min_dist_boarder=min_dist_boarder)
 
 
 class Picture(Rectangle):
@@ -517,3 +569,10 @@ class PolygonShape(ShapeType):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
+
+    def is_inside(self, shape: ShapeType,
+                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  min_dist_boarder: float = 0) -> float:
+        return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
+                                                        b_exterior_ring=shape_exterior_ring,
+                                                        min_dist_boarder=min_dist_boarder)
