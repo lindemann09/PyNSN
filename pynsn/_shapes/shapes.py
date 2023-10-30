@@ -10,7 +10,6 @@ relations between circular shapes not on shapely.polygons.
 
 from __future__ import annotations
 
-
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
@@ -23,9 +22,10 @@ import shapely
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 from shapely.affinity import scale
-from .. import _shapes
+
 from ..types import Coord2D, Coord2DLike
 from .colour import Colour
+from .. import _shapes
 
 INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
 
@@ -57,10 +57,10 @@ class Point2D(object):
         overlapping distances are 0.
         """
         if isinstance(shape, Point2D):
-            return _shapes.shape_geometry.distance_point_point(self, shape)
+            return _shapes.geometry.distance_point_point(self, shape)
 
         elif isinstance(shape, CircularShapeType):
-            return _shapes.shape_geometry.distance_point_circ(self, shape)
+            return _shapes.geometry.distance_point_circ(self, shape)
 
         else:
             return shapely.distance(self.xy_point, shape.polygon)
@@ -83,13 +83,13 @@ class Point2D(object):
         """True is shapes fully inside the shapes (dist)
         """
         if isinstance(shape, (Dot, Ellipse)):
-            return _shapes.shape_geometry.is_point_in_circ(self, shape=shape,
-                                                           min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_point_in_circ(self, shape=shape,
+                                                     min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.shape_geometry.is_point_in_shape(self,
-                                                            b=shape.polygon,
-                                                            b_exterior_ring=shape_exterior_ring,
-                                                            min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_point_in_shape(self,
+                                                      b=shape.polygon,
+                                                      b_exterior_ring=shape_exterior_ring,
+                                                      min_dist_boarder=min_dist_boarder)
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -223,10 +223,10 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
 
     def distance(self, shape: Union[Point2D, ShapeType]) -> float:
         if isinstance(shape, Point2D):
-            return _shapes.shape_geometry.distance_point_circ(shape, self)
+            return _shapes.geometry.distance_point_circ(shape, self)
 
         elif isinstance(shape, CircularShapeType):
-            return _shapes.shape_geometry.distance_circ_circ(self, shape)
+            return _shapes.geometry.distance_circ_circ(self, shape)
 
         else:
             return shapely.distance(self.polygon, shape.polygon)
@@ -301,12 +301,12 @@ class Ellipse(CircularShapeType):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> float:
         if isinstance(shape, (Dot, Ellipse)):
-            return _shapes.shape_geometry.is_circ_in_circ(self, b=shape,
-                                                          min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_circ_in_circ(self, b=shape,
+                                                    min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
-                                                            b_exterior_ring=shape_exterior_ring,
-                                                            min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_shape_in_shape(self, b=shape,
+                                                      b_exterior_ring=shape_exterior_ring,
+                                                      min_dist_boarder=min_dist_boarder)
 
 
 class Dot(CircularShapeType):
@@ -368,13 +368,13 @@ class Dot(CircularShapeType):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> float:
         if isinstance(shape, Dot):
-            return _shapes.shape_geometry.is_dot_in_dot(self, b=shape,
+            return _shapes.geometry.is_dot_in_dot(self, b=shape,
                                                         min_dist_boarder=min_dist_boarder)
         elif isinstance(shape, Dot):
-            return _shapes.shape_geometry.is_circ_in_circ(self, b=shape,
+            return _shapes.geometry.is_circ_in_circ(self, b=shape,
                                                           min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
+            return _shapes.geometry.is_shape_in_shape(self, b=shape,
                                                             b_exterior_ring=shape_exterior_ring,
                                                             min_dist_boarder=min_dist_boarder)
 
@@ -470,9 +470,9 @@ class Rectangle(ShapeType):
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> float:
-        return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
-                                                        b_exterior_ring=shape_exterior_ring,
-                                                        min_dist_boarder=min_dist_boarder)
+        return _shapes.geometry.is_shape_in_shape(self, b=shape,
+                                                  b_exterior_ring=shape_exterior_ring,
+                                                  min_dist_boarder=min_dist_boarder)
 
 
 class Picture(Rectangle):
@@ -573,6 +573,6 @@ class PolygonShape(ShapeType):
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> float:
-        return _shapes.shape_geometry.is_shape_in_shape(self, b=shape,
-                                                        b_exterior_ring=shape_exterior_ring,
-                                                        min_dist_boarder=min_dist_boarder)
+        return geometry.is_shape_in_shape(self, b=shape,
+                                                b_exterior_ring=shape_exterior_ring,
+                                                min_dist_boarder=min_dist_boarder)

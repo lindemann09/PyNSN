@@ -5,7 +5,8 @@ from pynsn.image import pil_image
 import shapely
 from tests.shapes_test_picture import shapes_test_picture, Line
 import numpy as np
-from pynsn import shape_geometry as sgeo
+from pynsn import geometry as sgeo
+
 
 da = pynsn.Dot((-20, 120), diameter=10, attribute="#222800")
 db = pynsn.Dot((22, -20), diameter=78, attribute="#000088")

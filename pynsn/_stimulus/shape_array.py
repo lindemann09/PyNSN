@@ -3,8 +3,6 @@
 """
 from __future__ import annotations
 
-from pynsn._shapes.shapes import CircularShapeType
-
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
@@ -14,10 +12,10 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
+from .. import _stimulus
+from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
+                       PolygonShape, Rectangle, ShapeType)
 from ..types import IntOVector
-from .._shapes import (Dot, Ellipse, Picture, PolygonShape,
-                       Rectangle, ShapeType)
-from .._shapes import shape_geometry as sgeo
 from .convex_hull import ConvexHull
 
 
@@ -271,67 +269,76 @@ class ShapeArray(object):
     #     """
     #     pass
 
-    def distances(self, shape: ShapeType) -> NDArray[np.float_]:
-        """distances of a shape to the elements in the shape array"""
+    def distances(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.float_]:
+        """distances of a shape or Point2D to the elements in the shape array"""
 
-        if isinstance(shape, CircularShapeType):
+        if isinstance(shape, (Point2D, CircularShapeType)):
             rtn = np.full(self.n_objects, np.nan)
 
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                rtn[idx] = sgeo.distance_circ_dot_array(circ_shape=shape,
-                                                        dots_xy=self._xy[idx, :],
-                                                        dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = _stimulus.geometry.distance_circ_dot_array(obj=shape,
+                                                                      dots_xy=self._xy[idx, :],
+                                                                      dots_diameter=self._sizes[idx, 0])
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                rtn[idx] = sgeo.distance_circ_ellipse_array(circ_shape=shape,
-                                                            ellipses_xy=self._xy[idx, :],
-                                                            ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
+                                                                          ellipses_xy=self._xy[idx, :],
+                                                                          ellipse_sizes=self._sizes[idx, :])
 
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
-                rtn[idx] = shapely.distance(shape.polygon, self._polygons[idx])
+                if isinstance(shape, CircularShapeType):
+                    rtn[idx] = shapely.distance(
+                        shape.polygon, self._polygons[idx])
+                else:
+                    rtn[idx] = shapely.distance(
+                        shape.xy_point, self._polygons[idx])
             return rtn
 
         else:
             # non-circular shape
             return shapely.distance(shape.polygon, self._polygons)
 
-    def overlaps(self, shape: ShapeType,  min_distance: float = 0) -> NDArray[np.int_]:
+    def overlaps(self, shape: Union[Point2D, ShapeType],  min_distance: float = 0) -> NDArray[np.int_]:
         """Returns indices of all overlapping elements of the array with this shape.
 
         Note
         -----
         Using this function is more efficient than computing the distance and comparing the result.
         """
-        if isinstance(shape, CircularShapeType):
+        if isinstance(shape, (Point2D, CircularShapeType)):
             rtn = np.full(self.n_objects, np.nan)
 
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                dists = sgeo.distance_circ_dot_array(circ_shape=shape,
-                                                     dots_xy=self._xy[idx, :],
-                                                     dots_diameter=self._sizes[idx, 0])
+                dists = _stimulus.geometry.distance_circ_dot_array(obj=shape,
+                                                                   dots_xy=self._xy[idx, :],
+                                                                   dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < min_distance
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                dists = sgeo.distance_circ_ellipse_array(circ_shape=shape,
-                                                         ellipses_xy=self._xy[idx, :],
-                                                         ellipse_sizes=self._sizes[idx, :])
+                dists = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
+                                                                       ellipses_xy=self._xy[idx, :],
+                                                                       ellipse_sizes=self._sizes[idx, :])
                 rtn[idx] = dists < min_distance
 
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
-                rtn[idx] = shapely.dwithin(
-                    shape.polygon, self._polygons[idx],  distance=min_distance)
+                if isinstance(shape, CircularShapeType):
+                    rtn[idx] = shapely.dwithin(
+                        shape.polygon, self._polygons[idx],  distance=min_distance)
+                else:
+                    rtn[idx] = shapely.dwithin(
+                        shape.xy_point, self._polygons[idx],  distance=min_distance)
 
         else:
             # non-circular shape

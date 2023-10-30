@@ -9,9 +9,9 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
-
-from .shapes import CircularShapeType, Dot, Ellipse, ShapeType, Point2D
 import shapely
+
+from .. import _shapes
 
 
 def ellipse_perimeter(sizes: NDArray) -> NDArray[np.float_]:
@@ -37,15 +37,15 @@ def ellipse_diameter(size: NDArray, theta: NDArray) -> NDArray[np.float_]:
                                          + (d[:, 1] * np.cos(theta))**2)
 
 
-def distance_point_point(a: Point2D, b: Point2D) -> float:
+def distance_point_point(a: _shapes.Point2D, b: _shapes.Point2D) -> float:
     return np.hypot(b.xy[0] - a.xy[0], b.xy[1] - a.xy[1])
 
 
-def distance_point_circ(a: Point2D, b: CircularShapeType) -> float:
+def distance_point_circ(a: _shapes.Point2D, b: _shapes.CircularShapeType) -> float:
     d_xy = np.asarray(a.xy) - b.xy
-    if isinstance(b, Dot):
+    if isinstance(b, _shapes.Dot):
         dia = b.diameter
-    elif isinstance(b, Ellipse):
+    elif isinstance(b, _shapes.Ellipse):
         theta = np.arctan2(d_xy[0], d_xy[1])
         dia = b.diameter(theta=theta)
     else:
@@ -54,22 +54,22 @@ def distance_point_circ(a: Point2D, b: CircularShapeType) -> float:
     return np.hypot(d_xy[0], d_xy[1]) - dia / 2
 
 
-def distance_dot_dot(a: Dot, b: Dot) -> float:
+def distance_dot_dot(a: _shapes.Dot, b: _shapes.Dot) -> float:
     return np.hypot(b.xy[0] - a.xy[0], b.xy[1] - a.xy[1]) - (a.diameter + b.diameter) / 2
 
 
-def distance_circ_circ(a: CircularShapeType, b: CircularShapeType) -> float:
+def distance_circ_circ(a: _shapes.CircularShapeType, b: _shapes.CircularShapeType) -> float:
     d_xy = np.asarray(a.xy) - b.xy
     theta = np.arctan2(d_xy[0], d_xy[1])
-    if isinstance(a, Dot):
+    if isinstance(a, _shapes.Dot):
         dia_a = a.diameter
-    elif isinstance(a, Ellipse):
+    elif isinstance(a, _shapes.Ellipse):
         dia_a = a.diameter(theta=theta)
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(a)}")
-    if isinstance(b, Dot):
+    if isinstance(b, _shapes.Dot):
         dia_b = b.diameter
-    elif isinstance(b, Ellipse):
+    elif isinstance(b, _shapes.Ellipse):
         dia_b = b.diameter(theta=theta)
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(b)}")
@@ -77,15 +77,15 @@ def distance_circ_circ(a: CircularShapeType, b: CircularShapeType) -> float:
     return np.hypot(d_xy[0], d_xy[1]) - (dia_a + dia_b) / 2
 
 
-def is_point_in_circ(p: Point2D,
-                     shape: CircularShapeType,
+def is_point_in_circ(p: _shapes.Point2D,
+                     shape: _shapes.CircularShapeType,
                      min_dist_boarder: float = 0) -> bool:
     """Returns True if point a is inside circular shape"""
     d_xy = np.asarray(shape.xy) - p.xy
-    if isinstance(shape, Dot):
+    if isinstance(shape, _shapes.Dot):
         # dot - dot
         return np.hypot(d_xy[0], d_xy[1]) < shape.diameter/2 - min_dist_boarder
-    elif isinstance(shape, Ellipse):
+    elif isinstance(shape, _shapes.Ellipse):
         # dot/ellipse - dot/ellipse
         theta = np.arctan2(d_xy[0], d_xy[1])
         return np.hypot(d_xy[0], d_xy[1]) < shape.diameter(theta=theta)/2 - min_dist_boarder
@@ -93,8 +93,8 @@ def is_point_in_circ(p: Point2D,
         raise RuntimeError(f"Unknown circular shape type: {type(shape)}")
 
 
-def is_dot_in_dot(a: Dot,
-                  b: Dot,
+def is_dot_in_dot(a: _shapes.Dot,
+                  b: _shapes.Dot,
                   min_dist_boarder: float = 0) -> bool:
     """Returns True if point a is inside circular shape"""
     d_xy = np.asarray(b.xy) - a.xy
@@ -102,23 +102,23 @@ def is_dot_in_dot(a: Dot,
     return max_ctr_dist > 0 and np.hypot(d_xy[0], d_xy[1]) < max_ctr_dist
 
 
-def is_circ_in_circ(a: CircularShapeType,
-                    b: CircularShapeType,
+def is_circ_in_circ(a: _shapes.CircularShapeType,
+                    b: _shapes.CircularShapeType,
                     min_dist_boarder: float = 0) -> bool:
     """Returns True if point a is inside circular shape"""
     d_xy = np.asarray(a.xy) - b.xy
     theta = np.arctan2(d_xy[0], d_xy[1])
-    if isinstance(a, Dot):
+    if isinstance(a, _shapes.Dot):
         a_diameter = a.diameter
-    elif isinstance(a, Ellipse):
+    elif isinstance(a, _shapes.Ellipse):
         a_diameter = a.diameter(theta=theta)
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(a)}")
 
-    if isinstance(b, Dot):
+    if isinstance(b, _shapes.Dot):
         # dot - dot
         max_ctr_dist = (b.diameter - a_diameter) / 2 - min_dist_boarder
-    elif isinstance(b, Ellipse):
+    elif isinstance(b, _shapes.Ellipse):
         # dot/ellipse - dot/ellipse
         max_ctr_dist = (b.diameter(theta=theta) -
                         a_diameter) / 2 - min_dist_boarder
@@ -128,8 +128,8 @@ def is_circ_in_circ(a: CircularShapeType,
     return max_ctr_dist > 0 and np.hypot(d_xy[0], d_xy[1]) < max_ctr_dist
 
 
-def is_point_in_shape(a: Point2D,
-                      b: ShapeType,
+def is_point_in_shape(a: _shapes.Point2D,
+                      b: _shapes.ShapeType,
                       b_exterior_ring: Optional[shapely.LinearRing] = None,
                       min_dist_boarder: float = 0) -> bool:
     """Returns True if point a is fully inside shape b
@@ -153,8 +153,8 @@ def is_point_in_shape(a: Point2D,
             return True
 
 
-def is_shape_in_shape(a: ShapeType,
-                      b: ShapeType,
+def is_shape_in_shape(a: _shapes.ShapeType,
+                      b: _shapes.ShapeType,
                       b_exterior_ring: Optional[shapely.LinearRing] = None,
                       min_dist_boarder: float = 0) -> bool:
     """Returns True if shape a is fully inside shape b
@@ -176,66 +176,3 @@ def is_shape_in_shape(a: ShapeType,
                                        distance=min_dist_boarder)
         else:
             return True
-
-
-def distance_point_dot_array(p: Point2D,
-                             dots_xy: NDArray[np.float_],
-                             dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distances of Point2D to multiple dots
-    """
-    d_xy = dots_xy - p.xy
-    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - dots_diameter / 2
-
-
-def distance_point_ellipses_array(p: Point2D,
-                                  ellipses_xy: NDArray[np.float_],
-                                  ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distances of Point2D to multiple dots
-    """
-    # coordinate -> ellipses
-    d_xy = ellipses_xy - p.xy
-    theta = np.arctan2(d_xy[:, 0], d_xy[:, 1])
-    # radii of ellipses in array to circ_shape
-    ellipse_dia = ellipse_diameter(size=ellipse_sizes, theta=theta)
-    # center dist - radius_a - radius_b
-    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - ellipse_dia / 2
-
-
-def distance_circ_dot_array(circ_shape: CircularShapeType,
-                            dots_xy: NDArray[np.float_],
-                            dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distances circular shape to multiple dots
-    """
-    d_xy = dots_xy - circ_shape.xy
-    if isinstance(circ_shape, Dot):
-        circ_dia = circ_shape.diameter
-    elif isinstance(circ_shape, Ellipse):
-        circ_dia = ellipse_diameter(
-            size=np.atleast_2d(circ_shape.size),
-            theta=np.arctan2(d_xy[:, 1], d_xy[:, 0]))  # ellipse radius to each dot in the array
-    else:
-        raise RuntimeError(f"Unknown circular shape type: {type(circ_shape)}")
-
-    # center dist - radius_a - radius_b
-    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (dots_diameter + circ_dia) / 2
-
-
-def distance_circ_ellipse_array(circ_shape: CircularShapeType,
-                                ellipses_xy: NDArray[np.float_],
-                                ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distance circular shape to multiple ellipses
-    """
-    d_xy = ellipses_xy - circ_shape.xy
-    theta = np.arctan2(d_xy[:, 0], d_xy[:, 1])
-    # radii of ellipses in array to circ_shape
-    ellipse_dia = ellipse_diameter(size=ellipse_sizes, theta=theta)
-    if isinstance(circ_shape, Dot):
-        shape_dia = circ_shape.diameter
-    elif isinstance(circ_shape, Ellipse):
-        shape_dia = ellipse_diameter(size=np.atleast_2d(circ_shape.size),
-                                     theta=theta)  # ellipse radius to each ellipse in the array
-    else:
-        raise RuntimeError(f"Unknown circular shape type: {type(circ_shape)}")
-
-    # center dist - radius_a - radius_b
-    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (ellipse_dia + shape_dia)/2

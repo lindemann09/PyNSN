@@ -18,8 +18,9 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
         + "Please use Python 3.8 or later."
     )
 
-from ._stimulus import *
-from ._shapes import *
+from ._shapes import (Point2D, Dot, Rectangle, Picture,
+                      Ellipse, PolygonShape, ShapeType, CircularShapeType, Colour)
+from ._stimulus import ShapeArray, ArrayProperties, VisProp, NSNStimulus
 
 
 def _print_version_info():

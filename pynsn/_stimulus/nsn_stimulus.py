@@ -15,7 +15,6 @@ from numpy.typing import NDArray
 from .. import constants
 from .._misc import key_value_format
 from .._shapes import Dot, PolygonShape, Rectangle, ShapeType
-from .._shapes import shape_geometry as sgeo
 from ..random._rng import WalkAround, generator
 from ..types import IntOVector, NoSolutionError
 from .properties import ArrayProperties
