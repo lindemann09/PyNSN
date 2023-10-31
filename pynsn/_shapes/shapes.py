@@ -56,11 +56,8 @@ class Point2D(object):
         Note: Returns negative distances only for circular shapes, otherwise
         overlapping distances are 0.
         """
-        if isinstance(shape, Point2D):
-            return _shapes.geometry.distance_point_point(self, shape)
-
-        elif isinstance(shape, CircularShapeType):
-            return _shapes.geometry.distance_point_circ(self, shape)
+        if isinstance(shape, (Point2D, CircularShapeType)):
+            return _shapes.geometry.distance_circ_circ(self, shape)
 
         else:
             return shapely.distance(self.xy_point, shape.polygon)
@@ -72,24 +69,24 @@ class Point2D(object):
         computing the distance and comparing it with dist.
         """
 
-        if isinstance(shape, Point2D):
-            return shapely.dwithin(self.xy_point, shape.xy_point, distance=dist)
+        if isinstance(shape, (Point2D, CircularShapeType)):
+            return self.distance(shape) < dist
         else:
             return shapely.dwithin(self.xy_point, shape.polygon, distance=dist)
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
+                  min_dist_boarder: float = 0) -> bool:
         """True is shapes fully inside the shapes (dist)
         """
         if isinstance(shape, (Dot, Ellipse)):
-            return _shapes.geometry.is_point_in_circ(self, shape=shape,
-                                                     min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_circ_in_circ(self, b=shape,
+                                                    min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.geometry.is_point_in_shape(self,
-                                                      b=shape.polygon,
-                                                      b_exterior_ring=shape_exterior_ring,
-                                                      min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_in_shape(self,
+                                                b=shape.polygon,
+                                                b_exterior_ring=shape_exterior_ring,
+                                                min_dist_boarder=min_dist_boarder)
 
 
 class ShapeType(metaclass=ABCMeta):
@@ -212,7 +209,7 @@ class ShapeType(metaclass=ABCMeta):
     @abstractmethod
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
+                  min_dist_boarder: float = 0) -> bool:
         """True is shapes fully inside the shapes (dist)
         """
 
@@ -222,10 +219,7 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
     QUAD_SEGS = 32  # line segments used to approximate dot
 
     def distance(self, shape: Union[Point2D, ShapeType]) -> float:
-        if isinstance(shape, Point2D):
-            return _shapes.geometry.distance_point_circ(shape, self)
-
-        elif isinstance(shape, CircularShapeType):
+        if isinstance(shape, (Point2D, CircularShapeType)):
             return _shapes.geometry.distance_circ_circ(self, shape)
 
         else:
@@ -299,12 +293,12 @@ class Ellipse(CircularShapeType):
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
+                  min_dist_boarder: float = 0) -> bool:
         if isinstance(shape, (Dot, Ellipse)):
             return _shapes.geometry.is_circ_in_circ(self, b=shape,
                                                     min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.geometry.is_shape_in_shape(self, b=shape,
+            return _shapes.geometry.is_in_shape(self, b=shape,
                                                       b_exterior_ring=shape_exterior_ring,
                                                       min_dist_boarder=min_dist_boarder)
 
@@ -366,17 +360,14 @@ class Dot(CircularShapeType):
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
-        if isinstance(shape, Dot):
-            return _shapes.geometry.is_dot_in_dot(self, b=shape,
-                                                        min_dist_boarder=min_dist_boarder)
-        elif isinstance(shape, Dot):
+                  min_dist_boarder: float = 0) -> bool:
+        if isinstance(shape, CircularShapeType):
             return _shapes.geometry.is_circ_in_circ(self, b=shape,
-                                                          min_dist_boarder=min_dist_boarder)
+                                                    min_dist_boarder=min_dist_boarder)
         else:
-            return _shapes.geometry.is_shape_in_shape(self, b=shape,
-                                                            b_exterior_ring=shape_exterior_ring,
-                                                            min_dist_boarder=min_dist_boarder)
+            return _shapes.geometry.is_in_shape(self, b=shape,
+                                                b_exterior_ring=shape_exterior_ring,
+                                                min_dist_boarder=min_dist_boarder)
 
 
 class Rectangle(ShapeType):
@@ -469,8 +460,8 @@ class Rectangle(ShapeType):
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
-        return _shapes.geometry.is_shape_in_shape(self, b=shape,
+                  min_dist_boarder: float = 0) -> bool:
+        return _shapes.geometry.is_in_shape(self, b=shape,
                                                   b_exterior_ring=shape_exterior_ring,
                                                   min_dist_boarder=min_dist_boarder)
 
@@ -572,7 +563,7 @@ class PolygonShape(ShapeType):
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
-                  min_dist_boarder: float = 0) -> float:
-        return geometry.is_shape_in_shape(self, b=shape,
-                                                b_exterior_ring=shape_exterior_ring,
-                                                min_dist_boarder=min_dist_boarder)
+                  min_dist_boarder: float = 0) -> bool:
+        return _shapes.geometry.is_in_shape(self, b=shape,
+                                                  b_exterior_ring=shape_exterior_ring,
+                                                  min_dist_boarder=min_dist_boarder)

@@ -273,6 +273,7 @@ class ShapeArray(object):
         """distances of a shape or Point2D to the elements in the shape array"""
 
         if isinstance(shape, (Point2D, CircularShapeType)):
+            # circular target shape
             rtn = np.full(self.n_objects, np.nan)
 
             idx = self._ids[Dot.ID]
@@ -281,14 +282,12 @@ class ShapeArray(object):
                 rtn[idx] = _stimulus.geometry.distance_circ_dot_array(obj=shape,
                                                                       dots_xy=self._xy[idx, :],
                                                                       dots_diameter=self._sizes[idx, 0])
-
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
                                                                           ellipses_xy=self._xy[idx, :],
                                                                           ellipse_sizes=self._sizes[idx, :])
-
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
@@ -301,11 +300,12 @@ class ShapeArray(object):
             return rtn
 
         else:
-            # non-circular shape
+            # non-circular shape as target
             return shapely.distance(shape.polygon, self._polygons)
 
-    def overlaps(self, shape: Union[Point2D, ShapeType],  min_distance: float = 0) -> NDArray[np.int_]:
-        """Returns indices of all overlapping elements of the array with this shape.
+    def dwithin(self, shape: Union[Point2D, ShapeType],  distance: float = 0) -> NDArray[np.int_]:
+        """Returns True for all elements of the array that are within the
+        specified distance.
 
         Note
         -----
@@ -320,7 +320,7 @@ class ShapeArray(object):
                 dists = _stimulus.geometry.distance_circ_dot_array(obj=shape,
                                                                    dots_xy=self._xy[idx, :],
                                                                    dots_diameter=self._sizes[idx, 0])
-                rtn[idx] = dists < min_distance
+                rtn[idx] = dists < distance
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
@@ -328,22 +328,22 @@ class ShapeArray(object):
                 dists = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
                                                                        ellipses_xy=self._xy[idx, :],
                                                                        ellipse_sizes=self._sizes[idx, :])
-                rtn[idx] = dists < min_distance
+                rtn[idx] = dists < distance
 
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
                 if isinstance(shape, CircularShapeType):
                     rtn[idx] = shapely.dwithin(
-                        shape.polygon, self._polygons[idx],  distance=min_distance)
+                        shape.polygon, self._polygons[idx],  distance=distance)
                 else:
                     rtn[idx] = shapely.dwithin(
-                        shape.xy_point, self._polygons[idx],  distance=min_distance)
+                        shape.xy_point, self._polygons[idx],  distance=distance)
 
         else:
             # non-circular shape
             rtn = shapely.dwithin(
-                shape.polygon, self._polygons, distance=min_distance)
+                shape.polygon, self._polygons, distance=distance)
 
         return np.flatnonzero(rtn)
 

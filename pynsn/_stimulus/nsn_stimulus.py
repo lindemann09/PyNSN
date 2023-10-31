@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 
 from .. import constants
 from .._misc import key_value_format
-from .._shapes import Dot, PolygonShape, Rectangle, ShapeType
+from .._shapes import Dot, PolygonShape, Rectangle, ShapeType, Point2D
 from ..random._rng import WalkAround, generator
 from ..types import IntOVector, NoSolutionError
 from .properties import ArrayProperties
@@ -178,14 +178,6 @@ class NSNStimulus(ShapeArray):
         rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
-    def round_values(self, decimals: int = 0, int_type: type = np.int64,
-                     rebuild_polygons=True) -> None:
-        """rounds all values"""
-        super().round_values(decimals=decimals, int_type=int_type,
-                             rebuild_polygons=rebuild_polygons)
-        if rebuild_polygons:
-            self._convex_hull = None  # reset convex hull
-
     def fix_overlap(self, object_index: int,
                     inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
         """move an selected object that overlaps to an free position in the
@@ -226,21 +218,23 @@ class NSNStimulus(ShapeArray):
         self.add(target)
         return changes
 
-    def overlaps(self, shape: ShapeType) -> NDArray[np.int_]:
-        """Returns indices of all overlapping elements of the array with this shape.
+    def overlaps(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.int_]:
+        """Returns True for all elements in the array that overlap (i.e. taking
+        into account the minimum distance) with the shape or Point2D.
 
         Note
         -----
-        Using this function is more efficient than computing the distance and comparing the result.
+        Using this function is more efficient than computing the distance and
+        comparing the result with minimum distance.
         """
-        return super().overlaps(shape, min_distance=self.min_distance)
+        return self.dwithin(shape, distance=self.min_distance)
 
-    def inside_target_area(self, shape: ShapeType) -> bool:
+    def inside_target_area(self, shape: Union[Point2D, ShapeType]) -> bool:
         """Returns True if shape is inside target area.
         """
-        return sgeo.is_inside(a=shape, b=self.target_area,
-                              b_exterior_ring=self._area_ring,
-                              min_dist_boarder=self.min_distance_target_area)
+        return shape.is_inside(shape=self.target_area,
+                               shape_exterior_ring=self._area_ring,
+                               min_dist_boarder=self.min_distance_target_area)
 
     def add_somewhere(self,
                       ref_object: ShapeType,

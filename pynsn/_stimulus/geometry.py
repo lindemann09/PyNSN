@@ -12,7 +12,7 @@ from .._shapes.geometry import ellipse_diameter
 def distance_circ_dot_array(obj: Union[_shapes.Point2D, _shapes.CircularShapeType],
                             dots_xy: NDArray[np.float_],
                             dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distances circular shape (or Point) to multiple dots
+    """Distances circular shape or Point to multiple dots
     """
     d_xy = dots_xy - obj.xy
     if isinstance(obj, _shapes.Point2D):
@@ -33,7 +33,7 @@ def distance_circ_dot_array(obj: Union[_shapes.Point2D, _shapes.CircularShapeTyp
 def distance_circ_ellipse_array(obj: Union[_shapes.Point2D, _shapes.CircularShapeType],
                                 ellipses_xy: NDArray[np.float_],
                                 ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
-    """Distance circular shape (or Point2D) to multiple ellipses
+    """Distance circular shape or Point2D to multiple ellipses
     """
     d_xy = ellipses_xy - obj.xy
     theta = np.arctan2(d_xy[:, 0], d_xy[:, 1])
