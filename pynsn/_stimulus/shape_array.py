@@ -6,20 +6,28 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from collections import OrderedDict
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
-import shapely
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
+import shapely
 from numpy.typing import NDArray
 
-from .._lib.geometry import round2
-from .shapes import (Dot, Ellipse, Picture, PolygonShape,
-                     Rectangle, ShapeType, SHAPE_LABEL)
-
-IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
+from .. import _stimulus
+from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
+                       PolygonShape, Rectangle, ShapeType)
+from ..types import IntOVector
+from .convex_hull import ConvexHull
 
 
 class ShapeArray(object):
     """Numpy Optimizes Representation of Array of shapes"""
+
+    SHAPE_LABELS = {
+        Dot.ID: "Dot",
+        Rectangle.ID: "Rectangle",
+        Picture.ID: "Picture",
+        Ellipse.ID: "Ellipse",
+        PolygonShape.ID: "Polygon"}
 
     def __init__(self) -> None:
         self._xy = np.empty((0, 2), dtype=np.float64)
@@ -28,6 +36,7 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=int)
         self._ids = {}
+        self._convex_hull = None
         self._update_ids()
 
     @property
@@ -40,7 +49,7 @@ class ShapeArray(object):
 
     @property
     def shape_types(self) -> List[str]:
-        return [SHAPE_LABEL[x] for x in self._types]
+        return [ShapeArray.SHAPE_LABELS[x] for x in self._types]
 
     @property
     def shape_types_ids(self) -> NDArray[np.int_]:
@@ -72,6 +81,7 @@ class ShapeArray(object):
             self._attributes = np.append(self._attributes, shapes.attribute)
             self._types = np.append(self._types, shapes.ID)
             self._polygons = np.append(self._polygons, shapes.polygon)
+            self._convex_hull = None
             self._update_ids()
 
         elif isinstance(shapes, (list, tuple)):
@@ -93,6 +103,7 @@ class ShapeArray(object):
         self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
         self._types[index] = shape.ID
+        self._convex_hull = None
         self._update_ids()
 
     def delete(self, index: IntOVector) -> None:
@@ -101,6 +112,7 @@ class ShapeArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._types = np.delete(self._types, index)
         self._sizes = np.delete(self._sizes, index, axis=0)
+        self._convex_hull = None
         self._update_ids()
 
     def clear(self):
@@ -110,7 +122,13 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=int)
         self._sizes = np.empty((0, 2), dtype=np.float64)
+        self._convex_hull = None
         self._update_ids()
+
+    def sort_by_excentricity(self):
+        ctr = self.convex_hull.centroid
+
+        raise NotImplementedError()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -146,7 +164,7 @@ class ShapeArray(object):
             return Picture(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
-                filename=Picture.extract_filename(self._attributes[index]))  # type: ignore
+                path=self._attributes[index])  # type: ignore
         elif type_id == Ellipse.ID:
             return Ellipse(
                 xy=self._xy[index, :],
@@ -177,6 +195,13 @@ class ShapeArray(object):
     def n_objects(self) -> int:
         """number of shapes"""
         return len(self._attributes)
+
+    @property
+    def convex_hull(self) -> ConvexHull:
+        """Convex hull poygon of the Shape Array"""
+        if not isinstance(self._convex_hull, ConvexHull):
+            self._convex_hull = ConvexHull(self._polygons)
+        return self._convex_hull
 
     def to_dict(self) -> OrderedDict:
         """dict representation of the object array
@@ -244,8 +269,86 @@ class ShapeArray(object):
     #     """
     #     pass
 
+    def distances(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.float_]:
+        """distances of a shape or Point2D to the elements in the shape array"""
+
+        if isinstance(shape, (Point2D, CircularShapeType)):
+            # circular target shape
+            rtn = np.full(self.n_objects, np.nan)
+
+            idx = self._ids[Dot.ID]
+            if len(idx) > 0:
+                # circular -> dots in shape array
+                rtn[idx] = _stimulus.geometry.distance_circ_dot_array(obj=shape,
+                                                                      dots_xy=self._xy[idx, :],
+                                                                      dots_diameter=self._sizes[idx, 0])
+            idx = self._ids[Ellipse.ID]
+            if len(idx) > 0:
+                # circular -> ellipses in shape array
+                rtn[idx] = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
+                                                                          ellipses_xy=self._xy[idx, :],
+                                                                          ellipse_sizes=self._sizes[idx, :])
+            # check if non-circular shapes are in shape_array
+            idx = np.flatnonzero(np.isnan(rtn))
+            if len(idx) > 0:
+                if isinstance(shape, CircularShapeType):
+                    rtn[idx] = shapely.distance(
+                        shape.polygon, self._polygons[idx])
+                else:
+                    rtn[idx] = shapely.distance(
+                        shape.xy_point, self._polygons[idx])
+            return rtn
+
+        else:
+            # non-circular shape as target
+            return shapely.distance(shape.polygon, self._polygons)
+
+    def dwithin(self, shape: Union[Point2D, ShapeType],  distance: float = 0) -> NDArray[np.int_]:
+        """Returns True for all elements of the array that are within the
+        specified distance.
+
+        Note
+        -----
+        Using this function is more efficient than computing the distance and comparing the result.
+        """
+        if isinstance(shape, (Point2D, CircularShapeType)):
+            rtn = np.full(self.n_objects, np.nan)
+
+            idx = self._ids[Dot.ID]
+            if len(idx) > 0:
+                # circular -> dots in shape array
+                dists = _stimulus.geometry.distance_circ_dot_array(obj=shape,
+                                                                   dots_xy=self._xy[idx, :],
+                                                                   dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = dists < distance
+
+            idx = self._ids[Ellipse.ID]
+            if len(idx) > 0:
+                # circular -> ellipses in shape array
+                dists = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
+                                                                       ellipses_xy=self._xy[idx, :],
+                                                                       ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = dists < distance
+
+            # check if non-circular shapes are in shape_array
+            idx = np.flatnonzero(np.isnan(rtn))
+            if len(idx) > 0:
+                if isinstance(shape, CircularShapeType):
+                    rtn[idx] = shapely.dwithin(
+                        shape.polygon, self._polygons[idx],  distance=distance)
+                else:
+                    rtn[idx] = shapely.dwithin(
+                        shape.xy_point, self._polygons[idx],  distance=distance)
+
+        else:
+            # non-circular shape
+            rtn = shapely.dwithin(
+                shape.polygon, self._polygons, distance=distance)
+
+        return np.flatnonzero(rtn)
+
 
 def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
     """read shape array from dict"""
     ##
-    pass  # FIXME
+    raise NotImplementedError()

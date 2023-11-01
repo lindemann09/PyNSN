@@ -3,7 +3,7 @@ from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
 from pynsn import Colour, Dot, Rectangle, ShapeType
-from pynsn._lib.geometry import cartesian2image_coordinates as _c2i_coord
+from pynsn.image._base import cartesian2image_coordinates as _c2i_coord
 
 
 class Line(object):

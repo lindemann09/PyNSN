@@ -6,15 +6,16 @@ import numpy as _np
 from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
-from .. import _stimulus
-from . import _array_draw
+from .. import _shapes
+from .._stimulus import NSNStimulus
+from . import _base
 from ._image_colours import ImageColours
 
 # FIXME broken module
 
 
 def create(
-    nsn_stimulus: _stimulus.NSNStimulus,
+    nsn_stimulus: NSNStimulus,
     colours: Optional[ImageColours] = None,
     dpi: float = 100,
 ) -> _Figure:
@@ -35,7 +36,7 @@ def create(
     )
 
 
-class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
+class _MatplotlibDraw(_base.AbstractArrayDraw):
     @staticmethod
     def get_image(image_size, background_colour, **kwargs) -> _Figure:
         dpi = kwargs["dpi"]
@@ -54,26 +55,23 @@ class _MatplotlibDraw(_array_draw.AbstractArrayDraw):
         return figure
 
     @staticmethod
-    def draw_shape(img, shape: _stimulus.ShapeType, opacity):
+    def draw_shape(img, shape: _shapes.ShapeType, opacity):
         col = shape.colour
 
-        if isinstance(shape, _stimulus.Picture):
+        if isinstance(shape, _shapes.Picture):
             raise RuntimeError(
                 "Pictures are not supported for matplotlib files.")
 
-        if isinstance(shape, _stimulus.Dot):
-            r = shape.diameter / 2
+        if isinstance(shape, _shapes.Dot):
             plt_shape = _plt.Circle(
-                xy=shape.xy, radius=r, color=col.value, lw=0)
-        elif isinstance(shape, _stimulus.Rectangle):
-            xy = (shape.left, shape.bottom)
+                xy=shape.xy, radius=shape.diameter / 2, color=col.value, lw=0)
+        elif isinstance(shape, _shapes.Rectangle):
             plt_shape = _plt.Rectangle(
-                xy=xy, width=shape.width, height=shape.height, color=col.value, lw=0
-            )
+                xy=shape.left_bottom.tolist(), width=shape.width, height=shape.height,
+                color=col.value, lw=0)
         else:
             raise NotImplementedError(
-                "Shape {} NOT YET IMPLEMENTED".format(type(shape))
-            )
+                "Shape {} NOT YET IMPLEMENTED".format(type(shape)))
 
         plt_shape.set_alpha(opacity)
         img.axes[0].add_artist(plt_shape)

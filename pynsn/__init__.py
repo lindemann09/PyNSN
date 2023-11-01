@@ -18,12 +18,13 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
         + "Please use Python 3.8 or later."
     )
 
-from ._stimulus import *
-from ._lib.colour import Colour, ColourType
+from ._shapes import (Point2D, Dot, Rectangle, Picture,
+                      Ellipse, PolygonShape, ShapeType, CircularShapeType, Colour)
+from ._stimulus import ShapeArray, ArrayProperties, VisProp, NSNStimulus
 
 
 def _print_version_info():
-    from ._lib.misc import is_interactive_mode
+    from ._misc import is_interactive_mode
 
     if is_interactive_mode():
         print(f"PyNSN {__version__}")

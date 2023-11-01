@@ -7,7 +7,10 @@ from typing import Optional, Sequence, Union
 
 import numpy as np
 import shapely
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
+
+from ..types import Coord2DLike
+from .._misc import polar2cartesian
 
 generator = np.random.default_rng()
 
@@ -30,6 +33,31 @@ def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
     generator = np.random.default_rng(seed=seed)
     if seed is not None:
         print(f"PyNSN seed: {seed}")
+
+
+class WalkAround(object):
+    """Jump at random positions in the surrounding of a position with constantly
+    increading jump radius"""
+
+    def __init__(self, xy: Coord2DLike, delta: int = 2, attempts_per_radius: int = 2) -> None:
+        if len(xy) != 2:
+            raise ValueError("xy has be an list of two numerals (x, y)")
+
+        self._xy = np.asarray(xy)
+        self._delta = delta
+        self._attempts = attempts_per_radius
+        self._radius = delta
+        self._attempt_cnt = 0
+
+    def next(self):
+        if self._attempt_cnt >= self._attempts:
+            self._attempt_cnt = 1
+            self._radius += self._delta
+        else:
+            self._attempt_cnt += 1
+
+        rnd_angle = 2*np.pi*generator.random()
+        return polar2cartesian((self._radius, rnd_angle)) + self._xy
 
 
 class BrownianMotion(object):

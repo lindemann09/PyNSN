@@ -6,18 +6,19 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import warnings
 from hashlib import md5
-from typing import Optional, Sequence, Tuple, Union
-from numpy.typing import NDArray
+from typing import Sequence, Tuple, Union
+
 import numpy as np
 import shapely
+from numpy.typing import NDArray
 
 from .. import constants
-from .._lib.exceptions import NoSolutionError
-from .._lib.misc import key_value_format
-from ..random._rng import BrownianMotion, generator
+from .._misc import key_value_format
+from .._shapes import Dot, PolygonShape, Rectangle, ShapeType, Point2D
+from ..random._rng import WalkAround, generator
+from ..types import IntOVector, NoSolutionError
 from .properties import ArrayProperties
-from .shape_array import IntOVector, ShapeArray
-from .shapes import Dot, Ellipse, Picture, Rectangle, ShapeType
+from .shape_array import ShapeArray
 
 
 class NSNStimulus(ShapeArray):
@@ -140,27 +141,22 @@ class NSNStimulus(ShapeArray):
         see `add_somewhere` for adding shape at a random position
         """
         super().add(shapes)
-        self._properties.reset_convex_hull()
 
     def replace(self, index: int, shape: ShapeType):
         super().replace(index, shape)
-        self._properties.reset_convex_hull()
 
     def delete(self, index: IntOVector) -> None:
         super().delete(index)
-        self._properties.reset_convex_hull()
 
-    def pop(self, index: int) -> Union[Dot, Rectangle]:
+    def pop(self, index: int) -> ShapeType:
         """Remove and return item at index"""
         rtn = self.get(index)
         self.delete(index)
-        self._properties.reset_convex_hull()
         return rtn
 
     def clear(self):
         """ """
         super().clear()
-        self._properties.reset_convex_hull()
 
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
@@ -182,13 +178,63 @@ class NSNStimulus(ShapeArray):
         rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
-    def round_values(self, decimals: int = 0, int_type: type = np.int64,
-                     rebuild_polygons=True) -> None:
-        """rounds all values"""
-        super().round_values(decimals=decimals, int_type=int_type,
-                             rebuild_polygons=rebuild_polygons)
-        if rebuild_polygons:
-            self._properties.reset_convex_hull()
+    def fix_overlap(self, object_index: int,
+                    inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
+        """move an selected object that overlaps to an free position in the
+        neighbourhood.
+
+        returns True if position has been changed
+
+        raise exception if not found
+        occupied space: see generator generate
+        """
+
+        target = self.pop(object_index)
+
+        if inside_convex_hull:
+            search_area = self.convex_hull.polygon
+        else:
+            search_area = self.target_area.polygon
+
+        random_walk = WalkAround(target.polygon,
+                                 walk_area=search_area,
+                                 delta=2)
+
+        while True:
+            # polygons list is prepared
+            overlaps = shapely.dwithin(
+                self.polygons, random_walk.polygon, distance=0)
+            if not np.any(overlaps):
+                break  # good position
+            if random_walk.counter > constants.MAX_ITERATIONS:
+                raise NoSolutionError("Can't find a free position: "
+                                      + f"Current n={self.n_objects}")
+            random_walk.next()
+
+        changes = random_walk.counter > 0
+        if changes:
+            target.xy = np.array(target.xy) + random_walk.walk
+
+        self.add(target)
+        return changes
+
+    def overlaps(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.int_]:
+        """Returns True for all elements in the array that overlap (i.e. taking
+        into account the minimum distance) with the shape or Point2D.
+
+        Note
+        -----
+        Using this function is more efficient than computing the distance and
+        comparing the result with minimum distance.
+        """
+        return self.dwithin(shape, distance=self.min_distance)
+
+    def inside_target_area(self, shape: Union[Point2D, ShapeType]) -> bool:
+        """Returns True if shape is inside target area.
+        """
+        return shape.is_inside(shape=self.target_area,
+                               shape_exterior_ring=self._area_ring,
+                               min_dist_boarder=self.min_distance_target_area)
 
     def add_somewhere(self,
                       ref_object: ShapeType,
@@ -209,43 +255,14 @@ class NSNStimulus(ShapeArray):
         if not isinstance(ref_object, (ShapeType)):
             raise NotImplementedError("Not implemented for "
                                       f"{type(ref_object).__name__}")
-        ctr_object = ref_object.copy()
-        ctr_object.xy = (0, 0)  # ensure centred position
         while n > 0:
-            if inside_convex_hull:
-                raise NotImplementedError()
-
-            if ignore_overlaps:
-                other_polygons = None
-            else:
-                other_polygons = self.polygons
-
-            new_object = ctr_object.copy()
-            if isinstance(new_object, (Dot, Ellipse)) :
-                try:
-                    new_object.xy = move_free_position_cricular_shape(
-                                        shape=new_object,
-                                        target_area=self.target_area.polygon,
-                                        other_polygons=other_polygons,
-                                        min_distance=self.min_distance,
-                                        min_dist_area_boarder=self.min_distance_target_area,
-                                        target_area_ring=self._area_ring)
-                except NoSolutionError as err:
-                    raise NoSolutionError("Can't find a free position: "
-                                        + f"Current n={self.n_objects}") from err
-            else:
-                # all other shapes
-                try:
-                    new_object.xy = move_free_position_polygon(
-                                            polygon=new_object.polygon,
-                                            target_area=self.target_area.polygon,
-                                            other_polygons=other_polygons,
-                                            min_distance=self.min_distance,
-                                            min_dist_area_boarder=self.min_distance_target_area,
-                                            target_area_ring=self._area_ring)
-                except NoSolutionError as err:
-                    raise NoSolutionError("Can't find a free position: "
-                                        + f"Current n={self.n_objects}") from err
+            try:
+                new_object = self._move_to_free_position(shape=ref_object,
+                                                         ignore_overlaps=ignore_overlaps,
+                                                         inside_convex_hull=inside_convex_hull)
+            except NoSolutionError as err:
+                raise NoSolutionError("Can't find a free position: "
+                                      + f"Current n={self.n_objects}") from err
 
             self.add(new_object)
             n = n - 1
@@ -253,159 +270,59 @@ class NSNStimulus(ShapeArray):
     def random_free_position(self,
                              ref_object: ShapeType,
                              ignore_overlaps: bool = False,
-                             inside_convex_hull: bool = False) -> NDArray:
+                             inside_convex_hull: bool = False) -> Tuple[float, float]:
         """returns random free position for this object or polygon
 
-
         raise exception if not found
         occupied space: see generator generate
         """
-        if inside_convex_hull:
-            raise NotImplementedError()
+        if not isinstance(ref_object, (ShapeType)):
+            raise NotImplementedError("Not implemented for "
+                                      f"{type(ref_object).__name__}")
+        new_object = self._move_to_free_position(shape=ref_object,
+                                                 ignore_overlaps=ignore_overlaps,
+                                                 inside_convex_hull=inside_convex_hull)
+        return new_object.xy
 
-        if ignore_overlaps:
-            other_polygons = None
-        else:
-            other_polygons = self.polygons
-
-        if isinstance(ref_object, (Dot, Ellipse)) and False:
-            return move_free_position_cricular_shape(shape=ref_object,
-                                        target_area=self.target_area.polygon,
-                                        other_polygons=other_polygons,
-                                        min_distance=self.min_distance,
-                                        min_dist_area_boarder=self.min_distance_target_area,
-                                        target_area_ring=self._area_ring)
-        else:
-            # all other ShapeTypes
-            if ref_object.xy != (0, 0):
-                # enforce centred polygon
-                ref_object = ref_object.copy()
-                ref_object.xy = (0,0)
-            return move_free_position_polygon(polygon=ref_object.polygon,
-                                        target_area=self.target_area.polygon,
-                                        other_polygons=other_polygons,
-                                        min_distance=self.min_distance,
-                                        min_dist_area_boarder=self.min_distance_target_area,
-                                        target_area_ring=self._area_ring)
-
-    def fix_overlap(self, object_index: int,
-                    inside_convex_hull: bool = False) -> bool:  # FIXME manipulation objects
-        """move an selected object that overlaps to an free position in the
-        neighbourhood.
-
-        returns True if position has been changed
-
-        raise exception if not found
-        occupied space: see generator generate
+    def _move_to_free_position(self,
+                               shape: ShapeType,
+                               ignore_overlaps: bool = False,
+                               inside_convex_hull: bool = False) -> ShapeType:
+        """returns shape moved to a new free position in the target area
         """
 
-        target = self.pop(object_index)
-
         if inside_convex_hull:
-            search_area = self.properties.convex_hull.polygon
+            area = PolygonShape(self.convex_hull.polygon)
+            area_ring = area.polygon.exterior
+            shapely.prepare(area_ring)
+            raise NotImplementedError("Needs testing")  # FIXME
         else:
-            search_area = self.target_area.polygon
+            area = self.target_area
+            area_ring = self._area_ring
 
-        random_walk = BrownianMotion(
-            target.make_polygon(buffer=self.min_distance),
-                                walk_area=search_area,
-                                delta=2)
+        b = area.polygon.bounds  # l, b, r, t
+        search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
 
+        candidate = shape.copy()
+        cnt = 0
         while True:
-            # polygons list is prepared
-            overlaps = shapely.dwithin(
-                self.polygons, random_walk.polygon, distance=0)
-            if not np.any(overlaps):
-                break  # good position
-            if random_walk.counter > constants.MAX_ITERATIONS:
-                raise NoSolutionError("Can't find a free position: "
-                                      + f"Current n={self.n_objects}")
-            random_walk.next()
+            if cnt > constants.MAX_ITERATIONS:
+                raise NoSolutionError(
+                    "Can't find a free position for this polygon")
+            cnt += 1
+            # propose a random position
+            candidate.xy = generator.random(size=2) * search_bounds_size \
+                - (search_bounds_size/2)
 
-        changes = random_walk.counter > 0
-        if changes:
-            target.xy = np.array(target.xy) + random_walk.walk
+            if not candidate.is_inside(shape=area,
+                                       shape_exterior_ring=area_ring,
+                                       min_dist_boarder=self.min_distance_target_area):
+                continue
 
-        self.add(target)
-        return changes
-
-    def get_overlaps(self, polygon: shapely.Polygon):
-
-        return shapely.dwithin(self.polygons, polygon, distance=self.min_distance)
-
-
-def move_free_position_cricular_shape(shape:Union[Dot, Ellipse],
-                          target_area: shapely.Polygon,
-                          other_polygons: Optional[NDArray[shapely.Polygon]] = None,
-                          min_distance: int = 0,
-                          min_dist_area_boarder: Optional[int] = None,
-                          target_area_ring: Optional[shapely.Polygon] = None
-                          ) -> NDArray:
-    """returns the required movement (x, y) of the shape to a randomly chosen
-    position in the target area.
-
-    target_ring: the exterior of target_area
-        it can be explicitly specified to avoid generation of exterior polygon and
-        thus improve performance with reoccurring function calls
-    """
-
-
-    raise NotImplementedError()
-    return np.empty(0)
-
-def move_free_position_polygon(polygon: shapely.Polygon,
-                          target_area: shapely.Polygon,
-                          other_polygons: Optional[NDArray[shapely.Polygon]] = None,
-                          min_distance: int = 0,
-                          min_dist_area_boarder: Optional[int] = None,
-                          target_area_ring: Optional[shapely.Polygon] = None
-                          ) -> NDArray:
-    """returns the required movement (x, y) of the polygon to a randomly chosen
-    position in the target area.
-
-    target_ring: the exterior of target_area
-        it can be explicitly specified to avoid generation of exterior polygon and
-        thus improve performance with reoccurring function calls
-
-    Note:
-
-     search performance is better if `target_area`, `target_area_ring` and
-     `other_polygons` are prepared (see `shapely.prepare()`)
-    """
-
-    if not shapely.contains_properly(target_area, polygon):
-        raise RuntimeError("Polygon has to been inside target_area")
-
-    if min_dist_area_boarder is None:
-        min_dist_area_boarder = min_distance
-    if target_area_ring is None:
-        target_area_ring = target_area.exterior
-
-    b = target_area.bounds  # l, b, r, t
-    search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
-    movement = np.zeros(2)
-    cnt = 0
-    while True:
-        if cnt > constants.MAX_ITERATIONS:
-            raise NoSolutionError(
-                "Can't find a free position for this polygon")
-        cnt += 1
-
-        # propose a random position
-        movement = generator.random(size=2) * search_bounds_size \
-            - (search_bounds_size/2)
-        candidate_polygon = shapely.transform(polygon,
-                                              lambda x: x + movement)
-        # target is inside if covered and not too close to target_area_ring
-        if target_area.contains_properly(candidate_polygon) and not \
-            shapely.dwithin(target_area_ring, candidate_polygon,
-                            distance=min_dist_area_boarder):
-
-            if other_polygons is None:
-                return movement
+            if ignore_overlaps:
+                return candidate
             else:
                 # find overlaps
-                overlaps = shapely.dwithin(
-                    candidate_polygon, other_polygons, distance=min_distance)
-                if not np.any(overlaps):
-                    return movement
+                overlaps = self.overlaps(candidate)
+                if len(overlaps) == 0:
+                    return candidate

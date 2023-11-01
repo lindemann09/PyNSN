@@ -4,14 +4,11 @@ The named colour are the 140 HTML colour names:
 """
 from functools import total_ordering
 from typing import Sequence, Union, Tuple
-
+from ..types import RGBType, ColourType
 
 _NUMERALS = "0123456789abcdefABCDEF"
-_HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
-
-
-RGBType = Tuple[int, int, int]
-ColourType = Union[str, RGBType, Sequence[float], None]
+_HEXDEC = {v: int(v, 16)
+           for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 
 
 @total_ordering
@@ -142,14 +139,17 @@ class Colour(object):
 
         if isinstance(alpha, float):
             if alpha < 0.0 or alpha > 1.0:
-                raise TypeError("If alpha is a float, it has to be between 0 and 1.")
+                raise TypeError(
+                    "If alpha is a float, it has to be between 0 and 1.")
             alpha = round(alpha * 255)
         elif isinstance(alpha, int):
             if alpha < 0 or alpha > 255:
-                raise TypeError("If alpha is an int, it has to be between 0 and 255.")
+                raise TypeError(
+                    "If alpha is an int, it has to be between 0 and 255.")
         else:
             raise TypeError(
-                "If alpha has to be a float or int and not {}.".format(type(alpha))
+                "If alpha has to be a float or int and not {}.".format(
+                    type(alpha))
             )
 
         return self.rgb + (alpha,)
@@ -161,7 +161,8 @@ class Colour(object):
         try:
             return _HEXDEC[ht[0:2]], _HEXDEC[ht[2:4]], _HEXDEC[ht[4:6]]
         except KeyError as err:
-            raise ValueError(f"Can't convert {hextriplet} to rgb value") from err
+            raise ValueError(
+                f"Can't convert {hextriplet} to rgb value") from err
 
     @staticmethod
     def convert_rgb_hextriplet(rgb: Sequence, uppercase: bool = True):

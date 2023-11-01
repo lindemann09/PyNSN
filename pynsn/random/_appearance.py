@@ -5,20 +5,20 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy
 from typing import Optional, Sequence, Union, Any
 
-from ._distributions import Levels, PyNSNDistribution, _Constant
+from ._distributions import Levels, DistributionType, _Constant
 
-ParameterDistributionType = Union[PyNSNDistribution,
+ParameterDistributionType = Union[DistributionType,
                                   float, int, Sequence[Any], None]
 
 
 class Appearance(object):
 
     def __init__(self,
-                 attributes: Optional[PyNSNDistribution] = None,
-                 dot_diameter: Optional[PyNSNDistribution] = None,
-                 rect_width: Optional[PyNSNDistribution] = None,
-                 rect_height: Optional[PyNSNDistribution] = None,
-                 rect_proportion: Optional[PyNSNDistribution] = None):
+                 attributes: Optional[DistributionType] = None,
+                 dot_diameter: Optional[DistributionType] = None,
+                 rect_width: Optional[DistributionType] = None,
+                 rect_height: Optional[DistributionType] = None,
+                 rect_proportion: Optional[DistributionType] = None):
         """
 
         Parameters
@@ -34,7 +34,7 @@ class Appearance(object):
                                   proportion=rect_proportion)
 
     @property
-    def attributes(self) -> Optional[PyNSNDistribution]:
+    def attributes(self) -> Optional[DistributionType]:
         """Distribution of attributes for dots"""
         return self._attributes
 
@@ -44,7 +44,7 @@ class Appearance(object):
         self._attributes = _make_distr(val)
 
     @property
-    def dot_diameter(self) -> Optional[PyNSNDistribution]:
+    def dot_diameter(self) -> Optional[DistributionType]:
         """Distribution of diameter parameter"""
         return self._diameter
 
@@ -54,17 +54,17 @@ class Appearance(object):
         self._diameter = _make_distr(val)
 
     @property
-    def rect_width(self) -> Optional[PyNSNDistribution]:
+    def rect_width(self) -> Optional[DistributionType]:
         """Distribution of width parameter"""
         return self._width
 
     @property
-    def rect_height(self) -> Optional[PyNSNDistribution]:
+    def rect_height(self) -> Optional[DistributionType]:
         """Distribution of height parameter"""
         return self._height
 
     @property
-    def rect_proportion(self) -> Optional[PyNSNDistribution]:
+    def rect_proportion(self) -> Optional[DistributionType]:
         """Distribution of proportion parameter"""
         return self._rect_proportion
 
@@ -98,14 +98,14 @@ class Appearance(object):
         self._rect_proportion = _make_distr(proportion)
 
 
-def _make_distr(value: ParameterDistributionType) -> Union[PyNSNDistribution, None]:
+def _make_distr(value: ParameterDistributionType) -> Union[DistributionType, None]:
     """helper
     returns a distribution or None, if None
     """
 
     if value is None:
         return None
-    elif isinstance(value, PyNSNDistribution):
+    elif isinstance(value, DistributionType):
         return value
     elif isinstance(value, (list, tuple)):
         return Levels(levels=copy(value))
