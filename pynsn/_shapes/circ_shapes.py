@@ -15,13 +15,12 @@ from typing import Any, Optional, Tuple, Union
 
 import numpy as np
 import shapely
-from numpy.typing import NDArray
 from shapely import Point, Polygon
 from shapely.affinity import scale
 
 from ..types import Coord2D, Coord2DLike
-from .abc_shapes import CircularShapeType, PointType, ShapeType
-from .shapes import is_in_shape
+from .abc_shapes import CircularShapeType, PointType, ShapeType, is_in_shape
+
 
 class Point2D(PointType):
 
@@ -33,12 +32,12 @@ class Point2D(PointType):
         overlapping distances are 0.
         """
         if isinstance(shape, (PointType, CircularShapeType)):
-            return distance_circ_circ(self, shape)
+            return _distance_circ_circ(self, shape)
 
         else:
             return shapely.distance(self.xy_point, shape.polygon)
 
-    def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
+    def dwithin(self, shape: Union[PointType, ShapeType], distance: float) -> bool:
         """True if point is in given distance to a shape (dist)
 
         Using this function is more efficient for non-circular shapes than
@@ -46,9 +45,9 @@ class Point2D(PointType):
         """
 
         if isinstance(shape, (PointType, CircularShapeType)):
-            return self.distance(shape) < dist
+            return self.distance(shape) < distance
         else:
-            return shapely.dwithin(self.xy_point, shape.polygon, distance=dist)
+            return shapely.dwithin(self.xy_point, shape.polygon, distance=distance)
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
@@ -56,7 +55,7 @@ class Point2D(PointType):
         """True is shapes fully inside the shapes (dist)
         """
         if isinstance(shape, (Dot, Ellipse)):
-            return is_circ_in_circ(self, b=shape,
+            return _is_circ_in_circ(self, b=shape,
                                                     min_dist_boarder=min_dist_boarder)
         else:
             return is_in_shape(self,
@@ -127,23 +126,23 @@ class Ellipse(CircularShapeType):
 
     def distance(self, shape: Union[PointType, ShapeType]) -> float:
         if isinstance(shape, (PointType, CircularShapeType)):
-            return distance_circ_circ(self, shape)
+            return _distance_circ_circ(self, shape)
 
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: ShapeType, dist: float) -> bool:
+    def dwithin(self, shape: ShapeType, distance: float) -> bool:
         if isinstance(shape, (PointType, CircularShapeType)):
-            return self.distance(shape) < dist
+            return self.distance(shape) < distance
         else:
-            return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
+            return shapely.dwithin(self.polygon, shape.polygon, distance=distance)
 
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         if isinstance(shape, CircularShapeType):
-            return is_circ_in_circ(self, b=shape,
+            return _is_circ_in_circ(self, b=shape,
                                                     min_dist_boarder=min_dist_boarder)
         else:
             return is_in_shape(self, b=shape,
@@ -208,54 +207,31 @@ class Dot(CircularShapeType):
 
     def distance(self, shape: Union[PointType, ShapeType]) -> float:
         if isinstance(shape, (PointType, CircularShapeType)):
-            return distance_circ_circ(self, shape)
+            return _distance_circ_circ(self, shape)
 
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: ShapeType, dist: float) -> bool:
+    def dwithin(self, shape: ShapeType, distance: float) -> bool:
         if isinstance(shape, (PointType, CircularShapeType)):
-            return self.distance(shape) < dist
+            return self.distance(shape) < distance
         else:
-            return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
+            return shapely.dwithin(self.polygon, shape.polygon, distance=distance)
 
     def is_inside(self, shape: ShapeType,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         if isinstance(shape, CircularShapeType):
-            return is_circ_in_circ(self, b=shape,
-                                                    min_dist_boarder=min_dist_boarder)
+            return _is_circ_in_circ(self, b=shape,
+                                   min_dist_boarder=min_dist_boarder)
         else:
             return is_in_shape(self, b=shape,
-                                                      b_exterior_ring=shape_exterior_ring,
-                                                      min_dist_boarder=min_dist_boarder)
+                               b_exterior_ring=shape_exterior_ring,
+                               min_dist_boarder=min_dist_boarder)
 
 
 
-def ellipse_perimeter(sizes: NDArray) -> NDArray[np.float_]:
-    """Ramanujan's second approximation of the ellipse perimeter"""
-    s = np.atleast_2d(sizes)
-    a = s[:, 0]
-    b = s[:, 1]
-    return np.pi * ((a+b) + (3*(a-b)**2) / (10*(a+b) + np.sqrt(a**2 + 14*a*b + b**2)))
-
-
-def ellipse_diameter(size: NDArray, theta: NDArray) -> NDArray[np.float_]:
-    """Ellipse diameter at a certain angle
-
-    Parameter
-    ---------
-        Size: NDarray
-            2d array with (semi-majors, semi-minors)
-        theta: float
-            angle in radians
-    """
-    d = np.atleast_2d(size)
-    return (d[:, 0] * d[:, 1]) / np.sqrt((d[:, 0] * np.sin(theta))**2
-                                         + (d[:, 1] * np.cos(theta))**2)
-
-
-def distance_circ_circ(a: Union[PointType, CircularShapeType],
+def _distance_circ_circ(a: Union[PointType, CircularShapeType],
                        b: Union[PointType, CircularShapeType]) -> float:
     """Returns the distance between a circular shape or PointType and other
     circular shape or PointType
@@ -287,7 +263,7 @@ def distance_circ_circ(a: Union[PointType, CircularShapeType],
     return np.hypot(d_xy[0], d_xy[1]) - (dia_a + dia_b) / 2
 
 
-def is_circ_in_circ(a: Union[PointType, CircularShapeType],
+def _is_circ_in_circ(a: Union[PointType, CircularShapeType],
                     b: Union[PointType, CircularShapeType],
                     min_dist_boarder: float = 0) -> bool:
     """Returns True if circular shape or PointType is inside another circular

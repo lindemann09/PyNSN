@@ -198,7 +198,7 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def dwithin(self, shape: ShapeType, dist: float) -> bool:
+    def dwithin(self, shape: ShapeType, distance: float) -> bool:
         pass
 
     @abstractmethod
@@ -206,3 +206,33 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         pass
+
+def is_in_shape(a: Union[PointType, ShapeType],
+                b: ShapeType,
+                b_exterior_ring: Optional[shapely.LinearRing] = None,
+                min_dist_boarder: float = 0) -> bool:
+    """Returns True if shape or PointType a is fully inside shape b while taking
+    into account a minimum to the shape boarder.
+
+    If b_exterior_ring  is not defined, it has to created to determine distance
+    to boarder for non-circular shapes. That is, if b_exterior_ring
+    is already known in this case, specifying the parameter will improve performance.
+    """
+
+    if isinstance(a, PointType):
+        a_polygon = a.xy_point
+    else:
+        a_polygon = a.polygon
+
+    if not shapely.contains_properly(b.polygon, a_polygon):
+        # target is not inside if fully covered
+        return False
+    else:
+        if min_dist_boarder > 0:
+            # is target to too close to target_area_ring -> False
+            if not isinstance(b_exterior_ring, shapely.LinearRing):
+                b_exterior_ring = shapely.get_exterior_ring(b.polygon)
+            return not shapely.dwithin(a_polygon, b_exterior_ring,
+                                       distance=min_dist_boarder)
+        else:
+            return True

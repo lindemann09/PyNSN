@@ -80,17 +80,6 @@ class NSNStimulus(ShapeArray):
         """
         return self._properties
 
-    def copy(self) -> NSNStimulus:
-        """A copy of the nsn stimulus.
-
-        Returns:
-            a copy of the array
-        """
-        rtn = NSNStimulus(target_area=self.target_area.copy(),
-                          min_distance=self.min_distance)
-        rtn.add(self.get_list())  # copy all objects
-        return rtn
-
     def properties_txt(self, with_hash: bool = False, extended_format: bool = False) -> str:
         prop = self.properties
         if extended_format:
@@ -133,30 +122,7 @@ class NSNStimulus(ShapeArray):
     #         if self.target_area.polygon.contains_properly(shapely.Point(pos)):
     #             return pos
 
-    def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
-        """add shape a the defined position
 
-        Note
-        ----
-        see `add_somewhere` for adding shape at a random position
-        """
-        super().add(shapes)
-
-    def replace(self, index: int, shape: ShapeType):
-        super().replace(index, shape)
-
-    def delete(self, index: IntOVector) -> None:
-        super().delete(index)
-
-    def pop(self, index: int) -> ShapeType:
-        """Remove and return item at index"""
-        rtn = self.get(index)
-        self.delete(index)
-        return rtn
-
-    def clear(self):
-        """ """
-        super().clear()
 
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
@@ -228,6 +194,9 @@ class NSNStimulus(ShapeArray):
         comparing the result with minimum distance.
         """
         return self.dwithin(shape, distance=self.min_distance)
+
+    def matrix_overlaps(self) -> NDArray:
+        return self.matrix_dwithin(distance=self.min_distance)
 
     def inside_target_area(self, shape: Union[Point2D, ShapeType]) -> bool:
         """Returns True if shape is inside target area.
@@ -323,6 +292,6 @@ class NSNStimulus(ShapeArray):
                 return candidate
             else:
                 # find overlaps
-                overlaps = self.overlaps(candidate)
-                if len(overlaps) == 0:
+                overlaps = self.dwithin(candidate, distance=self.min_distance)
+                if np.all(overlaps==0):
                     return candidate

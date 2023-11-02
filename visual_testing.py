@@ -7,6 +7,7 @@ from tests.shapes_test_picture import shapes_test_picture, Line
 import numpy as np
 
 
+
 da = pynsn.Dot((-20, 120), diameter=10, attribute="#222800")
 db = pynsn.Dot((22, -20), diameter=78, attribute="#000088")
 dc = pynsn.Dot((160, -17), diameter=120, attribute="#00F000")  # big dot
@@ -23,6 +24,7 @@ nsn = pynsn.NSNStimulus(
     min_distance=5
 )
 nsn.add([da, dc, db,  ra, rb])
+
 
 if False:
     nsn.add([da, dc, db,  ra, rb])
@@ -43,7 +45,7 @@ if False:
 # random dot
 if True:
     start = timer()
-    nsn.add_somewhere(da, n=200, ignore_overlaps=False)
+    nsn.add_somewhere(da, n=300, ignore_overlaps=False)
     end = timer()
     print(f"adding :{end - start}")
     print(nsn.properties_txt(extended_format=True))
@@ -52,3 +54,10 @@ if True:
 col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)
 a.save("shapes_test2.png")
+
+
+rtn = nsn.matrix_dwithin(distance=0)
+
+print(np.nonzero(rtn))
+print(rtn)
+

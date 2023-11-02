@@ -14,7 +14,7 @@ import shapely
 from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Picture, PolygonShape, Rectangle
-from .._shapes.circ_shapes import ellipse_perimeter
+from .._shapes import ellipse_geometry as ellipse_geo
 from .shape_array import ShapeArray
 
 
@@ -119,7 +119,7 @@ class ArrayProperties(object):
         # ellipse perimeter
         idx = self._shapes.ids[Ellipse.ID]
         if len(idx) > 0:
-            rtn[idx] = ellipse_perimeter(self._shapes.sizes[idx, :])
+            rtn[idx] = ellipse_geo.perimeter(self._shapes.sizes[idx, :])
 
         return rtn
 
