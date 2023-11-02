@@ -58,6 +58,3 @@ a.save("shapes_test2.png")
 
 rtn = nsn.matrix_dwithin(distance=0)
 
-print(np.nonzero(rtn))
-print(rtn)
-

@@ -427,7 +427,7 @@ def _relation_matrix(shape_array: ShapeArray, what:int, para:float=0) -> NDArray
     1 = dwithin
     """
     arr = deepcopy(shape_array)
-    l = shape_array.n_objects
+    l = arr.n_objects
     rtn = np.full((l, l), np.nan)
     for x in reversed(range(l)):
         shape = arr.pop(x)

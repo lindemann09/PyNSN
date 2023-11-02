@@ -2,6 +2,7 @@
 
 """
 from __future__ import annotations
+from copy import deepcopy
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import warnings
@@ -184,16 +185,20 @@ class NSNStimulus(ShapeArray):
         self.add(target)
         return changes
 
-    def overlaps(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.int_]:
-        """Returns True for all elements in the array that overlap (i.e. taking
-        into account the minimum distance) with the shape or Point2D.
-
-        Note
-        -----
-        Using this function is more efficient than computing the distance and
-        comparing the result with minimum distance.
+    @property
+    def has_overlaps(self) -> bool:
+        """Returns True for two or more elements overlap (i.e. taking
+        into account the minimum distance).
         """
-        return self.dwithin(shape, distance=self.min_distance)
+        arr = deepcopy(self)
+        while arr.n_objects>0:
+            shape = arr.pop()
+            y = arr.dwithin(shape=shape, distance=self.min_distance)
+            if np.any(y!=0):
+                return True
+
+        return False
+
 
     def matrix_overlaps(self) -> NDArray:
         return self.matrix_dwithin(distance=self.min_distance)
