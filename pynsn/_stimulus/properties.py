@@ -14,7 +14,7 @@ import shapely
 from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Picture, PolygonShape, Rectangle
-from .._shapes.geometry import ellipse_perimeter
+from .._shapes.circ_shapes import ellipse_perimeter
 from .shape_array import ShapeArray
 
 

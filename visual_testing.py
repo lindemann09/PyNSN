@@ -19,7 +19,8 @@ r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 nsn = pynsn.NSNStimulus(
     # target_area=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF")
     target_area=pynsn.Rectangle((0, 0), size=(500, 500), attribute="#00FFFF"),
-    min_distance_target_area=30
+    min_distance_target_area=30,
+    min_distance=5
 )
 nsn.add([da, dc, db,  ra, rb])
 
@@ -42,7 +43,7 @@ if False:
 # random dot
 if True:
     start = timer()
-    nsn.add_somewhere(da, n=400, ignore_overlaps=False)
+    nsn.add_somewhere(da, n=200, ignore_overlaps=False)
     end = timer()
     print(f"adding :{end - start}")
     print(nsn.properties_txt(extended_format=True))

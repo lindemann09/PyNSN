@@ -15,6 +15,7 @@ from numpy.typing import NDArray
 from .. import _stimulus
 from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
                        PolygonShape, Rectangle, ShapeType)
+from .._shapes.circ_shapes import ellipse_diameter
 from ..types import IntOVector
 from .convex_hull import ConvexHull
 
@@ -279,13 +280,13 @@ class ShapeArray(object):
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                rtn[idx] = _stimulus.geometry.distance_circ_dot_array(obj=shape,
+                rtn[idx] = distance_circ_dot_array(obj=shape,
                                                                       dots_xy=self._xy[idx, :],
                                                                       dots_diameter=self._sizes[idx, 0])
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                rtn[idx] = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
+                rtn[idx] = distance_circ_ellipse_array(obj=shape,
                                                                           ellipses_xy=self._xy[idx, :],
                                                                           ellipse_sizes=self._sizes[idx, :])
             # check if non-circular shapes are in shape_array
@@ -317,17 +318,17 @@ class ShapeArray(object):
             idx = self._ids[Dot.ID]
             if len(idx) > 0:
                 # circular -> dots in shape array
-                dists = _stimulus.geometry.distance_circ_dot_array(obj=shape,
-                                                                   dots_xy=self._xy[idx, :],
-                                                                   dots_diameter=self._sizes[idx, 0])
+                dists = distance_circ_dot_array(obj=shape,
+                                                dots_xy=self._xy[idx, :],
+                                                dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                dists = _stimulus.geometry.distance_circ_ellipse_array(obj=shape,
-                                                                       ellipses_xy=self._xy[idx, :],
-                                                                       ellipse_sizes=self._sizes[idx, :])
+                dists = distance_circ_ellipse_array(obj=shape,
+                                                    ellipses_xy=self._xy[idx, :],
+                                                    ellipse_sizes=self._sizes[idx, :])
                 rtn[idx] = dists < distance
 
             # check if non-circular shapes are in shape_array
@@ -352,3 +353,48 @@ def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
     """read shape array from dict"""
     ##
     raise NotImplementedError()
+
+
+def distance_circ_dot_array(obj: Union[Point2D, CircularShapeType],
+                            dots_xy: NDArray[np.float_],
+                            dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
+    """Distances circular shape or Point to multiple dots
+    """
+    d_xy = dots_xy - obj.xy
+    if isinstance(obj, Point2D):
+        circ_dia = 0
+    elif isinstance(obj, Dot):
+        circ_dia = obj.diameter
+    elif isinstance(obj, Ellipse):
+        circ_dia = ellipse_diameter(
+            size=np.atleast_2d(obj.size),
+            theta=np.arctan2(d_xy[:, 1], d_xy[:, 0]))  # ellipse radius to each dot in the array
+    else:
+        raise RuntimeError(f"Unknown circular shape type: {type(obj)}")
+
+    # center dist - radius_a - radius_b
+    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (dots_diameter + circ_dia) / 2
+
+
+def distance_circ_ellipse_array(obj: Union[Point2D, CircularShapeType],
+                                ellipses_xy: NDArray[np.float_],
+                                ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
+    """Distance circular shape or Point2D to multiple ellipses
+    """
+    d_xy = ellipses_xy - obj.xy
+    theta = np.arctan2(d_xy[:, 0], d_xy[:, 1])
+    # radii of ellipses in array to circ_shape
+    ellipse_dia = ellipse_diameter(size=ellipse_sizes, theta=theta)
+    if isinstance(obj, Point2D):
+        shape_dia = 0
+    elif isinstance(obj, Dot):
+        shape_dia = obj.diameter
+    elif isinstance(obj, Ellipse):
+        shape_dia = ellipse_diameter(size=np.atleast_2d(obj.size),
+                                     theta=theta)  # ellipse radius to each ellipse in the array
+    else:
+        raise RuntimeError(f"Unknown circular shape type: {type(obj)}")
+
+    # center dist - radius_a - radius_b
+    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (ellipse_dia + shape_dia)/2
+
