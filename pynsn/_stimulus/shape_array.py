@@ -142,9 +142,19 @@ class ShapeArray(object):
         return rtn
 
     def sort_by_excentricity(self):
-        ctr = self.convex_hull.centroid
+        """Sort order fo the objects in the array by excentricity, that is, by the
+        distance the center of the convex hull (from close to far)
+        """
+        d = self.distances(Point2D(self.convex_hull.centroid))
+        i = np.argsort(d)
+        self._polygons = self._polygons[i]
+        self._xy = self._xy[i,:]
+        self._attributes = self._attributes[i]
+        self._types = self._types[i]
+        self._sizes = self._sizes[i]
+        self._convex_hull = None
+        self._update_ids()
 
-        raise NotImplementedError()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -319,7 +329,7 @@ class ShapeArray(object):
             # non-circular shape as target
             return shapely.distance(shape.polygon, self._polygons)
 
-    def dwithin(self, shape: Union[Point2D, ShapeType],  distance: float = 0) -> NDArray[np.int_]:
+    def dwithin(self, shape: Union[Point2D, ShapeType],  distance: float = 0) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
         specified distance.
 
@@ -328,7 +338,7 @@ class ShapeArray(object):
         Using this function is more efficient than computing the distance and comparing the result.
         """
         if isinstance(shape, (Point2D, CircularShapeType)):
-            rtn = np.full(self.n_objects, np.nan)
+            rtn = np.full(self.n_objects, False)
 
             idx = self._ids[Dot.ID]
             if len(idx) > 0:

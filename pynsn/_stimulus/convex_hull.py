@@ -34,4 +34,4 @@ class ConvexHull(object):
         Returns:
             numpy array (x, y) of center position
         """
-        return get_coordinates(self._ch_polygon.centroid)
+        return get_coordinates(self._ch_polygon.centroid)[0]

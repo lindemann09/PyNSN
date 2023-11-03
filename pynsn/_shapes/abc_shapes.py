@@ -34,6 +34,7 @@ class PointType(metaclass=ABCMeta):
             raise ValueError(INCORRECT_COORDINATE)
         self._xy = np.asarray(val)
 
+    @property
     def xy_point(self) -> Point:
         return Point(self._xy)
 

@@ -16,14 +16,12 @@ r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 
 nsn = pynsn.NSNStimulus(
     # target_area=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF")
-    target_area=pynsn.Ellipse((0, 0), size=(400, 500), attribute="#00FFFF"),
-    min_distance_target_area=30,
+    target_area=pynsn.Rectangle((0, 0), size=(400, 500), attribute="#00FFFF"),
+    min_distance_target_area=10,
     min_distance=2
 )
-nsn.add([db,  dc, ra])
 
-
-if True:
+if False:
     dist = 2
     a = db
     b = dc
@@ -42,12 +40,12 @@ if True:
 
 # random dot
 if True:
-    start = timer()
     nsn.add_somewhere(da, n=200, ignore_overlaps=False)
-    end = timer()
-    print(f"adding :{end - start}")
-    print(nsn.properties_txt(extended_format=True))
 
+nsn.add([db,  dc, ra])
+print(nsn.contains_overlaps())
+print(nsn.fix_overlap())
+print(nsn.contains_overlaps())
 
 col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)

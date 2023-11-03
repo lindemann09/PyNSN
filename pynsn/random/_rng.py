@@ -39,22 +39,24 @@ class WalkAround(object):
     """Jump at random positions in the surrounding of a position with constantly
     increading jump radius"""
 
-    def __init__(self, xy: Coord2DLike, delta: int = 2, attempts_per_radius: int = 2) -> None:
+    def __init__(self,
+                 xy: Coord2DLike,
+                 delta: int = 2,
+                 attempts_per_radius: int = 2) -> None:
         if len(xy) != 2:
             raise ValueError("xy has be an list of two numerals (x, y)")
 
         self._xy = np.asarray(xy)
         self._delta = delta
         self._attempts = attempts_per_radius
-        self._radius = delta
-        self._attempt_cnt = 0
+        self._radius = 0
+        self.counter = 0
 
-    def next(self):
-        if self._attempt_cnt >= self._attempts:
-            self._attempt_cnt = 1
+    def next(self) -> NDArray[np.float_]:
+
+        if self.counter % self._attempts == 0:
             self._radius += self._delta
-        else:
-            self._attempt_cnt += 1
+        self.counter += 1
 
         rnd_angle = 2*np.pi*generator.random()
         return polar2cartesian((self._radius, rnd_angle)) + self._xy
