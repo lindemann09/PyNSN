@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .._stimulus import NSNStimulus
-from .._shapes import Dot, Picture, Rectangle
+from .._shapes import Dot, Picture, Rectangle, Ellipse
 from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
@@ -78,7 +78,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
         convex_hull_colour
         points
         image :  handler of plotter in the respective framework
-                    (e.g. pillow image, axes (matplotlib) or svrdraw object)
+                    (e.g. pillow image, axes (matplotlib) or svgdraw object)
         """
 
     def create_image(
@@ -124,22 +124,29 @@ class AbstractArrayDraw(metaclass=ABCMeta):
 
         # prepare the image, make target area if required
         if isinstance(nsn_stimulus.target_area, Dot):
-            tmp = int(np.ceil(nsn_stimulus.target_area.diameter) * aaf)
             target_area_shape = Dot(
-                xy=(0, 0), diameter=tmp, attribute=colours.target_area.value
+                xy=(0, 0),
+                diameter=np.ceil(nsn_stimulus.target_area.diameter) * aaf,
+                attribute=colours.target_area.value
             )
-            image_size = np.ones(2) * tmp
+        elif isinstance(nsn_stimulus.target_area, Ellipse):
+            target_area_shape = Ellipse(
+                xy=(0, 0),
+                size=np.ceil(nsn_stimulus.target_area.size) * aaf,
+                attribute=colours.target_area.value
+            )
 
         elif isinstance(nsn_stimulus.target_area, Rectangle):
-            tmp = np.ceil(nsn_stimulus.target_area.size) * aaf
             target_area_shape = Rectangle(
-                xy=(0, 0), size=tmp, attribute=colours.target_area.value
+                xy=(0, 0),
+                size=np.ceil(nsn_stimulus.target_area.size) * aaf,
+                attribute=colours.target_area.value
             )
-            image_size = target_area_shape.size
         else:
             raise NotImplementedError()  # should never happen
 
-        image_size = (round(image_size[0]), round(image_size[1]))
+        image_size = (round(target_area_shape.width),
+                      round(target_area_shape.height))
         img = self.get_image(
             image_size=image_size, background_colour=colours.background.value, **kwargs
         )

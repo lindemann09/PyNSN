@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 
 from .. import constants
 from .._misc import key_value_format
-from .._shapes import Dot, PolygonShape, Rectangle, ShapeType, Point2D
+from .._shapes import Dot, PolygonShape, Rectangle,Ellipse, ShapeType, Point2D
 from ..random._rng import WalkAround, generator
 from ..types import NoSolutionError
 from .properties import ArrayProperties
@@ -30,19 +30,16 @@ class NSNStimulus(ShapeArray):
     """
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle],
+                 target_area: Union[Dot, Rectangle, Ellipse],
                  min_distance: int = 2,
                  min_distance_target_area: int = 2
                  ) -> None:
         super().__init__()
-        assert isinstance(target_area, (Dot, Rectangle))
-        if isinstance(target_area, Dot) and target_area.diameter < 1:
+        if not isinstance(target_area, (Dot, Rectangle, Ellipse)):
+            raise RuntimeError(f"Target area can not be a {type(target_area)}")
+        if (target_area.height < 1 or target_area.width < 1):
             raise RuntimeError(
-                f"Target area is too small. Diameter={target_area.diameter}")
-        if isinstance(target_area, Rectangle) and \
-                (target_area.height < 1 or target_area.width < 1):
-            raise RuntimeError(
-                f"Target area is too small. Size={target_area.size}")
+                f"Target area is too small. size={target_area.size}")
 
         self.target_area = target_area
         if tuple(target_area.xy) != (0, 0):
