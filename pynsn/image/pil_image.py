@@ -62,11 +62,16 @@ class _PILDraw(_base.AbstractArrayDraw):
         shape.xy = _base.cartesian2image_coordinates(
             _np.asarray(shape.xy) * scaling_factor, image.size)
 
-        if isinstance(shape, _shapes.Dot):
-            r = (shape.diameter * scaling_factor) / 2
+        if isinstance(shape, (_shapes.Ellipse, _shapes.Dot)):
+            if isinstance(shape, _shapes.Dot):
+                rx = (shape.diameter * scaling_factor) / 2
+                ry = rx
+            else: # ellipse
+                rx, ry = (_np.asarray(shape.size) * (scaling_factor / 2))
+
             x, y = shape.xy
             _ImageDraw.Draw(image).ellipse(
-                (x - r, y - r, x + r, y + r), fill=shape.colour.value
+                (x - rx, y - ry, x + rx, y + ry), fill=shape.colour.value
             )
 
         elif isinstance(shape, _shapes.Picture):

@@ -7,7 +7,7 @@ from copy import deepcopy
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import warnings
 from hashlib import md5
-from typing import Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 import shapely
@@ -17,7 +17,7 @@ from .. import constants
 from .._misc import key_value_format
 from .._shapes import Dot, PolygonShape, Rectangle, ShapeType, Point2D
 from ..random._rng import WalkAround, generator
-from ..types import IntOVector, NoSolutionError
+from ..types import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
 
@@ -199,6 +199,11 @@ class NSNStimulus(ShapeArray):
 
         return False
 
+    def shape_overlaps(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.int_]:
+        """Returns True for all elements that overlap  with the particular shape
+        (i.e. taking into account the minimum distance).
+        """
+        return self.dwithin(shape, distance=self.min_distance)
 
     def matrix_overlaps(self) -> NDArray:
         return self.matrix_dwithin(distance=self.min_distance)

@@ -100,7 +100,7 @@ class Ellipse(CircularShapeType):
     def polygon(self) -> Polygon:  # lazy polygon creation
         if self._polygon is None:
             circle = Point(self._xy).buffer(1, quad_segs=Dot.QUAD_SEGS)
-            self._polygon = scale(circle, 15, 20)
+            self._polygon = scale(circle, self.size[0]/2, self.size[1]/2)
             shapely.prepare(self._polygon)  # FIXME needed?
         return self._polygon
 
@@ -242,7 +242,7 @@ def _distance_circ_circ(a: Union[PointType, CircularShapeType],
         dia_a = a.diameter
     elif isinstance(a, Ellipse):
         if theta is None:
-            theta = np.arctan2(d_xy[0], d_xy[1])
+            theta = np.arctan2(d_xy[1], d_xy[0])
         dia_a = a.diameter(theta=theta)
     elif isinstance(a, PointType):
         dia_a = 0
@@ -253,7 +253,7 @@ def _distance_circ_circ(a: Union[PointType, CircularShapeType],
         dia_b = b.diameter
     elif isinstance(b, Ellipse):
         if theta is None:
-            theta = np.arctan2(d_xy[0], d_xy[1])
+            theta = np.arctan2(d_xy[1], d_xy[0])
         dia_b = b.diameter(theta=theta)
     elif isinstance(b, PointType):
         dia_b = 0
@@ -275,7 +275,7 @@ def _is_circ_in_circ(a: Union[PointType, CircularShapeType],
         a_diameter = a.diameter
     elif isinstance(a, Ellipse):
         if theta is None:
-            theta = np.arctan2(d_xy[0], d_xy[1])
+            theta = np.arctan2(d_xy[1], d_xy[0])
         a_diameter = a.diameter(theta=theta)
     elif isinstance(a, PointType):
         a_diameter = 0
@@ -288,7 +288,7 @@ def _is_circ_in_circ(a: Union[PointType, CircularShapeType],
     elif isinstance(b, Ellipse):
         # dot/ellipse - dot/ellipse
         if theta is None:
-            theta = np.arctan2(d_xy[0], d_xy[1])
+            theta = np.arctan2(d_xy[1], d_xy[0])
         b_diameter = b.diameter(theta=theta)
     elif isinstance(b, PointType):
         b_diameter = 0

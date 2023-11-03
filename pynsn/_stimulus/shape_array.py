@@ -404,7 +404,7 @@ def _distance_circ_ellipse_array(obj: Union[Point2D, CircularShapeType],
     """Distance circular shape or Point2D to multiple ellipses
     """
     d_xy = ellipses_xy - obj.xy
-    theta = np.arctan2(d_xy[:, 0], d_xy[:, 1])
+    theta = np.arctan2(d_xy[:, 1], d_xy[:, 0])
     # radii of ellipses in array to circ_shape
     ellipse_dia = ellipse_geo.diameter(size=ellipse_sizes, theta=theta)
     if isinstance(obj, Point2D):
