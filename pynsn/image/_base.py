@@ -123,23 +123,24 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                 aaf = 1
 
         # prepare the image, make target area if required
-        if isinstance(nsn_stimulus.target_area, Dot):
+        ta_shape = nsn_stimulus.target_area.shape
+        if isinstance(ta_shape, Dot):
             target_area_shape = Dot(
                 xy=(0, 0),
-                diameter=np.ceil(nsn_stimulus.target_area.diameter) * aaf,
+                diameter=np.ceil(ta_shape.diameter) * aaf,
                 attribute=colours.target_area.value
             )
-        elif isinstance(nsn_stimulus.target_area, Ellipse):
+        elif isinstance(ta_shape, Ellipse):
             target_area_shape = Ellipse(
                 xy=(0, 0),
-                size=np.ceil(nsn_stimulus.target_area.size) * aaf,
+                size=np.ceil(ta_shape.size) * aaf,
                 attribute=colours.target_area.value
             )
 
-        elif isinstance(nsn_stimulus.target_area, Rectangle):
+        elif isinstance(ta_shape, Rectangle):
             target_area_shape = Rectangle(
                 xy=(0, 0),
-                size=np.ceil(nsn_stimulus.target_area.size) * aaf,
+                size=np.ceil(ta_shape.size) * aaf,
                 attribute=colours.target_area.value
             )
         else:

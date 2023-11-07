@@ -17,7 +17,8 @@ r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 
 nsn = pynsn.NSNStimulus(
     # target_area=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF")
-    target_area=pynsn.Rectangle((0, 0), size=(400, 500), attribute="#00FFFF"),
+    target_area_shape=pynsn.Rectangle(
+        (0, 0), size=(400, 500), attribute="#00FFFF"),
     min_distance_target_area=10,
     min_distance=2
 )

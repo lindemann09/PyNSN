@@ -116,8 +116,8 @@ class Rectangle(ShapeType):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,
-                                                  b_exterior_ring=shape_exterior_ring,
-                                                  min_dist_boarder=min_dist_boarder)
+                           b_exterior_ring=shape_exterior_ring,
+                           min_dist_boarder=min_dist_boarder)
 
 
 class Picture(Rectangle):
@@ -184,7 +184,7 @@ class PolygonShape(ShapeType):
 
     @property
     def size(self) -> Tuple[float, float]:
-        b = shapely.bounds(self._polygon)
+        b = shapely.bounds(self._polygon)  # l, b, r, t
         return b[2:4] - b[0:2]  # [bound width, bound height]
 
     def __repr__(self):
@@ -219,6 +219,5 @@ class PolygonShape(ShapeType):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,
-                                                  b_exterior_ring=shape_exterior_ring,
-                                                  min_dist_boarder=min_dist_boarder)
-
+                           b_exterior_ring=shape_exterior_ring,
+                           min_dist_boarder=min_dist_boarder)

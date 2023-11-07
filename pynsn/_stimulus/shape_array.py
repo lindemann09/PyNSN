@@ -2,26 +2,26 @@
 
 """
 from __future__ import annotations
-from .. import constants
-from ..random._rng import WalkAround
-from copy import deepcopy
-
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+
 from collections import OrderedDict
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 
+from .. import constants
 from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
                        PolygonShape, Rectangle, ShapeType)
 from .._shapes import ellipse_geometry as ellipse_geo
+from ..random._rng import WalkAround
 from ..types import IntOVector, NoSolutionError
 from .convex_hull import ConvexHull
-from ..random import generator
+from .target_area import TargetArea
 
 
 class ShapeArray(object):
@@ -421,7 +421,7 @@ class ShapeArray(object):
             elif what == 1:
                 y = arr.dwithin(shape=shape, distance=para)
             else:
-                raise RuntimeError("unkown function")
+                raise RuntimeError("unknown function")
 
             rtn[x, 0:x] = y
 
@@ -433,17 +433,12 @@ class ShapeArray(object):
     def _random_free_position(self,
                               shape: ShapeType,
                               min_distance: float,
-                              min_distance_target_area: float,
-                              target_area: ShapeType,
-                              target_area_ring: shapely.LinearRing,
+                              target_area: TargetArea,
                               ignore_overlaps: bool) -> ShapeType:
         """returns the object at random free position
 
         raises exception if not found
         """
-
-        b = target_area.polygon.bounds  # l, b, r, t
-        search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
 
         cnt = 0
         while True:
@@ -452,12 +447,9 @@ class ShapeArray(object):
                     "Can't find a free position for this polygon")
             cnt += 1
             # propose a random position
-            shape.xy = generator.random(size=2) * search_bounds_size \
-                - (search_bounds_size/2)
+            shape.xy = target_area.random_xy_inside_bounds()
 
-            if not shape.is_inside(shape=target_area,
-                                   shape_exterior_ring=target_area_ring,
-                                   min_dist_boarder=min_distance_target_area):
+            if not target_area.is_object_inside(shape):
                 continue
 
             if ignore_overlaps:
@@ -472,9 +464,7 @@ class ShapeArray(object):
                      index: int,
                      min_distance: float,
                      minimal_replacing: bool,
-                     target_area: ShapeType,
-                     target_area_ring: shapely.LinearRing,
-                     min_distance_target_area: float) -> int:  # FIXME manipulation objects
+                     target_area: TargetArea) -> int:  # FIXME manipulation objects
         """Move an selected object that overlaps to an free position in the
         neighbourhood.
 
@@ -505,9 +495,7 @@ class ShapeArray(object):
                     return -1  # can't find a free position
 
                 target.xy = walk.next()
-                if not target.is_inside(shape=target_area,
-                                        shape_exterior_ring=target_area_ring,
-                                        min_dist_boarder=min_distance_target_area):
+                if not target_area.is_object_inside(target):
                     outside_cnt += 1
                 else:
                     outside_cnt = 0
@@ -518,10 +506,9 @@ class ShapeArray(object):
         else:
             # random position anywhere
             try:
-                target = self._random_free_position(target, min_distance=min_distance,
-                                                    min_distance_target_area=min_distance_target_area,
+                target = self._random_free_position(target,
+                                                    min_distance=min_distance,
                                                     target_area=target_area,
-                                                    target_area_ring=target_area_ring,
                                                     ignore_overlaps=False)
             except NoSolutionError:
                 return -1

@@ -4,21 +4,18 @@
 from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-import warnings
 from hashlib import md5
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
-import shapely
 from numpy.typing import NDArray
 
-from .. import constants
 from .._misc import key_value_format
 from .._shapes import Dot, PolygonShape, Rectangle, Ellipse, ShapeType, Point2D
 from ..types import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
-from ..random import generator
+from .target_area import TargetArea
 
 
 class NSNStimulus(ShapeArray):
@@ -29,31 +26,21 @@ class NSNStimulus(ShapeArray):
     """
 
     def __init__(self,
-                 target_area: Union[Dot, Rectangle, Ellipse],
+                 target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
                  min_distance: int = 2,
                  min_distance_target_area: int = 2
                  ) -> None:
         super().__init__()
-        if not isinstance(target_area, (Dot, Rectangle, Ellipse)):
-            raise RuntimeError(f"Target area can not be a {type(target_area)}")
-        if (target_area.height < 1 or target_area.width < 1):
-            raise RuntimeError(
-                f"Target area is too small. size={target_area.size}")
-
-        self.target_area = target_area
-        if tuple(target_area.xy) != (0, 0):
-            warnings.warn("TargetArea does not use shape position. "
-                          "Shape Position will be set to (0, 0).",
-                          UserWarning)
-            self.target_area.xy = (0, 0)
-
-        self._area_ring = shapely.get_exterior_ring(self.target_area.polygon)
-        shapely.prepare(self.target_area.polygon)
-        shapely.prepare(self._area_ring)
+        self._target_area = TargetArea(shape=target_area_shape,
+                                       min_distance_boarder=min_distance_target_area)
 
         self.min_distance = min_distance
-        self.min_distance_target_area = min_distance_target_area
         self._properties = ArrayProperties(self)
+
+    @property
+    def target_area(self) -> TargetArea:
+        """the target area of the stimulus"""
+        return self._target_area
 
     @property
     def properties(self) -> ArrayProperties:
@@ -109,16 +96,6 @@ class NSNStimulus(ShapeArray):
 
         return rtn.rstrip()
 
-    # def random_position(self) -> NDArray:
-    #     """random position inside the target area"""
-    #     b = self.target_area.polygon.bounds  # l, b, r, t
-    #     bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
-
-    #     while True:
-    #         pos = rng.generator.random(size=2) * bounds_size - (bounds_size/2)
-    #         if self.target_area.polygon.contains_properly(shapely.Point(pos)):
-    #             return pos
-
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
 
@@ -158,24 +135,21 @@ class NSNStimulus(ShapeArray):
             self.sort_by_excentricity()
 
         if inside_convex_hull:
-            area = PolygonShape(self.convex_hull.polygon)
-            area_ring = area.polygon.exterior
-            shapely.prepare(area_ring)
-            raise NotImplementedError("Needs testing")  # FIXME
+            area = TargetArea(
+                shape=PolygonShape(self.convex_hull.polygon),
+                min_distance_boarder=self._target_area.min_distance_boarder)
         else:
-            area = self.target_area
-            area_ring = self._area_ring
+            area = self._target_area
 
         changes = False
-
         cnt = 0
         while cnt < 20:
             resp = np.empty(0, dtype=int)
             for x in range(self.n_objects):
-                r = self._fix_overlap(index=x, min_distance=self.min_distance,
-                                      target_area=area, target_area_ring=area_ring,
+                r = self._fix_overlap(index=x,
+                                      min_distance=self.min_distance,
                                       minimal_replacing=minimal_replacing,
-                                      min_distance_target_area=self.min_distance_target_area)
+                                      target_area=area)
                 resp = np.append(resp, r)
             if np.any(resp == 1):
                 changes = True
@@ -207,7 +181,7 @@ class NSNStimulus(ShapeArray):
         """
         if min_distance is None:
             min_distance = self.min_distance
-        return super().shape_overlaps(shape, min_distance)
+        return self.dwithin(shape, distance=min_distance)
 
     def matrix_overlaps(self, min_distance: Optional[float] = None) -> NDArray:
         if min_distance is None:
@@ -217,9 +191,7 @@ class NSNStimulus(ShapeArray):
     def inside_target_area(self, shape: Union[Point2D, ShapeType]) -> bool:
         """Returns True if shape is inside target area.
         """
-        return shape.is_inside(shape=self.target_area,
-                               shape_exterior_ring=self._area_ring,
-                               min_dist_boarder=self.min_distance_target_area)
+        return self._target_area.is_object_inside(shape)
 
     def add_somewhere(self,
                       ref_object: ShapeType,
@@ -253,16 +225,13 @@ class NSNStimulus(ShapeArray):
                                       f"{type(shape).__name__}")
 
         if inside_convex_hull:
-            area = PolygonShape(self.convex_hull.polygon)
-            area_ring = area.polygon.exterior
-            shapely.prepare(area_ring)
+            area = TargetArea(
+                shape=PolygonShape(self.convex_hull.polygon),
+                min_distance_boarder=self._target_area.min_distance_boarder)
         else:
-            area = self.target_area
-            area_ring = self._area_ring
+            area = self._target_area
 
         return self._random_free_position(shape=shape,
                                           min_distance=self.min_distance,
-                                          min_distance_target_area=self.min_distance_target_area,
                                           ignore_overlaps=ignore_overlaps,
-                                          target_area=area,
-                                          target_area_ring=area_ring)
+                                          target_area=area)

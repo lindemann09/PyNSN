@@ -7,7 +7,7 @@ from typing import Optional, Sequence, Union
 
 import numpy as np
 import shapely
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import NDArray
 
 from ..types import Coord2DLike
 from .._misc import polar2cartesian

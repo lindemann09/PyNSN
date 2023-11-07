@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy
 from typing import Optional, Sequence, Union, Any
 
-from ._distributions import Levels, DistributionType, _Constant
+from ._distributions import Levels, UnivariateDistributionType, _Constant
 from .._stimulus import NSNStimulus, ShapeType
 from ._appearance import Appearance
 

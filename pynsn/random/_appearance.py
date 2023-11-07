@@ -5,20 +5,20 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy
 from typing import Optional, Sequence, Union, Any
 
-from ._distributions import Levels, DistributionType, _Constant
+from ._distributions import Levels, UnivariateDistributionType, _Constant
 
-ParameterDistributionType = Union[DistributionType,
+ParameterDistributionType = Union[UnivariateDistributionType,
                                   float, int, Sequence[Any], None]
 
 
 class Appearance(object):
 
     def __init__(self,
-                 attributes: Optional[DistributionType] = None,
-                 dot_diameter: Optional[DistributionType] = None,
-                 rect_width: Optional[DistributionType] = None,
-                 rect_height: Optional[DistributionType] = None,
-                 rect_proportion: Optional[DistributionType] = None):
+                 attributes: Optional[UnivariateDistributionType] = None,
+                 dot_diameter: Optional[UnivariateDistributionType] = None,
+                 rect_width: Optional[UnivariateDistributionType] = None,
+                 rect_height: Optional[UnivariateDistributionType] = None,
+                 rect_proportion: Optional[UnivariateDistributionType] = None):
         """
 
         Parameters
@@ -34,7 +34,7 @@ class Appearance(object):
                                   proportion=rect_proportion)
 
     @property
-    def attributes(self) -> Optional[DistributionType]:
+    def attributes(self) -> Optional[UnivariateDistributionType]:
         """Distribution of attributes for dots"""
         return self._attributes
 
@@ -44,7 +44,7 @@ class Appearance(object):
         self._attributes = _make_distr(val)
 
     @property
-    def dot_diameter(self) -> Optional[DistributionType]:
+    def dot_diameter(self) -> Optional[UnivariateDistributionType]:
         """Distribution of diameter parameter"""
         return self._diameter
 
@@ -54,17 +54,17 @@ class Appearance(object):
         self._diameter = _make_distr(val)
 
     @property
-    def rect_width(self) -> Optional[DistributionType]:
+    def rect_width(self) -> Optional[UnivariateDistributionType]:
         """Distribution of width parameter"""
         return self._width
 
     @property
-    def rect_height(self) -> Optional[DistributionType]:
+    def rect_height(self) -> Optional[UnivariateDistributionType]:
         """Distribution of height parameter"""
         return self._height
 
     @property
-    def rect_proportion(self) -> Optional[DistributionType]:
+    def rect_proportion(self) -> Optional[UnivariateDistributionType]:
         """Distribution of proportion parameter"""
         return self._rect_proportion
 
@@ -98,14 +98,14 @@ class Appearance(object):
         self._rect_proportion = _make_distr(proportion)
 
 
-def _make_distr(value: ParameterDistributionType) -> Union[DistributionType, None]:
+def _make_distr(value: ParameterDistributionType) -> Union[UnivariateDistributionType, None]:
     """helper
     returns a distribution or None, if None
     """
 
     if value is None:
         return None
-    elif isinstance(value, DistributionType):
+    elif isinstance(value, UnivariateDistributionType):
         return value
     elif isinstance(value, (list, tuple)):
         return Levels(levels=copy(value))
