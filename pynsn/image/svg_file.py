@@ -60,18 +60,24 @@ class _SVGDraw(_base.AbstractArrayDraw):
         shape = copy(shape)
         shape.xy = _base.cartesian2image_coordinates(shape.xy,
                                                      _np.array(svg_image_size(image))).tolist()
-        col = shape.get_colour()
+        col = shape.colour.value
 
         if isinstance(shape, _shapes.Dot):
             image.add(image.circle(center=shape.xy,
                                    r=shape.diameter / 2,
                                    # stroke_width="0", stroke="black",
-                                   fill=col.colour,
+                                   fill=col,
                                    opacity=opacity))
+        elif isinstance(shape, _shapes.Ellipse):
+            image.add(image.ellipse(center=shape.xy,
+                                    r=(shape.size[0]/2, shape.size[1]/2),
+                                    # stroke_width="0", stroke="black",
+                                    fill=col,
+                                    opacity=opacity))
         elif isinstance(shape, _shapes.Rectangle):
             image.add(image.rect(insert=shape.left_bottom,
                                  size=shape.size,
-                                 fill=col.colour,
+                                 fill=col,
                                  opacity=opacity))
         else:
             raise NotImplementedError(
@@ -86,10 +92,11 @@ class _SVGDraw(_base.AbstractArrayDraw):
             _np.asarray(points), _np.array(svg_image_size(image)))
 
         last = None
+        col = convex_hull_colour.value
         for p in _np.append(points, [points[0]], axis=0):
             if last is not None:
                 l = image.line(start=last, end=p).stroke(
-                    width=1, color=convex_hull_colour.colour, opacity=opacity)
+                    width=1, color=col, opacity=opacity)
                 image.add(l)
             last = p
 

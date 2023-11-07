@@ -3,7 +3,7 @@ from pynsn.random._rng import WalkAround
 import time
 from timeit import default_timer as timer
 import pynsn
-from pynsn.image import pil_image
+from pynsn.image import pil_image, svg_file
 import numpy as np
 
 
@@ -59,3 +59,7 @@ nsn.sort_by_excentricity()
 
 a = pil_image.create(nsn, colours=col)
 a.save("shapes_test2.png")
+
+
+fl = svg_file.create("shapes_test.svg", nsn, colours=col)
+fl.save()
