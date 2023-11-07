@@ -1,3 +1,5 @@
+from pynsn._misc import cartesian2polar
+from pynsn.random._rng import WalkAround
 import time
 from timeit import default_timer as timer
 import pynsn
@@ -5,9 +7,8 @@ from pynsn.image import pil_image
 import numpy as np
 
 
-
 da = pynsn.Dot((-20, 120), diameter=10, attribute="#222800")
-db = pynsn.Dot((20, 17), diameter=60, attribute="#FF0000")
+db = pynsn.Ellipse((20, 17), size=(120, 50), attribute="#FF0000")
 dc = pynsn.Ellipse((120, 57), size=(60, 120), attribute="#00F000")  # big dot
 
 ra = pynsn.Rectangle(np.array((-70, -175)), size=(40, 40), attribute="#FF0000")
@@ -41,13 +42,19 @@ if False:
 # random dot
 if True:
     nsn.add_somewhere(da, n=200, ignore_overlaps=False)
-
 nsn.add([db,  dc, ra])
-print(nsn.contains_overlaps())
-print(nsn.fix_overlap())
-print(nsn.contains_overlaps())
+nsn.sort_by_excentricity()
 
 col = pil_image.ImageColours(field_area="red")
 a = pil_image.create(nsn, colours=col)
-a.save("shapes_test2.png")
+a.save("shapes_test.png")
 
+t = timer()
+nsn.fix_overlap(sort_before=True, minimal_replacing=True)
+print(timer()-t)
+
+print(nsn.contains_overlaps())
+nsn.sort_by_excentricity()
+
+a = pil_image.create(nsn, colours=col)
+a.save("shapes_test2.png")

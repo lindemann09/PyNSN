@@ -2,6 +2,8 @@
 
 """
 from __future__ import annotations
+from .. import constants
+from ..random._rng import WalkAround
 from copy import deepcopy
 
 
@@ -16,9 +18,10 @@ from numpy.typing import NDArray
 
 from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
                        PolygonShape, Rectangle, ShapeType)
-from .._shapes import ellipse_geometry as  ellipse_geo
-from ..types import IntOVector
+from .._shapes import ellipse_geometry as ellipse_geo
+from ..types import IntOVector, NoSolutionError
 from .convex_hull import ConvexHull
+from ..random import generator
 
 
 class ShapeArray(object):
@@ -133,10 +136,10 @@ class ShapeArray(object):
         self._convex_hull = None
         self._update_ids()
 
-    def pop(self, index: Optional[int]=None) -> ShapeType:
+    def pop(self, index: Optional[int] = None) -> ShapeType:
         """Remove and return item at index"""
         if index is None:
-            index = len(self._polygons) -1
+            index = len(self._polygons) - 1
         rtn = self.get(index)
         self.delete(index)
         return rtn
@@ -148,13 +151,12 @@ class ShapeArray(object):
         d = self.distances(Point2D(self.convex_hull.centroid))
         i = np.argsort(d)
         self._polygons = self._polygons[i]
-        self._xy = self._xy[i,:]
+        self._xy = self._xy[i, :]
         self._attributes = self._attributes[i]
         self._types = self._types[i]
         self._sizes = self._sizes[i]
         self._convex_hull = None
         self._update_ids()
-
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -306,14 +308,14 @@ class ShapeArray(object):
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
-                                                   dots_xy=self._xy[idx, :],
-                                                   dots_diameter=self._sizes[idx, 0])
+                                                    dots_xy=self._xy[idx, :],
+                                                    dots_diameter=self._sizes[idx, 0])
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
-                                                       ellipses_xy=self._xy[idx, :],
-                                                       ellipse_sizes=self._sizes[idx, :])
+                                                        ellipses_xy=self._xy[idx, :],
+                                                        ellipse_sizes=self._sizes[idx, :])
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
@@ -344,16 +346,16 @@ class ShapeArray(object):
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
-                                                dots_xy=self._xy[idx, :],
-                                                dots_diameter=self._sizes[idx, 0])
+                                                 dots_xy=self._xy[idx, :],
+                                                 dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
             idx = self._ids[Ellipse.ID]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,
-                                                    ellipses_xy=self._xy[idx, :],
-                                                    ellipse_sizes=self._sizes[idx, :])
+                                                     ellipses_xy=self._xy[idx, :],
+                                                     ellipse_sizes=self._sizes[idx, :])
                 rtn[idx] = dists < distance
 
             # check if non-circular shapes are in shape_array
@@ -373,23 +375,164 @@ class ShapeArray(object):
 
         return rtn
 
+    def contains_overlaps(self, min_distance: float = 0) -> bool:
+        """Returns True for two or more elements overlap (i.e. taking
+        into account the minimum distance).
+        """
+        for x in range(self.n_objects):
+            if np.any(self.get_overlaps(x, min_distance)) > 0:
+                return True
+
+        return False
+
+    def get_overlaps(self, index: int, min_distance: float = 0) -> NDArray[np.bool_]:
+        """get overlaps with other objects. Ignores overlap with oneself."""
+        overlaps = self.dwithin(self.get(index), distance=min_distance)
+        overlaps[index] = False  # ignore overlap with oneself
+        return overlaps
 
     def matrix_distances(self) -> NDArray:
-        return _relation_matrix(self, what=0)
+        return self._relation_matrix(what=0)
 
-    def matrix_dwithin(self, distance:float) -> NDArray:
-        return _relation_matrix(self, what=1, para=distance)
+    def matrix_dwithin(self, distance: float) -> NDArray:
+        return self._relation_matrix(what=1, para=distance)
+
+    def matrix_overlaps(self, min_distance: float = 0) -> NDArray:
+        return self.matrix_dwithin(distance=min_distance)
+
+    @staticmethod
+    def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
+        """read shape array from dict"""
+        ##
+        raise NotImplementedError()  # FIXME
+
+    def _relation_matrix(self, what: int, para: float = 0) -> NDArray:
+        """helper function returning the relation between polygons
+        0 = distance
+        1 = dwithin
+        """
+        arr = deepcopy(self)
+        l = arr.n_objects
+        rtn = np.full((l, l), np.nan)
+        for x in reversed(range(l)):
+            shape = arr.pop(x)
+            if what == 0:
+                y = arr.distances(shape)
+            elif what == 1:
+                y = arr.dwithin(shape=shape, distance=para)
+            else:
+                raise RuntimeError("unkown function")
+
+            rtn[x, 0:x] = y
+
+        # make symetric
+        i_lower = np.triu_indices(l, 1)
+        rtn[i_lower] = rtn.T[i_lower]
+        return rtn
+
+    def _random_free_position(self,
+                              shape: ShapeType,
+                              min_distance: float,
+                              min_distance_target_area: float,
+                              target_area: ShapeType,
+                              target_area_ring: shapely.LinearRing,
+                              ignore_overlaps: bool) -> ShapeType:
+        """returns the object at random free position
+
+        raises exception if not found
+        """
+
+        b = target_area.polygon.bounds  # l, b, r, t
+        search_bounds_size = np.array([b[2]-b[0], b[3]-b[1]])
+
+        cnt = 0
+        while True:
+            if cnt > constants.MAX_ITERATIONS:
+                raise NoSolutionError(
+                    "Can't find a free position for this polygon")
+            cnt += 1
+            # propose a random position
+            shape.xy = generator.random(size=2) * search_bounds_size \
+                - (search_bounds_size/2)
+
+            if not shape.is_inside(shape=target_area,
+                                   shape_exterior_ring=target_area_ring,
+                                   min_dist_boarder=min_distance_target_area):
+                continue
+
+            if ignore_overlaps:
+                return shape
+            else:
+                # find overlaps
+                overlaps = self.dwithin(shape, distance=min_distance)
+                if not np.any(overlaps):
+                    return shape
+
+    def _fix_overlap(self,
+                     index: int,
+                     min_distance: float,
+                     minimal_replacing: bool,
+                     target_area: ShapeType,
+                     target_area_ring: shapely.LinearRing,
+                     min_distance_target_area: float) -> int:  # FIXME manipulation objects
+        """Move an selected object that overlaps to an free position in the
+        neighbourhood.
+
+        minimal_replacing: try to find a new random position is a neighbourhood,
+            otherwise overlapping object will be randomly replaced anywere in the
+            search area
 
 
-def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
-    """read shape array from dict"""
-    ##
-    raise NotImplementedError() #FIXME
+        Returns
+        -------
+         0: if no overlaps exist
+        -1: if object overlaps, but no new position could be found
+         1: if object was replaced
+
+        occupied space: see generator generate
+        """
+
+        if not np.any(self.get_overlaps(index, min_distance)):
+            return 0  # no overlap
+
+        target = self.get(index)
+
+        if minimal_replacing:
+            walk = WalkAround(target.xy)
+            outside_cnt = 0
+            while True:
+                if walk.counter > constants.MAX_ITERATIONS or outside_cnt > 20:
+                    return -1  # can't find a free position
+
+                target.xy = walk.next()
+                if not target.is_inside(shape=target_area,
+                                        shape_exterior_ring=target_area_ring,
+                                        min_dist_boarder=min_distance_target_area):
+                    outside_cnt += 1
+                else:
+                    outside_cnt = 0
+                    overlaps = self.dwithin(target, distance=min_distance)
+                    overlaps[index] = False  # ignore overlap with oneself
+                    if not np.any(overlaps):
+                        break  # place found
+        else:
+            # random position anywhere
+            try:
+                target = self._random_free_position(target, min_distance=min_distance,
+                                                    min_distance_target_area=min_distance_target_area,
+                                                    target_area=target_area,
+                                                    target_area_ring=target_area_ring,
+                                                    ignore_overlaps=False)
+            except NoSolutionError:
+                return -1
+
+        self.replace(index, target)
+        return 1
 
 
 def _distance_circ_dot_array(obj: Union[Point2D, CircularShapeType],
-                            dots_xy: NDArray[np.float_],
-                            dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
+                             dots_xy: NDArray[np.float_],
+                             dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
     """Distances circular shape or Point to multiple dots
     """
     d_xy = dots_xy - obj.xy
@@ -409,8 +552,8 @@ def _distance_circ_dot_array(obj: Union[Point2D, CircularShapeType],
 
 
 def _distance_circ_ellipse_array(obj: Union[Point2D, CircularShapeType],
-                                ellipses_xy: NDArray[np.float_],
-                                ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
+                                 ellipses_xy: NDArray[np.float_],
+                                 ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
     """Distance circular shape or Point2D to multiple ellipses
     """
     d_xy = ellipses_xy - obj.xy
@@ -423,34 +566,9 @@ def _distance_circ_ellipse_array(obj: Union[Point2D, CircularShapeType],
         shape_dia = obj.diameter
     elif isinstance(obj, Ellipse):
         shape_dia = ellipse_geo.diameter(size=np.atleast_2d(obj.size),
-                                     theta=theta)  # ellipse radius to each ellipse in the array
+                                         theta=theta)  # ellipse radius to each ellipse in the array
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(obj)}")
 
     # center dist - radius_a - radius_b
     return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (ellipse_dia + shape_dia)/2
-
-
-def _relation_matrix(shape_array: ShapeArray, what:int, para:float=0) -> NDArray:
-    """helper function returning the relation between polygons
-    0 = distance
-    1 = dwithin
-    """
-    arr = deepcopy(shape_array)
-    l = arr.n_objects
-    rtn = np.full((l, l), np.nan)
-    for x in reversed(range(l)):
-        shape = arr.pop(x)
-        if what==0:
-            y = arr.distances(shape)
-        elif what == 1:
-            y = arr.dwithin(shape=shape, distance=para)
-        else:
-            raise RuntimeError("unkown function")
-
-        rtn[x, 0:x] = y
-
-    #make symetric
-    i_lower = np.triu_indices(l, 1)
-    rtn[i_lower] = rtn.T[i_lower]
-    return rtn

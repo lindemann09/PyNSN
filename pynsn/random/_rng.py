@@ -37,7 +37,7 @@ def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
 
 class WalkAround(object):
     """Jump at random positions in the surrounding of a position with constantly
-    increading jump radius"""
+    increasing jump radius"""
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -59,7 +59,7 @@ class WalkAround(object):
         self.counter += 1
 
         rnd_angle = 2*np.pi*generator.random()
-        return polar2cartesian((self._radius, rnd_angle)) + self._xy
+        return polar2cartesian((self._radius, rnd_angle))[0] + self._xy
 
 
 class BrownianMotion(object):
