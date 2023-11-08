@@ -9,14 +9,14 @@ from matplotlib.figure import Figure as _Figure
 from .. import _shapes
 from .._stimulus import NSNStimulus
 from . import _base
-from ._image_colours import ImageColours
+from .._stimulus.stimulus_colours import StimulusColours
 
 # FIXME broken module
 
 
 def create(
     nsn_stimulus: NSNStimulus,
-    colours: Optional[ImageColours] = None,
+    colours: Optional[StimulusColours] = None,
     dpi: float = 100,
 ) -> _Figure:
     """Matplotlib figure

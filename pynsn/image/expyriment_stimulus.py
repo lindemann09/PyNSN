@@ -9,25 +9,18 @@ from expyriment.stimuli import Canvas as _Canvas
 
 from . import _base
 from . import pil_image as _pil_image
-from ._image_colours import ImageColours
 
 
 class ExprimentNSNStimulus(_Canvas):
 
     def __init__(self, nsn_stimulus,
-                 colours=None,
                  position=(0, 0),
                  antialiasing=True):
 
         _base.check_nsn_stimulus(nsn_stimulus)
-        if colours is None:
-            colours = ImageColours()
-        if not isinstance(colours, ImageColours):
-            raise TypeError("Colours must be of type image.ImageColours")
 
         _Canvas.__init__(self, size=(0, 0), position=position)
         self.dot_array = nsn_stimulus
-        self.colours = colours
         self.antialiasing = antialiasing
         self._image = None
 
@@ -35,7 +28,6 @@ class ExprimentNSNStimulus(_Canvas):
     def image(self):
         if self._image is None:
             self._image = _pil_image.create(nsn_stimulus=self.dot_array,
-                                            colours=self.colours,
                                             antialiasing=self.antialiasing)  # TODO gabor filter
 
         return self._image
@@ -52,13 +44,9 @@ class ExpyrimentDASequence(object):
     def __init__(self, da_sequence,
                  # pil_image_generator TODO better using generator
                  position=(0, 0),
-                 colours=ImageColours(),
                  antialiasing=None,
                  make_pil_images_now=False,
                  multiprocessing=False):
-
-        if not isinstance(colours, ImageColours):
-            raise TypeError("Colours must be a ImageColours instance")
 
         self.da_sequence = da_sequence
         self.stimuli = []
@@ -67,7 +55,6 @@ class ExpyrimentDASequence(object):
 
         for da in self.da_sequence.dot_arrays:
             stim = ExprimentNSNStimulus(nsn_stimulus=da, position=position,
-                                        colours=colours,
                                         antialiasing=antialiasing)
             self.stimuli.append(stim)
 

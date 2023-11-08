@@ -16,6 +16,8 @@ from ..types import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .target_area import TargetArea
+from .stimulus_colours import StimulusColours
+from .. import constants
 
 
 class NSNStimulus(ShapeArray):
@@ -27,8 +29,8 @@ class NSNStimulus(ShapeArray):
 
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
-                 min_distance: int = 2,
-                 min_distance_target_area: int = 2
+                 min_distance: int = constants.MIN_DISTANCE,
+                 min_distance_target_area: int = constants.MIN_DISTANCE
                  ) -> None:
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
@@ -36,11 +38,17 @@ class NSNStimulus(ShapeArray):
 
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
+        self._colours = StimulusColours()
 
     @property
     def target_area(self) -> TargetArea:
         """the target area of the stimulus"""
         return self._target_area
+
+    @property
+    def colours(self) -> StimulusColours:
+        """the colours of the stimulus"""
+        return self._colours
 
     @property
     def properties(self) -> ArrayProperties:

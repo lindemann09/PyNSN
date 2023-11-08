@@ -8,25 +8,22 @@ import svgwrite as _svg
 
 from .. import _stimulus, _shapes
 from . import _base
-from ._image_colours import ImageColours
 
 
 def create(filename: str,
-           nsn_stimulus: _stimulus.NSNStimulus,
-           colours: Optional[ImageColours] = None) -> _svg.Drawing:
+           nsn_stimulus: _stimulus.NSNStimulus) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters
     ----------
     nsn_stimulus
-    colours
     filename
 
     Returns
     -------
 
     """
-    return _SVGDraw().create_image(nsn_stimulus=nsn_stimulus, colours=colours,
+    return _SVGDraw().create_image(nsn_stimulus=nsn_stimulus,
                                    filename=filename)
 
 

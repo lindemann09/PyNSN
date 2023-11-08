@@ -1,3 +1,4 @@
+from pynsn import random
 from pynsn._misc import cartesian2polar
 from pynsn.random._rng import WalkAround
 import time
@@ -7,7 +8,7 @@ from pynsn.image import pil_image, svg_file
 import numpy as np
 
 
-da = pynsn.Dot((-20, 120), diameter=10, attribute="#222800")
+da = pynsn.Dot((-20, 120), diameter=10)
 db = pynsn.Ellipse((20, 17), size=(120, 50), attribute="#FF0000")
 dc = pynsn.Ellipse((120, 57), size=(60, 120), attribute="#00F000")  # big dot
 
@@ -42,24 +43,14 @@ if False:
 
 # random dot
 if True:
-    nsn.add_somewhere(da, n=200, ignore_overlaps=False)
+    nsn.add_somewhere(da, n=20, ignore_overlaps=False)
 nsn.add([db,  dc, ra])
-nsn.sort_by_excentricity()
+# nsn.colours.object_default = "red"
+# nsn.colours.convex_hull = "gray"
 
-col = pil_image.ImageColours(field_area="red")
-a = pil_image.create(nsn, colours=col)
+nsn.sort_by_excentricity()
+a = pil_image.create(nsn)
 a.save("shapes_test.png")
 
-t = timer()
-nsn.fix_overlap(sort_before=True, minimal_replacing=True)
-print(timer()-t)
 
-print(nsn.contains_overlaps())
-nsn.sort_by_excentricity()
-
-a = pil_image.create(nsn, colours=col)
-a.save("shapes_test2.png")
-
-
-fl = svg_file.create("shapes_test.svg", nsn, colours=col)
-fl.save()
+d = random.Normal(mu=0, sigma=2)

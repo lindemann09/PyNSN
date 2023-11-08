@@ -11,7 +11,6 @@ from PIL import ImageDraw as _ImageDraw
 from . import _base
 from .. import _shapes
 from .. import _stimulus
-from ._image_colours import ImageColours
 
 # TODO pillow supports no alpha/opacity
 
@@ -20,7 +19,6 @@ RESAMPLING = _Image.Resampling.LANCZOS
 
 def create(
     nsn_stimulus: _stimulus.NSNStimulus,
-    colours: _tp.Optional[ImageColours] = None,
     antialiasing: _tp.Union[bool, int] = True,
 ) -> _Image.Image:
     # ImageParameter
@@ -34,7 +32,7 @@ def create(
     """
 
     return _PILDraw().create_image(
-        nsn_stimulus=nsn_stimulus, colours=colours, antialiasing=antialiasing
+        nsn_stimulus=nsn_stimulus, antialiasing=antialiasing
     )
 
 
@@ -66,7 +64,7 @@ class _PILDraw(_base.AbstractArrayDraw):
             if isinstance(shape, _shapes.Dot):
                 rx = (shape.diameter * scaling_factor) / 2
                 ry = rx
-            else: # ellipse
+            else:  # ellipse
                 rx, ry = (_np.asarray(shape.size) * (scaling_factor / 2))
 
             x, y = shape.xy

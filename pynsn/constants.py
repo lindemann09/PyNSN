@@ -1,7 +1,11 @@
-# stimuli
-DEFAULT_MIN_DIST = 2  # minim distance between objects and
-
+# minim distance between objects
+MIN_DISTANCE = 2
+# Colours
+COLOUR_TARGET_AREA = "#A1A1A1"
+COLOUR_OBJECT = "black"
+OPACITY_OBJECT: float = 1
+OPACITY_GUIDES: float = 0.5
 # iterations
 MAX_ITERATIONS = 1000
-DEFAULT_FIT_SPACING_PRECISION = 0.0001
-DEFAULT_FIT_FA2TA_RATIO = 0.5
+FIT_SPACING_PRECISION = 0.0001
+FIT_FA2TA_RATIO = 0.5

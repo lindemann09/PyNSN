@@ -8,7 +8,6 @@ from numpy.typing import ArrayLike, NDArray
 
 from .._stimulus import NSNStimulus
 from .._shapes import Dot, Picture, Rectangle, Ellipse
-from ._image_colours import ImageColours
 
 # helper for type checking and error raising error
 
@@ -84,7 +83,6 @@ class AbstractArrayDraw(metaclass=ABCMeta):
     def create_image(
         self,
         nsn_stimulus: NSNStimulus,
-        colours: Optional[ImageColours],
         antialiasing: Optional[float] = None,
         **kwargs
     ) -> Any:
@@ -106,10 +104,6 @@ class AbstractArrayDraw(metaclass=ABCMeta):
         """
 
         check_nsn_stimulus(nsn_stimulus)
-        if colours is None:
-            colours = ImageColours()
-        if not isinstance(colours, ImageColours):
-            raise TypeError("Colours must be of type image.ImageColours")
 
         if isinstance(antialiasing, bool):
             if antialiasing:  # (not if 1)
@@ -124,6 +118,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
 
         # prepare the image, make target area if required
         ta_shape = nsn_stimulus.target_area.shape
+        colours = nsn_stimulus.colours
         if isinstance(ta_shape, Dot):
             target_area_shape = Dot(
                 xy=(0, 0),
@@ -161,16 +156,16 @@ class AbstractArrayDraw(metaclass=ABCMeta):
             for obj in nsn_stimulus.get_list():
                 if obj.colour.value is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour
-                    obj.attribute = colours.default_object_colour
+                    obj.attribute = colours.object_default
                 self.draw_shape(
                     img, obj, opacity=colours.opacity_object, scaling_factor=aaf)
 
             # draw convex hulls
-            if colours.field_area.value is not None:
+            if colours.convex_hull.value is not None:
                 coords = nsn_stimulus.convex_hull.coordinates
                 if len(coords) > 1:
                     self.draw_convex_hull(img, points=coords,
-                                          convex_hull_colour=colours.field_area,
+                                          convex_hull_colour=colours.convex_hull,
                                           opacity=colours.opacity_guides,
                                           scaling_factor=aaf)
             #  and center of mass
