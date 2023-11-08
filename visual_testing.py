@@ -51,6 +51,3 @@ nsn.add([db,  dc, ra])
 nsn.sort_by_excentricity()
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
-
-
-d = random.Normal(mu=0, sigma=2)

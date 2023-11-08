@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Sequence, Union
+from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
@@ -12,30 +12,46 @@ from ._distributions import ABCDistribution, round_samples
 
 class MultiVarDistributionType(ABCDistribution):
 
-    def __init__(self, x_minmax, y_minmax):
+    def __init__(self,
+                 xy_minmax: Optional[ArrayLike] = None,
+                 max_radius: Optional[float] = None):
+        """
+        xy_minmax: [xmin, ymin, xmax, ymax]
+        """
 
-        self.x_minmax = np.asarray(x_minmax)
-        self.y_minmax = np.asarray(y_minmax)
-        if len(self.x_minmax) != 2 or \
-                (None not in self.x_minmax and self.x_minmax[0] > self.x_minmax[1]):
-            raise TypeError(f"min_max {x_minmax} has to be a tuple of two values "
-                            "(a, b) with a <= b.")
-        if len(self.y_minmax) != 2 or \
-                (None not in self.y_minmax and self.y_minmax[0] > self.y_minmax[1]):
-            raise TypeError(f"min_max {y_minmax} has to be a tuple of two values "
-                            "(a, b) with a <= b.")
+        if xy_minmax is not None:
+            xy_minmax = np.asarray(xy_minmax)
+            if len(xy_minmax) != 4:
+                raise ValueError("xy_minmax has to be an array of four values [xmin, ymin, xmax, ymax], "
+                                 f"and not {xy_minmax}")
+
+            # replace nan or None with np.inf/-np.inf
+            for i, x in enumerate([-1*np.inf, -1*np.inf, np.inf, np.inf]):
+                if xy_minmax[i] is None or np.isnan(xy_minmax[i]):
+                    xy_minmax[i] = x
+
+            if (xy_minmax[0] > xy_minmax[2] or xy_minmax[1] > xy_minmax[3]):
+                raise TypeError(f"xy_minmax=[xmin, ymin, xmax, ymax]. xmin (or ymin) "
+                                "is larger xmax (or ymax)")
+
+        self.xy_minmax = xy_minmax
+        self.max_radius = max_radius
 
     def to_dict(self):
         """Dict representation of the distribution"""
         d = super().to_dict()
-        d.update({"x_min_max": self.x_minmax,
-                  "y_min_max": self.y_minmax})
+        d.update({"max_radius": self.max_radius,
+                  "xy_minmax": self.xy_minmax})
         return d
 
 
 class Normal2D(MultiVarDistributionType):
 
-    def __init__(self, mu, sigma, correlation, max_radius=None):
+    def __init__(self, mu: Tuple[float, float],
+                 sigma: Tuple[float, float],
+                 correlation: float = 0,
+                 xy_minmax: Optional[ArrayLike] = None,
+                 max_radius: Optional[float] = None):
         """Two dimensional normal distribution with optional radial cut-off
 
         Resulting multivariate distribution has the defined means, standard
@@ -49,8 +65,7 @@ class Normal2D(MultiVarDistributionType):
             max_radius: numerical (optional)
                 cut-off criterion: maximal distance from the distribution center (mu)
         """
-        super().__init__(min_max=np.array((None, None)))
-
+        super().__init__(xy_minmax=xy_minmax, max_radius=max_radius)
         try:
             lmu = len(mu)
             lsigma = len(sigma)
@@ -65,7 +80,6 @@ class Normal2D(MultiVarDistributionType):
         self.mu = np.array(mu)
         self.sigma = np.abs(sigma)
         self.correlation = correlation
-        self.max_radius = max_radius
 
     def varcov(self):
         """Variance covariance matrix"""
@@ -85,6 +99,13 @@ class Normal2D(MultiVarDistributionType):
                 # remove to large radii
                 r = np.hypot(draw[:, 0], draw[:, 1])
                 draw = np.delete(draw, r > self.max_radius, axis=0)
+
+            if self.xy_minmax is not None:
+                idx = (draw[:, 0] < self.xy_minmax[0]) | \
+                    (draw[:, 1] < self.xy_minmax[1]) | \
+                    (draw[:, 0] > self.xy_minmax[2]) | \
+                    (draw[:, 1] > self.xy_minmax[3])
+                draw = np.delete(draw, idx, axis=0)
 
             if len(draw) > 0:
                 # append

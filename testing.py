@@ -1,22 +1,10 @@
 import pynsn
+from pynsn import random
+import matplotlib.pyplot as plt
 
-r = pynsn.Rectangle((10, 20), (23, 78))
-d = pynsn.Dot([10, 20], 78)
+d = random.Normal2D(mu=(0, 0), sigma=(10, 10),
+                    xy_minmax=(-10, None, 10, 20),
+                    correlation=0.5)
+d.pyplot_samples()
 
-print(d.colour.value)
-print(d)
-d.xy = [100, 100]
-print(r.left_top)
-print(r.right_bottom)
-
-a = np.array(
-    [
-        [10, 12.43],
-        [10, 12.43],
-        [np.nan, np.nan],
-        [10, 12.43],
-        [np.nan, n.nan],
-        [10, 12.43],
-        [10, 12.43],
-    ]
-)
+plt.show()
