@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from typing import Optional
 
-from .. import _misc, constants
+from .. import _misc, defaults
 from .._shapes import Colour
 from ..types import ColourType
 
@@ -9,14 +9,14 @@ from ..types import ColourType
 class StimulusColours(object):
     def __init__(
         self,
-        target_area: Optional[ColourType] = constants.COLOUR_TARGET_AREA,
-        object_default: ColourType = constants.COLOUR_OBJECT,
+        target_area: Optional[ColourType] = defaults.COLOUR_TARGET_AREA,
+        object_default: ColourType = defaults.COLOUR_OBJECT,
         background: Optional[ColourType] = None,
         convex_hull: Optional[ColourType] = None,
         center_of_field_area: Optional[ColourType] = None,
         center_of_mass: Optional[ColourType] = None,
-        opacity_object: float = constants.OPACITY_OBJECT,
-        opacity_guides: float = constants.OPACITY_GUIDES
+        opacity_object: float = defaults.OPACITY_OBJECT,
+        opacity_guides: float = defaults.OPACITY_GUIDES
     ):
         self._target_area = Colour(target_area)
         self._convex_hull = Colour(convex_hull)

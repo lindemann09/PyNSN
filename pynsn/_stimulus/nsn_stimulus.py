@@ -17,7 +17,7 @@ from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .target_area import TargetArea
 from .stimulus_colours import StimulusColours
-from .. import constants
+from .. import defaults
 
 
 class NSNStimulus(ShapeArray):
@@ -29,8 +29,8 @@ class NSNStimulus(ShapeArray):
 
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
-                 min_distance: int = constants.MIN_DISTANCE,
-                 min_distance_target_area: int = constants.MIN_DISTANCE
+                 min_distance: int = defaults.MIN_DISTANCE,
+                 min_distance_target_area: int = defaults.MIN_DISTANCE
                  ) -> None:
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
@@ -127,7 +127,8 @@ class NSNStimulus(ShapeArray):
     def fix_overlap(self,
                     inside_convex_hull: bool = False,
                     minimal_replacing: bool = True,
-                    sort_before: bool = True) -> bool:  # FIXME manipulation objects
+                    sort_before: bool = True,
+                    max_iterations: Optional[int] = None) -> bool:  # FIXME manipulation objects
         """move an selected object that overlaps to an free position in the
         neighbourhood.
 
@@ -139,6 +140,9 @@ class NSNStimulus(ShapeArray):
         raise exception if not found
         occupied space: see generator generate
         """
+        if max_iterations is None:
+            max_iterations = defaults.MAX_ITERATIONS
+
         if sort_before:
             self.sort_by_excentricity()
 
@@ -157,7 +161,8 @@ class NSNStimulus(ShapeArray):
                 r = self._fix_overlap(index=x,
                                       min_distance=self.min_distance,
                                       minimal_replacing=minimal_replacing,
-                                      target_area=area)
+                                      target_area=area,
+                                      max_iterations=max_iterations)
                 resp = np.append(resp, r)
             if np.any(resp == 1):
                 changes = True
@@ -205,14 +210,16 @@ class NSNStimulus(ShapeArray):
                       ref_object: ShapeType,
                       n: int = 1,
                       ignore_overlaps: bool = False,
-                      inside_convex_hull: bool = False):
+                      inside_convex_hull: bool = False,
+                      max_iterations: Optional[int] = None):
 
         while n > 0:
             try:
                 new_object = self.random_free_position(
                     shape=ref_object.copy(),
                     ignore_overlaps=ignore_overlaps,
-                    inside_convex_hull=inside_convex_hull)
+                    inside_convex_hull=inside_convex_hull,
+                    max_iterations=max_iterations)
             except NoSolutionError as err:
                 raise NoSolutionError("Can't find a free position: "
                                       + f"Current n={self.n_objects}") from err
@@ -223,7 +230,8 @@ class NSNStimulus(ShapeArray):
     def random_free_position(self,
                              shape: ShapeType,
                              ignore_overlaps: bool = False,
-                             inside_convex_hull: bool = False) -> ShapeType:
+                             inside_convex_hull: bool = False,
+                             max_iterations: Optional[int] = None) -> ShapeType:
         """moves the object to a random free position
 
         raise exception if not found
@@ -231,6 +239,8 @@ class NSNStimulus(ShapeArray):
         if not isinstance(shape, (ShapeType)):
             raise NotImplementedError("Not implemented for "
                                       f"{type(shape).__name__}")
+        if max_iterations is None:
+            max_iterations = defaults.MAX_ITERATIONS
 
         if inside_convex_hull:
             area = TargetArea(
@@ -242,4 +252,5 @@ class NSNStimulus(ShapeArray):
         return self._random_free_position(shape=shape,
                                           min_distance=self.min_distance,
                                           ignore_overlaps=ignore_overlaps,
-                                          target_area=area)
+                                          target_area=area,
+                                          max_iterations=max_iterations)

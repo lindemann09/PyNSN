@@ -4,14 +4,14 @@
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import warnings
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, ShapeType
-from ..constants import MAX_ITERATIONS
+from .. import defaults
 from ..random import generator
 from ..types import NoSolutionError
 
@@ -70,14 +70,17 @@ class TargetArea(object):
         return generator.random(size=2) * self._bound_sizes \
             - (self._bound_sizes/2)
 
-    def random_position(self, shape: ShapeType) -> ShapeType:
+    def random_position(self, shape: ShapeType,
+                        max_iterations: Optional[int] = None) -> ShapeType:
         """returns the object at random free position inside the target area
 
         takes into account the minimum distance to boarder
         """
+        if max_iterations is None:
+            max_iterations = defaults.MAX_ITERATIONS
         cnt = 0
         while True:
-            if cnt > MAX_ITERATIONS:
+            if cnt > max_iterations:
                 raise NoSolutionError(
                     "Can't find a free position for this polygon")
             cnt += 1

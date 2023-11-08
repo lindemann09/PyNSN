@@ -14,7 +14,7 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .. import constants
+from .. import defaults
 from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
                        PolygonShape, Rectangle, ShapeType)
 from .._shapes import ellipse_geometry as ellipse_geo
@@ -434,7 +434,8 @@ class ShapeArray(object):
                               shape: ShapeType,
                               min_distance: float,
                               target_area: TargetArea,
-                              ignore_overlaps: bool) -> ShapeType:
+                              ignore_overlaps: bool,
+                              max_iterations: int) -> ShapeType:
         """returns the object at random free position
 
         raises exception if not found
@@ -442,7 +443,7 @@ class ShapeArray(object):
 
         cnt = 0
         while True:
-            if cnt > constants.MAX_ITERATIONS:
+            if cnt > max_iterations:
                 raise NoSolutionError(
                     "Can't find a free position for this polygon")
             cnt += 1
@@ -464,7 +465,8 @@ class ShapeArray(object):
                      index: int,
                      min_distance: float,
                      minimal_replacing: bool,
-                     target_area: TargetArea) -> int:  # FIXME manipulation objects
+                     target_area: TargetArea,
+                     max_iterations: int) -> int:  # FIXME manipulation objects
         """Move an selected object that overlaps to an free position in the
         neighbourhood.
 
@@ -491,7 +493,7 @@ class ShapeArray(object):
             walk = WalkAround(target.xy)
             outside_cnt = 0
             while True:
-                if walk.counter > constants.MAX_ITERATIONS or outside_cnt > 20:
+                if walk.counter > max_iterations or outside_cnt > 20:
                     return -1  # can't find a free position
 
                 target.xy = walk.next()
@@ -509,7 +511,8 @@ class ShapeArray(object):
                 target = self._random_free_position(target,
                                                     min_distance=min_distance,
                                                     target_area=target_area,
-                                                    ignore_overlaps=False)
+                                                    ignore_overlaps=False,
+                                                    max_iterations=max_iterations)
             except NoSolutionError:
                 return -1
 
