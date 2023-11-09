@@ -169,8 +169,8 @@ class Dot(CircularShapeType):
         self._diameter = diameter
 
     @property
-    def size(self) -> Tuple[float, float]:
-        return (self._diameter, self._diameter)
+    def size(self) -> NDArray:
+        return np.array((self._diameter, self._diameter))
 
     @property
     def diameter(self) -> float:

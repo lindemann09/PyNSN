@@ -46,7 +46,7 @@ class Rectangle(ShapeType):
         return self._polygon
 
     @property
-    def size(self):
+    def size(self) -> NDArray:
         lb = shapely.get_coordinates(self._polygon)[0]  # left bottom
         rt = shapely.get_coordinates(self._polygon)[2]  # right top
         return rt - lb
@@ -183,7 +183,7 @@ class PolygonShape(ShapeType):
         return self._polygon
 
     @property
-    def size(self) -> Tuple[float, float]:
+    def size(self) -> NDArray:
         b = shapely.bounds(self._polygon)  # l, b, r, t
         return b[2:4] - b[0:2]  # [bound width, bound height]
 

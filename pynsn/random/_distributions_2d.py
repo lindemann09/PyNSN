@@ -22,12 +22,36 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
         y_range: relative bottom, top
         """
 
-        self.mu = np.asarray(mu)
-        if len(self.mu) != 2:
+        self._mu = np.array((0, 0))
+        self._x_minmax = np.array((-1*np.inf, np.inf))
+        self._y_minmax = np.array((-1*np.inf, np.inf))
+        self._max_radius = np.inf
+        # call constructors
+        self.max_radius = max_radius
+        self.set_limits(mu=mu, x_minmax=x_minmax, y_minmax=y_minmax)
+
+    @property
+    def mu(self) -> NDArray:
+        return self._mu
+
+    @property
+    def x_min(self) -> ArrayLike:
+        return self._x_minmax
+
+    @property
+    def y_min(self) -> ArrayLike:
+        return self._y_minmax
+
+    def set_limits(self, mu: ArrayLike,
+                   x_minmax: Optional[ArrayLike],
+                   y_minmax: Optional[ArrayLike]) -> None:
+
+        self._mu = np.asarray(mu)
+        if len(self._mu) != 2:
             raise TypeError("Mu has to be an array of two values.")
-        print(self.mu)
+
         if x_minmax is None:
-            xr = np.array((-1*np.inf, np.inf))
+            self._x_minmax = np.array((-1*np.inf, np.inf))
         else:
             xr = np.asarray(x_minmax)
             if len(xr) != 2:
@@ -36,10 +60,11 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
                 xr[0] = -1*np.inf
             if xr[1] is None or np.isnan(xr[1]):
                 xr[1] = np.inf
-            if not (xr[0] <= self.mu[0] <= xr[1]):
+            if not (xr[0] <= self._mu[0] <= xr[1]):
                 raise ValueError(f"interval x_minmax {xr} must contain mu[0]")
+            self._x_minmax = xr
         if y_minmax is None:
-            yr = np.array((-1*np.inf, np.inf))
+            self._y_minmax = np.array((-1*np.inf, np.inf))
         else:
             yr = np.asarray(y_minmax)
             if len(yr) != 2:
@@ -48,31 +73,38 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
                 yr[0] = -1*np.inf
             if yr[1] is None or np.isnan(yr[1]):
                 yr[1] = np.inf
-            if not (yr[0] <= self.mu[1] <= yr[1]):
+            if not (yr[0] <= self._mu[1] <= yr[1]):
                 raise ValueError(f"interval y_minmax {yr} must contain mu[1]")
+            self._y_minmax = yr
 
-        self.x_minmax = xr
-        self.y_minmax = yr
-        if max_radius is None:
-            self.max_radius = np.inf
+    @property
+    def max_radius(self) -> float:
+        return self._max_radius
+
+    @max_radius.setter
+    def max_radius(self, val: Optional[float]):
+        if val is None or np.isnan(val):
+            self._max_radius = np.inf
+        elif val <= 0:
+            raise ValueError("max_radius has to be a positive float and not 0")
         else:
-            self.max_radius = max_radius
+            self._max_radius = val
 
     def todict(self) -> Dict:
         """Dict representation of the distribution"""
         d = super().todict()
-        d.update({"mu": self.mu,
-                  "max_radius": self.max_radius,
-                  "x_minmax": self.x_minmax,
-                  "y_minmax": self.y_minmax})
+        d.update({"mu": self._mu,
+                  "max_radius": self._max_radius,
+                  "x_minmax": self._x_minmax,
+                  "y_minmax": self._y_minmax})
         return d
 
     def _delete_outlier_cartesian(self, arr: NDArray):
         """helper: delete those 2D values that are outside a particular range
         (cartesian)
         """
-        idx = (arr[:, 0] < self.x_minmax[0]) | (arr[:, 1] < self.y_minmax[0]) | \
-            (arr[:, 0] > self.x_minmax[1]) | (arr[:, 1] > self.y_minmax[1])
+        idx = (arr[:, 0] < self._x_minmax[0]) | (arr[:, 1] < self._y_minmax[0]) | \
+            (arr[:, 0] > self._x_minmax[1]) | (arr[:, 1] > self._y_minmax[1])
         return np.delete(arr, idx, axis=0)
 
     def _delete_outlier_radial(self, arr: NDArray):
@@ -80,11 +112,11 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
         (mu, max_radius)
         """
 
-        if self.max_radius < np.inf:
+        if self._max_radius < np.inf:
             # remove to large radii
-            d = arr - self.mu
+            d = arr - self._mu
             r = np.hypot(d[:, 0], d[:, 1])
-            return np.delete(arr, r > self.max_radius, axis=0)
+            return np.delete(arr, r > self._max_radius, axis=0)
         else:
             return arr
 
@@ -123,16 +155,16 @@ class Uniform2D(MultiVarDistributionType):
         super().__init__(mu=mu, x_minmax=x_minmax, y_minmax=y_minmax,
                          max_radius=max_radius)
 
-        self._xy_scale = (self.x_minmax[1] - self.x_minmax[0],
-                          self.y_minmax[1] - self.y_minmax[0])
+        self._xy_scale = (self._x_minmax[1] - self._x_minmax[0],
+                          self._y_minmax[1] - self._y_minmax[0])
 
     def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         rtn = np.empty((0, 2), dtype=float)
         required = n
         while required > 0:
             draw = _rng.generator.random(size=(required, 2))
-            draw[:, 0] = self.x_minmax[0] + draw[:, 0] * self._xy_scale[0]
-            draw[:, 1] = self.y_minmax[0] + draw[:, 1] * self._xy_scale[1]
+            draw[:, 0] = self._x_minmax[0] + draw[:, 0] * self._xy_scale[0]
+            draw[:, 1] = self._y_minmax[0] + draw[:, 1] * self._xy_scale[1]
             draw = self._delete_outlier_radial(draw)
             if len(draw) > 0:
                 # append
@@ -187,7 +219,7 @@ class Normal2D(MultiVarDistributionType):
         required = n
         while required > 0:
             draw = _rng.generator.multivariate_normal(
-                mean=self.mu, cov=self.varcov(), size=required)
+                mean=self._mu, cov=self.varcov(), size=required)
             draw = self._delete_outlier_radial(
                 self._delete_outlier_cartesian(draw))
             if len(draw) > 0:

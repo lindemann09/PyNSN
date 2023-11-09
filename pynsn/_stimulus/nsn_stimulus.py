@@ -17,6 +17,7 @@ from .shape_array import ShapeArray
 from .target_area import TargetArea
 from .stimulus_colours import StimulusColours
 from .. import defaults
+from ..random import MultiVarDistributionType
 
 
 class NSNStimulus(ShapeArray):
@@ -29,12 +30,14 @@ class NSNStimulus(ShapeArray):
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
                  min_distance: int = defaults.MIN_DISTANCE,
-                 min_distance_target_area: int = defaults.MIN_DISTANCE
+                 min_distance_target_area: int = defaults.MIN_DISTANCE,
+                 random_distribution: Optional[MultiVarDistributionType] = None
                  ) -> None:
 
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
-                                       min_distance_boarder=min_distance_target_area)
+                                       min_distance_boarder=min_distance_target_area,
+                                       random_distribution=random_distribution)
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
         self._colours = StimulusColours(target_area=self._target_area.colour)

@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, \
     ShapeType, Colour
 from .. import defaults
-from ..random import generator
+from ..random import MultiVarDistributionType, Uniform2D
 from ..types import NoSolutionError
 
 
@@ -21,7 +21,8 @@ class TargetArea(object):
 
     def __init__(self,
                  shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
-                 min_distance_boarder: int = 2
+                 min_distance_boarder: int = 2,
+                 random_distribution: Optional[MultiVarDistributionType] = None
                  ) -> None:
 
         super().__init__()
@@ -42,9 +43,19 @@ class TargetArea(object):
             self._shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)
 
         self._ring = shapely.get_exterior_ring(self._shape.polygon)
-        self._bound_sizes = np.array(shape.size)
-        self.min_distance_boarder = min_distance_boarder
 
+        # buffer of random position samples to avoid frequent call of random distribution
+        self._random_buffer = np.empty(0)
+        # random distribution
+        if isinstance(random_distribution, MultiVarDistributionType):
+            self._rand_dist = random_distribution
+        else:
+            f = np.array((-0.5, 0.5))
+            self._rand_dist = Uniform2D(x_minmax=shape.size[0] * f,
+                                        y_minmax=shape.size[1] * f)
+        # FIXME set_limits for rand_dist, if shape is smaller then actual limits
+
+        self.min_distance_boarder = min_distance_boarder
         shapely.prepare(self._shape.polygon)
         shapely.prepare(self._ring)
 
@@ -69,15 +80,17 @@ class TargetArea(object):
     @property
     def bound_sizes(self) -> NDArray[np.float_]:
         """width and height of bounds of the target area"""
-        return self._bound_sizes
+        return self._shape.size
 
-    def random_xy_inside_bounds(self):
+    def random_xy_inside_bounds(self) -> NDArray:
         """returns a random position inside the bounds of the target area
-
-        see shapley.bounds
         """
-        return generator.random(size=2) * self._bound_sizes \
-            - (self._bound_sizes/2)
+        if len(self._random_buffer) == 0:
+            self._random_buffer = self._rand_dist.sample(100)
+
+        rtn = self._random_buffer[-1]
+        self._random_buffer = np.delete(self._random_buffer, -1, axis=0)
+        return rtn
 
     def random_position(self, shape: ShapeType,
                         max_iterations: Optional[int] = None) -> ShapeType:

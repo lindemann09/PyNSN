@@ -80,6 +80,7 @@ class UnivariateDistributionType(ABCDistribution):
         if minmax is None:
             self.minmax = np.array((None, None))
         else:
+            # FIXME make properties with setter!
             self.minmax = np.asarray(minmax)
         if len(self.minmax) != 2:
             raise TypeError(

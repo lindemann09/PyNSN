@@ -150,7 +150,7 @@ class ShapeType(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def size(self) -> Tuple[float, float]:
+    def size(self) -> NDArray:
         pass
 
     @property
