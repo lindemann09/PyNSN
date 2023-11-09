@@ -2,8 +2,7 @@ from collections import OrderedDict
 from typing import Optional
 
 from .. import _misc, defaults
-from .._shapes import Colour
-from ..types import ColourType
+from .._shapes import Colour, ColourType
 
 
 class StimulusColours(object):

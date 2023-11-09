@@ -1,10 +1,12 @@
 # minim distance between objects
 MIN_DISTANCE = 2
+
 # Colours
 COLOUR_TARGET_AREA = "#A1A1A1"
 COLOUR_OBJECT = "black"
 OPACITY_OBJECT: float = 1
 OPACITY_GUIDES: float = 0.5
+
 # iterations
 MAX_ITERATIONS = 1000
 FIT_SPACING_PRECISION = 0.0001

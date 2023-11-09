@@ -32,13 +32,13 @@ class NSNStimulus(ShapeArray):
                  min_distance: int = defaults.MIN_DISTANCE,
                  min_distance_target_area: int = defaults.MIN_DISTANCE
                  ) -> None:
+
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
                                        min_distance_boarder=min_distance_target_area)
-
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
-        self._colours = StimulusColours()
+        self._colours = StimulusColours(target_area=self._target_area.colour)
 
     @property
     def target_area(self) -> TargetArea:
@@ -72,37 +72,16 @@ class NSNStimulus(ShapeArray):
         """
         return self._properties
 
-    def properties_txt(self, with_hash: bool = False, extended_format: bool = False) -> str:
-        prop = self.properties
-        if extended_format:
-            if with_hash:
+    def properties_txt(self, with_hash: bool = False, short_format: bool = False) -> str:
+        if with_hash:
+            if not short_format:
                 rtn = f"- Hash {self.hash()}\n "
             else:
-                rtn = ""
-            first = True
-            for k, v in prop.to_dict().items():
-                if first and len(rtn) == 0:
-                    rtn = "- "
-                    first = False
-                else:
-                    rtn += " "
-                rtn += key_value_format(k, v) + "\n "
-
-        else:
-            if with_hash:
                 rtn = "HASH: {} ".format(self.hash())
-            else:
-                rtn = ""
-            rtn += (f"N: {prop.numerosity}, "
-                    + f"TSA: {int(prop.total_surface_area)}, "
-                    + f"ISA: {int(prop.average_surface_area)}, "
-                    + f"FA: {int(prop.field_area)}, "
-                    + f"SPAR: {prop.sparsity:.2f}, "
-                    + f"logSIZE: {prop.log_size:.2f}, "
-                    + f"logSPACE: {prop.log_spacing:.2f}, "
-                    + f"COV: {prop.coverage:.2f}")
+        else:
+            rtn = ""
 
-        return rtn.rstrip()
+        return rtn + self._properties.totext(short_format)
 
     def hash(self) -> str:
         """Hash (MD5 hash) of the array

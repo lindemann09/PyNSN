@@ -13,6 +13,7 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
+from .._misc import key_value_format
 from .._shapes import Dot, Ellipse, Picture, PolygonShape, Rectangle
 from .._shapes import ellipse_geometry as ellipse_geo
 from .shape_array import ShapeArray
@@ -77,6 +78,28 @@ class ArrayProperties(object):
     def __init__(self, shape_array: ShapeArray) -> None:
         self._shapes = shape_array
         self._ch = None
+
+    def totext(self, short_format: bool = False) -> str:
+        if not short_format:
+            rtn = ""
+            first = True
+            for k, v in self.to_dict().items():
+                if first and len(rtn) == 0:
+                    rtn = "- "
+                    first = False
+                else:
+                    rtn += " "
+                rtn += key_value_format(k, v) + "\n "
+        else:
+            rtn = (f"N: {self.numerosity}, "
+                   + f"TSA: {self.total_surface_area:.2f}, "
+                   + f"ISA: {self.average_surface_area:.2f}, "
+                   + f"FA: {self.field_area:.2f}, "
+                   + f"SPAR: {self.sparsity:.2f}, "
+                   + f"logSIZE: {self.log_size:.2f}, "
+                   + f"logSPACE: {self.log_spacing:.2f}, "
+                   + f"COV: {self.coverage:.2f}")
+        return rtn.rstrip()
 
     @property
     def areas(self) -> NDArray[np.float_]:

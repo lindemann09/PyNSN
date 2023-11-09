@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray, ArrayLike
@@ -31,13 +31,13 @@ class MultiVarDistributionType(ABCDistribution):
                     xy_minmax[i] = x
 
             if (xy_minmax[0] > xy_minmax[2] or xy_minmax[1] > xy_minmax[3]):
-                raise TypeError(f"xy_minmax=[xmin, ymin, xmax, ymax]. xmin (or ymin) "
+                raise TypeError("xy_minmax=[xmin, ymin, xmax, ymax]. xmin (or ymin) "
                                 "is larger xmax (or ymax)")
 
         self.xy_minmax = xy_minmax
         self.max_radius = max_radius
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         """Dict representation of the distribution"""
         d = super().to_dict()
         d.update({"max_radius": self.max_radius,
@@ -89,7 +89,7 @@ class Normal2D(MultiVarDistributionType):
         cov[1, 0] = cov[0, 1]
         return cov
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n, round_to_decimals=None) -> NDArray:
         rtn = None
         required = n
         while required > 0:

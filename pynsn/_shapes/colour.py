@@ -2,13 +2,16 @@
 The named colour are the 140 HTML colour names:
    see https://www.w3schools.com/colors/colors_names.asp
 """
+
+from __future__ import annotations
+
 from functools import total_ordering
 from typing import Sequence, Union, Tuple
-from ..types import RGBType, ColourType
 
 _NUMERALS = "0123456789abcdefABCDEF"
 _HEXDEC = {v: int(v, 16)
            for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
+RGBType = Tuple[int, int, int]
 
 
 @total_ordering
@@ -320,3 +323,6 @@ class Colour(object):
         "expyriment_orange": "#FF9632",
         "expyriment_purple": "#A046FA",
     }
+
+
+ColourType = Union[Colour, str, RGBType, Sequence[float], None]

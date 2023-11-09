@@ -10,7 +10,8 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, ShapeType
+from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, \
+    ShapeType, Colour
 from .. import defaults
 from ..random import generator
 from ..types import NoSolutionError
@@ -22,6 +23,7 @@ class TargetArea(object):
                  shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
                  min_distance_boarder: int = 2
                  ) -> None:
+
         super().__init__()
         if not isinstance(shape, (Dot, Rectangle, Ellipse, PolygonShape)):
             raise RuntimeError(f"Target area can not be a {type(shape)}")
@@ -35,6 +37,9 @@ class TargetArea(object):
                           "Shape Position will be set to (0, 0).",
                           UserWarning)
             self._shape.xy = (0, 0)
+
+        if shape.colour.value is None:
+            shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)
 
         self._ring = shapely.get_exterior_ring(self._shape.polygon)
         self._bound_sizes = np.array(shape.size)
@@ -51,6 +56,10 @@ class TargetArea(object):
         return shape.is_inside(shape=self._shape,
                                shape_exterior_ring=self._ring,
                                min_dist_boarder=self.min_distance_boarder)
+
+    @property
+    def colour(self) -> Colour:
+        return self._shape.colour
 
     @property
     def shape(self) -> Union[Dot, Rectangle, Ellipse, PolygonShape]:
