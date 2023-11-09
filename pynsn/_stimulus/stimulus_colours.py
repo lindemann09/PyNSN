@@ -29,7 +29,7 @@ class StimulusColours(object):
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 
-    def to_dict(self) -> dict:  # FIXME: is that used somewhere?
+    def todict(self) -> dict:  # FIXME: is that used somewhere?
         return OrderedDict(
             {
                 "total_area": self.target_area.value,
@@ -44,7 +44,7 @@ class StimulusColours(object):
         )
 
     def __str__(self) -> str:
-        return _misc.dict_to_text(self.to_dict())
+        return _misc.dict_to_text(self.todict())
 
     @property
     def target_area(self) -> Colour:

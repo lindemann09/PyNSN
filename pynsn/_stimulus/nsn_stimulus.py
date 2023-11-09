@@ -10,7 +10,6 @@ from typing import Optional, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from .._misc import key_value_format
 from .._shapes import Dot, PolygonShape, Rectangle, Ellipse, ShapeType, Point2D
 from ..types import NoSolutionError
 from .properties import ArrayProperties

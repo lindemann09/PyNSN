@@ -83,7 +83,7 @@ class ArrayProperties(object):
         if not short_format:
             rtn = ""
             first = True
-            for k, v in self.to_dict().items():
+            for k, v in self.todict().items():
                 if first and len(rtn) == 0:
                     rtn = "- "
                     first = False
@@ -249,7 +249,7 @@ class ArrayProperties(object):
         else:
             raise ValueError("f{property_flag} is a unknown visual feature")
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
         rtn.extend([(x.label(), self.get(x))

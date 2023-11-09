@@ -1,10 +1,20 @@
 import pynsn
 from pynsn import random
 import matplotlib.pyplot as plt
+import numpy as np
+import timeit
+start = timeit.timeit()
 
-d = random.Normal2D(mu=(0, 0), sigma=(10, 10),
-                    xy_minmax=(-10, None, 10, 20),
-                    correlation=0.5)
-d.pyplot_samples()
+d = random.Uniform2D(x_minmax=(-100, 100),
+                     y_minmax=(20, 50))
 
-plt.show()
+s = d.sample(100000)
+print(np.min(s, axis=0))
+print(np.max(s, axis=0))
+
+# d.pyplot_samples()
+
+# plt.show()
+
+# d = random.Uniform2D(x_minmax=(50, 55), y_minmax=(-100, 100),
+#                     radial_radius=6)

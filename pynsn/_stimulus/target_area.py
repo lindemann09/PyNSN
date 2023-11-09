@@ -38,8 +38,8 @@ class TargetArea(object):
                           UserWarning)
             self._shape.xy = (0, 0)
 
-        if shape.colour.value is None:
-            shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)
+        if self._shape.colour.value is None:
+            self._shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)
 
         self._ring = shapely.get_exterior_ring(self._shape.polygon)
         self._bound_sizes = np.array(shape.size)

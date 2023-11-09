@@ -14,7 +14,6 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .. import defaults
 from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
                        PolygonShape, Rectangle, ShapeType)
 from .._shapes import ellipse_geometry as ellipse_geo
@@ -231,7 +230,7 @@ class ShapeArray(object):
             self._convex_hull = ConvexHull(self._polygons)
         return self._convex_hull
 
-    def to_dict(self) -> OrderedDict:
+    def todict(self) -> OrderedDict:
         """dict representation of the object array
 
         Notes. The can be used to create Pandas dataframe or Arrow Tables
@@ -264,7 +263,7 @@ class ShapeArray(object):
 
         """
 
-        d = self.to_dict()
+        d = self.todict()
         rtn = ",".join(d.keys()) + "\n"
         keys = list(d.keys())
         if skip_columns is not None:

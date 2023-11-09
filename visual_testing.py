@@ -42,7 +42,7 @@ if False:
 
 # random dot
 if True:
-    nsn.add_somewhere(da, n=20, ignore_overlaps=False)
+    nsn.add_somewhere(da, n=300, ignore_overlaps=False)
 nsn.add([db,  dc, ra])
 # nsn.colours.object_default = "red"
 # nsn.colours.convex_hull = "gray"

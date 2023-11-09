@@ -13,7 +13,7 @@ from . import _rng
 
 
 def round_samples(samples: NDArray,
-                  round_to_decimals: Union[None, int]) -> NDArray:
+                  round_to_decimals: Optional[int]) -> NDArray:
     if round_to_decimals is not None:
         arr = np.round(samples, decimals=round_to_decimals)
         if round_to_decimals == 0:
@@ -25,14 +25,15 @@ def round_samples(samples: NDArray,
 
 
 class ABCDistribution(metaclass=ABCMeta):
+    """Base class for all distribution"""
 
     @abstractmethod
-    def to_dict(self) -> Dict:
+    def todict(self) -> Dict:
         """Dict representation of the distribution"""
         return {"distribution": type(self).__name__}
 
     @abstractmethod
-    def sample(self, n, round_to_decimals=False) -> NDArray:
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         """Random sample from the distribution
 
         Args:
@@ -84,10 +85,10 @@ class UnivariateDistributionType(ABCDistribution):
             raise TypeError(
                 f"min_max {minmax} has to be a tuple of two values")
 
-    def to_dict(self):
+    def todict(self):
         """Dict representation of the distribution"""
-        d = super().to_dict()
-        d.update({"min_max": self.minmax})
+        d = super().todict()
+        d.update({"minmax": self.minmax})
         return d
 
 
@@ -104,14 +105,14 @@ class Uniform(UnivariateDistributionType):
         """
 
         super().__init__(minmax)
-        if self.minmax[0] is None or self.minmax[1] is None or \
-                self.minmax[0] > self.minmax[1]:
+        if self.minmax[0] > self.minmax[1]:
             raise TypeError(f"min_max {minmax} has to be a tuple of two values "
                             "(a, b) with a <= b.")
+        self._scale = self.minmax[1] - self.minmax[0]
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         dist = _rng.generator.random(size=n)
-        rtn = self.minmax[0] + dist * float(self.minmax[1] - self.minmax[0])
+        rtn = self.minmax[0] + dist * self._scale
         return round_samples(rtn, round_to_decimals)
 
 
@@ -136,7 +137,7 @@ class Levels(UnivariateDistributionType):
                 raise ValueError(
                     "Number weights does not match the number of levels")
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         if self.weights is None:
             p = np.array([1 / len(self.levels)] * len(self.levels))
         else:
@@ -167,8 +168,8 @@ class Levels(UnivariateDistributionType):
 
         return round_samples(np.asarray(dist), round_to_decimals)
 
-    def to_dict(self):
-        d = super().to_dict()
+    def todict(self):
+        d = super().todict()
         d.update({"population": self.levels,
                   "weights": self.weights,
                   "exact_weighting": self.exact_weighting})
@@ -187,13 +188,13 @@ class Triangle(UnivariateDistributionType):
             raise ValueError(f"mode ({mode}) has to be inside the defined "
                              f"min_max range ({self.minmax})")
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         dist = _rng.generator.triangular(left=self.minmax[0], right=self.minmax[1],
                                          mode=self.mode, size=n)
         return round_samples(dist, round_to_decimals)
 
-    def to_dict(self):
-        d = super().to_dict()
+    def todict(self):
+        d = super().todict()
         d.update({"mode": self.mode})
         return d
 
@@ -209,8 +210,8 @@ class _DistributionMuSigma(UnivariateDistributionType):
             raise ValueError(f"mode ({mu}) has to be inside the defined "
                              f"min_max range ({self.minmax})")
 
-    def to_dict(self):
-        d = super().to_dict()
+    def todict(self):
+        d = super().todict()
         d.update({"mu": self.mu,
                   "sigma": self.sigma})
         return d
@@ -229,7 +230,7 @@ class Normal(_DistributionMuSigma):
             the range of the distribution
     """
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         rtn = np.array([])
         required = n
         while required > 0:
@@ -276,7 +277,7 @@ class Beta(_DistributionMuSigma):
                 "Either Mu & Sigma or Alpha & Beta have to specified.")
         super().__init__(mu=mu, sigma=sigma, minmax=minmax)
 
-    def sample(self, n, round_to_decimals=None):
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         if self.sigma is None or self.sigma == 0:
             return np.array([self.mu] * n)
 
@@ -339,9 +340,9 @@ class _Constant(UnivariateDistributionType):
 
         super().__init__(minmax=np.array((value, value)))
 
-    def sample(self, n, round_to_decimals=None) -> NDArray:
+    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
         return round_samples([self.minmax[0]] * n, round_to_decimals)
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         return {"distribution": "Constant",
                 "value": self.minmax[0]}

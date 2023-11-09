@@ -11,7 +11,7 @@ import shapely
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 
-from ..types import Coord2D, Coord2DLike
+from ..types import Coord2DLike
 from .colour import Colour
 
 INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
@@ -20,9 +20,9 @@ INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
 class PointType(metaclass=ABCMeta):
 
     def __init__(self, xy: Coord2DLike):
-        if len(xy) != 2:
-            raise ValueError(INCORRECT_COORDINATE)
         self._xy = np.asarray(xy)
+        if len(self._xy) != 2:
+            raise ValueError(INCORRECT_COORDINATE)
 
     @property
     def xy(self) -> NDArray:
@@ -30,23 +30,21 @@ class PointType(metaclass=ABCMeta):
 
     @xy.setter
     def xy(self, val: Coord2DLike):
-        if len(val) != 2:
-            raise ValueError(INCORRECT_COORDINATE)
         self._xy = np.asarray(val)
+        if len(self._xy) != 2:
+            raise ValueError(INCORRECT_COORDINATE)
 
     @property
     def xy_point(self) -> Point:
         return Point(self._xy)
 
-
     @abstractmethod
     def distance(self, shape: Union[PointType, ShapeType]) -> float:
-            """Distance to another shape
+        """Distance to another shape
 
-            Note: Returns negative distances only for circular shapes, otherwise
-            overlapping distances are 0.
-            """
-
+        Note: Returns negative distances only for circular shapes, otherwise
+        overlapping distances are 0.
+        """
 
     @abstractmethod
     def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
@@ -64,7 +62,6 @@ class PointType(metaclass=ABCMeta):
         """
 
 
-
 class ShapeType(metaclass=ABCMeta):
     """Abstract Shape Type Class"""
     ID = -1
@@ -72,22 +69,22 @@ class ShapeType(metaclass=ABCMeta):
     def __init__(self,
                  xy: Coord2DLike,
                  attribute: Any) -> None:
-        if len(xy) != 2:
+        self._xy = np.asarray(xy)
+        if len(self._xy) != 2:
             raise ValueError(INCORRECT_COORDINATE)
-        self._xy = tuple(xy)
         self._attribute = attribute
         self._polygon = None
 
     @property
-    def xy(self) -> Coord2D:
-        return self._xy  # type: ignore
+    def xy(self) -> NDArray:
+        return self._xy
 
     @xy.setter
     def xy(self, val: Coord2DLike):
-        if len(val) != 2:
+        xy = np.asarray(val)
+        if len(xy) != 2:
             raise ValueError(INCORRECT_COORDINATE)
 
-        xy = tuple(val)
         if isinstance(self._polygon, Polygon):
             move_xy = (xy[0] - self._xy[0], xy[1] - self._xy[1])
             self._polygon = shapely.transform(self._polygon,
@@ -126,14 +123,13 @@ class ShapeType(metaclass=ABCMeta):
     def height(self) -> float:
         return self.size[1]
 
-    def move(self, move_xy: Coord2DLike):
+    def move(self, move_xy: Coord2DLike) -> None:
         """moves the xy position of the shape
         """
-
+        move_xy = np.asarray(move_xy)
         if len(move_xy) != 2:
             raise ValueError("move_xy has be an list of two numerals (x, y)")
-        self._xy = (self._xy[0] + move_xy[0],
-                    self._xy[1] + move_xy[1])
+        self._xy = self._xy + move_xy
         if self._polygon is not None:
             self._polygon = shapely.transform(self._polygon,
                                               lambda x: x + move_xy)
@@ -207,6 +203,7 @@ class CircularShapeType(ShapeType, metaclass=ABCMeta):
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         pass
+
 
 def is_in_shape(a: Union[PointType, ShapeType],
                 b: ShapeType,
