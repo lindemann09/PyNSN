@@ -30,7 +30,7 @@ class ABCDistribution(metaclass=ABCMeta):
     @abstractmethod
     def todict(self) -> dict:
         """Dict representation of the distribution"""
-        return {"distribution": type(self).__name__}
+        return {"type": type(self).__name__}
 
     @abstractmethod
     def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
@@ -89,7 +89,7 @@ class UnivariateDistributionType(ABCDistribution):
     def todict(self) -> dict:
         """Dict representation of the distribution"""
         d = super().todict()
-        d.update({"minmax": self.minmax})
+        d.update({"minmax": self.minmax.tolist()})
         return d
 
 
@@ -121,25 +121,25 @@ class Levels(UnivariateDistributionType):
     """Levels
     """
 
-    def __init__(self, levels: Sequence,
+    def __init__(self, levels: ArrayLike,
                  weights: Optional[ArrayLike] = None,
                  exact_weighting=False):
         """Distribution of level. Samples from a population discrete categories
          with optional weights for each level or category.
         """
         super().__init__(minmax=None)
-        self.levels = levels
+        self.levels = np.asarray(levels)
         self.exact_weighting = exact_weighting
         if weights is None:
-            self.weights = None
+            self.weights = np.empty(0)
         else:
             self.weights = np.asarray(weights)
-            if len(levels) != len(self.weights):
+            if len(self.levels) != len(self.weights):
                 raise ValueError(
                     "Number weights does not match the number of levels")
 
     def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
-        if self.weights is None:
+        if len(self.weights) ==0:
             p = np.array([1 / len(self.levels)] * len(self.levels))
         else:
             p = self.weights / np.sum(self.weights)
@@ -152,7 +152,7 @@ class Levels(UnivariateDistributionType):
                 # problem: some n are floats
                 try:
                     # greatest common denominator
-                    gcd = np.gcd.reduce(self.weights)  # type: ignore
+                    gcd = np.gcd.reduce(self.weights)
                     info = "\nSample size has to be a multiple of {}.".format(
                         int(np.sum(self.weights / gcd)))
                 except:
@@ -171,8 +171,8 @@ class Levels(UnivariateDistributionType):
 
     def todict(self) -> dict:
         d = super().todict()
-        d.update({"population": self.levels,
-                  "weights": self.weights,
+        d.update({"population": self.levels.tolist(),
+                  "weights": self.weights.tolist(),
                   "exact_weighting": self.exact_weighting})
         return d
 
@@ -345,5 +345,5 @@ class _Constant(UnivariateDistributionType):
         return round_samples([self.minmax[0]] * n, round_to_decimals)
 
     def todict(self) -> dict:
-        return {"distribution": "Constant",
+        return {"type": "Constant",
                 "value": self.minmax[0]}

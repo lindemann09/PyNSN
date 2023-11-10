@@ -4,11 +4,42 @@ Draw a random number from a beta dirstribution
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+import json
 import sys
 from collections import OrderedDict
 from typing import Any
+
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import ArrayLike, NDArray
+
+
+def formated_json(d:dict, indent:int=2) -> str:
+    json_str = json.dumps(d)
+    if indent<1:
+        return json_str
+    rtn = ""
+    i = 0
+    block_newline = False
+    for x in json_str:
+        if x == "{":
+            i = i + indent
+            x = x + "\n" + " " * i
+        elif x == "," and not block_newline:
+            x = x + "\n" + " " * (i-1) # -1, because a space follows
+        elif x == "}":
+            i -= indent
+            x = "\n" + " " * i + x
+        elif x == "[":
+            block_newline = True
+        elif x == "]":
+            block_newline = False
+
+
+        rtn += x
+
+    return rtn
+
+
 
 
 def join_dict_list(list_of_dicts):

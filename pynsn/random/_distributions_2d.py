@@ -93,10 +93,10 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
     def todict(self) -> dict:
         """Dict representation of the distribution"""
         d = super().todict()
-        d.update({"mu": self._mu,
+        d.update({"mu": self._mu.tolist(),
                   "max_radius": self._max_radius,
-                  "x_minmax": self._x_minmax,
-                  "y_minmax": self._y_minmax})
+                  "x_minmax": self._x_minmax.tolist(),
+                  "y_minmax": self._y_minmax.tolist()})
         return d
 
     def _delete_outlier_cartesian(self, arr: NDArray):

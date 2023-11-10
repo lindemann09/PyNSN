@@ -21,11 +21,12 @@ class TargetArea(object):
 
     def __init__(self,
                  shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
-                 min_distance_boarder: int = 2,
-                 random_distribution: Optional[MultiVarDistributionType] = None
+                 min_dist_boarder: int = 2,
+                 distribution: Optional[MultiVarDistributionType] = None
                  ) -> None:
 
         super().__init__()
+
         if not isinstance(shape, (Dot, Rectangle, Ellipse, PolygonShape)):
             raise RuntimeError(f"Target area can not be a {type(shape)}")
         if (shape.height < 1 or shape.width < 1):
@@ -47,15 +48,15 @@ class TargetArea(object):
         # buffer of random position samples to avoid frequent call of random distribution
         self._random_buffer = np.empty(0)
         # random distribution
-        if isinstance(random_distribution, MultiVarDistributionType):
-            self._rand_dist = random_distribution
+        if isinstance(distribution, MultiVarDistributionType):
+            self._distr = distribution
         else:
             f = np.array((-0.5, 0.5))
-            self._rand_dist = Uniform2D(x_minmax=shape.size[0] * f,
+            self._distr = Uniform2D(x_minmax=shape.size[0] * f,
                                         y_minmax=shape.size[1] * f)
         # FIXME set_limits for rand_dist, if shape is smaller then actual limits
 
-        self.min_distance_boarder = min_distance_boarder
+        self.min_dist_boarder = min_dist_boarder
         shapely.prepare(self._shape.polygon)
         shapely.prepare(self._ring)
 
@@ -66,7 +67,7 @@ class TargetArea(object):
 
         return shape.is_inside(shape=self._shape,
                                shape_exterior_ring=self._ring,
-                               min_dist_boarder=self.min_distance_boarder)
+                               min_dist_boarder=self.min_dist_boarder)
 
     @property
     def colour(self) -> Colour:
@@ -86,7 +87,7 @@ class TargetArea(object):
         """returns a random position inside the bounds of the target area
         """
         if len(self._random_buffer) == 0:
-            self._random_buffer = self._rand_dist.sample(100)
+            self._random_buffer = self._distr.sample(100)
 
         rtn = self._random_buffer[-1]
         self._random_buffer = np.delete(self._random_buffer, -1, axis=0)
@@ -111,3 +112,9 @@ class TargetArea(object):
 
             if self.is_object_inside(shape):
                 return shape
+
+    def todict(self) -> dict:
+        return {"shape": self.shape.todict(),
+             "min_dist_boarder": self.min_dist_boarder,
+            "distribution": self._distr.todict()}
+

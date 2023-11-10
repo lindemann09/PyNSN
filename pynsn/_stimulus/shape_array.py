@@ -6,7 +6,6 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 
-from collections import OrderedDict
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -89,14 +88,13 @@ class ShapeArray(object):
         if np.any(self._types == PolygonShape.name):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
-        d = OrderedDict()
-        d.update({"type": self._types,
-                    "x": self._xy[:, 0].tolist(),
+        d = {"type": self._types.tolist(),
+                "x": self._xy[:, 0].tolist(),
                 "y": self._xy[:, 1].tolist(),
                 "width": self._sizes[:, 0].tolist(),
                 "height": self._sizes[:, 1].tolist(),
                 "attributes": [str(x) for x in self._attributes.tolist()]
-                })
+                }
         return d
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):

@@ -4,21 +4,22 @@
 from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
+
 from hashlib import md5
 from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .._shapes import Dot, PolygonShape, Rectangle, Ellipse, ShapeType, Point2D
+from .. import defaults
+from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, ShapeType
+from ..random import MultiVarDistributionType
 from ..types import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
-from .target_area import TargetArea
 from .stimulus_colours import StimulusColours
-from .. import defaults
-from ..random import MultiVarDistributionType
-
+from .target_area import TargetArea
+from .._misc import formated_json
 
 class NSNStimulus(ShapeArray):
     """Non-Symbolic Number Stimulus
@@ -36,8 +37,8 @@ class NSNStimulus(ShapeArray):
 
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
-                                       min_distance_boarder=min_distance_target_area,
-                                       random_distribution=random_distribution)
+                                       min_dist_boarder=min_distance_target_area,
+                                       distribution=random_distribution)
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
         self._colours = StimulusColours(target_area=self._target_area.colour)
@@ -108,12 +109,16 @@ class NSNStimulus(ShapeArray):
     def todict(self, tabular:bool= True) -> dict:
         """Dict representation of the shape array
         """
+        rtn = {"target_area" : self.target_area.todict()}
         if tabular:
-            rtn = self.shape_table_dict()
+            rtn.update({"shape_table": self.shape_table_dict()})
         else:
-            rtn = super().todict()
+            rtn.update(super().todict())
         return rtn
 
+    def tojson(self, indent:int=2, tabular:bool= True)->str:
+        d = self.todict(tabular=tabular)
+        return formated_json(d, indent=indent)
 
     def fix_overlap(self,
                     inside_convex_hull: bool = False,
@@ -140,7 +145,7 @@ class NSNStimulus(ShapeArray):
         if inside_convex_hull:
             area = TargetArea(
                 shape=PolygonShape(self.convex_hull.polygon),
-                min_distance_boarder=self._target_area.min_distance_boarder)
+                min_dist_boarder=self._target_area.min_dist_boarder)
         else:
             area = self._target_area
 
@@ -236,7 +241,7 @@ class NSNStimulus(ShapeArray):
         if inside_convex_hull:
             area = TargetArea(
                 shape=PolygonShape(self.convex_hull.polygon),
-                min_distance_boarder=self._target_area.min_distance_boarder)
+                min_dist_boarder=self._target_area.min_dist_boarder)
         else:
             area = self._target_area
 
