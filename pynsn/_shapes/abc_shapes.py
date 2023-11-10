@@ -4,7 +4,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import shapely
@@ -38,6 +38,11 @@ class PointType(metaclass=ABCMeta):
     def xy_point(self) -> Point:
         return Point(self._xy)
 
+    @classmethod
+    @property
+    def name(cls) -> str:
+        return str(cls.__name__)
+
     @abstractmethod
     def distance(self, shape: Union[PointType, ShapeType]) -> float:
         """Distance to another shape
@@ -61,10 +66,16 @@ class PointType(metaclass=ABCMeta):
         """True is shapes fully inside the shapes (dist)
         """
 
+    @abstractmethod
+    def todict(self) -> dict:
+        """dict representation of the object"""
+        return {"type: ": str(self.__class__.__name__),
+                "xy": self.xy.tolist()}
+
+
 
 class ShapeType(metaclass=ABCMeta):
     """Abstract Shape Type Class"""
-    ID = -1
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -140,7 +151,18 @@ class ShapeType(metaclass=ABCMeta):
         if self._polygon is None:
             self._polygon = self.polygon
 
+    @classmethod
+    @property
+    def name(cls) -> str:
+        return str(cls.__name__)
+
     ## abstract methods ###
+    @abstractmethod
+    def todict(self) -> dict:
+        """dict representation of the object"""
+        return {"type: ": self.name,
+                "xy": self.xy.tolist(),
+                "attr": str(self.attribute)}
 
     @abstractmethod
     def copy(self, new_xy: Optional[Coord2DLike] = None,

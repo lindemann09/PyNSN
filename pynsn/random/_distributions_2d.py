@@ -90,7 +90,7 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
         else:
             self._max_radius = val
 
-    def todict(self) -> Dict:
+    def todict(self) -> dict:
         """Dict representation of the distribution"""
         d = super().todict()
         d.update({"mu": self._mu,

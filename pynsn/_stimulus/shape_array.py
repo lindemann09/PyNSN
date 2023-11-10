@@ -26,19 +26,12 @@ from .target_area import TargetArea
 class ShapeArray(object):
     """Numpy Optimizes Representation of Array of shapes"""
 
-    SHAPE_LABELS = {
-        Dot.ID: "Dot",
-        Rectangle.ID: "Rectangle",
-        Picture.ID: "Picture",
-        Ellipse.ID: "Ellipse",
-        PolygonShape.ID: "Polygon"}
-
     def __init__(self) -> None:
         self._xy = np.empty((0, 2), dtype=np.float64)
         self._sizes = np.empty((0, 2), dtype=np.float64)
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
-        self._types = np.empty(0, dtype=int)
+        self._types = np.empty(0, dtype=str)
         self._ids = {}
         self._convex_hull = None
         self._update_ids()
@@ -52,11 +45,7 @@ class ShapeArray(object):
         return self._sizes
 
     @property
-    def shape_types(self) -> List[str]:
-        return [ShapeArray.SHAPE_LABELS[x] for x in self._types]
-
-    @property
-    def shape_types_ids(self) -> NDArray[np.int_]:
+    def shape_types(self) -> NDArray[np.str_]:
         return self._types
 
     @property
@@ -68,14 +57,40 @@ class ShapeArray(object):
         return self._attributes
 
     @property
-    def ids(self) -> Dict[int, NDArray]:
+    def ids(self) -> Dict[str, NDArray]:
         """Dictionary of ids for the different shape types"""
         return self._ids
 
     def _update_ids(self):
         self._ids = {}
-        for st in [Dot.ID, Rectangle.ID, Ellipse.ID, Picture.ID, PolygonShape.ID]:
+        for st in [Dot.name, Rectangle.name, Ellipse.name, Picture.name, PolygonShape.name]:
             self._ids[st] = np.flatnonzero(self._types == st)
+
+    def todict(self, tabular=False) -> dict:
+        """dict representation of the object array
+
+        Notes
+        -----
+        Tabular representation can not handle PolygonShapes, but they are more
+        effient and can be used to create Pandas dataframe or Arrow Tables.
+
+        Examples
+        --------
+        >>> df_dict = stimulus.dataframe_dict()
+        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
+
+        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
+        """
+        if not tabular:
+            return {"shape_array": [x.todict() for x in self.get_list()]}
+        else:
+            d = OrderedDict()
+            d.update({"x": self._xy[:, 0].tolist(),
+                    "y": self._xy[:, 1].tolist(),
+                    "width": self._sizes[:, 0].tolist(),
+                    "height": self._sizes[:, 1].tolist(),
+                    "attributes": self._attributes.tolist()})
+            return d
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
         """add shape a the defined position
@@ -89,7 +104,7 @@ class ShapeArray(object):
             self._sizes = np.append(
                 self._sizes, np.atleast_2d(shapes.size), axis=0)
             self._attributes = np.append(self._attributes, shapes.attribute)
-            self._types = np.append(self._types, shapes.ID)
+            self._types = np.append(self._types, shapes.name)
             self._polygons = np.append(self._polygons, shapes.polygon)
             self._convex_hull = None
             self._update_ids()
@@ -112,7 +127,7 @@ class ShapeArray(object):
         self._xy[index, :] = shape.xy
         self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
-        self._types[index] = shape.ID
+        self._types[index] = shape.name
         self._convex_hull = None
         self._update_ids()
 
@@ -130,7 +145,7 @@ class ShapeArray(object):
         self._polygons = np.empty(0, dtype=object)
         self._xy = np.empty((0, 2), dtype=np.float64)
         self._attributes = np.empty(0, dtype=object)
-        self._types = np.empty(0, dtype=int)
+        self._types = np.empty(0, dtype=str)
         self._sizes = np.empty((0, 2), dtype=np.float64)
         self._convex_hull = None
         self._update_ids()
@@ -176,32 +191,32 @@ class ShapeArray(object):
 
     def get(self, index: int) -> ShapeType:
         """Returns selected object"""
-        type_id = self._types[index]
-        if type_id == Dot.ID:
+        name = self._types[index]
+        if name == Dot.name:
             rtn = Dot(
                 xy=self._xy[index, :],
                 diameter=self._sizes[index, 0],
                 attribute=self._attributes[index])
-        elif type_id == Rectangle.ID:
+        elif name == Rectangle.name:
             return Rectangle(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 attribute=self._attributes[index])
-        elif type_id == Picture.ID:
+        elif name == Picture.name:
             return Picture(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 path=self._attributes[index])  # type: ignore
-        elif type_id == Ellipse.ID:
+        elif name == Ellipse.name:
             return Ellipse(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 attribute=self._attributes[index])
-        elif type_id == PolygonShape.ID:
+        elif name == PolygonShape.name:
             return PolygonShape(polygon=self._polygons[index],
                                 attribute=self._attributes[index])
         else:
-            raise TypeError(f"{type_id}: Unknown shape type id.")
+            raise TypeError(f"{name}: Unknown shape type id.")
 
         # rtn.set_polygon(self._polygons[index])
         return rtn
@@ -230,26 +245,7 @@ class ShapeArray(object):
             self._convex_hull = ConvexHull(self._polygons)
         return self._convex_hull
 
-    def todict(self) -> OrderedDict:
-        """dict representation of the object array
 
-        Notes. The can be used to create Pandas dataframe or Arrow Tables
-
-        Examples
-        --------
-        >>> df_dict = stimulus.dataframe_dict()
-        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
-
-        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
-        """
-
-        d = OrderedDict()
-        d.update({"x": self._xy[:, 0].tolist(),
-                  "y": self._xy[:, 1].tolist(),
-                  "width": self._sizes[:, 0].tolist(),
-                  "height": self._sizes[:, 1].tolist(),
-                  "attributes": self._attributes.tolist()})
-        return d
 
     def csv(self, skip_columns: Optional[Sequence[str]] = None) -> str:
         """Comma-separated table representation the nsn stimulus
@@ -303,13 +299,13 @@ class ShapeArray(object):
             # circular target shape
             rtn = np.full(self.n_objects, np.nan)
 
-            idx = self._ids[Dot.ID]
+            idx = self._ids[Dot.name]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
                                                     dots_xy=self._xy[idx, :],
                                                     dots_diameter=self._sizes[idx, 0])
-            idx = self._ids[Ellipse.ID]
+            idx = self._ids[Ellipse.name]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
@@ -341,7 +337,7 @@ class ShapeArray(object):
         if isinstance(shape, (Point2D, CircularShapeType)):
             rtn = np.full(self.n_objects, False)
 
-            idx = self._ids[Dot.ID]
+            idx = self._ids[Dot.name]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
@@ -349,7 +345,7 @@ class ShapeArray(object):
                                                  dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
-            idx = self._ids[Ellipse.ID]
+            idx = self._ids[Ellipse.name]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,

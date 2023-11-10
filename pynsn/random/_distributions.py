@@ -28,7 +28,7 @@ class ABCDistribution(metaclass=ABCMeta):
     """Base class for all distribution"""
 
     @abstractmethod
-    def todict(self) -> Dict:
+    def todict(self) -> dict:
         """Dict representation of the distribution"""
         return {"distribution": type(self).__name__}
 
@@ -86,7 +86,7 @@ class UnivariateDistributionType(ABCDistribution):
             raise TypeError(
                 f"min_max {minmax} has to be a tuple of two values")
 
-    def todict(self):
+    def todict(self) -> dict:
         """Dict representation of the distribution"""
         d = super().todict()
         d.update({"minmax": self.minmax})
@@ -169,7 +169,7 @@ class Levels(UnivariateDistributionType):
 
         return round_samples(np.asarray(dist), round_to_decimals)
 
-    def todict(self):
+    def todict(self) -> dict:
         d = super().todict()
         d.update({"population": self.levels,
                   "weights": self.weights,
@@ -194,7 +194,7 @@ class Triangle(UnivariateDistributionType):
                                          mode=self.mode, size=n)
         return round_samples(dist, round_to_decimals)
 
-    def todict(self):
+    def todict(self) -> dict:
         d = super().todict()
         d.update({"mode": self.mode})
         return d
@@ -211,7 +211,7 @@ class _DistributionMuSigma(UnivariateDistributionType):
             raise ValueError(f"mode ({mu}) has to be inside the defined "
                              f"min_max range ({self.minmax})")
 
-    def todict(self):
+    def todict(self) -> dict:
         d = super().todict()
         d.update({"mu": self.mu,
                   "sigma": self.sigma})

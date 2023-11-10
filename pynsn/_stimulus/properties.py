@@ -107,19 +107,19 @@ class ArrayProperties(object):
 
         rtn = np.full(self._shapes.n_objects, np.nan)
         # rects and polygons
-        idx = np.append(self._shapes.ids[Rectangle.ID],
-                        self._shapes.ids[Picture.ID])
+        idx = np.append(self._shapes.ids[Rectangle.name],
+                        self._shapes.ids[Picture.name])
         if len(idx) > 0:
             rtn[idx] = self._shapes.sizes[idx, 0] * self._shapes.sizes[idx, 1]
         # circular shapes area
         # Area = pi * r_x * r_y
-        idx = np.append(self._shapes.ids[Dot.ID],
-                        self._shapes.ids[Ellipse.ID])
+        idx = np.append(self._shapes.ids[Dot.name],
+                        self._shapes.ids[Ellipse.name])
         if len(idx) > 0:
             r = self._shapes.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
         # polygons area
-        idx = self._shapes.ids[PolygonShape.ID]
+        idx = self._shapes.ids[PolygonShape.name]
         if len(idx) > 0:
             rtn[idx] = shapely.area(self._shapes.polygons[idx])
         return rtn
@@ -130,17 +130,17 @@ class ArrayProperties(object):
 
         rtn = np.full(self._shapes.n_objects, np.nan)
 
-        idx = np.concatenate((self._shapes.ids[Rectangle.ID],
-                              self._shapes.ids[Picture.ID],
-                              self._shapes.ids[PolygonShape.ID]))
+        idx = np.concatenate((self._shapes.ids[Rectangle.name],
+                              self._shapes.ids[Picture.name],
+                              self._shapes.ids[PolygonShape.name]))
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shapes.polygons[idx])
         # dots perimeter
-        idx = self._shapes.ids[Dot.ID]
+        idx = self._shapes.ids[Dot.name]
         if len(idx) > 0:
             rtn[idx] = np.pi * self._shapes.sizes[idx, 0]
         # ellipse perimeter
-        idx = self._shapes.ids[Ellipse.ID]
+        idx = self._shapes.ids[Ellipse.name]
         if len(idx) > 0:
             rtn[idx] = ellipse_geo.perimeter(self._shapes.sizes[idx, :])
 

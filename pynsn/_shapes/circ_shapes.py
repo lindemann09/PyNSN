@@ -11,7 +11,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from copy import deepcopy
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional,  Union
 from numpy.typing import NDArray
 
 import numpy as np
@@ -21,7 +21,7 @@ from shapely.affinity import scale
 
 from ..types import Coord2DLike
 from .abc_shapes import CircularShapeType, PointType, ShapeType, is_in_shape
-
+import json
 
 class Point2D(PointType):
 
@@ -63,9 +63,11 @@ class Point2D(PointType):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
+    def todict(self) -> dict:
+        return super().todict()
+
 
 class Ellipse(CircularShapeType):
-    ID = 3
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -147,9 +149,12 @@ class Ellipse(CircularShapeType):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
+    def todict(self) -> dict:
+        d = super().todict()
+        d.update({"size": self.size.tolist()})
+        return d
 
 class Dot(CircularShapeType):
-    ID = 1
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -227,6 +232,10 @@ class Dot(CircularShapeType):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
+    def todict(self) -> dict:
+        d = super().todict()
+        d.update( {"diameter": self.diameter})
+        return d
 
 def _distance_circ_circ(a: Union[PointType, CircularShapeType],
                         b: Union[PointType, CircularShapeType]) -> float:

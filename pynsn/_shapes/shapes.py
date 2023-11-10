@@ -25,7 +25,6 @@ from .abc_shapes import PointType, ShapeType, is_in_shape
 
 
 class Rectangle(ShapeType):
-    ID = 2
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -87,6 +86,11 @@ class Rectangle(ShapeType):
         return (f"Rectangle(xy={self._xy}, size={self.size}, "
                 + f"attribute='{self._attribute}')")
 
+    def todict(self) -> dict:
+        d = super().todict()
+        d.update({"size": self.size.tolist()})
+        return d
+
     def copy(self, new_xy: Optional[Coord2DLike] = None,
              copy_polygon: bool = True) -> Rectangle:
 
@@ -120,8 +124,8 @@ class Rectangle(ShapeType):
                            min_dist_boarder=min_dist_boarder)
 
 
+
 class Picture(Rectangle):
-    ID = 4
 
     def __init__(self, xy: Coord2DLike, size: Coord2DLike,
                  path: Union[Path, str]) -> None:
@@ -168,9 +172,10 @@ class Picture(Rectangle):
             return Picture(xy=new_xy, size=self.size,
                            path=self.path)
 
+    def todict(self) -> dict:
+        return super().todict()
 
 class PolygonShape(ShapeType):
-    ID = 5
 
     def __init__(self, polygon: Polygon, attribute: Any = None):
         ctr = polygon.centroid
@@ -221,3 +226,9 @@ class PolygonShape(ShapeType):
         return is_in_shape(self, b=shape,
                            b_exterior_ring=shape_exterior_ring,
                            min_dist_boarder=min_dist_boarder)
+
+    def todict(self) -> dict:
+        d = super().todict()
+        del d["xy"]
+        d.update({"wkt": shapely.to_wkt(self.polygon)})
+        return d

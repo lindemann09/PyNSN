@@ -54,3 +54,6 @@ print(nsn.properties_txt(short_format=True))
 nsn.sort_by_excentricity()
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
+
+print(nsn.get(44).todict())
+
