@@ -55,8 +55,6 @@ nsn.sort_by_excentricity()
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
 
-d = nsn.tojson(indent=2)
-with open("demo.json", "w", encoding="utf-8") as fl:
-    fl.write(d)
+d = nsn.tojson(filename="demo.json", tabular=True)
 
 

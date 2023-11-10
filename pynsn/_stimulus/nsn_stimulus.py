@@ -109,16 +109,27 @@ class NSNStimulus(ShapeArray):
     def todict(self, tabular:bool= True) -> dict:
         """Dict representation of the shape array
         """
-        rtn = {"target_area" : self.target_area.todict()}
+        rtn = {"hash": self.hash(),
+               "target_area" : self.target_area.todict(),
+               "min_distance": self.min_distance,
+               "colours": self._colours.todict()}
+
         if tabular:
             rtn.update({"shape_table": self.shape_table_dict()})
         else:
             rtn.update(super().todict())
+
         return rtn
 
-    def tojson(self, indent:int=2, tabular:bool= True)->str:
+    def tojson(self,
+               filename:str="",
+               indent:int=2, tabular:bool= True)->str:
         d = self.todict(tabular=tabular)
-        return formated_json(d, indent=indent)
+        json_str = formated_json(d, indent=indent)
+        if filename:
+            with open(filename, "w", encoding="utf-8") as fl:
+                fl.write(json_str)
+        return json_str
 
     def fix_overlap(self,
                     inside_convex_hull: bool = False,
