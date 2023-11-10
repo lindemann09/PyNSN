@@ -105,6 +105,16 @@ class NSNStimulus(ShapeArray):
         rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
+    def todict(self, tabular:bool= True) -> dict:
+        """Dict representation of the shape array
+        """
+        if tabular:
+            rtn = self.shape_table_dict()
+        else:
+            rtn = super().todict()
+        return rtn
+
+
     def fix_overlap(self,
                     inside_convex_hull: bool = False,
                     minimal_replacing: bool = True,

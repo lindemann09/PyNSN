@@ -66,31 +66,38 @@ class ShapeArray(object):
         for st in [Dot.name, Rectangle.name, Ellipse.name, Picture.name, PolygonShape.name]:
             self._ids[st] = np.flatnonzero(self._types == st)
 
-    def todict(self, tabular=False) -> dict:
-        """dict representation of the object array
+    def todict(self) -> dict:
+        """Dict representation of the shape array
+        """
 
-        Notes
-        -----
-        Tabular representation can not handle PolygonShapes, but they are more
-        effient and can be used to create Pandas dataframe or Arrow Tables.
+        return {"shape_array": [x.todict() for x in self.get_list()]}
+
+    def shape_table_dict(self) -> dict:
+        """Tabular representation of the array of the shapes.
+
+        This representation can not deal with PolygonShapes. It"s useful to
+        create Pandas dataframe or Arrow Tables.
 
         Examples
         --------
-        >>> df_dict = stimulus.dataframe_dict()
+        >>> df_dict = stimulus.shape_table_dict()
         >>> df = pandas.DataFame(df_dict) # Pandas dataframe
 
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
-        if not tabular:
-            return {"shape_array": [x.todict() for x in self.get_list()]}
-        else:
-            d = OrderedDict()
-            d.update({"x": self._xy[:, 0].tolist(),
-                    "y": self._xy[:, 1].tolist(),
-                    "width": self._sizes[:, 0].tolist(),
-                    "height": self._sizes[:, 1].tolist(),
-                    "attributes": self._attributes.tolist()})
-            return d
+
+        if np.any(self._types == PolygonShape.name):
+            raise RuntimeError("tabular shape representation can not deal with "
+                               "PolygonShapes")
+        d = OrderedDict()
+        d.update({"type": self._types,
+                    "x": self._xy[:, 0].tolist(),
+                "y": self._xy[:, 1].tolist(),
+                "width": self._sizes[:, 0].tolist(),
+                "height": self._sizes[:, 1].tolist(),
+                "attributes": [str(x) for x in self._attributes.tolist()]
+                })
+        return d
 
     def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
         """add shape a the defined position

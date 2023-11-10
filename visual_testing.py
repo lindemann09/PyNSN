@@ -8,7 +8,7 @@ from pynsn.image import pil_image, svg_file
 import numpy as np
 
 from pynsn import random
-da = pynsn.Dot((-20, 120), diameter=2)
+da = pynsn.Dot((-20, 120), diameter=2,  attribute=pynsn.Colour("red"))
 db = pynsn.Ellipse((20, 17), size=(120, 50), attribute="#FF0000")
 dc = pynsn.Ellipse((120, 57), size=(60, 120), attribute="#00F000")  # big dot
 
@@ -55,5 +55,9 @@ nsn.sort_by_excentricity()
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
 
-print(nsn.get(44).todict())
+d = nsn.shape_table_dict()
+
+import pandas as pd
+print(pd.DataFrame(d))
+
 
