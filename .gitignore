@@ -29,6 +29,9 @@ nosetests.xml
 # PyCharm
 .idea
 
+#vscode
+.vscode
+
 # PyPi
 .pypirc
 
@@ -50,4 +53,4 @@ test-*
 *.json
 *.svg
 *.png
-
+*.tmp
