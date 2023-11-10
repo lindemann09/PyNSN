@@ -1,79 +1,103 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
+from copy import copy
+from typing import Optional
+
 import numpy as _np
 import svgwrite as _svg
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import _shapes
-from . import _array_draw
+
+from .. import _stimulus, _shapes
+from . import _base
 
 
-def create(object_array, colours, filename):
+def create(filename: str,
+           nsn_stimulus: _stimulus.NSNStimulus) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters
     ----------
-    object_array
-    colours
+    nsn_stimulus
     filename
 
     Returns
     -------
 
     """
-    return _SVGDraw().create_image(object_array=object_array, colours=colours,
+    return _SVGDraw().create_image(nsn_stimulus=nsn_stimulus,
                                    filename=filename)
 
 
-class _SVGDraw(_array_draw.ArrayDraw):
+class _SVGDraw(_base.AbstractArrayDraw):
     # scaling not used, because vector format is scale independent.
 
     @staticmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour: str, **kwargs) -> _svg.Drawing:
         """"""
-        px = "{}px".format(image_width)
-        return _svg.Drawing(size=(px, px), filename=kwargs['filename'])
+        size = (f"{image_size[0]}px", f"{image_size[1]}px")
+        image = _svg.Drawing(size=size, filename=kwargs['filename'])
+        if background_colour is not None:
+            bkg_rect = _shapes.Rectangle(xy=(0, 0), size=image_size,
+                                         attribute=background_colour)
+            _SVGDraw.draw_shape(image=image, shape=bkg_rect, opacity=100,
+                                scaling_factor=None)
+        return image
 
     @staticmethod
     def scale_image(image, scaling_factor):
         """"""
-        return image # not used
+        return image  # not used
 
     @staticmethod
     def draw_shape(image, shape, opacity, scaling_factor):
         """"""
         assert isinstance(image, _svg.Drawing)
-        width = int(image.attribs['width'][:-2]) # string "300px" --> 300
-        shape.xy = _c2i_coord(_np.asarray(shape.xy), width).tolist()
-        attr = shape.get_attribute_object()
-
-        if isinstance(attr, _shapes.PictureFile):
+        if isinstance(shape, _shapes.Picture):
             raise RuntimeError("Pictures are not supported for SVG file.")
+
+        shape = copy(shape)
+        shape.xy = _base.cartesian2image_coordinates(shape.xy,
+                                                     _np.array(svg_image_size(image))).tolist()
+        col = shape.colour.value
 
         if isinstance(shape, _shapes.Dot):
             image.add(image.circle(center=shape.xy,
-                                       r=shape.diameter / 2,
-                                       # stroke_width="0", stroke="black",
-                                       fill=attr.colour,
-                                       opacity=opacity))
+                                   r=shape.diameter / 2,
+                                   # stroke_width="0", stroke="black",
+                                   fill=col,
+                                   opacity=opacity))
+        elif isinstance(shape, _shapes.Ellipse):
+            image.add(image.ellipse(center=shape.xy,
+                                    r=(shape.size[0]/2, shape.size[1]/2),
+                                    # stroke_width="0", stroke="black",
+                                    fill=col,
+                                    opacity=opacity))
         elif isinstance(shape, _shapes.Rectangle):
-            image.add(image.rect(insert=(shape.left, shape.bottom),
-                                     size=shape.size,
-                                     fill=attr.colour,
-                                     opacity=opacity))
+            image.add(image.rect(insert=shape.left_bottom,
+                                 size=shape.size,
+                                 fill=col,
+                                 opacity=opacity))
         else:
-            raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+            raise NotImplementedError(
+                f"Shape {type(shape)} NOT YET IMPLEMENTED")
 
     @staticmethod
     def draw_convex_hull(image, points, convex_hull_colour, opacity,
                          scaling_factor):
         """"""
-        width = int(image.attribs['width'][:-2]) # string "300px" --> 300
-        points = _c2i_coord(points, width)
+
+        points = _base.cartesian2image_coordinates(
+            _np.asarray(points), _np.array(svg_image_size(image)))
 
         last = None
+        col = convex_hull_colour.value
         for p in _np.append(points, [points[0]], axis=0):
             if last is not None:
                 l = image.line(start=last, end=p).stroke(
-                    width=1, color=convex_hull_colour.colour, opacity=opacity)
+                    width=1, color=col, opacity=opacity)
                 image.add(l)
             last = p
+
+
+def svg_image_size(image):
+    return (int(image.attribs['width'][:-2]),  # string "300px" --> 300
+            int(image.attribs['height'][:-2]))

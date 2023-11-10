@@ -1,92 +1,112 @@
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+"""
+"""
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+import typing as _tp
+
+import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
-import numpy as _np
-from .._lib.geometry import cartesian2image_coordinates as _c2i_coord
-from .. import _shapes
-from . import _array_draw
 
+from . import _base
+from .. import _shapes
+from .. import _stimulus
 
 # TODO pillow supports no alpha/opacity
 
+RESAMPLING = _Image.Resampling.LANCZOS
 
-def create(object_array, colours=None, antialiasing=True):
+
+def create(
+    nsn_stimulus: _stimulus.NSNStimulus,
+    antialiasing: _tp.Union[bool, int] = True,
+) -> _Image.Image:
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
 
     returns pil image
 
-    antialiasing: Ture or integer
+    antialiasing: True or integer
 
     default_dot_colour: if colour is undefined in _lib
     """
 
-    return _PILDraw().create_image(object_array=object_array,
-                                   colours=colours,
-                                   antialiasing=antialiasing)
+    return _PILDraw().create_image(
+        nsn_stimulus=nsn_stimulus, antialiasing=antialiasing
+    )
 
 
-class _PILDraw(_array_draw.ArrayDraw):
-
+class _PILDraw(_base.AbstractArrayDraw):
     @staticmethod
-    def get_squared_image(image_width, background_colour, **kwargs):
+    def get_image(image_size, background_colour: str, **kwargs) -> _Image.Image:
         # filename not used for pil images
-        return _Image.new("RGBA", (image_width, image_width), color=background_colour)
+        return _Image.new("RGBA", image_size, color=background_colour)
 
     @staticmethod
     def scale_image(image, scaling_factor):
-        im_size = int(image.size[0] / scaling_factor)
-        return image.resize((im_size, im_size), _Image.Resampling.LANCZOS)
+        im_size = (
+            int(image.size[0] / scaling_factor),
+            int(image.size[1] / scaling_factor),
+        )
+        return image.resize(im_size, resample=RESAMPLING)
 
     @staticmethod
-    def draw_shape(img, shape, opacity, scaling_factor):
+    def draw_shape(
+        image, shape: _shapes.ShapeType, opacity: float, scaling_factor: float
+    ):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        shape.xy = _c2i_coord(_np.asarray(shape.xy) * scaling_factor, img.size[0]).tolist()
-        attr = shape.get_attribute_object()
+        shape.copy()
+        shape.xy = _base.cartesian2image_coordinates(
+            _np.asarray(shape.xy) * scaling_factor, image.size)
 
-        if isinstance(shape, _shapes.Dot):
-            shape.diameter = shape.diameter * scaling_factor
-            r = shape.diameter / 2
-            _ImageDraw.Draw(img).ellipse((shape.x - r, shape.y - r,
-                                          shape.x + r, shape.y + r),
-                                         fill=attr.colour)
+        if isinstance(shape, (_shapes.Ellipse, _shapes.Dot)):
+            if isinstance(shape, _shapes.Dot):
+                rx = (shape.diameter * scaling_factor) / 2
+                ry = rx
+            else:  # ellipse
+                rx, ry = (_np.asarray(shape.size) * (scaling_factor / 2))
+
+            x, y = shape.xy
+            _ImageDraw.Draw(image).ellipse(
+                (x - rx, y - ry, x + rx, y + ry), fill=shape.colour.value
+            )
+
+        elif isinstance(shape, _shapes.Picture):
+            rect = _shapes.Rectangle(xy=shape.xy,
+                                     size=(shape.size[0] * scaling_factor,
+                                           shape.size[1] * scaling_factor))
+            upper_left = _np.flip(rect.left_top).tolist()
+            pict = _Image.open(shape.path, "r")
+            if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
+                pict = pict.resize((int(shape.size[0]), int(shape.size[1])),
+                                   resample=RESAMPLING)
+
+            tr_layer = _Image.new("RGBA", image.size, (0, 0, 0, 0))
+            tr_layer.paste(pict, upper_left)
+            res = _Image.alpha_composite(image, tr_layer)
+            image.paste(res)
+
         elif isinstance(shape, _shapes.Rectangle):
-            tmp = _np.asarray(shape.size) * scaling_factor
-            shape.size = tmp.tolist()
-            if isinstance(attr, _shapes.PictureFile):
-                # picture
-                shape_size = (round(shape.width), round(shape.height))
-                target_box = (round(shape.left), round(shape.bottom),  # FIXME ceil?
-                              round(shape.right), round(shape.top))  # reversed y axes
-                pict = _Image.open(attr.filename, "r")
-                if pict.size[0] != shape_size[0] or pict.size[1] != shape_size[1]:
-                    pict = pict.resize(shape_size, resample=_Image.ANTIALIAS)
-
-                tr_layer = _Image.new('RGBA', img.size, (0, 0, 0, 0))
-                tr_layer.paste(pict, target_box)
-                res = _Image.alpha_composite(img, tr_layer)
-                img.paste(res)
-            else:
-                # rectangle shape
-                _ImageDraw.Draw(img).rectangle((shape.left, shape.top,
-                                                shape.right, shape.bottom),
-                                               fill=attr.colour)  # FIXME decentral _shapes seems to be bit larger than with pyplot
-
+            rect = _shapes.Rectangle(xy=shape.xy,
+                                     size=(shape.size[0] * scaling_factor,
+                                           shape.size[1] * scaling_factor))
+            # rectangle shape TODO decentral _shapes seems to be bit larger than with pyplot
+            _ImageDraw.Draw(image).rectangle(tuple(rect.box),  # type: ignore
+                                             fill=shape.colour.value)
         else:
-            raise NotImplementedError("Shape {} NOT YET IMPLEMENTED".format(type(shape)))
+            raise NotImplementedError(
+                f"Shape {type(shape)} NOT YET IMPLEMENTED")
 
     @staticmethod
-    def draw_convex_hull(img, points, convex_hull_colour,  opacity,
-                         scaling_factor):
+    def draw_convex_hull(image, points, convex_hull_colour, opacity, scaling_factor):
         # FIXME opacity is ignored (not yet supported)
-        points = _c2i_coord(points * scaling_factor, img.size[0])
+        points = _base.cartesian2image_coordinates(
+            points * scaling_factor, image.size)
         last = None
-        draw = _ImageDraw.Draw(img)
+        draw = _ImageDraw.Draw(image)
         for p in _np.append(points, [points[0]], axis=0):
             if last is not None:
                 draw.line(_np.append(last, p).tolist(),
-                          width=2,
-                          fill=convex_hull_colour.colour)
+                          width=2, fill=convex_hull_colour.value)
             last = p

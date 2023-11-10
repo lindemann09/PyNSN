@@ -16,7 +16,7 @@ publish:
 	twine check dist/*
 	twine upload dist/*
 
-docker_unittest: 
+docker_unittest:
 	docker build -t pynsn38 -f tests/Dockerfile-py38 . && \
 	docker build -t pynsn310 -f tests/Dockerfile-py310 .
 	docker run --rm pynsn38
@@ -33,9 +33,8 @@ jupyter_examples: venv
 	cd examples && \
 	make html
 
-tox: venv
-	. venv/bin/activate && \
-	python -m tox
+unittest:
+	python -m unittest discover tests/
 
 clean:
 	@rm -rf build \
@@ -43,6 +42,9 @@ clean:
 		dist \
 		pynsn.egg-info \
 		.tox \
-		.pytest_cache
+		.pytest_cache \
+		examples\pynsn
 	cd documentation && make clean
+	py3clean .
 
+venv:

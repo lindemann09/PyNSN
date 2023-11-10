@@ -1,3 +1,4 @@
+=========
 PyNSN API
 =========
 
@@ -6,11 +7,11 @@ Intro TODO
 .. toctree::
    :maxdepth: 3
 
-   shapes
    arrays
-   factory
+   random_arrays
+   distributions
+   colours
    misc
-   modules
 
 
 

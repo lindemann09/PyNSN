@@ -1,4 +1,4 @@
-from .point import Point
-from .dot import Dot
-from .rectangle import Rectangle
-from .picture_file import PictureFile
+from .abc_shapes import ShapeType, PointType, CircularShapeType
+from .shapes import Rectangle, Picture, PolygonShape, ShapeType
+from .circ_shapes import Point2D, Dot, Ellipse
+from .colour import Colour, ColourType

@@ -1,4 +1,4 @@
-from test_save_load import TestArrays
+from .test_save_load import TestArrays
 # TODO pygame test missing
 
 
@@ -32,12 +32,13 @@ class Images(TestArrays):
         from svgwrite.drawing import Drawing
         from pynsn.image import svg_file
 
-        img = svg_file.create(self.dot_stim, self.my_colours,
-                              filename=self.make_path("dots.svg"))
+        img = svg_file.create(filename=self.make_path("dots.svg"),
+                              object_array=self.dot_stim,
+                              colours=self.my_colours)
         self.assertTrue(isinstance(img, Drawing))
         img.save()
-        img = svg_file.create(self.rect_stim, self.my_colours,
+        img = svg_file.create(object_array=self.rect_stim,
+                              colours=self.my_colours,
                               filename=self.make_path("rects.svg"))
         self.assertTrue(isinstance(img, Drawing))
         img.save()
-
