@@ -21,8 +21,7 @@ class TargetArea(object):
 
     def __init__(self,
                  shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
-                 min_dist_boarder: int = 2,
-                 distribution: Optional[MultiVarDistributionType] = None
+                 min_dist_boarder: int = 2
                  ) -> None:
 
         super().__init__()
@@ -47,14 +46,11 @@ class TargetArea(object):
 
         # buffer of random position samples to avoid frequent call of random distribution
         self._random_buffer = np.empty(0)
-        # random distribution
-        if isinstance(distribution, MultiVarDistributionType):
-            self._distr = distribution
-        else:
-            f = np.array((-0.5, 0.5))
-            self._distr = Uniform2D(x_minmax=shape.size[0] * f,
+
+        # default random distribution is uniform
+        f = np.array((-0.5, 0.5))
+        self._default_distr = Uniform2D(x_minmax=shape.size[0] * f,
                                         y_minmax=shape.size[1] * f)
-        # FIXME set_limits for rand_dist, if shape is smaller then actual limits
 
         self.min_dist_boarder = min_dist_boarder
         shapely.prepare(self._shape.polygon)
@@ -83,15 +79,13 @@ class TargetArea(object):
         """width and height of bounds of the target area"""
         return self._shape.size
 
-    def random_xy_inside_bounds(self) -> NDArray:
+    def random_xy_inside_bounds(self, distr: Optional[MultiVarDistributionType] = None) -> NDArray:
         """returns a random position inside the bounds of the target area
         """
-        if len(self._random_buffer) == 0:
-            self._random_buffer = self._distr.sample(100)
-
-        rtn = self._random_buffer[-1]
-        self._random_buffer = np.delete(self._random_buffer, -1, axis=0)
-        return rtn
+        if isinstance(distr, MultiVarDistributionType):
+            return distr.sample(1)[0]
+        else:
+            return self._default_distr.sample(1)[0]
 
     def random_position(self, shape: ShapeType,
                         max_iterations: Optional[int] = None) -> ShapeType:
@@ -115,6 +109,4 @@ class TargetArea(object):
 
     def todict(self) -> dict:
         return {"shape": self.shape.todict(),
-             "min_dist_boarder": self.min_dist_boarder,
-            "distribution": self._distr.todict()}
-
+                "min_dist_boarder": self.min_dist_boarder}

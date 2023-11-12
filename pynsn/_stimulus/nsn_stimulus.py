@@ -21,6 +21,7 @@ from .stimulus_colours import StimulusColours
 from .target_area import TargetArea
 from .._misc import formated_json
 
+
 class NSNStimulus(ShapeArray):
     """Non-Symbolic Number Stimulus
 
@@ -31,14 +32,12 @@ class NSNStimulus(ShapeArray):
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
                  min_distance: int = defaults.MIN_DISTANCE,
-                 min_distance_target_area: int = defaults.MIN_DISTANCE,
-                 random_distribution: Optional[MultiVarDistributionType] = None
+                 min_distance_target_area: int = defaults.MIN_DISTANCE
                  ) -> None:
 
         super().__init__()
         self._target_area = TargetArea(shape=target_area_shape,
-                                       min_dist_boarder=min_distance_target_area,
-                                       distribution=random_distribution)
+                                       min_dist_boarder=min_distance_target_area)
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
         self._colours = StimulusColours(target_area=self._target_area.colour)
@@ -106,11 +105,11 @@ class NSNStimulus(ShapeArray):
         rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
-    def todict(self, tabular:bool= True) -> dict:
+    def todict(self, tabular: bool = True) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
-               "target_area" : self.target_area.todict(),
+               "target_area": self.target_area.todict(),
                "min_distance": self.min_distance,
                "colours": self._colours.todict()}
 
@@ -122,8 +121,8 @@ class NSNStimulus(ShapeArray):
         return rtn
 
     def tojson(self,
-               filename:str="",
-               indent:int=2, tabular:bool= True)->str:
+               filename: str = "",
+               indent: int = 2, tabular: bool = True) -> str:
         d = self.todict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if filename:
