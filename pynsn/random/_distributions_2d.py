@@ -1,11 +1,11 @@
 from abc import ABCMeta
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from . import _rng
-from ._distributions import ABCDistribution, round_samples
+from ._distributions import ABCDistribution
 
 
 class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
@@ -158,7 +158,7 @@ class Uniform2D(MultiVarDistributionType):
         self._xy_scale = (self._x_minmax[1] - self._x_minmax[0],
                           self._y_minmax[1] - self._y_minmax[0])
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         rtn = np.empty((0, 2), dtype=float)
         required = n
         while required > 0:
@@ -171,7 +171,7 @@ class Uniform2D(MultiVarDistributionType):
                 rtn = np.append(rtn, draw, axis=0)
                 required = n - len(rtn)
 
-        return round_samples(rtn, round_to_decimals)
+        return rtn
 
 
 class Normal2D(MultiVarDistributionType):
@@ -214,7 +214,7 @@ class Normal2D(MultiVarDistributionType):
         cov[1, 0] = cov[0, 1]
         return cov
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         rtn = None
         required = n
         while required > 0:
@@ -233,7 +233,7 @@ class Normal2D(MultiVarDistributionType):
         if rtn is None:
             return np.empty(0, dtype=float)
         else:
-            return round_samples(rtn, round_to_decimals)
+            return rtn
 
     def todict(self):
         d = super().todict()

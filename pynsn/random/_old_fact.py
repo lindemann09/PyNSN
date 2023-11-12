@@ -6,17 +6,14 @@ from typing import Any, Optional, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from . import _stimulus, constants
+from ... import _stimulus, constants
 from .._lib import geometry, rng
 from .._lib.exceptions import NoSolutionError
 from ._object_arrays.convex_hull import ConvexHull, ConvexHullPositions
-from .pynsn.constants import VisualPropertyFlags
-
+from .. import VisualPropertyFlags
 
 
 class NSNFactory(object):
-
-
 
     def set_appearance_dots(self,
                             diameter: ParameterDistributionType,
@@ -295,7 +292,6 @@ class NSNFactory(object):
 
     def __str__(self) -> str:
         return dict_to_text(self.to_dict())
-
 
 
 class ArrayProperties(object):

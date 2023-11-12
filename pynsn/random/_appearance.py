@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 from copy import copy
 from typing import Optional, Sequence, Union, Any
 
-from ._distributions import Levels, UnivariateDistributionType, _Constant
+from ._distributions import Levels, UnivariateDistributionType, Constant
 
 ParameterDistributionType = Union[UnivariateDistributionType,
                                   float, int, Sequence[Any], None]
@@ -110,7 +110,7 @@ def _make_distr(value: ParameterDistributionType) -> Union[UnivariateDistributio
     elif isinstance(value, (list, tuple)):
         return Levels(levels=copy(value))
     elif isinstance(value, (float, int)):
-        return _Constant(value)
+        return Constant(value)
     else:
         raise RuntimeError("Can't make distribution from"
                            f" {type(value).__name__}")

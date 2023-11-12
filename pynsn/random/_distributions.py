@@ -12,18 +12,6 @@ from ..types import NoSolutionError
 from . import _rng
 
 
-def round_samples(samples: NDArray,
-                  round_to_decimals: Optional[int]) -> NDArray:
-    if round_to_decimals is not None:
-        arr = np.round(samples, decimals=round_to_decimals)
-        if round_to_decimals == 0:
-            return arr.astype(np.int32)
-        else:
-            return arr
-    else:
-        return np.asarray(samples)
-
-
 class ABCDistribution(metaclass=ABCMeta):
     """Base class for all distribution"""
 
@@ -33,13 +21,11 @@ class ABCDistribution(metaclass=ABCMeta):
         return {"type": type(self).__name__}
 
     @abstractmethod
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         """Random sample from the distribution
 
         Args:
             n: number of samples
-            round_to_decimals: Set to round samples. If 0 a array of integer
-                will be return
 
         Returns:
             Numpy array of the sample
@@ -111,10 +97,9 @@ class Uniform(UnivariateDistributionType):
                             "(a, b) with a <= b.")
         self._scale = self.minmax[1] - self.minmax[0]
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         dist = _rng.generator.random(size=n)
-        rtn = self.minmax[0] + dist * self._scale
-        return round_samples(rtn, round_to_decimals)
+        return self.minmax[0] + dist * self._scale
 
 
 class Levels(UnivariateDistributionType):
@@ -138,8 +123,8 @@ class Levels(UnivariateDistributionType):
                 raise ValueError(
                     "Number weights does not match the number of levels")
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
-        if len(self.weights) ==0:
+    def sample(self, n: int) -> NDArray[np.float_]:
+        if len(self.weights) == 0:
             p = np.array([1 / len(self.levels)] * len(self.levels))
         else:
             p = self.weights / np.sum(self.weights)
@@ -167,7 +152,7 @@ class Levels(UnivariateDistributionType):
                 dist.extend([lev] * int(n))
             _rng.generator.shuffle(dist)
 
-        return round_samples(np.asarray(dist), round_to_decimals)
+        return np.asarray(dist)
 
     def todict(self) -> dict:
         d = super().todict()
@@ -189,10 +174,9 @@ class Triangle(UnivariateDistributionType):
             raise ValueError(f"mode ({mode}) has to be inside the defined "
                              f"min_max range ({self.minmax})")
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
-        dist = _rng.generator.triangular(left=self.minmax[0], right=self.minmax[1],
+    def sample(self, n: int) -> NDArray[np.float_]:
+        return _rng.generator.triangular(left=self.minmax[0], right=self.minmax[1],
                                          mode=self.mode, size=n)
-        return round_samples(dist, round_to_decimals)
 
     def todict(self) -> dict:
         d = super().todict()
@@ -231,7 +215,7 @@ class Normal(_DistributionMuSigma):
             the range of the distribution
     """
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         rtn = np.array([])
         required = n
         while required > 0:
@@ -244,7 +228,7 @@ class Normal(_DistributionMuSigma):
             if len(draw) > 0:  # type: ignore
                 rtn = np.append(rtn, draw)
                 required = n - len(rtn)
-        return round_samples(rtn, round_to_decimals)
+        return rtn
 
 
 class Beta(_DistributionMuSigma):
@@ -278,7 +262,7 @@ class Beta(_DistributionMuSigma):
                 "Either Mu & Sigma or Alpha & Beta have to specified.")
         super().__init__(mu=mu, sigma=sigma, minmax=minmax)
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float_]:
         if self.sigma is None or self.sigma == 0:
             return np.array([self.mu] * n)
 
@@ -286,7 +270,7 @@ class Beta(_DistributionMuSigma):
         dist = _rng.generator.beta(a=alpha, b=beta, size=n)
         dist = (dist - np.mean(dist)) / np.std(dist)  # z values
         rtn = dist * self.sigma + self.mu
-        return round_samples(rtn, round_to_decimals)
+        return rtn
 
     @property
     def shape_parameter(self):
@@ -327,7 +311,7 @@ class Beta(_DistributionMuSigma):
         return mu, sigma
 
 
-class _Constant(UnivariateDistributionType):
+class Constant(UnivariateDistributionType):
 
     def __init__(self, value: float) -> None:
         """Helper class to "sample" constance.
@@ -341,8 +325,8 @@ class _Constant(UnivariateDistributionType):
 
         super().__init__(minmax=np.array((value, value)))
 
-    def sample(self, n: int, round_to_decimals: Optional[int] = None) -> NDArray[np.float_]:
-        return round_samples([self.minmax[0]] * n, round_to_decimals)
+    def sample(self, n: int) -> NDArray[np.float_]:
+        return np.full(self.minmax[0],  n)
 
     def todict(self) -> dict:
         return {"type": "Constant",
