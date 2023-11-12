@@ -7,9 +7,8 @@ from typing import Optional, Sequence, Union
 
 import numpy as np
 import shapely
-from numpy.typing import NDArray
+from numpy.typing import NDArray, ArrayLike
 
-from ..types import Coord2DLike
 from .._misc import polar2cartesian
 
 generator = np.random.default_rng()
@@ -40,13 +39,13 @@ class WalkAround(object):
     increasing jump radius"""
 
     def __init__(self,
-                 xy: Coord2DLike,
+                 xy: ArrayLike,
                  delta: int = 2,
                  attempts_per_radius: int = 2) -> None:
-        if len(xy) != 2:
+        self._xy = np.asarray(xy)
+        if len(self._xy) != 2:
             raise ValueError("xy has be an list of two numerals (x, y)")
 
-        self._xy = np.asarray(xy)
         self._delta = delta
         self._attempts = attempts_per_radius
         self._radius = 0

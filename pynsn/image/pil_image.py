@@ -52,7 +52,7 @@ class _PILDraw(_base.AbstractArrayDraw):
 
     @staticmethod
     def draw_shape(
-        image, shape: _shapes.ShapeType, opacity: float, scaling_factor: float
+        image, shape: _shapes.AbstractShape, opacity: float, scaling_factor: float
     ):
         # FIXME opacity is ignored (not yet supported)
         # draw object

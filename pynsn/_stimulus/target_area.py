@@ -11,10 +11,10 @@ import shapely
 from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, \
-    ShapeType, Colour
+    AbstractShape, Colour
 from .. import defaults
-from ..random import MultiVarDistributionType, Uniform2D
-from ..types import NoSolutionError
+from ..random import AbstractMultivarDistr, Uniform2D
+from ..errors import NoSolutionError
 
 
 class TargetArea(object):
@@ -44,9 +44,6 @@ class TargetArea(object):
 
         self._ring = shapely.get_exterior_ring(self._shape.polygon)
 
-        # buffer of random position samples to avoid frequent call of random distribution
-        self._random_buffer = np.empty(0)
-
         # default random distribution is uniform
         f = np.array((-0.5, 0.5))
         self._default_distr = Uniform2D(x_minmax=shape.size[0] * f,
@@ -56,7 +53,7 @@ class TargetArea(object):
         shapely.prepare(self._shape.polygon)
         shapely.prepare(self._ring)
 
-    def is_object_inside(self, shape: Union[Point2D, ShapeType]) -> bool:
+    def is_object_inside(self, shape: Union[Point2D, AbstractShape]) -> bool:
         """returns True if shape is fully inside Target area
 
         takes into account the minimum distance to boarder"""
@@ -67,6 +64,7 @@ class TargetArea(object):
 
     @property
     def colour(self) -> Colour:
+        """Colour of the target area"""
         return self._shape.colour
 
     @property
@@ -79,16 +77,16 @@ class TargetArea(object):
         """width and height of bounds of the target area"""
         return self._shape.size
 
-    def random_xy_inside_bounds(self, distr: Optional[MultiVarDistributionType] = None) -> NDArray:
+    def random_xy_inside_bounds(self, distr: Optional[AbstractMultivarDistr] = None) -> NDArray:
         """returns a random position inside the bounds of the target area
         """
-        if isinstance(distr, MultiVarDistributionType):
+        if isinstance(distr, AbstractMultivarDistr):
             return distr.sample(1)[0]
         else:
             return self._default_distr.sample(1)[0]
 
-    def random_position(self, shape: ShapeType,
-                        max_iterations: Optional[int] = None) -> ShapeType:
+    def random_position(self, shape: AbstractShape,
+                        max_iterations: Optional[int] = None) -> AbstractShape:
         """returns the object at random free position inside the target area
 
         takes into account the minimum distance to boarder
@@ -108,5 +106,6 @@ class TargetArea(object):
                 return shape
 
     def todict(self) -> dict:
+        """dict representation of the target area"""
         return {"shape": self.shape.todict(),
                 "min_dist_boarder": self.min_dist_boarder}

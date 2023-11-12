@@ -5,10 +5,10 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from . import _rng
-from ._distributions import ABCDistribution
+from ._distributions import AbstractDistribution
 
 
-class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
+class AbstractMultivarDistr(AbstractDistribution, metaclass=ABCMeta):
     """Abstract class for Multivariate (2D) distributions """
 
     def __init__(self,
@@ -121,7 +121,7 @@ class MultiVarDistributionType(ABCDistribution, metaclass=ABCMeta):
             return arr
 
 
-class Uniform2D(MultiVarDistributionType):
+class Uniform2D(AbstractMultivarDistr):
 
     def __init__(self,
                  x_minmax:  Optional[ArrayLike] = None,
@@ -174,7 +174,7 @@ class Uniform2D(MultiVarDistributionType):
         return rtn
 
 
-class Normal2D(MultiVarDistributionType):
+class Normal2D(AbstractMultivarDistr):
 
     def __init__(self, mu: ArrayLike,
                  sigma: ArrayLike,

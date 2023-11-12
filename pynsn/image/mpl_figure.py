@@ -55,7 +55,7 @@ class _MatplotlibDraw(_base.AbstractArrayDraw):
         return figure
 
     @staticmethod
-    def draw_shape(img, shape: _shapes.ShapeType, opacity):
+    def draw_shape(img, shape: _shapes.AbstractShape, opacity):
         col = shape.colour
 
         if isinstance(shape, _shapes.Picture):

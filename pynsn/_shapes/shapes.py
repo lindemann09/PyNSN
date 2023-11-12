@@ -13,18 +13,17 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 from shapely import Polygon
 
-from ..types import Coord2DLike
-from .abc_shapes import PointType, ShapeType, is_in_shape
+from .abc_shapes import AbstractPoint, AbstractShape, Coord2DLike, is_in_shape
 
 
-class Rectangle(ShapeType):
+class Rectangle(AbstractShape):
 
     def __init__(self,
                  xy: Coord2DLike,
@@ -104,25 +103,24 @@ class Rectangle(ShapeType):
         else:
             return Rectangle(xy=new_xy, size=self.size, attribute=self._attribute)
 
-    def distance(self, shape: Union[PointType, ShapeType]) -> float:
-        if isinstance(shape, PointType):
+    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
+        if isinstance(shape, AbstractPoint):
             return shapely.distance(self.polygon, shape.xy_point)
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
-        if isinstance(shape, PointType):
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
+        if isinstance(shape, AbstractPoint):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
 
-    def is_inside(self, shape: ShapeType,
+    def is_inside(self, shape: AbstractShape,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,
                            b_exterior_ring=shape_exterior_ring,
                            min_dist_boarder=min_dist_boarder)
-
 
 
 class Picture(Rectangle):
@@ -175,7 +173,8 @@ class Picture(Rectangle):
     def todict(self) -> dict:
         return super().todict()
 
-class PolygonShape(ShapeType):
+
+class PolygonShape(AbstractShape):
 
     def __init__(self, polygon: Polygon, attribute: Any = None):
         ctr = polygon.centroid
@@ -208,19 +207,19 @@ class PolygonShape(ShapeType):
             new.xy = new_xy
         return new
 
-    def distance(self, shape: Union[PointType, ShapeType]) -> float:
-        if isinstance(shape, PointType):
+    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
+        if isinstance(shape, AbstractPoint):
             return shapely.distance(self.polygon, shape.xy_point)
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
-        if isinstance(shape, PointType):
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
+        if isinstance(shape, AbstractPoint):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=dist)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=dist)
 
-    def is_inside(self, shape: ShapeType,
+    def is_inside(self, shape: AbstractShape,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,

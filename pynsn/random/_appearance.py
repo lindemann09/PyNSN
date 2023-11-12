@@ -1,78 +1,73 @@
 """
 """
+from pathlib import Path
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from copy import copy
-from typing import Optional, Sequence, Union, Any
+from numpy.typing import NDArray
+from abc import ABCMeta
+from typing import Optional, Sequence, Tuple, Union, Any
+from .._shapes.colour import Colour
+from ._distributions import Categorical, AbstractUnivarDistr, Constant, AbstractDistribution
 
-from ._distributions import Levels, UnivariateDistributionType, Constant
+ConstantLike = Union[Constant, float, int, str, Colour]
+UnivariateLike = Union[ConstantLike, AbstractUnivarDistr]
+AttributesDistrLike = Union[ConstantLike,
+                            AbstractDistribution, Sequence, NDArray, None]
 
-ParameterDistributionType = Union[UnivariateDistributionType,
-                                  float, int, Sequence[Any], None]
+
+def _make_univar_distr(value: UnivariateLike) -> Union[Constant, AbstractUnivarDistr]:
+    """helper"""
+
+    if isinstance(value, AbstractUnivarDistr):
+        return value
+    else:  # constant like
+        return Constant(value)
 
 
-class Appearance(object):
+class Appearance(metaclass=ABCMeta):
 
-    def __init__(self,
-                 attributes: Optional[UnivariateDistributionType] = None,
-                 dot_diameter: Optional[UnivariateDistributionType] = None,
-                 rect_width: Optional[UnivariateDistributionType] = None,
-                 rect_height: Optional[UnivariateDistributionType] = None,
-                 rect_proportion: Optional[UnivariateDistributionType] = None):
+    def __init__(self, attributes: AttributesDistrLike = None):
         """
 
         Parameters
         ----------
         """
-
-        self._attributes = _make_distr(attributes)
-        self._diameter = _make_distr(dot_diameter)
-        self._width = None
-        self._height = None
-        self._rect_proportion = None
-        self.set_rectangles_sizes(width=rect_width, height=rect_height,
-                                  proportion=rect_proportion)
+        if attributes is None or isinstance(attributes, AbstractDistribution):
+            self._attributes = None
+        elif isinstance(attributes, ConstantLike):
+            self._attributes = Constant(attributes)
+        else:
+            self._attributes = Categorical(categories=attributes)
 
     @property
-    def attributes(self) -> Optional[UnivariateDistributionType]:
-        """Distribution of attributes for dots"""
+    def attributes(self) -> Optional[AbstractDistribution]:
+        """Distribution of attributes """
         return self._attributes
 
-    @attributes.setter
-    def attributes(self, val: ParameterDistributionType):
-        """Distribution of attributes for dots"""
-        self._attributes = _make_distr(val)
+
+class RandomDot(Appearance):
+
+    def __init__(self,
+                 diameter: UnivariateLike,
+                 attributes: AttributesDistrLike = None):
+        """Define distributions parameter
+        """
+        super().__init__(attributes=attributes)
+        self._diameter = _make_univar_distr(diameter)
 
     @property
-    def dot_diameter(self) -> Optional[UnivariateDistributionType]:
-        """Distribution of diameter parameter"""
+    def diameter(self) -> Union[Constant, AbstractUnivarDistr]:
         return self._diameter
 
-    @dot_diameter.setter
-    def dot_diameter(self, val: ParameterDistributionType):
-        """Distribution of diameter parameter"""
-        self._diameter = _make_distr(val)
 
-    @property
-    def rect_width(self) -> Optional[UnivariateDistributionType]:
-        """Distribution of width parameter"""
-        return self._width
+class _AppearanceWidthHeight(Appearance, metaclass=ABCMeta):
 
-    @property
-    def rect_height(self) -> Optional[UnivariateDistributionType]:
-        """Distribution of height parameter"""
-        return self._height
-
-    @property
-    def rect_proportion(self) -> Optional[UnivariateDistributionType]:
-        """Distribution of proportion parameter"""
-        return self._rect_proportion
-
-    def set_rectangles_sizes(self,
-                             width: ParameterDistributionType = None,
-                             height: ParameterDistributionType = None,
-                             proportion: ParameterDistributionType = None):
-        """Set distributions of the parameter for rectangle sizes
+    def __init__(self,
+                 width: Optional[UnivariateLike] = None,
+                 height: Optional[UnivariateLike] = None,
+                 size_proportion: Optional[UnivariateLike] = None,
+                 attributes: AttributesDistrLike = None):
+        """Define distributions parameter
 
         Args:
             width: distribution of width (Optional)
@@ -86,31 +81,70 @@ class Appearance(object):
         Raises:
             TypeError: if not two of the three rectangle parameter are defined
         """
-        n_rect_parameter = sum([width is not None, height is not None,
-                                proportion is not None])
-        if n_rect_parameter == 0:
-            return
-        elif n_rect_parameter != 2:
-            raise TypeError("Define rectangle width and height or, alternatively, rectangle proportion together with "
-                            "either width or height.")
-        self._width = _make_distr(width)
-        self._height = _make_distr(height)
-        self._rect_proportion = _make_distr(proportion)
+
+        super().__init__(attributes)
+        n_parameter = sum([width is not None, height is not None])
+        if size_proportion is not None:
+            if n_parameter != 1:
+                raise TypeError(
+                    "Define size proportion together with either width or height, not both.")
+        elif n_parameter < 2:
+            raise TypeError(
+                "Define width and height or, alternatively, size proportion together with width or height.")
+
+        if width is None:
+            self._width = None
+        else:
+            self._width = _make_univar_distr(width)
+        if height is None:
+            self._height = None
+        else:
+            self._height = _make_univar_distr(height)
+        if size_proportion is None:
+            self._size_proportion = None
+        else:
+            self._size_proportion = _make_univar_distr(size_proportion)
+
+    @property
+    def width(self) -> Union[Constant, AbstractUnivarDistr, None]:
+        """Distribution of width parameter"""
+        return self._width
+
+    @property
+    def height(self) -> Union[Constant, AbstractUnivarDistr, None]:
+        """Distribution of height parameter"""
+        return self._height
+
+    @property
+    def size_proportion(self) -> Union[Constant, AbstractUnivarDistr, None]:
+        """Distribution of proportion parameter"""
+        return self._size_proportion
 
 
-def _make_distr(value: ParameterDistributionType) -> Union[UnivariateDistributionType, None]:
-    """helper
-    returns a distribution or None, if None
-    """
+class RandomRectangle(_AppearanceWidthHeight):
+    pass
 
-    if value is None:
-        return None
-    elif isinstance(value, UnivariateDistributionType):
-        return value
-    elif isinstance(value, (list, tuple)):
-        return Levels(levels=copy(value))
-    elif isinstance(value, (float, int)):
-        return Constant(value)
-    else:
-        raise RuntimeError("Can't make distribution from"
-                           f" {type(value).__name__}")
+
+class RandomEllipse(_AppearanceWidthHeight):
+    pass
+
+
+class RandomPicture(_AppearanceWidthHeight):
+
+    def __init__(self,
+                 width: Optional[UnivariateLike] = None,
+                 height: Optional[UnivariateLike] = None,
+                 size_proportion: Optional[UnivariateLike] = None,
+                 path: Union[Categorical, Constant, str, Path, Sequence[Path],
+                             Sequence[str], None] = None):
+        """Define distributions parameter
+        """
+        if isinstance(path, (str, Path)):
+            attr = Constant(Path(path))
+        elif isinstance(path, Sequence):
+            pathes = [Path(x)for x in path]
+            attr = Categorical(pathes)
+        else:
+            attr = path
+        super().__init__(width=width, height=height, size_proportion=size_proportion,
+                         attributes=attr)

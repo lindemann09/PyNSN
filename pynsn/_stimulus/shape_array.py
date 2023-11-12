@@ -13,13 +13,15 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import (CircularShapeType, Dot, Ellipse, Picture, Point2D,
-                       PolygonShape, Rectangle, ShapeType)
+from .._shapes import (AbstractCircularShape, Dot, Ellipse, Picture, Point2D,
+                       PolygonShape, Rectangle, AbstractShape)
 from .._shapes import ellipse_geometry as ellipse_geo
 from ..random._rng import WalkAround
-from ..types import IntOVector, NoSolutionError
+from ..errors import NoSolutionError
 from .convex_hull import ConvexHull
 from .target_area import TargetArea
+
+IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
 
 class ShapeArray(object):
@@ -89,22 +91,22 @@ class ShapeArray(object):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
         d = {"type": self._types.tolist(),
-                "x": self._xy[:, 0].tolist(),
-                "y": self._xy[:, 1].tolist(),
-                "width": self._sizes[:, 0].tolist(),
-                "height": self._sizes[:, 1].tolist(),
-                "attributes": [str(x) for x in self._attributes.tolist()]
-                }
+             "x": self._xy[:, 0].tolist(),
+             "y": self._xy[:, 1].tolist(),
+             "width": self._sizes[:, 0].tolist(),
+             "height": self._sizes[:, 1].tolist(),
+             "attributes": [str(x) for x in self._attributes.tolist()]
+             }
         return d
 
-    def add(self, shapes: Union[ShapeType, Tuple, Sequence, ShapeArray]):
+    def add(self, shapes: Union[AbstractShape, Tuple, Sequence, ShapeArray]):
         """add shape a the defined position
 
         Note
         ----
         see `add_somewhere` for adding shape at a random position
         """
-        if isinstance(shapes, ShapeType):
+        if isinstance(shapes, AbstractShape):
             self._xy = np.append(self._xy, np.atleast_2d(shapes.xy), axis=0)
             self._sizes = np.append(
                 self._sizes, np.atleast_2d(shapes.size), axis=0)
@@ -126,7 +128,7 @@ class ShapeArray(object):
                 f"Can't add '{type(shapes)}', that's not a ShapeType or list of ShapeTypes."
             )
 
-    def replace(self, index: int, shape: ShapeType):
+    def replace(self, index: int, shape: AbstractShape):
 
         self._polygons[index] = shape.polygon
         self._xy[index, :] = shape.xy
@@ -155,7 +157,7 @@ class ShapeArray(object):
         self._convex_hull = None
         self._update_ids()
 
-    def pop(self, index: Optional[int] = None) -> ShapeType:
+    def pop(self, index: Optional[int] = None) -> AbstractShape:
         """Remove and return item at index"""
         if index is None:
             index = len(self._polygons) - 1
@@ -194,7 +196,7 @@ class ShapeArray(object):
     #             shape.delete_polygon()
     #             self._polygons[i] = shape.polygon
 
-    def get(self, index: int) -> ShapeType:
+    def get(self, index: int) -> AbstractShape:
         """Returns selected object"""
         name = self._types[index]
         if name == Dot.name:
@@ -226,7 +228,7 @@ class ShapeArray(object):
         # rtn.set_polygon(self._polygons[index])
         return rtn
 
-    def get_list(self, index: Optional[IntOVector] = None) -> List[ShapeType]:
+    def get_list(self, index: Optional[IntOVector] = None) -> List[AbstractShape]:
         """Returns list with selected objects
         """
         if index is None:
@@ -249,8 +251,6 @@ class ShapeArray(object):
         if not isinstance(self._convex_hull, ConvexHull):
             self._convex_hull = ConvexHull(self._polygons)
         return self._convex_hull
-
-
 
     def csv(self, skip_columns: Optional[Sequence[str]] = None) -> str:
         """Comma-separated table representation the nsn stimulus
@@ -297,10 +297,10 @@ class ShapeArray(object):
     #     """
     #     pass
 
-    def distances(self, shape: Union[Point2D, ShapeType]) -> NDArray[np.float_]:
+    def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float_]:
         """distances of a shape or Point2D to the elements in the shape array"""
 
-        if isinstance(shape, (Point2D, CircularShapeType)):
+        if isinstance(shape, (Point2D, AbstractCircularShape)):
             # circular target shape
             rtn = np.full(self.n_objects, np.nan)
 
@@ -319,7 +319,7 @@ class ShapeArray(object):
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
-                if isinstance(shape, CircularShapeType):
+                if isinstance(shape, AbstractCircularShape):
                     rtn[idx] = shapely.distance(
                         shape.polygon, self._polygons[idx])
                 else:
@@ -331,7 +331,7 @@ class ShapeArray(object):
             # non-circular shape as target
             return shapely.distance(shape.polygon, self._polygons)
 
-    def dwithin(self, shape: Union[Point2D, ShapeType],  distance: float = 0) -> NDArray[np.bool_]:
+    def dwithin(self, shape: Union[Point2D, AbstractShape],  distance: float = 0) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
         specified distance.
 
@@ -339,7 +339,7 @@ class ShapeArray(object):
         -----
         Using this function is more efficient than computing the distance and comparing the result.
         """
-        if isinstance(shape, (Point2D, CircularShapeType)):
+        if isinstance(shape, (Point2D, AbstractCircularShape)):
             rtn = np.full(self.n_objects, False)
 
             idx = self._ids[Dot.name]
@@ -361,7 +361,7 @@ class ShapeArray(object):
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
-                if isinstance(shape, CircularShapeType):
+                if isinstance(shape, AbstractCircularShape):
                     rtn[idx] = shapely.dwithin(
                         shape.polygon, self._polygons[idx],  distance=distance)
                 else:
@@ -431,11 +431,11 @@ class ShapeArray(object):
         return rtn
 
     def _random_free_position(self,
-                              shape: ShapeType,
+                              shape: AbstractShape,
                               min_distance: float,
                               target_area: TargetArea,
                               ignore_overlaps: bool,
-                              max_iterations: int) -> ShapeType:
+                              max_iterations: int) -> AbstractShape:
         """returns the object at random free position
 
         raises exception if not found
@@ -520,7 +520,7 @@ class ShapeArray(object):
         return 1
 
 
-def _distance_circ_dot_array(obj: Union[Point2D, CircularShapeType],
+def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],
                              dots_xy: NDArray[np.float_],
                              dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
     """Distances circular shape or Point to multiple dots
@@ -541,7 +541,7 @@ def _distance_circ_dot_array(obj: Union[Point2D, CircularShapeType],
     return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (dots_diameter + circ_dia) / 2
 
 
-def _distance_circ_ellipse_array(obj: Union[Point2D, CircularShapeType],
+def _distance_circ_ellipse_array(obj: Union[Point2D, AbstractCircularShape],
                                  ellipses_xy: NDArray[np.float_],
                                  ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
     """Distance circular shape or Point2D to multiple ellipses

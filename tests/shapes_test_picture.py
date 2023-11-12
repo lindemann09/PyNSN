@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
-from pynsn import Colour, Dot, Rectangle, ShapeType
+from pynsn import Colour, Dot, Rectangle, AbstractShape
 from pynsn.image._base import cartesian2image_coordinates as _c2i_coord
 
 
@@ -15,7 +15,7 @@ class Line(object):
         self.colour = Colour(colour)
 
 
-def _draw_shape(img, shape: ShapeType, scaling_factor=1):
+def _draw_shape(img, shape: AbstractShape, scaling_factor=1):
     if isinstance(shape, Line):
         xy_a = _c2i_coord(np.asarray(shape.xy_a), img.size).tolist()
         xy_b = _c2i_coord(np.asarray(shape.xy_b), img.size).tolist()

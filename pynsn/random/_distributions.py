@@ -3,16 +3,17 @@ from __future__ import annotations
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Optional, Sequence, Tuple, Union
+from copy import copy
+from typing import Any, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from ..types import NoSolutionError
+from ..errors import NoSolutionError
 from . import _rng
 
 
-class ABCDistribution(metaclass=ABCMeta):
+class AbstractDistribution(metaclass=ABCMeta):
     """Base class for all distribution"""
 
     @abstractmethod
@@ -58,28 +59,32 @@ class ABCDistribution(metaclass=ABCMeta):
             return hist(samples, bins=100)[2]
 
 
-class UnivariateDistributionType(ABCDistribution):
+class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
     """Univariate Distribution
     """
 
     def __init__(self, minmax: Optional[ArrayLike]):
         if minmax is None:
-            self.minmax = np.array((None, None))
+            self._minmax = np.array((None, None))
         else:
             # FIXME make properties with setter!
-            self.minmax = np.asarray(minmax)
-        if len(self.minmax) != 2:
+            self._minmax = np.asarray(minmax)
+        if len(self._minmax) != 2:
             raise TypeError(
                 f"min_max {minmax} has to be a tuple of two values")
 
     def todict(self) -> dict:
         """Dict representation of the distribution"""
         d = super().todict()
-        d.update({"minmax": self.minmax.tolist()})
+        d.update({"minmax": self._minmax.tolist()})
         return d
 
+    @property
+    def minmax(self) -> NDArray:
+        return self._minmax
 
-class Uniform(UnivariateDistributionType):
+
+class Uniform(AbstractUnivarDistr):
     """
     """
 
@@ -92,117 +97,69 @@ class Uniform(UnivariateDistributionType):
         """
 
         super().__init__(minmax)
-        if self.minmax[0] > self.minmax[1]:
+        if self._minmax[0] > self._minmax[1]:
             raise TypeError(f"min_max {minmax} has to be a tuple of two values "
                             "(a, b) with a <= b.")
-        self._scale = self.minmax[1] - self.minmax[0]
+        self._scale = self._minmax[1] - self._minmax[0]
 
     def sample(self, n: int) -> NDArray[np.float_]:
         dist = _rng.generator.random(size=n)
-        return self.minmax[0] + dist * self._scale
+        return self._minmax[0] + dist * self._scale
 
 
-class Levels(UnivariateDistributionType):
-    """Levels
-    """
-
-    def __init__(self, levels: ArrayLike,
-                 weights: Optional[ArrayLike] = None,
-                 exact_weighting=False):
-        """Distribution of level. Samples from a population discrete categories
-         with optional weights for each level or category.
-        """
-        super().__init__(minmax=None)
-        self.levels = np.asarray(levels)
-        self.exact_weighting = exact_weighting
-        if weights is None:
-            self.weights = np.empty(0)
-        else:
-            self.weights = np.asarray(weights)
-            if len(self.levels) != len(self.weights):
-                raise ValueError(
-                    "Number weights does not match the number of levels")
-
-    def sample(self, n: int) -> NDArray[np.float_]:
-        if len(self.weights) == 0:
-            p = np.array([1 / len(self.levels)] * len(self.levels))
-        else:
-            p = self.weights / np.sum(self.weights)
-
-        if not self.exact_weighting:
-            dist = _rng.generator.choice(a=self.levels, p=p, size=n)
-        else:
-            n_distr = n * p
-            if np.any(np.round(n_distr) != n_distr):
-                # problem: some n are floats
-                try:
-                    # greatest common denominator
-                    gcd = np.gcd.reduce(self.weights)
-                    info = "\nSample size has to be a multiple of {}.".format(
-                        int(np.sum(self.weights / gcd)))
-                except:
-                    info = ""
-
-                raise NoSolutionError(f"Can't find n={n} samples that" +
-                                      f" are exactly distributed as specified by the weights (p={p}). " +
-                                      info)
-
-            dist = []
-            for lev, n in zip(self.levels, n_distr):
-                dist.extend([lev] * int(n))
-            _rng.generator.shuffle(dist)
-
-        return np.asarray(dist)
-
-    def todict(self) -> dict:
-        d = super().todict()
-        d.update({"population": self.levels.tolist(),
-                  "weights": self.weights.tolist(),
-                  "exact_weighting": self.exact_weighting})
-        return d
-
-
-class Triangle(UnivariateDistributionType):
+class Triangle(AbstractUnivarDistr):
     """Triangle
     """
 
-    def __init__(self, mode, minmax: ArrayLike):
+    def __init__(self, mode: float, minmax: ArrayLike):
         super().__init__(minmax=minmax)
-        self.mode = mode
-        if (self.minmax[0] is not None and mode <= self.minmax[0]) or \
-                (self.minmax[1] is not None and mode >= self.minmax[1]):
+        self._mode = mode
+        if (self._minmax[0] is not None and mode <= self._minmax[0]) or \
+                (self._minmax[1] is not None and mode >= self._minmax[1]):
             raise ValueError(f"mode ({mode}) has to be inside the defined "
-                             f"min_max range ({self.minmax})")
+                             f"min_max range ({self._minmax})")
 
     def sample(self, n: int) -> NDArray[np.float_]:
-        return _rng.generator.triangular(left=self.minmax[0], right=self.minmax[1],
-                                         mode=self.mode, size=n)
+        return _rng.generator.triangular(left=self._minmax[0], right=self._minmax[1],
+                                         mode=self._mode, size=n)
 
     def todict(self) -> dict:
         d = super().todict()
-        d.update({"mode": self.mode})
+        d.update({"mode": self._mode})
         return d
 
+    @property
+    def mode(self) -> float:
+        return self._mode
 
-class _DistributionMuSigma(UnivariateDistributionType):
 
-    def __init__(self, mu, sigma, minmax: Optional[ArrayLike] = None):
+class _AbstractDistrMuSigma(AbstractUnivarDistr, metaclass=ABCMeta):
+
+    def __init__(self, mu: float, sigma: float, minmax: Optional[ArrayLike] = None):
         super().__init__(minmax)
-        self.mu = mu
-        self.sigma = abs(sigma)
-        if (self.minmax[0] is not None and mu <= self.minmax[0]) or \
-                (self.minmax[1] is not None and mu >= self.minmax[1]):
+        self._mu = mu
+        self._sigma = abs(sigma)
+        if (self._minmax[0] is not None and mu <= self._minmax[0]) or \
+                (self._minmax[1] is not None and mu >= self._minmax[1]):
             raise ValueError(f"mode ({mu}) has to be inside the defined "
-                             f"min_max range ({self.minmax})")
+                             f"min_max range ({self._minmax})")
 
     def todict(self) -> dict:
         d = super().todict()
-        d.update({"mu": self.mu,
-                  "sigma": self.sigma})
+        d.update({"mu": self._mu,
+                  "sigma": self._sigma})
         return d
 
+    @property
+    def mu(self) -> float:
+        return self._mu
 
-class Normal(_DistributionMuSigma):
+    @property
+    def sigma(self) -> float:
+        return self._sigma
+
+
+class Normal(_AbstractDistrMuSigma):
     """Normal distribution with optional cut-off of minimum and maximum
 
     Resulting distribution has the defined mean and std, only if
@@ -220,18 +177,18 @@ class Normal(_DistributionMuSigma):
         required = n
         while required > 0:
             draw = _rng.generator.normal(
-                loc=self.mu, scale=self.sigma, size=required)
-            if self.minmax[0] is not None:
-                draw = np.delete(draw, draw < self.minmax[0])
-            if self.minmax[1] is not None:
-                draw = np.delete(draw, draw > self.minmax[1])
+                loc=self._mu, scale=self._sigma, size=required)
+            if self._minmax[0] is not None:
+                draw = np.delete(draw, draw < self._minmax[0])
+            if self._minmax[1] is not None:
+                draw = np.delete(draw, draw > self._minmax[1])
             if len(draw) > 0:  # type: ignore
                 rtn = np.append(rtn, draw)
                 required = n - len(rtn)
         return rtn
 
 
-class Beta(_DistributionMuSigma):
+class Beta(_AbstractDistrMuSigma):
 
     def __init__(self, mu=None, sigma=None, alpha=None, beta=None,
                  minmax: Optional[ArrayLike] = None):
@@ -263,13 +220,13 @@ class Beta(_DistributionMuSigma):
         super().__init__(mu=mu, sigma=sigma, minmax=minmax)
 
     def sample(self, n: int) -> NDArray[np.float_]:
-        if self.sigma is None or self.sigma == 0:
-            return np.array([self.mu] * n)
+        if self._sigma is None or self._sigma == 0:
+            return np.array([self._mu] * n)
 
         alpha, beta = self.shape_parameter
         dist = _rng.generator.beta(a=alpha, b=beta, size=n)
         dist = (dist - np.mean(dist)) / np.std(dist)  # z values
-        rtn = dist * self.sigma + self.mu
+        rtn = dist * self._sigma + self._mu
         return rtn
 
     @property
@@ -283,9 +240,9 @@ class Beta(_DistributionMuSigma):
             shape parameter (alpha, beta) of the distribution
 
         """
-        r = float(self.minmax[1] - self.minmax[0])
-        m = (self.mu - self.minmax[0]) / r  # mean
-        std = self.sigma / r
+        r = float(self._minmax[1] - self._minmax[0])
+        m = (self._mu - self._minmax[0]) / r  # mean
+        std = self._sigma / r
         x = (m * (1 - m) / std ** 2) - 1
         return x * m, (1 - m) * x
 
@@ -311,9 +268,78 @@ class Beta(_DistributionMuSigma):
         return mu, sigma
 
 
-class Constant(UnivariateDistributionType):
+class Categorical(AbstractDistribution):
+    """Categorical
+    """
 
-    def __init__(self, value: float) -> None:
+    def __init__(self,
+                 categories: Union[Sequence, NDArray],
+                 weights: Optional[ArrayLike] = None,
+                 exact_weighting=False):
+        """Distribution of category. Samples from a population discrete categories
+         with optional weights for each category or category.
+        """
+
+        self._categories = np.asarray(copy(categories))
+        self.exact_weighting = exact_weighting
+        if weights is None:
+            self._weights = np.empty(0)
+        else:
+            self._weights = np.asarray(weights)
+            if len(self._categories) != len(self._weights):
+                raise ValueError(
+                    "Number weights does not match the number of categories")
+
+    @property
+    def categories(self) -> NDArray:
+        return self._categories
+
+    @property
+    def weights(self) -> NDArray:
+        return self._weights
+
+    def sample(self, n: int) -> NDArray[np.float_]:
+        if len(self._weights) == 0:
+            p = np.array([1 / len(self._categories)] * len(self._categories))
+        else:
+            p = self._weights / np.sum(self._weights)
+
+        if not self.exact_weighting:
+            dist = _rng.generator.choice(a=self._categories, p=p, size=n)
+        else:
+            n_distr = n * p
+            if np.any(np.round(n_distr) != n_distr):
+                # problem: some n are floats
+                try:
+                    # greatest common denominator
+                    gcd = np.gcd.reduce(self._weights)
+                    info = "\nSample size has to be a multiple of {}.".format(
+                        int(np.sum(self._weights / gcd)))
+                except:
+                    info = ""
+
+                raise NoSolutionError(f"Can't find n={n} samples that" +
+                                      f" are exactly distributed as specified by the weights (p={p}). " +
+                                      info)
+
+            dist = []
+            for lev, n in zip(self._categories, n_distr):
+                dist.extend([lev] * int(n))
+            _rng.generator.shuffle(dist)
+
+        return np.asarray(dist)
+
+    def todict(self) -> dict:
+        d = super().todict()
+        d.update({"population": self._categories.tolist(),
+                  "weights": self._weights.tolist(),
+                  "exact_weighting": self.exact_weighting})
+        return d
+
+
+class Constant(AbstractDistribution):
+
+    def __init__(self, value: Any) -> None:
         """Helper class to "sample" constance.
 
         Looks like a PyNSNDistribution, but sample returns just the constant
@@ -323,11 +349,11 @@ class Constant(UnivariateDistributionType):
         constant : numeric
         """
 
-        super().__init__(minmax=np.array((value, value)))
+        self.value = value
 
     def sample(self, n: int) -> NDArray[np.float_]:
-        return np.full(self.minmax[0],  n)
+        return np.full(self.value,  n)
 
     def todict(self) -> dict:
         return {"type": "Constant",
-                "value": self.minmax[0]}
+                "value": self.value}

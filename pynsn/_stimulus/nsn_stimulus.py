@@ -12,9 +12,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .. import defaults
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, ShapeType
-from ..random import MultiVarDistributionType
-from ..types import NoSolutionError
+from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, AbstractShape
+from ..errors import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .stimulus_colours import StimulusColours
@@ -193,7 +192,7 @@ class NSNStimulus(ShapeArray):
             min_distance = self.min_distance
         return super().get_overlaps(index, min_distance)
 
-    def shape_overlaps(self, shape: Union[Point2D, ShapeType],
+    def shape_overlaps(self, shape: Union[Point2D, AbstractShape],
                        min_distance: Optional[float] = None) -> NDArray[np.bool_]:
         """Returns True for all elements that overlap  with the particular shape
         (i.e. taking into account the minimum distance).
@@ -207,13 +206,13 @@ class NSNStimulus(ShapeArray):
             min_distance = self.min_distance
         return self.matrix_dwithin(distance=min_distance)
 
-    def inside_target_area(self, shape: Union[Point2D, ShapeType]) -> bool:
+    def inside_target_area(self, shape: Union[Point2D, AbstractShape]) -> bool:
         """Returns True if shape is inside target area.
         """
         return self._target_area.is_object_inside(shape)
 
     def add_somewhere(self,
-                      ref_object: ShapeType,
+                      ref_object: AbstractShape,
                       n: int = 1,
                       ignore_overlaps: bool = False,
                       inside_convex_hull: bool = False,
@@ -234,15 +233,15 @@ class NSNStimulus(ShapeArray):
             n = n - 1
 
     def random_free_position(self,
-                             shape: ShapeType,
+                             shape: AbstractShape,
                              ignore_overlaps: bool = False,
                              inside_convex_hull: bool = False,
-                             max_iterations: Optional[int] = None) -> ShapeType:
+                             max_iterations: Optional[int] = None) -> AbstractShape:
         """moves the object to a random free position
 
         raise exception if not found
         """
-        if not isinstance(shape, (ShapeType)):
+        if not isinstance(shape, AbstractShape):
             raise NotImplementedError("Not implemented for "
                                       f"{type(shape).__name__}")
         if max_iterations is None:

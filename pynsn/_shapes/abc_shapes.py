@@ -5,19 +5,22 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
 from typing import Any, Optional, Union
+from typing import Sequence, Tuple
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 
-from ..types import Coord2DLike
 from .colour import Colour
 
 INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
 
+Coord2D = Tuple[float, float]
+Coord2DLike = Union[Coord2D, Sequence[float], NDArray]
 
-class PointType(metaclass=ABCMeta):
+
+class AbstractPoint(metaclass=ABCMeta):
 
     def __init__(self, xy: Coord2DLike):
         self._xy = np.asarray(xy)
@@ -44,7 +47,7 @@ class PointType(metaclass=ABCMeta):
         return str(cls.__name__)
 
     @abstractmethod
-    def distance(self, shape: Union[PointType, ShapeType]) -> float:
+    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
         """Distance to another shape
 
         Note: Returns negative distances only for circular shapes, otherwise
@@ -52,7 +55,7 @@ class PointType(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
         """True if point is in given distance to a shape (dist)
 
         Using this function is more efficient for non-circular shapes than
@@ -60,7 +63,7 @@ class PointType(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def is_inside(self, shape: PointType,
+    def is_inside(self, shape: AbstractPoint,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         """True is shapes fully inside the shapes (dist)
@@ -73,8 +76,7 @@ class PointType(metaclass=ABCMeta):
                 "xy": self.xy.tolist()}
 
 
-
-class ShapeType(metaclass=ABCMeta):
+class AbstractShape(metaclass=ABCMeta):
     """Abstract Shape Type Class"""
 
     def __init__(self,
@@ -166,7 +168,7 @@ class ShapeType(metaclass=ABCMeta):
 
     @abstractmethod
     def copy(self, new_xy: Optional[Coord2DLike] = None,
-             copy_polygon: bool = True) -> ShapeType:
+             copy_polygon: bool = True) -> AbstractShape:
         """returns a copy of the object
         """
 
@@ -185,7 +187,7 @@ class ShapeType(metaclass=ABCMeta):
         """"""
 
     @abstractmethod
-    def distance(self, shape: Union[PointType, ShapeType]) -> float:
+    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
         """Distance to another shape
 
         Note: Returns negative distances only for circular shapes, otherwise
@@ -193,7 +195,7 @@ class ShapeType(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def dwithin(self, shape: Union[PointType, ShapeType], dist: float) -> bool:
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
         """True is shapes are within a given distance (dist)
 
         Using this function is more efficient for non-circular shapes than
@@ -201,34 +203,34 @@ class ShapeType(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def is_inside(self, shape: ShapeType,
+    def is_inside(self, shape: AbstractShape,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         """True is shapes fully inside the shapes (dist)
         """
 
 
-class CircularShapeType(ShapeType, metaclass=ABCMeta):
+class AbstractCircularShape(AbstractShape, metaclass=ABCMeta):
     """Abstract Class for Circular Shapes"""
     QUAD_SEGS = 32  # line segments used to approximate dot
 
     @abstractmethod
-    def distance(self, shape: Union[PointType, ShapeType]) -> float:
+    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
         pass
 
     @abstractmethod
-    def dwithin(self, shape: ShapeType, distance: float) -> bool:
+    def dwithin(self, shape: AbstractShape, distance: float) -> bool:
         pass
 
     @abstractmethod
-    def is_inside(self, shape: ShapeType,
+    def is_inside(self, shape: AbstractShape,
                   shape_exterior_ring: Optional[shapely.LinearRing] = None,
                   min_dist_boarder: float = 0) -> bool:
         pass
 
 
-def is_in_shape(a: Union[PointType, ShapeType],
-                b: ShapeType,
+def is_in_shape(a: Union[AbstractPoint, AbstractShape],
+                b: AbstractShape,
                 b_exterior_ring: Optional[shapely.LinearRing] = None,
                 min_dist_boarder: float = 0) -> bool:
     """Returns True if shape or PointType a is fully inside shape b while taking
@@ -239,7 +241,7 @@ def is_in_shape(a: Union[PointType, ShapeType],
     is already known in this case, specifying the parameter will improve performance.
     """
 
-    if isinstance(a, PointType):
+    if isinstance(a, AbstractPoint):
         a_polygon = a.xy_point
     else:
         a_polygon = a.polygon
