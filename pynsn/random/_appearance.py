@@ -5,7 +5,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from numpy.typing import NDArray
 from abc import ABCMeta
-from typing import Optional, Sequence, Tuple, Union, Any
+from typing import Optional, Sequence, Union
 from .._shapes.colour import Colour
 from ._distributions import Categorical, AbstractUnivarDistr, Constant, AbstractDistribution
 

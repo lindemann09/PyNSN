@@ -85,8 +85,9 @@ class AbstractShape(metaclass=ABCMeta):
         self._xy = np.asarray(xy)
         if len(self._xy) != 2:
             raise ValueError(INCORRECT_COORDINATE)
-        self._attribute = attribute
+        self._attribute = None
         self._polygon = None
+        self.attribute = attribute  # setter
 
     @property
     def xy(self) -> NDArray:
@@ -111,21 +112,21 @@ class AbstractShape(metaclass=ABCMeta):
 
     @attribute.setter
     def attribute(self, val: Any):
-        self._attribute = val
+        if val is None:
+            self._attribute = None
+        else:
+            try:
+                self._attribute = Colour(self._attribute)
+            except TypeError:
+                self._attribute = val
 
     @property
     def colour(self) -> Colour:
-        """Class instance of the attribute, if possible
-
-        Returns
-        -------
-        rtn : Colour
+        """colour of the shape
         """
         if isinstance(self._attribute, Colour):
             return self._attribute
-        try:
-            return Colour(self._attribute)
-        except TypeError:
+        else:
             return Colour(None)
 
     @property
