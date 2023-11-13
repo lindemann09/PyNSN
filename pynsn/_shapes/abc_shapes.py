@@ -72,7 +72,7 @@ class AbstractPoint(metaclass=ABCMeta):
     @abstractmethod
     def todict(self) -> dict:
         """dict representation of the object"""
-        return {"type: ": str(self.__class__.__name__),
+        return {"type": str(self.__class__.__name__),
                 "xy": self.xy.tolist()}
 
 
@@ -163,7 +163,7 @@ class AbstractShape(metaclass=ABCMeta):
     @abstractmethod
     def todict(self) -> dict:
         """dict representation of the object"""
-        return {"type: ": self.name,
+        return {"type": self.name,
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
 

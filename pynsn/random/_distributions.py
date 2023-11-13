@@ -11,7 +11,10 @@ from numpy.typing import ArrayLike, NDArray
 
 from ..errors import NoSolutionError
 from . import _rng
+from .._shapes.colour import Colour
 
+ConstantLike = Union[float, int, str, dict,  Colour]
+CategoricalLike = Union[Sequence, NDArray]
 
 class AbstractDistribution(metaclass=ABCMeta):
     """Base class for all distribution"""
@@ -22,7 +25,7 @@ class AbstractDistribution(metaclass=ABCMeta):
         return {"type": type(self).__name__}
 
     @abstractmethod
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray:
         """Random sample from the distribution
 
         Args:
@@ -58,9 +61,12 @@ class AbstractDistribution(metaclass=ABCMeta):
         else:
             return hist(samples, bins=100)[2]
 
-
 class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
-    """Univariate Distribution
+    pass
+
+
+class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
+    """Univariate Continuous Distribution
     """
 
     def __init__(self, minmax: Optional[ArrayLike]):
@@ -84,7 +90,7 @@ class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
         return self._minmax
 
 
-class Uniform(AbstractUnivarDistr):
+class Uniform(AbstractContinuousDistr):
     """
     """
 
@@ -107,7 +113,7 @@ class Uniform(AbstractUnivarDistr):
         return self._minmax[0] + dist * self._scale
 
 
-class Triangle(AbstractUnivarDistr):
+class Triangle(AbstractContinuousDistr):
     """Triangle
     """
 
@@ -133,7 +139,7 @@ class Triangle(AbstractUnivarDistr):
         return self._mode
 
 
-class _AbstractDistrMuSigma(AbstractUnivarDistr, metaclass=ABCMeta):
+class _AbstractDistrMuSigma(AbstractContinuousDistr, metaclass=ABCMeta):
 
     def __init__(self, mu: float, sigma: float, minmax: Optional[ArrayLike] = None):
         super().__init__(minmax)
@@ -268,15 +274,15 @@ class Beta(_AbstractDistrMuSigma):
         return mu, sigma
 
 
-class Categorical(AbstractDistribution):
+class Categorical(AbstractUnivarDistr):
     """Categorical
     """
 
     def __init__(self,
-                 categories: Union[Sequence, NDArray],
+                 categories: CategoricalLike,
                  weights: Optional[ArrayLike] = None,
                  exact_weighting=False):
-        """Distribution of category. Samples from a population discrete categories
+        """Distribution of category. Samples from discrete categories
          with optional weights for each category or category.
         """
 
@@ -331,15 +337,15 @@ class Categorical(AbstractDistribution):
 
     def todict(self) -> dict:
         d = super().todict()
-        d.update({"population": self._categories.tolist(),
+        d.update({"categories": self._categories.tolist(),
                   "weights": self._weights.tolist(),
                   "exact_weighting": self.exact_weighting})
         return d
 
 
-class Constant(AbstractDistribution):
+class Constant(AbstractUnivarDistr):
 
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: ConstantLike) -> None:
         """Helper class to "sample" constance.
 
         Looks like a PyNSNDistribution, but sample returns just the constant
@@ -351,8 +357,8 @@ class Constant(AbstractDistribution):
 
         self.value = value
 
-    def sample(self, n: int) -> NDArray[np.float_]:
-        return np.full(self.value,  n)
+    def sample(self, n: int) -> NDArray:
+        return np.full(n, self.value)
 
     def todict(self) -> dict:
         return {"type": "Constant",

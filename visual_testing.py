@@ -8,6 +8,12 @@ from pynsn.image import pil_image, svg_file
 import numpy as np
 
 from pynsn import random
+
+a = random.RndDot(diameter=(120.8, 20.4), attributes=["green", "red"])
+
+print(a)
+exit()
+
 da = pynsn.Dot((-20, 120), diameter=2,  attribute=pynsn.Colour("red"))
 db = pynsn.Ellipse((20, 17), size=(120, 50), attribute="#FF0000")
 dc = pynsn.Ellipse((120, 57), size=(60, 120), attribute="#00F000")  # big dot

@@ -36,17 +36,17 @@ class VisProp(enum.Flag):  # visual properties
 
     @staticmethod
     def size_properties() -> tuple:
-        return (VisProp.LOG_SIZE,
-                VisProp.TOTAL_SURFACE_AREA,
-                VisProp.AV_SURFACE_AREA,
-                VisProp.AV_PERIMETER,
-                VisProp.TOTAL_PERIMETER)
+        return (
+            VisProp.LOG_SIZE,
+            VisProp.TOTAL_SURFACE_AREA,
+            VisProp.AV_SURFACE_AREA,
+            VisProp.AV_PERIMETER,
+            VisProp.TOTAL_PERIMETER,
+        )
 
     @staticmethod
     def space_properties() -> tuple:
-        return (VisProp.LOG_SPACING,
-                VisProp.SPARSITY,
-                VisProp.FIELD_AREA)
+        return (VisProp.LOG_SPACING, VisProp.SPARSITY, VisProp.FIELD_AREA)
 
     def is_dependent_from(self, other: Any) -> bool:
         """returns true if both properties are not independent"""
@@ -54,22 +54,33 @@ class VisProp(enum.Flag):  # visual properties
         is_space_prop = self in VisProp.space_properties()
         other_size_prop = other in VisProp.size_properties()
         other_space_prop = other in VisProp.space_properties()
-        return (is_size_prop and other_size_prop) or \
-            (is_space_prop and other_space_prop)
+        return (is_size_prop and other_size_prop) or (
+            is_space_prop and other_space_prop
+        )
 
-    def label(self) -> str:
-        labels = {
-            VisProp.NUMEROSITY: "Numerosity",
-            VisProp.LOG_SIZE: "Log size",
-            VisProp.TOTAL_SURFACE_AREA: "Total surface area",
-            VisProp.AV_SURFACE_AREA: "Av. surface area",
-            VisProp.AV_PERIMETER: "Av. perimeter",
-            VisProp.TOTAL_PERIMETER: "Total perimeter",
-            VisProp.LOG_SPACING: "Log spacing",
-            VisProp.SPARSITY: "Sparsity",
-            VisProp.FIELD_AREA: "Field area",
-            VisProp.COVERAGE: "Coverage"}
-        return labels[self]
+    def __str__(self) -> str:
+        if self == VisProp.NUMEROSITY:
+            return "Numerosity"
+        elif self == VisProp.LOG_SIZE:
+            return "Log size"
+        elif self == VisProp.TOTAL_SURFACE_AREA:
+            return "Total surface area"
+        elif self == VisProp.AV_SURFACE_AREA:
+            return "Av. surface area"
+        elif self == VisProp.AV_PERIMETER:
+            return "Av. perimeter"
+        elif self == VisProp.TOTAL_PERIMETER:
+            return "Total perimeter"
+        elif self == VisProp.LOG_SPACING:
+            return "Log spacing"
+        elif self == VisProp.SPARSITY:
+            return "Sparsity"
+        elif self == VisProp.FIELD_AREA:
+            return "Field area"
+        elif self == VisProp.COVERAGE:
+            return "Coverage"
+        else:
+            return "???"
 
 
 class ArrayProperties(object):
@@ -91,14 +102,16 @@ class ArrayProperties(object):
                     rtn += " "
                 rtn += key_value_format(k, v) + "\n "
         else:
-            rtn = (f"N: {self.numerosity}, "
-                   + f"TSA: {self.total_surface_area:.2f}, "
-                   + f"ISA: {self.average_surface_area:.2f}, "
-                   + f"FA: {self.field_area:.2f}, "
-                   + f"SPAR: {self.sparsity:.2f}, "
-                   + f"logSIZE: {self.log_size:.2f}, "
-                   + f"logSPACE: {self.log_spacing:.2f}, "
-                   + f"COV: {self.coverage:.2f}")
+            rtn = (
+                f"N: {self.numerosity}, "
+                + f"TSA: {self.total_surface_area:.2f}, "
+                + f"ISA: {self.average_surface_area:.2f}, "
+                + f"FA: {self.field_area:.2f}, "
+                + f"SPAR: {self.sparsity:.2f}, "
+                + f"logSIZE: {self.log_size:.2f}, "
+                + f"logSPACE: {self.log_spacing:.2f}, "
+                + f"COV: {self.coverage:.2f}"
+            )
         return rtn.rstrip()
 
     @property
@@ -107,14 +120,14 @@ class ArrayProperties(object):
 
         rtn = np.full(self._shapes.n_objects, np.nan)
         # rects and polygons
-        idx = np.append(self._shapes.ids[Rectangle.name],
-                        self._shapes.ids[Picture.name])
+        idx = np.append(
+            self._shapes.ids[Rectangle.name], self._shapes.ids[Picture.name]
+        )
         if len(idx) > 0:
             rtn[idx] = self._shapes.sizes[idx, 0] * self._shapes.sizes[idx, 1]
         # circular shapes area
         # Area = pi * r_x * r_y
-        idx = np.append(self._shapes.ids[Dot.name],
-                        self._shapes.ids[Ellipse.name])
+        idx = np.append(self._shapes.ids[Dot.name], self._shapes.ids[Ellipse.name])
         if len(idx) > 0:
             r = self._shapes.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
@@ -130,9 +143,13 @@ class ArrayProperties(object):
 
         rtn = np.full(self._shapes.n_objects, np.nan)
 
-        idx = np.concatenate((self._shapes.ids[Rectangle.name],
-                              self._shapes.ids[Picture.name],
-                              self._shapes.ids[PolygonShape.name]))
+        idx = np.concatenate(
+            (
+                self._shapes.ids[Rectangle.name],
+                self._shapes.ids[Picture.name],
+                self._shapes.ids[PolygonShape.name],
+            )
+        )
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shapes.polygons[idx])
         # dots perimeter
@@ -252,6 +269,5 @@ class ArrayProperties(object):
     def todict(self) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
-        rtn.extend([(x.label(), self.get(x))
-                   for x in list(VisProp)])  # type: ignore
+        rtn.extend([(str(x), self.get(x)) for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)

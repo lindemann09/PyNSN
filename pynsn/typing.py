@@ -6,7 +6,7 @@ from ._stimulus.properties import ArrayProperties
 from ._stimulus.shape_array import ShapeArray
 from ._stimulus.stimulus_colours import StimulusColours
 from ._stimulus.target_area import TargetArea
-from .random._distributions import AbstractDistribution, AbstractUnivarDistr
+from .random._distributions import (AbstractDistribution, AbstractUnivarDistr,
+                                    AbstractContinuousDistr, CategoricalLike, ConstantLike)
 from .random._distributions_2d import AbstractMultivarDistr
-from .random._random_shape import (AbstractRandomShape, AttributesDistrLike,
-                                   ConstantLike, UnivariateLike)
+from .random._random_shape import AbstractRndShape, DistributionLike
