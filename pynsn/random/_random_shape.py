@@ -24,7 +24,7 @@ def _make_univar_distr(value: UnivariateLike) -> Union[Constant, AbstractUnivarD
         return Constant(value)
 
 
-class Appearance(metaclass=ABCMeta):
+class AbstractRandomShape(metaclass=ABCMeta):
 
     def __init__(self, attributes: AttributesDistrLike = None):
         """
@@ -45,7 +45,7 @@ class Appearance(metaclass=ABCMeta):
         return self._attributes
 
 
-class RandomDot(Appearance):
+class RandomDot(AbstractRandomShape):
 
     def __init__(self,
                  diameter: UnivariateLike,
@@ -60,7 +60,7 @@ class RandomDot(Appearance):
         return self._diameter
 
 
-class _AppearanceWidthHeight(Appearance, metaclass=ABCMeta):
+class _RandShapeWidthHeight(AbstractRandomShape, metaclass=ABCMeta):
 
     def __init__(self,
                  width: Optional[UnivariateLike] = None,
@@ -121,15 +121,17 @@ class _AppearanceWidthHeight(Appearance, metaclass=ABCMeta):
         return self._size_proportion
 
 
-class RandomRectangle(_AppearanceWidthHeight):
+class RandomRectangle(_RandShapeWidthHeight):
     pass
 
 
-class RandomEllipse(_AppearanceWidthHeight):
+class RandomEllipse(_RandShapeWidthHeight):
     pass
 
+class RandomPolygon(_RandShapeWidthHeight):
+    pass
 
-class RandomPicture(_AppearanceWidthHeight):
+class RandomPicture(_RandShapeWidthHeight):
 
     def __init__(self,
                  width: Optional[UnivariateLike] = None,
@@ -148,3 +150,4 @@ class RandomPicture(_AppearanceWidthHeight):
             attr = path
         super().__init__(width=width, height=height, size_proportion=size_proportion,
                          attributes=attr)
+

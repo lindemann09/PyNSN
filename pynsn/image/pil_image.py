@@ -11,7 +11,6 @@ from PIL import ImageDraw as _ImageDraw
 from . import _base
 from .. import _shapes
 from .. import _stimulus
-
 # TODO pillow supports no alpha/opacity
 
 RESAMPLING = _Image.Resampling.LANCZOS

@@ -12,7 +12,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .. import defaults
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, AbstractShape
+from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle
+from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError
 from .properties import ArrayProperties
 from .shape_array import ShapeArray

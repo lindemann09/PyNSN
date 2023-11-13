@@ -10,11 +10,11 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, \
-    AbstractShape, Colour
 from .. import defaults
-from ..random import AbstractMultivarDistr, Uniform2D
+from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle
+from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError
+from ..random import AbstractMultivarDistr, Uniform2D
 
 
 class TargetArea(object):

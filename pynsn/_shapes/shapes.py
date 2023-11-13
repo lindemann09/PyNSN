@@ -1,6 +1,6 @@
 """Shape Classes
 
-Rectanglur shapes and Polygons are based on shapely.Polygon.
+Rectangular shapes and Polygons are based on shapely.Polygon.
 For performance reasons, circular shapes (Dot & Ellipse) are represented merely by
 positions and radii. Polygons will be created if required only.
 
@@ -18,7 +18,7 @@ from typing import Any, Optional, Union
 import numpy as np
 import shapely
 from numpy.typing import NDArray
-from shapely import Polygon
+from shapely import Polygon, affinity
 
 from .abc_shapes import AbstractPoint, AbstractShape, Coord2DLike, is_in_shape
 
@@ -149,7 +149,7 @@ class Picture(Rectangle):
 
     @property
     def path(self) -> Path:
-        return self._attribute
+        return self._attribute # type: ignore
 
     def file_exists(self) -> bool:
         """Checks if the file exists"""
@@ -231,3 +231,18 @@ class PolygonShape(AbstractShape):
         del d["xy"]
         d.update({"wkt": shapely.to_wkt(self.polygon)})
         return d
+
+    def copy_scaled(self,
+                    new_size:Coord2DLike,
+                    new_xy: Optional[Coord2DLike] = None):
+        """returns a copy of the polygon scaled to a different size and optionally
+        new position"""
+        new_size = np.asarray(new_size)
+        if len(new_size) != 2:
+            raise ValueError("new_size has be an list of two numerals (width, height)")
+        fact = new_size / self.size
+        rtn = PolygonShape(
+            affinity.scale(self._polygon, xfact=fact[0], yfact=fact[1]))
+        if new_xy is not None:
+            rtn.xy = new_xy
+        return rtn

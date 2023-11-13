@@ -13,8 +13,9 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import (AbstractCircularShape, Dot, Ellipse, Picture, Point2D,
-                       PolygonShape, Rectangle, AbstractShape)
+from .._shapes import (Dot, Ellipse, Picture, Point2D,
+                       PolygonShape, Rectangle )
+from .._shapes.abc_shapes import AbstractShape, AbstractCircularShape
 from .._shapes import ellipse_geometry as ellipse_geo
 from ..random._rng import WalkAround
 from ..errors import NoSolutionError
