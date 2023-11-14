@@ -32,9 +32,8 @@ class ShapeArray(object):
         self._polygons = np.empty(0, dtype=object)
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=str)
-        self._ids = {}
+        self._ids = None
         self._convex_hull = None
-        self._update_ids()
 
     @property
     def xy(self) -> NDArray:
@@ -59,12 +58,17 @@ class ShapeArray(object):
     @property
     def ids(self) -> Dict[str, NDArray]:
         """Dictionary of ids for the different shape types"""
+
+        if self._ids is None:
+            self._ids = {}
+            for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
+                self._ids[st] = np.flatnonzero(self._types == st)
         return self._ids
 
-    def _update_ids(self):
-        self._ids = {}
-        for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
-            self._ids[st] = np.flatnonzero(self._types == st)
+    def _reset(self):
+        """clears convex hull and ids"""
+        self._convex_hull = None
+        self._ids = None
 
     def todict(self) -> dict:
         """Dict representation of the shape array
@@ -107,8 +111,7 @@ class ShapeArray(object):
             self._attributes = np.append(self._attributes, shape.attribute)
             self._types = np.append(self._types, shape.name())
             self._polygons = np.append(self._polygons, shape.polygon)
-            self._convex_hull = None
-            self._update_ids()
+            self._reset()
         else:
             raise TypeError(
                 f"Can't add '{type(shape)}'. That's not a ShapeType or list of ShapeTypes."
@@ -126,8 +129,7 @@ class ShapeArray(object):
         self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
         self._types[index] = shape.name()
-        self._convex_hull = None
-        self._update_ids()
+        self._reset()
 
     def delete(self, index: IntOVector) -> None:
         self._polygons = np.delete(self._polygons, index)
@@ -135,8 +137,7 @@ class ShapeArray(object):
         self._attributes = np.delete(self._attributes, index)
         self._types = np.delete(self._types, index)
         self._sizes = np.delete(self._sizes, index, axis=0)
-        self._convex_hull = None
-        self._update_ids()
+        self._reset()
 
     def clear(self):
         """ """
@@ -145,8 +146,7 @@ class ShapeArray(object):
         self._attributes = np.empty(0, dtype=object)
         self._types = np.empty(0, dtype=str)
         self._sizes = np.empty((0, 2), dtype=np.float64)
-        self._convex_hull = None
-        self._update_ids()
+        self._reset()
 
     def pop(self, index: Optional[int] = None) -> AbstractShape:
         """Remove and return item at index"""
@@ -167,8 +167,7 @@ class ShapeArray(object):
         self._attributes = self._attributes[i]
         self._types = self._types[i]
         self._sizes = self._sizes[i]
-        self._convex_hull = None
-        self._update_ids()
+        self._reset()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64,
     #                  rebuild_polygons=True) -> None: #FIXME rounding
@@ -295,13 +294,13 @@ class ShapeArray(object):
             # circular target shape
             rtn = np.full(self.n_objects, np.nan)
 
-            idx = self._ids[Dot.name()]
+            idx = self.ids[Dot.name()]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
                                                     dots_xy=self._xy[idx, :],
                                                     dots_diameter=self._sizes[idx, 0])
-            idx = self._ids[Ellipse.name()]
+            idx = self.ids[Ellipse.name()]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
@@ -333,7 +332,7 @@ class ShapeArray(object):
         if isinstance(shape, (Point2D, AbstractCircularShape)):
             rtn = np.full(self.n_objects, False)
 
-            idx = self._ids[Dot.name()]
+            idx = self.ids[Dot.name()]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
@@ -341,7 +340,7 @@ class ShapeArray(object):
                                                  dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
-            idx = self._ids[Ellipse.name()]
+            idx = self.ids[Ellipse.name()]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,

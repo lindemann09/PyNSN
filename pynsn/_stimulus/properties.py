@@ -7,7 +7,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import enum
 from collections import OrderedDict
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import shapely
@@ -121,13 +121,15 @@ class ArrayProperties(object):
         rtn = np.full(self._shapes.n_objects, np.nan)
         # rects and polygons
         idx = np.append(
-            self._shapes.ids[Rectangle.name()], self._shapes.ids[Picture.name()]
+            self._shapes.ids[Rectangle.name(
+            )], self._shapes.ids[Picture.name()]
         )
         if len(idx) > 0:
             rtn[idx] = self._shapes.sizes[idx, 0] * self._shapes.sizes[idx, 1]
         # circular shapes area
         # Area = pi * r_x * r_y
-        idx = np.append(self._shapes.ids[Dot.name()], self._shapes.ids[Ellipse.name()])
+        idx = np.append(
+            self._shapes.ids[Dot.name()], self._shapes.ids[Ellipse.name()])
         if len(idx) > 0:
             r = self._shapes.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
@@ -139,17 +141,15 @@ class ArrayProperties(object):
 
     @property
     def perimeter(self) -> NDArray[np.float_]:
-        """Perimeter for each dot"""
+        """Perimeter for each object"""
 
         rtn = np.full(self._shapes.n_objects, np.nan)
 
-        idx = np.concatenate(
-            (
-                self._shapes.ids[Rectangle.name()],
-                self._shapes.ids[Picture.name()],
-                self._shapes.ids[PolygonShape.name()],
-            )
-        )
+        idx = np.concatenate((
+            self._shapes.ids[Rectangle.name()],
+            self._shapes.ids[Picture.name()],
+            self._shapes.ids[PolygonShape.name()]
+        ))
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shapes.polygons[idx])
         # dots perimeter
@@ -176,27 +176,27 @@ class ArrayProperties(object):
         return self._shapes.n_objects
 
     @property
-    def total_surface_area(self) -> np.floating:
+    def total_surface_area(self) -> np.float_:
         return np.nansum(self.areas)
 
     @property
-    def average_surface_area(self) -> Union[np.floating, float]:
+    def average_surface_area(self) ->  np.float_:
         if self._shapes.n_objects == 0:
-            return np.nan
+            return np.float64(np.nan)
         return np.nanmean(self.areas)
 
     @property
-    def total_perimeter(self) -> np.floating:
+    def total_perimeter(self) -> np.float_:
         return np.nansum(self.perimeter)
 
     @property
-    def average_perimeter(self) -> Union[np.floating, float]:
+    def average_perimeter(self) -> np.float_:
         if self._shapes.n_objects == 0:
-            return np.nan
+            return np.float64(np.nan)
         return np.nanmean(self.perimeter)
 
     @property
-    def coverage(self) -> Union[np.floating, float]:
+    def coverage(self) -> np.float_:
         """percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
@@ -204,32 +204,32 @@ class ArrayProperties(object):
         try:
             return self.total_surface_area / self.field_area
         except ZeroDivisionError:
-            return np.nan
+            return np.float64(np.nan)
 
     @property
-    def log_size(self) -> float:
+    def log_size(self) -> np.float_:
         try:
             return np.log2(self.total_surface_area) + np.log2(self.average_surface_area)
         except ValueError:
-            return np.nan
+            return np.float64(np.nan)
 
     @property
-    def log_spacing(self) -> float:
+    def log_spacing(self) -> np.float_:
         try:
             return np.log2(self.field_area) + np.log2(self.sparsity)
         except ValueError:
-            return np.nan
+            return np.float64(np.nan)
 
     @property
-    def sparsity(self) -> float:
+    def sparsity(self) -> np.float_:
         try:
             return self.field_area / self.numerosity
         except ZeroDivisionError:
-            return np.nan
+            return np.float64(np.nan)
 
     @property
-    def field_area(self) -> float:
-        return self._shapes.convex_hull.area
+    def field_area(self) -> np.float_:
+        return np.float64(self._shapes.convex_hull.area)
 
     def get(self, prop: VisProp) -> Any:
         """returns a visual property"""
@@ -269,5 +269,6 @@ class ArrayProperties(object):
     def todict(self) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
-        rtn.extend([(str(x), self.get(x)) for x in list(VisProp)])  # type: ignore
+        rtn.extend([(str(x), self.get(x))
+                   for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)
