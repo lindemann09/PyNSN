@@ -20,7 +20,7 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 8):
 
 from ._shapes import (Point2D, Dot, Rectangle, Picture, Ellipse, PolygonShape,
                       Colour)
-from ._stimulus import VisProp, NSNStimulus
+from ._stimulus import VisProp, NSNStimulus, StimulusFactory
 
 
 def _print_version_info():

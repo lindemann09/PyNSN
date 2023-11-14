@@ -12,15 +12,15 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .. import defaults
+from .._misc import formated_json
 from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle
 from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError, ShapeOutsideError, ShapeOverlapsError
+from ..random._random_shape import AbstractRndShape
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .stimulus_colours import StimulusColours
 from .target_area import TargetArea
-from .._misc import formated_json
-from ..random._random_shape import AbstractRndShape
 
 
 class NSNStimulus(ShapeArray):
@@ -52,6 +52,12 @@ class NSNStimulus(ShapeArray):
     def colours(self) -> StimulusColours:
         """the colours of the stimulus"""
         return self._colours
+
+    @colours.setter
+    def colours(self, val:StimulusColours):
+        """the colours of the stimulus"""
+        assert isinstance(val, StimulusColours)
+        self._colours = val
 
     @property
     def properties(self) -> ArrayProperties:
@@ -247,13 +253,11 @@ class NSNStimulus(ShapeArray):
                   ignore_overlaps: bool = False,
                   inside_convex_hull: bool = False,
                   max_iterations: Optional[int] = None):
-        """"creates n (default n=1) copies of the shape and adds it to
-        random positions in the array"""
+        """Creates n copies of the shape or n instances of the random shape
+        and adds them at random positions to the array (default n=1)"""
 
         if isinstance(ref_object, AbstractRndShape):
-            lst = ref_object.sample(n)
-            print(lst)
-            self.add_shape_list(lst,
+            self.add_shape_list(ref_object.sample(n),
                                 random_position=random_position,
                                 ignore_overlaps=ignore_overlaps,
                                 inside_convex_hull=inside_convex_hull,
