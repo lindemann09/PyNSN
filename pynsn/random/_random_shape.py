@@ -56,7 +56,7 @@ class AbstractRndShape(metaclass=ABCMeta):
     def __repr__(self) -> str:
         d = self.todict()
         del d['type']
-        return f"{self.name}({d})"
+        return f"{self.name()}({d})"
 
     @abstractmethod
     def todict(self) -> dict:
@@ -67,7 +67,7 @@ class AbstractRndShape(metaclass=ABCMeta):
             attr = None
         else:
             attr = str(self.attributes)
-        return {"type": self.name, "attr": attr}
+        return {"type": self.name(), "attr": attr}
 
     @abstractmethod
     def sample(self, n: int = 1) -> List[AbstractShape]:

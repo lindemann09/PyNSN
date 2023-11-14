@@ -6,19 +6,17 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 
-from copy import deepcopy
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import (Dot, Ellipse, Picture, Point2D,
-                       PolygonShape, Rectangle )
-from .._shapes.abc_shapes import AbstractShape, AbstractCircularShape
+from .._shapes import Dot, Ellipse, Picture, Point2D, PolygonShape, Rectangle
 from .._shapes import ellipse_geometry as ellipse_geo
-from ..random._rng import WalkAround
+from .._shapes.abc_shapes import AbstractCircularShape, AbstractShape
 from ..errors import NoSolutionError
+from ..random._rng import WalkAround
 from .convex_hull import ConvexHull
 from .target_area import TargetArea
 
@@ -65,7 +63,7 @@ class ShapeArray(object):
 
     def _update_ids(self):
         self._ids = {}
-        for st in [Dot.name, Rectangle.name, Ellipse.name, Picture.name, PolygonShape.name]:
+        for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
             self._ids[st] = np.flatnonzero(self._types == st)
 
     def todict(self) -> dict:
@@ -88,7 +86,7 @@ class ShapeArray(object):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
-        if np.any(self._types == PolygonShape.name):
+        if np.any(self._types == PolygonShape.name()):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
         d = {"type": self._types.tolist(),
@@ -107,7 +105,7 @@ class ShapeArray(object):
             self._sizes = np.append(
                 self._sizes, np.atleast_2d(shape.size), axis=0)
             self._attributes = np.append(self._attributes, shape.attribute)
-            self._types = np.append(self._types, shape.name)
+            self._types = np.append(self._types, shape.name())
             self._polygons = np.append(self._polygons, shape.polygon)
             self._convex_hull = None
             self._update_ids()
@@ -127,7 +125,7 @@ class ShapeArray(object):
         self._xy[index, :] = shape.xy
         self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
-        self._types[index] = shape.name
+        self._types[index] = shape.name()
         self._convex_hull = None
         self._update_ids()
 
@@ -192,27 +190,27 @@ class ShapeArray(object):
     def get(self, index: int) -> AbstractShape:
         """Returns selected object"""
         name = self._types[index]
-        if name == Dot.name:
+        if name == Dot.name():
             rtn = Dot(
                 xy=self._xy[index, :],
                 diameter=self._sizes[index, 0],
                 attribute=self._attributes[index])
-        elif name == Rectangle.name:
+        elif name == Rectangle.name():
             return Rectangle(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 attribute=self._attributes[index])
-        elif name == Picture.name:
+        elif name == Picture.name():
             return Picture(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 path=self._attributes[index])  # type: ignore
-        elif name == Ellipse.name:
+        elif name == Ellipse.name():
             return Ellipse(
                 xy=self._xy[index, :],
                 size=self._sizes[index, :],
                 attribute=self._attributes[index])
-        elif name == PolygonShape.name:
+        elif name == PolygonShape.name():
             return PolygonShape(polygon=self._polygons[index],
                                 attribute=self._attributes[index])
         else:
@@ -297,13 +295,13 @@ class ShapeArray(object):
             # circular target shape
             rtn = np.full(self.n_objects, np.nan)
 
-            idx = self._ids[Dot.name]
+            idx = self._ids[Dot.name()]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
                                                     dots_xy=self._xy[idx, :],
                                                     dots_diameter=self._sizes[idx, 0])
-            idx = self._ids[Ellipse.name]
+            idx = self._ids[Ellipse.name()]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
@@ -335,7 +333,7 @@ class ShapeArray(object):
         if isinstance(shape, (Point2D, AbstractCircularShape)):
             rtn = np.full(self.n_objects, False)
 
-            idx = self._ids[Dot.name]
+            idx = self._ids[Dot.name()]
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
@@ -343,7 +341,7 @@ class ShapeArray(object):
                                                  dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
-            idx = self._ids[Ellipse.name]
+            idx = self._ids[Ellipse.name()]
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,

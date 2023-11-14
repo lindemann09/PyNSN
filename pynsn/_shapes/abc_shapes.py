@@ -156,7 +156,6 @@ class AbstractShape(metaclass=ABCMeta):
             self._polygon = self.polygon
 
     @classmethod
-    @property
     def name(cls) -> str:
         return str(cls.__name__)
 
@@ -164,7 +163,7 @@ class AbstractShape(metaclass=ABCMeta):
     @abstractmethod
     def todict(self) -> dict:
         """dict representation of the object"""
-        return {"type": self.name,
+        return {"type": self.name(),
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
 
