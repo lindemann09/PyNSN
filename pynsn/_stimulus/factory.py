@@ -13,6 +13,7 @@ from ..random._random_shape import AbstractRndShape
 from .nsn_stimulus import NSNStimulus
 from .stimulus_colours import StimulusColours
 
+#todo incremental_random_dot_array
 
 class StimulusFactory(object):
     """Factory class for creating Non-Symbolic Number Stimulus

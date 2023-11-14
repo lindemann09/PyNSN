@@ -211,10 +211,6 @@ class NSNStimulus(ShapeArray):
             min_distance = self.min_distance
         return self.dwithin(shape, distance=min_distance)
 
-    def matrix_overlaps(self, min_distance: Optional[float] = None) -> NDArray:
-        if min_distance is None:
-            min_distance = self.min_distance
-        return self.matrix_dwithin(distance=min_distance)
 
     def inside_target_area(self, shape: Union[Point2D, AbstractShape]) -> bool:
         """Returns True if shape is inside target area.

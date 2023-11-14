@@ -384,44 +384,11 @@ class ShapeArray(object):
         overlaps[index] = False  # ignore overlap with oneself
         return overlaps
 
-    def matrix_distances(self) -> NDArray:
-        return self._relation_matrix(what=0)
-
-    def matrix_dwithin(self, distance: float) -> NDArray:
-        return self._relation_matrix(what=1, para=distance)
-
-    def matrix_overlaps(self, min_distance: float = 0) -> NDArray:
-        return self.matrix_dwithin(distance=min_distance)
-
     @staticmethod
     def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
         """read shape array from dict"""
         ##
         raise NotImplementedError()  # FIXME
-
-    def _relation_matrix(self, what: int, para: float = 0) -> NDArray:
-        """helper function returning the relation between polygons
-        0 = distance
-        1 = dwithin
-        """
-        arr = deepcopy(self)
-        l = arr.n_objects
-        rtn = np.full((l, l), np.nan)
-        for x in reversed(range(l)):
-            shape = arr.pop(x)
-            if what == 0:
-                y = arr.distances(shape)
-            elif what == 1:
-                y = arr.dwithin(shape=shape, distance=para)
-            else:
-                raise RuntimeError("unknown function")
-
-            rtn[x, 0:x] = y
-
-        # make symetric
-        i_lower = np.triu_indices(l, 1)
-        rtn[i_lower] = rtn.T[i_lower]
-        return rtn
 
     def _random_free_position(self,
                               shape: AbstractShape,
