@@ -1,16 +1,20 @@
 """
 """
-from pathlib import Path
 
+import shapely
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence, Union
+from pathlib import Path
+from typing import List, Optional, Sequence, Union
 
+import numpy as np
 from numpy.typing import NDArray
 
 from ._distributions import (AbstractUnivarDistr, Categorical, CategoricalLike,
                              Constant, ConstantLike)
+
+from .._shapes import Dot, Ellipse, Rectangle, Picture, PolygonShape, AbstractShape
 
 DistributionLike = Union[AbstractUnivarDistr, ConstantLike, CategoricalLike]
 
@@ -20,7 +24,7 @@ def _make_distr(value: DistributionLike) -> AbstractUnivarDistr:
 
     if isinstance(value, AbstractUnivarDistr):
         return value
-    elif isinstance(value, ConstantLike): # constant like
+    elif isinstance(value, ConstantLike):  # constant like
         return Constant(value)
     else:
         return Categorical(value)
@@ -57,13 +61,23 @@ class AbstractRndShape(metaclass=ABCMeta):
     @abstractmethod
     def todict(self) -> dict:
         """dict representation of the object"""
-        if  isinstance(self.attributes, AbstractUnivarDistr):
+        if isinstance(self.attributes, AbstractUnivarDistr):
             attr = self.attributes.todict()
         elif self.attributes is None:
             attr = None
         else:
             attr = str(self.attributes)
         return {"type": self.name, "attr": attr}
+
+    @abstractmethod
+    def sample(self, n: int = 1) -> List[AbstractShape]:
+        """get n random variants of shapes
+
+        Note
+        -----
+        position is xy=(0,0), except for PolygonShapes the position is the
+        centroid of the shapley.polygon.
+        """
 
 
 class RndDot(AbstractRndShape):
@@ -89,6 +103,16 @@ class RndDot(AbstractRndShape):
         rtn.update({"diameter": d})
         return rtn
 
+    def sample(self, n: int = 1) -> List[Dot]:
+
+        if self._attributes is None:
+            attr = [None] * n
+        else:
+            attr = self._attributes.sample(n)[0]
+        return [Dot(xy=(0, 0), diameter=d, attribute=a)
+                for d, a in zip(self._diameter.sample(n), attr)]
+
+
 class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
 
     def __init__(self,
@@ -101,7 +125,7 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
         Args:
             width: distribution of width (Optional)
             height: distribution of height (Optional)
-            proportion: distribution of proportions (Optional)
+            proportion: distribution of proportions width/height (Optional)
 
         Notes:
             Define either rectangle width and height or rectangle proportion together
@@ -146,7 +170,7 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
 
     @property
     def size_proportion(self) -> Optional[AbstractUnivarDistr]:
-        """Distribution of proportion parameter"""
+        """Distribution of proportion parameter (width/height)"""
         return self._size_proportion
 
     def todict(self) -> dict:
@@ -163,19 +187,103 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
             s = None
         else:
             s = self._size_proportion.todict()
-        rtn.update({"width": w, "height":h, "size_proportion": s})
+        rtn.update({"width": w, "height": h, "size_proportion": s})
         return rtn
+
+    def _sample_sizes(self, n: int) -> NDArray:
+
+        size = np.empty((n, 2), dtype=float)
+        if self._width is not None and self._height is not None:
+            size[:, 0] = self._width.sample(n)
+            size[:, 1] = self._height.sample(n)
+        elif self._width is not None and self._size_proportion is not None:
+            size[:, 0] = self._width.sample(n)
+            size[:, 1] = size[:, 0] / self._size_proportion.sample(n)
+        elif self._height is not None and self._size_proportion is not None:
+            size[:, 1] = self._height.sample(n)
+            size[:, 0] = size[:, 1] * self._size_proportion.sample(n)
+        else:
+            raise RuntimeError("Something went wrong with the definition of the"
+                               " RndRectangle")
+        return size
 
 
 class RndRectangle(_RandShapeWidthHeight):
-    pass
+
+    def sample(self, n: int = 1) -> List[Rectangle]:
+        if self._attributes is None:
+            attr = [None] * n
+        else:
+            attr = self._attributes.sample(n)
+        return [Rectangle(xy=(0, 0), size=s, attribute=a)
+                for s, a in zip(self._sample_sizes(n), attr)]
 
 
 class RndEllipse(_RandShapeWidthHeight):
-    pass
 
-class RndPolygon(_RandShapeWidthHeight):
-    pass
+    def sample(self, n: int = 1) -> List[Ellipse]:
+        if self._attributes is None:
+            attr = [None] * n
+        else:
+            attr = self._attributes.sample(n)
+        size = self._sample_sizes(n)
+        return [Ellipse(xy=(0, 0), size=s, attribute=a)
+                for s, a in zip(size, attr)]
+
+
+class RndPolygonShape(_RandShapeWidthHeight):
+
+    def __init__(self,
+                 polygons: Union[shapely.Polygon, Sequence[shapely.Polygon], NDArray[shapely.Polygon]],
+                 width: Optional[DistributionLike] = None,
+                 height: Optional[DistributionLike] = None,
+                 size_proportion: Optional[DistributionLike] = None,
+                 attributes: Optional[DistributionLike] = None):
+        """Define distributions parameter
+
+        Args:
+            width: distribution of width (Optional)
+            height: distribution of height (Optional)
+            proportion: distribution of proportions width/height (Optional)
+
+        Notes:
+            Define either rectangle width and height or rectangle proportion together
+            with either width or height.
+
+        Raises:
+            TypeError: if not two of the three rectangle parameter are defined
+        """
+        if width is None and height is None:
+            width = -1
+            height = -1
+            size_proportion = None
+        super().__init__(width=width, height=height,
+                         size_proportion=size_proportion, attributes=attributes)
+
+        if isinstance(polygons, shapely.Polygon):
+            self._polygons = Constant(PolygonShape(polygons))
+        else:
+            self._polygons = Categorical([PolygonShape(p) for p in polygons])
+
+    @property
+    def polygons(self) -> Union[Constant, Categorical]:
+        return self._polygons
+
+    def sample(self, n: int = 1) -> List[PolygonShape]:
+        if self._attributes is None:
+            attr = [None] * n
+        else:
+            attr = self._attributes.sample(n)
+
+        rtn = []
+        for s, p, a in zip(self._sample_sizes(n), self._polygons.sample(n), attr):
+            # assert isinstance(p, PolygonShape)
+            if s[0] > 0:
+                x = p.copy_scaled(new_size=s)
+                x.attribute = a
+                rtn.append(x)
+        return rtn
+
 
 class RndPicture(_RandShapeWidthHeight):
 
@@ -197,4 +305,10 @@ class RndPicture(_RandShapeWidthHeight):
         super().__init__(width=width, height=height, size_proportion=size_proportion,
                          attributes=attr)
 
-
+    def sample(self, n: int = 1) -> List[Picture]:
+        if self._attributes is None:
+            attr = [None] * n
+        else:
+            attr = self._attributes.sample(n)
+        return [Picture(xy=(0, 0), size=s,
+                        path=a) for s, a in zip(self._sample_sizes(n), attr)]  # type: ignore

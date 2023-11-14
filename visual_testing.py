@@ -9,9 +9,9 @@ import numpy as np
 
 from pynsn import random
 
-a = random.RndDot(diameter=(120.8, 20.4), attributes=["green", "red"])
+a = random.RndEllipse(width=(120.8, 20.4), height=9, attributes=["green", "red"])
 
-print(a)
+print(a.sample(10))
 exit()
 
 da = pynsn.Dot((-20, 120), diameter=2,  attribute=pynsn.Colour("red"))

@@ -177,6 +177,9 @@ class Picture(Rectangle):
 class PolygonShape(AbstractShape):
 
     def __init__(self, polygon: Polygon, attribute: Any = None):
+        if not isinstance(polygon, Polygon):
+            raise TypeError(f"Polygon has to be a shapely.Polygon and not a {type(polygon)}")
+
         ctr = polygon.centroid
         super().__init__(xy=(ctr.x, ctr.y), attribute=attribute)
         shapely.prepare(polygon)

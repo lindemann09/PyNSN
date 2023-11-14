@@ -4,7 +4,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
-from typing import Any, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -12,8 +12,9 @@ from numpy.typing import ArrayLike, NDArray
 from ..errors import NoSolutionError
 from . import _rng
 from .._shapes.colour import Colour
+from .._shapes.shapes import PolygonShape
 
-ConstantLike = Union[float, int, str, dict,  Colour]
+ConstantLike = Union[float, int, str, dict, PolygonShape, Colour]
 CategoricalLike = Union[Sequence, NDArray]
 
 class AbstractDistribution(metaclass=ABCMeta):
@@ -279,26 +280,26 @@ class Categorical(AbstractUnivarDistr):
     """
 
     def __init__(self,
-                 categories: CategoricalLike,
+                 levels: CategoricalLike,
                  weights: Optional[ArrayLike] = None,
                  exact_weighting=False):
         """Distribution of category. Samples from discrete categories
          with optional weights for each category or category.
         """
 
-        self._categories = np.asarray(copy(categories))
+        self._levels = np.asarray(copy(levels))
         self.exact_weighting = exact_weighting
         if weights is None:
             self._weights = np.empty(0)
         else:
             self._weights = np.asarray(weights)
-            if len(self._categories) != len(self._weights):
+            if len(self._levels) != len(self._weights):
                 raise ValueError(
-                    "Number weights does not match the number of categories")
+                    "Number weights does not match the number of category levels")
 
     @property
-    def categories(self) -> NDArray:
-        return self._categories
+    def levels(self) -> NDArray:
+        return self._levels
 
     @property
     def weights(self) -> NDArray:
@@ -306,12 +307,12 @@ class Categorical(AbstractUnivarDistr):
 
     def sample(self, n: int) -> NDArray[np.float_]:
         if len(self._weights) == 0:
-            p = np.array([1 / len(self._categories)] * len(self._categories))
+            p = np.array([1 / len(self._levels)] * len(self._levels))
         else:
             p = self._weights / np.sum(self._weights)
 
         if not self.exact_weighting:
-            dist = _rng.generator.choice(a=self._categories, p=p, size=n)
+            dist = _rng.generator.choice(a=self._levels, p=p, size=n)
         else:
             n_distr = n * p
             if np.any(np.round(n_distr) != n_distr):
@@ -329,7 +330,7 @@ class Categorical(AbstractUnivarDistr):
                                       info)
 
             dist = []
-            for lev, n in zip(self._categories, n_distr):
+            for lev, n in zip(self._levels, n_distr):
                 dist.extend([lev] * int(n))
             _rng.generator.shuffle(dist)
 
@@ -337,9 +338,9 @@ class Categorical(AbstractUnivarDistr):
 
     def todict(self) -> dict:
         d = super().todict()
-        d.update({"categories": self._categories.tolist(),
+        d.update({"levels": self._levels.tolist(),
                   "weights": self._weights.tolist(),
-                  "exact_weighting": self.exact_weighting})
+                  "exact": self.exact_weighting})
         return d
 
 
