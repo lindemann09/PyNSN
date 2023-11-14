@@ -100,34 +100,26 @@ class ShapeArray(object):
              }
         return d
 
-    def add(self, shapes: Union[AbstractShape, Tuple, Sequence, ShapeArray]):
-        """add shape a the defined position
-
-        Note
-        ----
-        see `add_somewhere` for adding shape at a random position
-        """
-        if isinstance(shapes, AbstractShape):
-            self._xy = np.append(self._xy, np.atleast_2d(shapes.xy), axis=0)
+    def _add(self, shape: AbstractShape):
+        """add shape to the array"""
+        if isinstance(shape, AbstractShape):
+            self._xy = np.append(self._xy, np.atleast_2d(shape.xy), axis=0)
             self._sizes = np.append(
-                self._sizes, np.atleast_2d(shapes.size), axis=0)
-            self._attributes = np.append(self._attributes, shapes.attribute)
-            self._types = np.append(self._types, shapes.name)
-            self._polygons = np.append(self._polygons, shapes.polygon)
+                self._sizes, np.atleast_2d(shape.size), axis=0)
+            self._attributes = np.append(self._attributes, shape.attribute)
+            self._types = np.append(self._types, shape.name)
+            self._polygons = np.append(self._polygons, shape.polygon)
             self._convex_hull = None
             self._update_ids()
-
-        elif isinstance(shapes, (list, tuple)):
-            for x in shapes:
-                self.add(x)
-
-        elif isinstance(shapes, ShapeArray):
-            self.add(shapes.get_list())
-
         else:
             raise TypeError(
-                f"Can't add '{type(shapes)}', that's not a ShapeType or list of ShapeTypes."
+                f"Can't add '{type(shape)}'. That's not a ShapeType or list of ShapeTypes."
             )
+
+    def join_shapes(self, other:ShapeArray)-> None:
+        """join with shapes of other array"""
+        for x in other.get_list():
+            self._add(x)
 
     def replace(self, index: int, shape: AbstractShape):
 
@@ -467,7 +459,7 @@ class ShapeArray(object):
                      min_distance: float,
                      minimal_replacing: bool,
                      target_area: TargetArea,
-                     max_iterations: int) -> int:  # FIXME manipulation objects
+                     max_iterations: int) -> int:
         """Move an selected object that overlaps to an free position in the
         neighbourhood.
 

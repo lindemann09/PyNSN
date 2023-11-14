@@ -108,7 +108,7 @@ class RndDot(AbstractRndShape):
         if self._attributes is None:
             attr = [None] * n
         else:
-            attr = self._attributes.sample(n)[0]
+            attr = self._attributes.sample(n)
         return [Dot(xy=(0, 0), diameter=d, attribute=a)
                 for d, a in zip(self._diameter.sample(n), attr)]
 

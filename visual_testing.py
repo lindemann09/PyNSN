@@ -9,12 +9,10 @@ import numpy as np
 
 from pynsn import random
 
-a = random.RndEllipse(width=(120.8, 20.4), height=9, attributes=["green", "red"])
 
-print(a.sample(10))
-exit()
 
-da = pynsn.Dot((-20, 120), diameter=2,  attribute=pynsn.Colour("red"))
+
+da = pynsn.Dot((-20, 120), diameter=5,  attribute=pynsn.Colour("black"))
 db = pynsn.Ellipse((20, 17), size=(120, 50), attribute="#FF0000")
 dc = pynsn.Ellipse((120, 57), size=(60, 120), attribute="#00F000")  # big dot
 
@@ -22,38 +20,27 @@ ra = pynsn.Rectangle(np.array((-70, -175)), size=(40, 40), attribute="#FF0000")
 rb = pynsn.Rectangle((-50, -45), size=(10, 10), attribute="#cc0F00")
 r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 
+rnd_ell = random.RndEllipse(width=(40.8, 10.4), height=(20, 50),
+                            attributes=["green", "black", "orange", "red"])
+rnd_ell = random.RndDot(diameter=(40.8, 10),
+                            attributes=["green", "black", "orange", "red"])
 
 nsn = pynsn.NSNStimulus(
-    # target_area=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF")
+    #target_area_shape=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF"),
     target_area_shape=pynsn.Rectangle((0, 0), size=(400, 500)),
     min_distance_target_area=10,
     min_distance=2)
 
-if False:
-    dist = 2
-    a = db
-    b = dc
-    print(nsn.matrix_distances())
-
-    # sp_result = shapely.distance(a.polygon, b.polygon)
-    # geo_result = sgeo.distance(a, b)
-    # arr_result = sgeo.distance_circ_dot_array(a,
-    #                                           dots_xy=np.atleast_2d(b.xy),
-    #                                           dots_diameter=np.atleast_2d(b.diameter))
-    # arr_result2 = sgeo.distance_circ_ellipse_array(a,
-    #                                                ellipses_xy=np.atleast_2d(
-    #                                                    b.xy),
-    #                                                ellipse_sizes=np.atleast_2d(b.size))
-    # print((sp_result, geo_result, arr_result, arr_result2))
 
 # random dot
-if True:
-    nsn.add_somewhere(da, n=200, ignore_overlaps=False)
-nsn.add([db,  dc, ra])
-# nsn.colours.object_default = "red"
-# nsn.colours.convex_hull = "gray"
+nsn.add_shape(rnd_ell, n=20, random_position=True)
+
+#nsn.add_shape_list([db,  dc,  ra], ignore_overlaps=False)
+#nsn.fix_overlaps()
 
 print(nsn.properties_txt(short_format=True))
+print(nsn.contains_overlaps())
+print(nsn.properties.numerosity)
 
 nsn.sort_by_excentricity()
 a = pil_image.create(nsn)

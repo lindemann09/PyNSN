@@ -37,7 +37,7 @@ class Rectangle(AbstractShape):
         t = xy[1] + size[1] / 2
         b = xy[1] - size[1] / 2
         self._polygon = Polygon(((l, b), (l, t), (r, t), (r, b)))
-        shapely.prepare(self._polygon)  # FIXME needed?
+        shapely.prepare(self._polygon)
 
     @property
     def polygon(self) -> Polygon:

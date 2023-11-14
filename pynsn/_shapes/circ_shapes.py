@@ -103,7 +103,7 @@ class Ellipse(AbstractCircularShape):
         if self._polygon is None:
             circle = Point(self._xy).buffer(1, quad_segs=Dot.QUAD_SEGS)
             self._polygon = scale(circle, self.size[0]/2, self.size[1]/2)
-            shapely.prepare(self._polygon)  # FIXME needed?
+            shapely.prepare(self._polygon)
         return self._polygon
 
     def __repr__(self):
@@ -187,7 +187,7 @@ class Dot(AbstractCircularShape):
         if self._polygon is None:
             r = self._diameter / 2
             self._polygon = Point(self._xy).buffer(r, quad_segs=Dot.QUAD_SEGS)
-            shapely.prepare(self._polygon)  # FIXME needed?
+            shapely.prepare(self._polygon)  # TODO needed?
         return self._polygon
 
     def __repr__(self):

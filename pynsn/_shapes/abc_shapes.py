@@ -116,9 +116,10 @@ class AbstractShape(metaclass=ABCMeta):
             self._attribute = None
         else:
             try:
-                self._attribute = Colour(self._attribute)
+                self._attribute = Colour(val)
             except TypeError:
                 self._attribute = val
+
 
     @property
     def colour(self) -> Colour:
