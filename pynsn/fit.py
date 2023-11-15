@@ -1,21 +1,22 @@
 """Fitting module"""
 # pylint: disable=W0212
-from typing import Any, Optional, Union
+import typing as _tp
+import numpy as _np
+import shapely as _shp
 
-import numpy as np
-import shapely
+from pynsn.errors import NoSolutionError as _NoSolutionError
 
-from pynsn.errors import NoSolutionError
-
-from . import defaults
-from ._misc import cartesian2polar, polar2cartesian
-from ._stimulus import NSNStimulus, VisProp
-from .random import generator
+from . import defaults as _defaults
+from . import _misc
+from ._stimulus import NSNStimulus as _NSNStimulus
+from ._stimulus import VisProp as _VisProp
+from .random import generator as _rnd_generator
 
 # FIXME module not yer tested
 
 
-def total_surface_area(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
+def total_surface_area(stim: _NSNStimulus,
+                       value: _tp.Union[float, _np.float_]) -> None:
     """Set surface area.
 
     Resize all object to fit a specific surface area
@@ -26,24 +27,25 @@ def total_surface_area(stim: NSNStimulus, value: Union[float, np.float_]) -> Non
     stim.scale(value / stim.properties.total_surface_area)
 
 
-def total_perimeter(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
+def total_perimeter(stim: _NSNStimulus,
+                    value: _tp.Union[float, _np.float_]) -> None:
     """fit the total parameter of the stimulus"""
     stim.scale(value / stim.properties.total_perimeter)
 
 
-def average_perimeter(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
+def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
     """fit the average parameter of the stimulus"""
     total_perimeter(stim, value * stim.n_objects)
 
 
-def average_surface_area(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
+def average_surface_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
     """fits the average surface area of the stimulus"""
     total_surface_area(stim, stim.n_objects * value)
 
 
-def numerosity(stim: NSNStimulus, value: int,
+def numerosity(stim: _NSNStimulus, value: int,
                keep_convex_hull: bool = False,
-               max_iterations: Optional[int] = None) -> None:
+               max_iterations: _tp.Optional[int] = None) -> None:
     """
     fitting the numerosity
     """
@@ -56,8 +58,8 @@ def numerosity(stim: NSNStimulus, value: int,
         change_numerosity = value - stim.n_objects
         if keep_convex_hull and change_numerosity < 0:
             # find objects touching the convex hull (ch_shapes)
-            ring = shapely.get_exterior_ring(stim.convex_hull.polygon)
-            ch_shapes = np.flatnonzero(shapely.intersects(
+            ring = _shp.get_exterior_ring(stim.convex_hull.polygon)
+            ch_shapes = _np.flatnonzero(_shp.intersects(
                 stim.polygons, ring))
         else:
             ch_shapes = None
@@ -67,40 +69,40 @@ def numerosity(stim: NSNStimulus, value: int,
                 # remove dots
                 if ch_shapes is not None:
                     # find a random object that is not in convex hull
-                    rnd_seq = np.arange(stim.n_objects)
-                    generator.shuffle(rnd_seq)
+                    rnd_seq = _np.arange(stim.n_objects)
+                    _rnd_generator.shuffle(rnd_seq)
                     delete_id = None
                     for x in rnd_seq:
                         if x not in ch_shapes:
                             delete_id = x
                             break
                     if delete_id is None:
-                        raise NoSolutionError(
+                        raise _NoSolutionError(
                             "Can't increase numerosity, while keeping field area.")
                 else:
-                    delete_id = generator.integers(0, stim.n_objects)
+                    delete_id = _rnd_generator.integers(0, stim.n_objects)
 
                 stim.delete(delete_id)
 
             else:
                 # add dot: copy a random dot
-                clone_id = generator.integers(0, stim.n_objects)
+                clone_id = _rnd_generator.integers(0, stim.n_objects)
                 rnd_object = stim.shapes[clone_id]
                 try:
                     rnd_object = stim.random_free_position(
                         shape=rnd_object, ignore_overlaps=False,
                         inside_convex_hull=keep_convex_hull,
                         max_iterations=max_iterations)
-                except NoSolutionError as err:
+                except _NoSolutionError as err:
                     # no free position
-                    raise NoSolutionError(
+                    raise _NoSolutionError(
                         "Can't increase numerosity. No free position found.") from err
 
                 stim.add(rnd_object)
 
 
-def field_area(stim: NSNStimulus, value: Union[float, np.float_],
-               precision: Optional[Union[float, np.float_]] = None) -> None:
+def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
+               precision: _tp.Optional[_tp.Union[float, _np.float_]] = None) -> None:
     """changes the convex hull area to a desired size with certain precision
 
     uses scaling radial positions if field area has to be increased
@@ -109,8 +111,8 @@ def field_area(stim: NSNStimulus, value: Union[float, np.float_],
     iterative method can takes some time.
     """
 
-    if precision is None or np.isnan(precision):
-        precision = defaults.FIT_SPACING_PRECISION
+    if precision is None or _np.isnan(precision):
+        precision = _defaults.FIT_SPACING_PRECISION
 
     current = stim.convex_hull.area
     if stim.n_objects < 3 or current == 0:
@@ -124,13 +126,13 @@ def field_area(stim: NSNStimulus, value: Union[float, np.float_],
     # centred points
     old_center = stim.convex_hull.centroid
     stim.set_xy(stim._xy - old_center)
-    centered_polar = cartesian2polar(stim._xy)
+    centered_polar = _misc.cartesian2polar(stim._xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        stim.set_xy(polar2cartesian(centered_polar * [scale, 1]))
+        stim.set_xy(_misc.polar2cartesian(centered_polar * [scale, 1]))
         current = stim.convex_hull.area
 
         if (current < value and step < 0) or (current > value and step > 0):
@@ -139,9 +141,9 @@ def field_area(stim: NSNStimulus, value: Union[float, np.float_],
     stim.set_sizes(stim._xy + old_center)  # move back
 
 
-def coverage(stim: NSNStimulus, value: Union[float, np.float_],
-             precision: Optional[float] = None,
-             fa2ta_ratio: Optional[float] = None) -> None:
+def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
+             precision: _tp.Optional[float] = None,
+             fa2ta_ratio: _tp.Optional[float] = None) -> None:
     """
 
     Parameters
@@ -166,11 +168,11 @@ def coverage(stim: NSNStimulus, value: Union[float, np.float_],
     print("WARNING: _adapt_coverage is a experimental ")
     # dens = convex_hull_area / total_surface_area
     if fa2ta_ratio is None:
-        fa2ta_ratio = defaults.FIT_FA2TA_RATIO
+        fa2ta_ratio = _defaults.FIT_FA2TA_RATIO
     elif fa2ta_ratio < 0 or fa2ta_ratio > 1:
         fa2ta_ratio = 0.5
     if precision is None:
-        precision = defaults.FIT_SPACING_PRECISION
+        precision = _defaults.FIT_SPACING_PRECISION
 
     ta = stim.properties.total_surface_area  # total area
     ta_change100 = (value * stim.properties.field_area) - ta
@@ -183,9 +185,9 @@ def coverage(stim: NSNStimulus, value: Union[float, np.float_],
                precision=precision)
 
 
-def log_spacing(stim: NSNStimulus,
-                value: Union[float, np.float_],
-                precision: Optional[float] = None) -> None:
+def log_spacing(stim: _NSNStimulus,
+                value: _tp.Union[float, _np.float_],
+                precision: _tp.Optional[float] = None) -> None:
     """
 
     Parameters
@@ -197,11 +199,12 @@ def log_spacing(stim: NSNStimulus,
     -------
 
     """
-    log_fa = 0.5 * value + 0.5 * np.log2(stim.n_objects)
+    log_fa = 0.5 * value + 0.5 * _np.log2(stim.n_objects)
     field_area(stim, value=2**log_fa, precision=precision)
 
 
-def log_size(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
+def log_size(stim: _NSNStimulus,
+             value: _tp.Union[float, _np.float_]) -> None:
     """
 
     Parameters
@@ -212,12 +215,12 @@ def log_size(stim: NSNStimulus, value: Union[float, np.float_]) -> None:
     -------
 
     """
-    log_tsa = 0.5 * value + 0.5 * np.log2(stim.n_objects)
+    log_tsa = 0.5 * value + 0.5 * _np.log2(stim.n_objects)
     total_surface_area(stim, value=2**log_tsa)
 
 
-def sparsity(stim: NSNStimulus,
-             value: Union[float, np.float_], precision=None) -> None:
+def sparsity(stim: _NSNStimulus,
+             value: _tp.Union[float, _np.float_], precision=None) -> None:
     """
 
     Parameters
@@ -232,7 +235,8 @@ def sparsity(stim: NSNStimulus,
     field_area(stim, value=value * stim.n_objects, precision=precision)
 
 
-def fit(stim: NSNStimulus, property_flag: VisProp, value: float) -> Any:
+def fit(stim: _NSNStimulus,
+        property_flag: _VisProp, value: float) -> _tp.Any:
     """
     adapt_properties: continuous property or list of continuous properties
     several properties to be adapted
@@ -246,39 +250,39 @@ def fit(stim: NSNStimulus, property_flag: VisProp, value: float) -> Any:
     """
 
     # type check
-    if not isinstance(property_flag, VisProp):
+    if not isinstance(property_flag, _VisProp):
         raise ValueError(
             f"{property_flag} is not a visual feature.")
 
     # Adapt
-    if property_flag == VisProp.NUMEROSITY:
+    if property_flag == _VisProp.NUMEROSITY:
         return numerosity(stim, value=int(value))
 
-    elif property_flag == VisProp.AV_PERIMETER:
+    elif property_flag == _VisProp.AV_PERIMETER:
         return average_perimeter(stim, value=value)
 
-    elif property_flag == VisProp.TOTAL_PERIMETER:
+    elif property_flag == _VisProp.TOTAL_PERIMETER:
         return total_perimeter(stim, value=value)
 
-    elif property_flag == VisProp.AV_SURFACE_AREA:
+    elif property_flag == _VisProp.AV_SURFACE_AREA:
         return average_surface_area(stim, value=value)
 
-    elif property_flag == VisProp.TOTAL_SURFACE_AREA:
+    elif property_flag == _VisProp.TOTAL_SURFACE_AREA:
         return total_surface_area(stim, value=value)
 
-    elif property_flag == VisProp.LOG_SIZE:
+    elif property_flag == _VisProp.LOG_SIZE:
         return log_size(stim, value=value)
 
-    elif property_flag == VisProp.LOG_SPACING:
+    elif property_flag == _VisProp.LOG_SPACING:
         return log_spacing(stim, value=value)
 
-    elif property_flag == VisProp.SPARSITY:
+    elif property_flag == _VisProp.SPARSITY:
         return sparsity(stim, value=value)
 
-    elif property_flag == VisProp.FIELD_AREA:
+    elif property_flag == _VisProp.FIELD_AREA:
         return field_area(stim, value=value)
 
-    elif property_flag == VisProp.COVERAGE:
+    elif property_flag == _VisProp.COVERAGE:
         return coverage(stim, value=value)
     else:
         raise NotImplementedError(
