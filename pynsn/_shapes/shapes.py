@@ -17,7 +17,7 @@ from typing import Any, Optional, Union
 import numpy as np
 import shapely
 from numpy.typing import NDArray
-from shapely import Polygon, affinity
+from shapely import Polygon
 
 from .abc_shapes import AbstractPoint, AbstractShape, Coord2DLike, is_in_shape
 
