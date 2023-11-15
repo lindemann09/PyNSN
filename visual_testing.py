@@ -40,14 +40,7 @@ if True:
     nsn = factory.get()
     factory.tojson(filename="demo.json")
 
-a = pil_image.create(nsn)
-a.save("shapes_test2.png")
-
-
-sizes = nsn.get_sizes()
-sizes[5:9, :] = sizes[5:9, :] * 3
-nsn.set_sizes(sizes)
-print(nsn.get_sizes())
+nsn.colours.convex_hull = "green"
 
 a = pil_image.create(nsn)
 a.save("shapes_test.png")

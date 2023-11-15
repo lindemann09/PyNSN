@@ -1,4 +1,5 @@
 from numpy.typing import NDArray
+import numpy as np
 from shapely import MultiPolygon, Polygon, get_coordinates
 
 
@@ -6,7 +7,7 @@ class ConvexHull(object):
     """convenient wrapper class for calculating of convex hulls"""
 
     def __init__(self, array_of_polygons: NDArray[Polygon]) -> None:
-        polys = MultiPolygon(list(array_of_polygons))
+        polys = MultiPolygon(array_of_polygons.tolist())
         self._ch_polygon = polys.convex_hull
 
     @property
@@ -14,7 +15,7 @@ class ConvexHull(object):
         return self._ch_polygon
 
     @property
-    def coordinates(self) -> NDArray:
+    def coordinates(self) -> NDArray[np.float_]:
         """Coordinates that shape the convex hull
 
         Returns:
@@ -28,7 +29,7 @@ class ConvexHull(object):
         return self._ch_polygon.area
 
     @property
-    def centroid(self) -> NDArray:
+    def centroid(self) -> NDArray[np.float_]:
         """Geometric Center of convex hull
 
         Returns:

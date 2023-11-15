@@ -116,6 +116,9 @@ class ArrayProperties(object):
             )
         return rtn.rstrip()
 
+    def __str__(self) -> str:
+        return self.totext()
+
     @property
     def areas(self) -> NDArray[np.float_]:
         """area of each object"""
@@ -207,31 +210,34 @@ class ArrayProperties(object):
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
         """
-        try:
-            return self.total_surface_area / self.field_area
-        except ZeroDivisionError:
+        fa = self.field_area
+        if fa == 0:
             return np.float64(np.nan)
+        else:
+            return self.total_surface_area / fa
 
     @property
     def log_size(self) -> np.float_:
-        try:
-            return np.log2(self.total_surface_area) + np.log2(self.average_surface_area)
-        except ValueError:
+        fa = self.field_area
+        if fa == 0:
             return np.float64(np.nan)
+        else:
+            return np.log2(fa) + np.log2(self.average_surface_area)
 
     @property
     def log_spacing(self) -> np.float_:
-        try:
-            return np.log2(self.field_area) + np.log2(self.sparsity)
-        except ValueError:
+        fa = self.field_area
+        if fa == 0:
             return np.float64(np.nan)
+        else:
+            return np.log2(fa) + np.log2(self.sparsity)
 
     @property
     def sparsity(self) -> np.float_:
-        try:
-            return self.field_area / self.numerosity
-        except ZeroDivisionError:
+        if self.numerosity == 0:
             return np.float64(np.nan)
+        else:
+            return self.field_area / self.numerosity
 
     @property
     def field_area(self) -> np.float_:

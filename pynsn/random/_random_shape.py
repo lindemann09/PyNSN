@@ -1,6 +1,7 @@
 """
 """
 
+from copy import deepcopy
 import shapely
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -276,9 +277,10 @@ class RndPolygonShape(_RandShapeWidthHeight):
 
         rtn = []
         for s, p, a in zip(self._sample_sizes(n), self._polygons.sample(n), attr):
-            # assert isinstance(p, PolygonShape)
+            assert isinstance(p, PolygonShape)
             if s[0] > 0:
-                x = p.copy_scaled(new_size=s)
+                x = deepcopy(p)
+                x.size = s
                 x.attribute = a
                 rtn.append(x)
         return rtn

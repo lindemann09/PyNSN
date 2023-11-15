@@ -32,8 +32,8 @@ class ShapeArray(object):
         self._cache_polygons = None
         self._cache_ids = None
         self._convex_hull = None
-        self._pos_changes = np.empty(0, dtype=int)
-        self._size_changes = np.empty(0, dtype=int)
+        self._pos_changed = np.empty(0, dtype=int)
+        self._size_changed = np.empty(0, dtype=int)
 
     def get_xy(self) -> NDArray[np.float_]:
         """array of positions"""
@@ -46,8 +46,8 @@ class ShapeArray(object):
                 f"xy has to be a numpy array with shape={self._xy.shape}")
         changes = np.any(self._xy != val, axis=1)
         if np.any(changes):
-            self._pos_changes = np.unique(np.append(np.flatnonzero(changes),
-                                                    self._pos_changes))
+            self._pos_changed = np.unique(np.append(np.flatnonzero(changes),
+                                                    self._pos_changed))
             self._xy = val
             self._clear_cached()
 
@@ -62,8 +62,8 @@ class ShapeArray(object):
                 f"xy has to be a numpy array with shape={self._sizes.shape}")
         changes = np.any(self._sizes != val, axis=1)
         if np.any(changes):
-            self._size_changes = np.unique(np.append(np.flatnonzero(changes),
-                                                     self._size_changes))
+            self._size_changed = np.unique(np.append(np.flatnonzero(changes),
+                                                     self._size_changed))
             self._sizes = val
             self._clear_cached()
 
@@ -74,15 +74,16 @@ class ShapeArray(object):
 
     @property
     def shapes(self) -> List[AbstractShape]:
-
-        if len(self._pos_changes) > 0 or len(self._size_changes) > 0:
+        """list of the shapes"""
+        if len(self._pos_changed) > 0 or len(self._size_changed) > 0:
             # update of shape list is needed, because size or pos changed
-            for i in self._pos_changes:
+            for i in self._pos_changed:
                 self._shapes[i].xy = self._xy[i, :]
-            for i in self._size_changes:
+            for i in self._size_changed:
                 self._shapes[i].size = self._sizes[i, :]
-            self._pos_changes = np.empty(0, dtype=int)
-            self._size_changes = np.empty(0, dtype=int)
+            self._pos_changed = np.empty(0, dtype=int)
+            self._size_changed = np.empty(0, dtype=int)
+
         return self._shapes
 
     @property
@@ -121,7 +122,7 @@ class ShapeArray(object):
         """Dict representation of the shape array
         """
 
-        return {"shape_array": [x.todict() for x in self.get_shapes()]}
+        return {"shape_array": [x.todict() for x in self.shapes]}
 
     def shape_table_dict(self) -> dict:
         """Tabular representation of the array of the shapes.
@@ -159,12 +160,12 @@ class ShapeArray(object):
             self._clear_cached()
         else:
             raise TypeError(
-                f"Can't add '{type(shape)}'. That's not a ShapeType or list of ShapeTypes."
+                f"Can't add '{type(shape)}'. That's not a ShapeType."
             )
 
     def join_shapes(self, other: ShapeArray) -> None:
         """join with shapes of other array"""
-        for x in other.get_shapes():
+        for x in other.shapes:
             self.add(x)
 
     def replace(self, index: int, shape: AbstractShape):
@@ -206,12 +207,17 @@ class ShapeArray(object):
         self._shapes = [self._shapes[i] for i in idx]
         self._clear_cached()
 
-    def get_shapes(self, index: Optional[IntOVector] = None) -> List[AbstractShape]:
-        """Returns list with selected objects
+    def get_shapes(self, index: IntOVector) -> List[AbstractShape]:
+        """Returns list with multiple selected objects
+
+        Since shapes property has to be list (and not a numpy.array), this method
+        allows slicing with a vector of ids (similar to numpy)
+
+        Note
+        ----
+        Use `shapes`if you need to entire list of shapes.
         """
-        if index is None:
-            ids = range(self.n_objects)
-        elif isinstance(index, int):
+        if isinstance(index, int):
             ids = (index,)
         else:
             ids = index
@@ -236,7 +242,7 @@ class ShapeArray(object):
 
     @property
     def convex_hull(self) -> ConvexHull:
-        """Convex hull poygon of the Shape Array"""
+        """Convex hull polygon of the Shape Array"""
         if not isinstance(self._convex_hull, ConvexHull):
             self._convex_hull = ConvexHull(self.polygons)
         return self._convex_hull

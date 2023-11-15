@@ -1,6 +1,6 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from copy import copy
+from copy import copy, deepcopy
 from typing import Optional
 
 import numpy as _np
@@ -54,7 +54,7 @@ class _SVGDraw(_base.AbstractArrayDraw):
         if isinstance(shape, _shapes.Picture):
             raise RuntimeError("Pictures are not supported for SVG file.")
 
-        shape = copy(shape)
+        shape = deepcopy(shape)
         shape.xy = _base.cartesian2image_coordinates(shape.xy,
                                                      _np.array(svg_image_size(image))).tolist()
         col = shape.colour.value
