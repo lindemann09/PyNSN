@@ -13,7 +13,8 @@ from ..random._random_shape import AbstractRndShape
 from .nsn_stimulus import NSNStimulus
 from .stimulus_colours import StimulusColours
 
-#todo incremental_random_dot_array
+# todo incremental_random_dot_array
+
 
 class StimulusFactory(object):
     """Factory class for creating Non-Symbolic Number Stimulus
@@ -21,7 +22,7 @@ class StimulusFactory(object):
 
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle,
-                                     Ellipse, PolygonShape, None] = None,
+                                          Ellipse, PolygonShape, None] = None,
                  min_distance: int = defaults.MIN_DISTANCE,
                  min_distance_target_area: int = defaults.MIN_DISTANCE,
                  stimulus_colours: Optional[StimulusColours] = None,
@@ -77,9 +78,9 @@ class StimulusFactory(object):
 
     def get(self) -> NSNStimulus:
         rtn = deepcopy(self._stim)
-        for n,s in self._shapes:
-            rtn.add_shape(ref_object=s, n=n, random_position=True,
-                          ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
+        for n, s in self._shapes:
+            rtn.add_shapes(ref_object=s, n=n, random_position=True,
+                           ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
         return rtn
 
     def todict(self) -> dict:

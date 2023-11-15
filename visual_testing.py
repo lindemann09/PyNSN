@@ -13,18 +13,18 @@ rb = pynsn.Rectangle((-50, -45), size=(10, 10), attribute="#cc0F00")
 r_big = pynsn.Rectangle((10, -40), size=(150, 60), attribute="#000088")
 
 rnd_ell = random.RndRectangle(width=(40.8, 10.4), height=(20, 50),
-                            attributes=["green", "black", "orange", "red"])
+                              attributes=["green", "black", "orange", "red"])
 rnd_dot = random.RndDot(diameter=(40.8, 10),
-                            attributes=["green", "black", "orange", "red"])
+                        attributes=["green", "black", "orange", "red"])
 
 if True:
     nsn = pynsn.NSNStimulus(
-        #target_area_shape=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF"),
+        # target_area_shape=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF"),
         target_area_shape=pynsn.Rectangle((0, 0), size=(400, 500)),
         min_distance_target_area=10,
         min_distance=2)
     # random dot
-    nsn.add_shape(rnd_ell, n=20, random_position=True)
+    nsn.add_shapes(rnd_ell, n=20, random_position=True)
     print(nsn.properties_txt(short_format=True))
     print(nsn.contains_overlaps())
     print(nsn.properties.numerosity)
@@ -43,4 +43,3 @@ if False:
 nsn.sort_by_excentricity()
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
-

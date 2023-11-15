@@ -102,7 +102,7 @@ class ShapeArray(object):
              }
         return d
 
-    def _add(self, shape: AbstractShape):
+    def add(self, shape: AbstractShape):
         """add shape to the array"""
         if isinstance(shape, AbstractShape):
             self._xy = np.append(self._xy, np.atleast_2d(shape.xy), axis=0)
@@ -117,10 +117,10 @@ class ShapeArray(object):
                 f"Can't add '{type(shape)}'. That's not a ShapeType or list of ShapeTypes."
             )
 
-    def join_shapes(self, other:ShapeArray)-> None:
+    def join_shapes(self, other: ShapeArray) -> None:
         """join with shapes of other array"""
         for x in other.get_list():
-            self._add(x)
+            self.add(x)
 
     def replace(self, index: int, shape: AbstractShape):
 
