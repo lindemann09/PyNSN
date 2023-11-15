@@ -43,16 +43,9 @@ if True:
 
 nsn.colours.convex_hull = "green"
 
-a = pil_image.create(nsn)
-a.save("shapes_test.png")
 
-pg = pygame_surface.create(nsn)
-screen = pygame.display.set_mode((800, 600))
-screen.blit(pg, (0, 0))
-pygame.display.flip()
-pygame.event.clear()
-pygame.init()
-while True:
-    event = pygame.event.wait()
-    if event.type == pygame.QUIT:
-        pygame.quit()
+stim = pynsn.NSNStimulus(target_area_shape=pynsn.Dot((0, 0), diameter=300))
+stim.add_shapes(pynsn.Dot((0, 0), diameter=10), n=10, random_position=True)
+
+a = pil_image.create(stim)
+a.save("shapes_test.png")
