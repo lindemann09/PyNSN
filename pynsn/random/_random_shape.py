@@ -49,7 +49,6 @@ class AbstractRndShape(metaclass=ABCMeta):
         return self._attributes
 
     @classmethod
-    @property
     def name(cls) -> str:
         return str(cls.__name__)
 

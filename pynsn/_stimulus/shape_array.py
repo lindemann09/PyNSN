@@ -19,8 +19,7 @@ from ..errors import NoSolutionError
 from ..random._rng import WalkAround
 from .convex_hull import ConvexHull
 from .target_area import TargetArea
-
-IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
+from .._misc import delete_elements, IntOVector
 
 
 class ShapeArray(object):
@@ -29,52 +28,100 @@ class ShapeArray(object):
     def __init__(self) -> None:
         self._xy = np.empty((0, 2), dtype=np.float64)
         self._sizes = np.empty((0, 2), dtype=np.float64)
-        self._polygons = np.empty(0, dtype=object)
-        self._attributes = np.empty(0, dtype=object)
-        self._types = np.empty(0, dtype=str)
-        self._ids = None
+        self._shapes = []
+        self._cache_polygons = None
+        self._cache_ids = None
         self._convex_hull = None
+        self._pos_changes = np.empty(0, dtype=int)
+        self._size_changes = np.empty(0, dtype=int)
+
+    def get_xy(self) -> NDArray[np.float_]:
+        """array of positions"""
+        return self._xy.copy()
+
+    def set_xy(self, val: NDArray[np.float_]):
+        # lasy update of shapes and polygons
+        if val.shape != self._xy.shape:
+            raise ValueError(
+                f"xy has to be a numpy array with shape={self._xy.shape}")
+        changes = np.any(self._xy != val, axis=1)
+        if np.any(changes):
+            self._pos_changes = np.unique(np.append(np.flatnonzero(changes),
+                                                    self._pos_changes))
+            self._xy = val
+            self._clear_cached()
+
+    def get_sizes(self) -> NDArray[np.float_]:
+        """array of sizes"""
+        return self._sizes.copy()
+
+    def set_sizes(self, val: NDArray[np.float_]):
+        # lasy update of shapes
+        if val.shape != self._sizes.shape:
+            raise ValueError(
+                f"xy has to be a numpy array with shape={self._sizes.shape}")
+        changes = np.any(self._sizes != val, axis=1)
+        if np.any(changes):
+            self._size_changes = np.unique(np.append(np.flatnonzero(changes),
+                                                     self._size_changes))
+            self._sizes = val
+            self._clear_cached()
+
+    def scale(self, factor: Union[float, np.float_]):
+        """scale the size of all shapes"""
+        if factor != 1:
+            self.set_sizes(self._sizes * factor)
 
     @property
-    def xy(self) -> NDArray:
-        return self._xy
+    def shapes(self) -> List[AbstractShape]:
 
-    @property
-    def sizes(self) -> NDArray:
-        return self._sizes
+        if len(self._pos_changes) > 0 or len(self._size_changes) > 0:
+            # update of shape list is needed, because size or pos changed
+            for i in self._pos_changes:
+                self._shapes[i].xy = self._xy[i, :]
+            for i in self._size_changes:
+                self._shapes[i].size = self._sizes[i, :]
+            self._pos_changes = np.empty(0, dtype=int)
+            self._size_changes = np.empty(0, dtype=int)
+        return self._shapes
 
     @property
     def shape_types(self) -> NDArray[np.str_]:
-        return self._types
+        return np.array([s.name() for s in self._shapes])
 
     @property
     def polygons(self) -> NDArray[shapely.Polygon]:
-        return self._polygons
+        if self._cache_polygons is None:
+            # build polygons
+            poly = [s.polygon for s in self.shapes]
+            self._cache_polygons = np.array(poly)
+        return self._cache_polygons
 
     @property
-    def attributes(self) -> NDArray:
-        return self._attributes
+    def attributes(self) -> List[Any]:
+        return [s.attribute for s in self._shapes]
 
     @property
     def ids(self) -> Dict[str, NDArray]:
         """Dictionary of ids for the different shape types"""
 
-        if self._ids is None:
-            self._ids = {}
+        if self._cache_ids is None:
+            self._cache_ids = {}
             for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
-                self._ids[st] = np.flatnonzero(self._types == st)
-        return self._ids
+                self._cache_ids[st] = np.flatnonzero(self.shape_types == st)
+        return self._cache_ids
 
-    def _reset(self):
+    def _clear_cached(self):
         """clears convex hull and ids"""
         self._convex_hull = None
-        self._ids = None
+        self._cache_ids = None
+        self._cache_polygons = None
 
     def todict(self) -> dict:
         """Dict representation of the shape array
         """
 
-        return {"shape_array": [x.todict() for x in self.get_list()]}
+        return {"shape_array": [x.todict() for x in self.get_shapes()]}
 
     def shape_table_dict(self) -> dict:
         """Tabular representation of the array of the shapes.
@@ -90,28 +137,26 @@ class ShapeArray(object):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
-        if np.any(self._types == PolygonShape.name()):
+        if np.any(self.shape_types == PolygonShape.name()):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
-        d = {"type": self._types.tolist(),
+        d = {"type": self.shape_types.tolist(),
              "x": self._xy[:, 0].tolist(),
              "y": self._xy[:, 1].tolist(),
              "width": self._sizes[:, 0].tolist(),
              "height": self._sizes[:, 1].tolist(),
-             "attributes": [str(x) for x in self._attributes.tolist()]
+             "attributes": [str(x) for x in self.attributes]
              }
         return d
 
     def add(self, shape: AbstractShape):
         """add shape to the array"""
         if isinstance(shape, AbstractShape):
+            self._shapes.append(shape)
             self._xy = np.append(self._xy, np.atleast_2d(shape.xy), axis=0)
             self._sizes = np.append(
                 self._sizes, np.atleast_2d(shape.size), axis=0)
-            self._attributes = np.append(self._attributes, shape.attribute)
-            self._types = np.append(self._types, shape.name())
-            self._polygons = np.append(self._polygons, shape.polygon)
-            self._reset()
+            self._clear_cached()
         else:
             raise TypeError(
                 f"Can't add '{type(shape)}'. That's not a ShapeType or list of ShapeTypes."
@@ -119,40 +164,34 @@ class ShapeArray(object):
 
     def join_shapes(self, other: ShapeArray) -> None:
         """join with shapes of other array"""
-        for x in other.get_list():
+        for x in other.get_shapes():
             self.add(x)
 
     def replace(self, index: int, shape: AbstractShape):
-
-        self._polygons[index] = shape.polygon
+        self._shapes[index] = shape
         self._xy[index, :] = shape.xy
-        self._attributes[index] = shape.attribute
         self._sizes[index, :] = shape.size
-        self._types[index] = shape.name()
-        self._reset()
+        self._clear_cached()
 
     def delete(self, index: IntOVector) -> None:
-        self._polygons = np.delete(self._polygons, index)
+
+        self._shapes = delete_elements(self._shapes, index)
         self._xy = np.delete(self._xy, index, axis=0)
-        self._attributes = np.delete(self._attributes, index)
-        self._types = np.delete(self._types, index)
         self._sizes = np.delete(self._sizes, index, axis=0)
-        self._reset()
+        self._clear_cached()
 
     def clear(self):
         """ """
-        self._polygons = np.empty(0, dtype=object)
+        self._shapes = []
         self._xy = np.empty((0, 2), dtype=np.float64)
-        self._attributes = np.empty(0, dtype=object)
-        self._types = np.empty(0, dtype=str)
         self._sizes = np.empty((0, 2), dtype=np.float64)
-        self._reset()
+        self._clear_cached()
 
     def pop(self, index: Optional[int] = None) -> AbstractShape:
         """Remove and return item at index"""
         if index is None:
-            index = len(self._polygons) - 1
-        rtn = self.get(index)
+            index = len(self._shapes) - 1
+        rtn = self.shapes[index]
         self.delete(index)
         return rtn
 
@@ -161,16 +200,25 @@ class ShapeArray(object):
         distance the center of the convex hull (from close to far)
         """
         d = self.distances(Point2D(self.convex_hull.centroid))
-        i = np.argsort(d)
-        self._polygons = self._polygons[i]
-        self._xy = self._xy[i, :]
-        self._attributes = self._attributes[i]
-        self._types = self._types[i]
-        self._sizes = self._sizes[i]
-        self._reset()
+        idx = np.argsort(d)
+        self._xy = self._xy[idx, :]
+        self._sizes = self._sizes[idx]
+        self._shapes = [self._shapes[i] for i in idx]
+        self._clear_cached()
 
-    # def round_values(self, decimals: int = 0, int_type: type = np.int64,
-    #                  rebuild_polygons=True) -> None: #FIXME rounding
+    def get_shapes(self, index: Optional[IntOVector] = None) -> List[AbstractShape]:
+        """Returns list with selected objects
+        """
+        if index is None:
+            ids = range(self.n_objects)
+        elif isinstance(index, int):
+            ids = (index,)
+        else:
+            ids = index
+
+        return [self.shapes[x] for x in ids]
+
+    # def round_values(self, decimals: int = 0, int_type: type = np.int64) -> None: #FIXME rounding
     #     """rounds all values"""
 
     #     if decimals is None:
@@ -181,65 +229,16 @@ class ShapeArray(object):
     #     self._rect_sizes = round2(self._rect_sizes, decimals=decimals,
     #                               int_type=int_type)
 
-    #     if rebuild_polygons:
-    #         for i, shape in enumerate(self.get_list()):
-    #             shape.delete_polygon()
-    #             self._polygons[i] = shape.polygon
-
-    def get(self, index: int) -> AbstractShape:
-        """Returns selected object"""
-        name = self._types[index]
-        if name == Dot.name():
-            rtn = Dot(
-                xy=self._xy[index, :],
-                diameter=self._sizes[index, 0],
-                attribute=self._attributes[index])
-        elif name == Rectangle.name():
-            return Rectangle(
-                xy=self._xy[index, :],
-                size=self._sizes[index, :],
-                attribute=self._attributes[index])
-        elif name == Picture.name():
-            return Picture(
-                xy=self._xy[index, :],
-                size=self._sizes[index, :],
-                path=self._attributes[index])  # type: ignore
-        elif name == Ellipse.name():
-            return Ellipse(
-                xy=self._xy[index, :],
-                size=self._sizes[index, :],
-                attribute=self._attributes[index])
-        elif name == PolygonShape.name():
-            return PolygonShape(polygon=self._polygons[index],
-                                attribute=self._attributes[index])
-        else:
-            raise TypeError(f"{name}: Unknown shape type id.")
-
-        # rtn.set_polygon(self._polygons[index])
-        return rtn
-
-    def get_list(self, index: Optional[IntOVector] = None) -> List[AbstractShape]:
-        """Returns list with selected objects
-        """
-        if index is None:
-            ids = range(self.n_objects)
-        elif isinstance(index, int):
-            ids = (index,)
-        else:
-            ids = index
-
-        return [self.get(x) for x in ids]
-
     @property
     def n_objects(self) -> int:
         """number of shapes"""
-        return len(self._attributes)
+        return len(self._shapes)
 
     @property
     def convex_hull(self) -> ConvexHull:
         """Convex hull poygon of the Shape Array"""
         if not isinstance(self._convex_hull, ConvexHull):
-            self._convex_hull = ConvexHull(self._polygons)
+            self._convex_hull = ConvexHull(self.polygons)
         return self._convex_hull
 
     def csv(self, skip_columns: Optional[Sequence[str]] = None) -> str:
@@ -264,7 +263,7 @@ class ShapeArray(object):
                 except ValueError:
                     pass
 
-        for i in range(self.n_objects):
+        for i in range(len(self._shapes)):
             row = ""
             for k in keys:
                 row += f"{d[k][i]},"
@@ -292,7 +291,7 @@ class ShapeArray(object):
 
         if isinstance(shape, (Point2D, AbstractCircularShape)):
             # circular target shape
-            rtn = np.full(self.n_objects, np.nan)
+            rtn = np.full(len(self._shapes), np.nan)
 
             idx = self.ids[Dot.name()]
             if len(idx) > 0:
@@ -311,15 +310,15 @@ class ShapeArray(object):
             if len(idx) > 0:
                 if isinstance(shape, AbstractCircularShape):
                     rtn[idx] = shapely.distance(
-                        shape.polygon, self._polygons[idx])
+                        shape.polygon, self.polygons[idx])
                 else:
                     rtn[idx] = shapely.distance(
-                        shape.xy_point, self._polygons[idx])
+                        shape.xy_point, self.polygons[idx])
             return rtn
 
         else:
             # non-circular shape as target
-            return shapely.distance(shape.polygon, self._polygons)
+            return shapely.distance(shape.polygon, self.polygons)
 
     def dwithin(self, shape: Union[Point2D, AbstractShape],  distance: float = 0) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
@@ -329,8 +328,9 @@ class ShapeArray(object):
         -----
         Using this function is more efficient than computing the distance and comparing the result.
         """
+
         if isinstance(shape, (Point2D, AbstractCircularShape)):
-            rtn = np.full(self.n_objects, False)
+            rtn = np.full(len(self._shapes), False)
 
             idx = self.ids[Dot.name()]
             if len(idx) > 0:
@@ -353,15 +353,15 @@ class ShapeArray(object):
             if len(idx) > 0:
                 if isinstance(shape, AbstractCircularShape):
                     rtn[idx] = shapely.dwithin(
-                        shape.polygon, self._polygons[idx],  distance=distance)
+                        shape.polygon, self.polygons[idx],  distance=distance)
                 else:
                     rtn[idx] = shapely.dwithin(
-                        shape.xy_point, self._polygons[idx],  distance=distance)
+                        shape.xy_point, self.polygons[idx],  distance=distance)
 
         else:
             # non-circular shape
             rtn = shapely.dwithin(
-                shape.polygon, self._polygons, distance=distance)
+                shape.polygon, self.polygons, distance=distance)
 
         return rtn
 
@@ -369,15 +369,14 @@ class ShapeArray(object):
         """Returns True for two or more elements overlap (i.e. taking
         into account the minimum distance).
         """
-        for x in range(self.n_objects):
+        for x in range(len(self._shapes)):
             if np.any(self.get_overlaps(x, min_distance)) > 0:
                 return True
-
         return False
 
     def get_overlaps(self, index: int, min_distance: float = 0) -> NDArray[np.bool_]:
         """get overlaps with other objects. Ignores overlap with oneself."""
-        overlaps = self.dwithin(self.get(index), distance=min_distance)
+        overlaps = self.dwithin(self.shapes[index], distance=min_distance)
         overlaps[index] = False  # ignore overlap with oneself
         return overlaps
 
@@ -444,7 +443,7 @@ class ShapeArray(object):
         if not np.any(self.get_overlaps(index, min_distance)):
             return 0  # no overlap
 
-        target = self.get(index)
+        target = self.shapes[index]
 
         if minimal_replacing:
             walk = WalkAround(target.xy)

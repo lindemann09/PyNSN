@@ -2,6 +2,7 @@
 """
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+from copy import deepcopy
 import typing as _tp
 
 import numpy as _np
@@ -55,27 +56,20 @@ class _PILDraw(_base.AbstractArrayDraw):
     ):
         # FIXME opacity is ignored (not yet supported)
         # draw object
-        shape.copy()
+        shape = deepcopy(shape)
         shape.xy = _base.cartesian2image_coordinates(
             _np.asarray(shape.xy) * scaling_factor, image.size)
+        shape.scale(scaling_factor)
 
         if isinstance(shape, (_shapes.Ellipse, _shapes.Dot)):
-            if isinstance(shape, _shapes.Dot):
-                rx = (shape.diameter * scaling_factor) / 2
-                ry = rx
-            else:  # ellipse
-                rx, ry = (_np.asarray(shape.size) * (scaling_factor / 2))
-
+            rx, ry = shape.size / 2
             x, y = shape.xy
             _ImageDraw.Draw(image).ellipse(
                 (x - rx, y - ry, x + rx, y + ry), fill=shape.colour.value
             )
 
         elif isinstance(shape, _shapes.Picture):
-            rect = _shapes.Rectangle(xy=shape.xy,
-                                     size=(shape.size[0] * scaling_factor,
-                                           shape.size[1] * scaling_factor))
-            upper_left = _np.flip(rect.left_top).tolist()
+            upper_left = _np.flip(shape.left_top).tolist()
             pict = _Image.open(shape.path, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
                 pict = pict.resize((int(shape.size[0]), int(shape.size[1])),
@@ -87,11 +81,8 @@ class _PILDraw(_base.AbstractArrayDraw):
             image.paste(res)
 
         elif isinstance(shape, _shapes.Rectangle):
-            rect = _shapes.Rectangle(xy=shape.xy,
-                                     size=(shape.size[0] * scaling_factor,
-                                           shape.size[1] * scaling_factor))
             # rectangle shape TODO decentral _shapes seems to be bit larger than with pyplot
-            _ImageDraw.Draw(image).rectangle(tuple(rect.box),  # type: ignore
+            _ImageDraw.Draw(image).rectangle(tuple(shape.box),  # type: ignore
                                              fill=shape.colour.value)
         else:
             raise NotImplementedError(

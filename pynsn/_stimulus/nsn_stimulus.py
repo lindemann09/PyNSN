@@ -2,6 +2,7 @@
 
 """
 from __future__ import annotations
+from copy import deepcopy
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
@@ -109,7 +110,6 @@ class NSNStimulus(ShapeArray):
             rtn.update(self.properties.perimeter.tobytes())
         except AttributeError:
             pass
-        rtn.update(self._attributes.tobytes())
         return rtn.hexdigest()
 
     def todict(self, tabular: bool = True) -> dict:
@@ -170,7 +170,7 @@ class NSNStimulus(ShapeArray):
         cnt = 0
         while cnt < 20:
             resp = np.empty(0, dtype=int)
-            for x in range(self.n_objects):
+            for x in range(len(self._shapes)):
                 r = self._fix_overlap(index=x,
                                       min_distance=self.min_distance,
                                       minimal_replacing=minimal_replacing,
@@ -238,6 +238,7 @@ class NSNStimulus(ShapeArray):
                 raise ShapeOverlapsError(f"Shape overlaps with array. {shape}")
             if not self.target_area.is_object_inside(shape):
                 raise ShapeOutsideError(f"Shape outside target array. {shape}")
+
         super().add(shape)
 
     def add_shapes(self,
@@ -258,7 +259,7 @@ class NSNStimulus(ShapeArray):
                                 max_iterations=max_iterations)
         else:
             while n > 0:
-                new_object = ref_object.copy()
+                new_object = deepcopy(ref_object)
                 self.add(new_object, random_position=random_position,
                          ignore_overlaps=ignore_overlaps,
                          inside_convex_hull=inside_convex_hull,

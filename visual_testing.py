@@ -17,7 +17,7 @@ rnd_ell = random.RndRectangle(width=(40.8, 10.4), height=(20, 50),
 rnd_dot = random.RndDot(diameter=(40.8, 10),
                         attributes=["green", "black", "orange", "red"])
 
-if True:
+if False:
     nsn = pynsn.NSNStimulus(
         # target_area_shape=pynsn.Dot((0, 0), diameter=500, attribute="#00FFFF"),
         target_area_shape=pynsn.Rectangle((0, 0), size=(400, 500)),
@@ -29,7 +29,7 @@ if True:
     print(nsn.contains_overlaps())
     print(nsn.properties.numerosity)
 
-if False:
+if True:
     factory = pynsn.StimulusFactory(
         target_area_shape=pynsn.Rectangle((0, 0), size=(500, 400)),
         min_distance_target_area=10,
@@ -40,6 +40,14 @@ if False:
     nsn = factory.get()
     factory.tojson(filename="demo.json")
 
-nsn.sort_by_excentricity()
+a = pil_image.create(nsn)
+a.save("shapes_test2.png")
+
+
+sizes = nsn.get_sizes()
+sizes[5:9, :] = sizes[5:9, :] * 3
+nsn.set_sizes(sizes)
+print(nsn.get_sizes())
+
 a = pil_image.create(nsn)
 a.save("shapes_test.png")

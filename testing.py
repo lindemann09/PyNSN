@@ -1,8 +1,20 @@
-import pynsn
-from pynsn import random
-import matplotlib.pyplot as plt
-import numpy as np
+
 import timeit
+import numpy as np
+import matplotlib.pyplot as plt
+from pynsn import random
+import pynsn
+a = range(10)
+index = (8, 4, 2)
+new = []
+for c, s in enumerate(a):
+    if c not in index:
+        new.append(s)
+print(a)
+print(new)
+exit()
+
+
 start = timeit.timeit()
 
 d = random.Uniform2D(x_minmax=(-100, 100),

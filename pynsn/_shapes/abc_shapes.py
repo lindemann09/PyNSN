@@ -9,6 +9,7 @@ from typing import Sequence, Tuple
 
 import numpy as np
 import shapely
+from shapely import affinity
 from numpy.typing import NDArray
 from shapely import Point, Polygon
 
@@ -55,7 +56,7 @@ class AbstractPoint(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], distance: float) -> bool:
         """True if point is in given distance to a shape (dist)
 
         Using this function is more efficient for non-circular shapes than
@@ -69,7 +70,6 @@ class AbstractPoint(metaclass=ABCMeta):
         """True is shapes fully inside the shapes (dist)
         """
 
-    @abstractmethod
     def todict(self) -> dict:
         """dict representation of the object"""
         return {"type": str(self.__class__.__name__),
@@ -81,10 +81,15 @@ class AbstractShape(metaclass=ABCMeta):
 
     def __init__(self,
                  xy: Coord2DLike,
+                 size: Coord2DLike,
                  attribute: Any) -> None:
         self._xy = np.asarray(xy)
         if len(self._xy) != 2:
             raise ValueError(INCORRECT_COORDINATE)
+        self._size = np.asarray(size)
+        if len(self._size) != 2:
+            raise ValueError(
+                "size has be an list of two numerals (width, height)")
         self._attribute = None
         self._polygon = None
         self.attribute = attribute  # setter
@@ -107,6 +112,22 @@ class AbstractShape(metaclass=ABCMeta):
         self._xy = xy
 
     @property
+    def size(self) -> NDArray:
+        return self._size
+
+    @size.setter
+    def size(self, val: Coord2DLike):
+        """scale the size of the object
+        """
+        val = np.asarray(val)
+        fact = val / self._size
+        self._size = val
+        if isinstance(self._polygon, Polygon):
+            self._polygon = affinity.scale(self._polygon,
+                                           xfact=fact[0], yfact=fact[1])
+            shapely.prepare(self._polygon)
+
+    @property
     def attribute(self) -> Any:
         return self._attribute
 
@@ -119,7 +140,6 @@ class AbstractShape(metaclass=ABCMeta):
                 self._attribute = Colour(val)
             except TypeError:
                 self._attribute = val
-
 
     @property
     def colour(self) -> Colour:
@@ -138,16 +158,15 @@ class AbstractShape(metaclass=ABCMeta):
     def height(self) -> float:
         return self.size[1]
 
-    def move(self, move_xy: Coord2DLike) -> None:
-        """moves the xy position of the shape
+    def scale(self, factor: float):
+        """scale the size of the object
         """
-        move_xy = np.asarray(move_xy)
-        if len(move_xy) != 2:
-            raise ValueError("move_xy has be an list of two numerals (x, y)")
-        self._xy = self._xy + move_xy
-        if self._polygon is not None:
-            self._polygon = shapely.transform(self._polygon,
-                                              lambda x: x + move_xy)
+        if factor != 1:
+            self._size = self._size * factor
+            if isinstance(self._polygon, Polygon):
+                self._polygon = affinity.scale(self._polygon,
+                                               xfact=factor, yfact=factor)
+                shapely.prepare(self._polygon)
 
     def make_polygon(self) -> None:
         """enforce the creation of polygon, if it does not exist yet
@@ -167,17 +186,6 @@ class AbstractShape(metaclass=ABCMeta):
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
 
-    @abstractmethod
-    def copy(self, new_xy: Optional[Coord2DLike] = None,
-             copy_polygon: bool = True) -> AbstractShape:
-        """returns a copy of the object
-        """
-
-    @property
-    @abstractmethod
-    def size(self) -> NDArray:
-        pass
-
     @property
     @abstractmethod
     def polygon(self) -> Polygon:
@@ -196,8 +204,8 @@ class AbstractShape(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], dist: float) -> bool:
-        """True is shapes are within a given distance (dist)
+    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], distance: float) -> bool:
+        """True is shapes are within a given distance
 
         Using this function is more efficient for non-circular shapes than
         computing the distance and comparing it with dist.

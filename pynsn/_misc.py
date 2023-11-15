@@ -7,15 +7,17 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import json
 import sys
 from collections import OrderedDict
-from typing import Any
+from typing import Any, List, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
-def formated_json(d:dict, indent:int=2) -> str:
+
+def formated_json(d: dict, indent: int = 2) -> str:
     json_str = json.dumps(d)
-    if indent<1:
+    if indent < 1:
         return json_str
     rtn = ""
     i = 0
@@ -25,7 +27,7 @@ def formated_json(d:dict, indent:int=2) -> str:
             i = i + indent
             x = x + "\n" + " " * i
         elif x == "," and not block_newline:
-            x = x + "\n" + " " * (i-1) # -1, because a space follows
+            x = x + "\n" + " " * (i-1)  # -1, because a space follows
         elif x == "}":
             i -= indent
             x = "\n" + " " * i + x
@@ -34,12 +36,21 @@ def formated_json(d:dict, indent:int=2) -> str:
         elif x == "]":
             block_newline = False
 
-
         rtn += x
 
     return rtn
 
 
+def delete_elements(lst: List, index: IntOVector) -> List:
+    """delete multiple elements from list"""
+    rtn = []
+
+    if isinstance(index, int):
+        index = (index,)  # make iterable
+    for c, s in enumerate(lst):
+        if c not in index:
+            rtn.append(s)
+    return rtn
 
 
 def join_dict_list(list_of_dicts):
