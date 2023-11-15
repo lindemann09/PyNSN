@@ -1,7 +1,8 @@
+import numpy as np
+import pygame
 from pynsn import random
 import pynsn
-from pynsn.image import pil_image
-import numpy as np
+from pynsn.image import pil_image, pygame_surface
 
 
 da = pynsn.Dot((-20, 120), diameter=5,  attribute=pynsn.Colour("black"))
@@ -44,3 +45,14 @@ nsn.colours.convex_hull = "green"
 
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
+
+pg = pygame_surface.create(nsn)
+screen = pygame.display.set_mode((800, 600))
+screen.blit(pg, (0, 0))
+pygame.display.flip()
+pygame.event.clear()
+pygame.init()
+while True:
+    event = pygame.event.wait()
+    if event.type == pygame.QUIT:
+        pygame.quit()

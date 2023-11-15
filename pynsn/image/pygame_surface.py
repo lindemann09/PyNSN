@@ -7,8 +7,6 @@ import pygame as _pygame
 from .. import _stimulus
 from . import pil_image as _pil_image
 
-# FIXME check pygame2 compatibility
-
 
 def create(nsn_stimulus: _stimulus.NSNStimulus,
            antialiasing: Union[bool, int] = True) -> _pygame.Surface:
@@ -16,4 +14,5 @@ def create(nsn_stimulus: _stimulus.NSNStimulus,
     img = _pil_image.create(nsn_stimulus=nsn_stimulus,
                             antialiasing=antialiasing)
 
-    return _pygame.image.fromstring(img.tobytes(), img.size, img.mode)
+    return _pygame.image.fromstring(img.tobytes(), img.size,
+                                    img.mode)  # type: ignore
