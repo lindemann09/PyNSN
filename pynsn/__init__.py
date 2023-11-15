@@ -5,7 +5,7 @@ Creating Non-Symbolic Number Displays
 # pylint: disable=C0413
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = "1.0-dev"
+__version__ = '1.0-dev'
 
 from sys import version_info as _python_version_info
 from ._misc import is_interactive_mode as _is_interactive_mode

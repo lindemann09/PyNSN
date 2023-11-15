@@ -14,15 +14,15 @@ PACKAGE_NAME = "pynsn"
 if _vi.major < 3 or _vi.minor < 8:
     raise RuntimeError(f"{PACKAGE_NAME} requires Python 3.8 or larger.")
 
-install_requires = ["numpy>=1.20",
-                    "scipy>=1.5",
+install_requires = ["numpy>=1.26",
+                    "shapely==2.0.2",
                     "Pillow>=9.3"]
 
 extras_require = {
     'svg':                ["svgwrite>=1.4"],
     'pygame':             ["pygame>=1.9"],
     'expyriment':         ["expyriment>=0.9"],
-    'matplotlib':         ["matplotlib>=3.2"]
+    'matplotlib':         ["matplotlib>=3.8"]
 }
 
 entry_points = {}
