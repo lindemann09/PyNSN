@@ -125,20 +125,20 @@ def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
 
     # centred points
     old_center = stim.convex_hull.centroid
-    stim.set_xy(stim._xy - old_center)
+    stim.xy = stim._xy - old_center
     centered_polar = _misc.cartesian2polar(stim._xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:
         scale += step
 
-        stim.set_xy(_misc.polar2cartesian(centered_polar * [scale, 1]))
+        stim.xy = _misc.polar2cartesian(centered_polar * [scale, 1])
         current = stim.convex_hull.area
 
         if (current < value and step < 0) or (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    stim.set_sizes(stim._xy + old_center)  # move back
+    stim.sizes = stim.xy + old_center  # move back
 
 
 def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],

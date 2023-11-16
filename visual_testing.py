@@ -52,4 +52,7 @@ stim.add_shapes(pynsn.Dot(diameter=10), n=10, random_position=True)
 a = pil_image.create(stim)
 a.save("shapes_test.png")
 
-stim.tojson("demo.json")
+stim.xy[9, 1] = 800
+stim.sizes[9, :] = (555, 555)
+# stim.update_shapes()
+print(stim.shapes)

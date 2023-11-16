@@ -32,58 +32,48 @@ class ShapeArray(object):
         self._cache_polygons = None
         self._cache_ids = None
         self._convex_hull = None
-        self._pos_changed = np.empty(0, dtype=int)
-        self._size_changed = np.empty(0, dtype=int)
+        self._shape_updated_required = False
 
-    def get_xy(self) -> NDArray[np.float_]:
+    @property
+    def xy(self) -> NDArray[np.float_]:
         """array of positions"""
-        return self._xy.copy()
+        return self._xy
 
-    def set_xy(self, val: NDArray[np.float_]):
-        # lasy update of shapes and polygons
+    @xy.setter
+    def xy(self, val: NDArray[np.float_]):
         if val.shape != self._xy.shape:
             raise ValueError(
                 f"xy has to be a numpy array with shape={self._xy.shape}")
-        changes = np.any(self._xy != val, axis=1)
-        if np.any(changes):
-            self._pos_changed = np.unique(np.append(np.flatnonzero(changes),
-                                                    self._pos_changed))
-            self._xy = val
+        if np.any(self._xy != val):  # any change
+            self._shape_updated_required = True
             self._clear_cached()
+        self._xy = val
 
-    def get_sizes(self) -> NDArray[np.float_]:
+    @property
+    def sizes(self) -> NDArray[np.float_]:
         """array of sizes"""
-        return self._sizes.copy()
+        return self._sizes
 
-    def set_sizes(self, val: NDArray[np.float_]):
-        # lasy update of shapes
+    @sizes.setter
+    def sizes(self, val: NDArray[np.float_]):
         if val.shape != self._sizes.shape:
             raise ValueError(
                 f"xy has to be a numpy array with shape={self._sizes.shape}")
-        changes = np.any(self._sizes != val, axis=1)
-        if np.any(changes):
-            self._size_changed = np.unique(np.append(np.flatnonzero(changes),
-                                                     self._size_changed))
-            self._sizes = val
+        if np.any(self._sizes != val):
+            self._shape_updated_required = True
             self._clear_cached()
+        self._sizes = val
 
     def scale(self, factor: Union[float, np.float_]):
         """scale the size of all shapes"""
         if factor != 1:
-            self.set_sizes(self._sizes * factor)
+            self.sizes = self._sizes * factor
 
     @property
     def shapes(self) -> List[AbstractShape]:
         """list of the shapes"""
-        if len(self._pos_changed) > 0 or len(self._size_changed) > 0:
-            # update of shape list is needed, because size or pos changed
-            for i in self._pos_changed:
-                self._shapes[i].xy = self._xy[i, :]
-            for i in self._size_changed:
-                self._shapes[i].size = self._sizes[i, :]
-            self._pos_changed = np.empty(0, dtype=int)
-            self._size_changed = np.empty(0, dtype=int)
-
+        if self._shape_updated_required:
+            self.update_shapes()
         return self._shapes
 
     @property
@@ -105,50 +95,35 @@ class ShapeArray(object):
     @property
     def ids(self) -> Dict[str, NDArray]:
         """Dictionary of ids for the different shape types"""
-
         if self._cache_ids is None:
             self._cache_ids = {}
             for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
                 self._cache_ids[st] = np.flatnonzero(self.shape_types == st)
         return self._cache_ids
 
+    def update_shapes(self):
+        """Updates list shapes, if property arrays `xy` or `sizes` have changes.
+
+
+        Users have to call this method only, if `xy`or `sizes`has been manipulated
+        manually in place (like `stim.xy[3, :] = (20, 10)`.
+        If property setters are used (`stim.xy = new_xy`), this updates of shapes
+        is done automatically.
+        """
+        for i, shape in enumerate(self._shapes):
+            if np.any(shape.xy != self._xy[i, :]):
+                shape.xy = self._xy[i, :]
+            if np.any(shape.size != self._sizes[i, :]):
+                shape.size = self._sizes[i, :]
+
+        self._clear_cached()
+        self._shape_updated_required = False
+
     def _clear_cached(self):
         """clears convex hull and ids"""
         self._convex_hull = None
         self._cache_ids = None
         self._cache_polygons = None
-
-    def todict(self) -> dict:
-        """Dict representation of the shape array
-        """
-
-        return {"shape_array": [x.todict() for x in self.shapes]}
-
-    def shape_table_dict(self) -> dict:
-        """Tabular representation of the array of the shapes.
-
-        This representation can not deal with PolygonShapes. It"s useful to
-        create Pandas dataframe or Arrow Tables.
-
-        Examples
-        --------
-        >>> df_dict = stimulus.shape_table_dict()
-        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
-
-        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
-        """
-
-        if np.any(self.shape_types == PolygonShape.name()):
-            raise RuntimeError("tabular shape representation can not deal with "
-                               "PolygonShapes")
-        d = {"type": self.shape_types.tolist(),
-             "x": self._xy[:, 0].tolist(),
-             "y": self._xy[:, 1].tolist(),
-             "width": self._sizes[:, 0].tolist(),
-             "height": self._sizes[:, 1].tolist(),
-             "attributes": [str(x) for x in self.attributes]
-             }
-        return d
 
     def add(self, shape: AbstractShape):
         """add shape to the array"""
@@ -196,17 +171,6 @@ class ShapeArray(object):
         self.delete(index)
         return rtn
 
-    def sort_by_excentricity(self):
-        """Sort order fo the objects in the array by excentricity, that is, by the
-        distance the center of the convex hull (from close to far)
-        """
-        d = self.distances(Point2D(self.convex_hull.centroid))
-        idx = np.argsort(d)
-        self._xy = self._xy[idx, :]
-        self._sizes = self._sizes[idx]
-        self._shapes = [self._shapes[i] for i in idx]
-        self._clear_cached()
-
     def get_shapes(self, index: IntOVector) -> List[AbstractShape]:
         """Returns list with multiple selected objects
 
@@ -223,6 +187,49 @@ class ShapeArray(object):
             ids = index
 
         return [self.shapes[x] for x in ids]
+
+    def todict(self) -> dict:
+        """Dict representation of the shape array
+        """
+
+        return {"shape_array": [x.todict() for x in self.shapes]}
+
+    def shape_table_dict(self) -> dict:
+        """Tabular representation of the array of the shapes.
+
+        This representation can not deal with PolygonShapes. It"s useful to
+        create Pandas dataframe or Arrow Tables.
+
+        Examples
+        --------
+        >>> df_dict = stimulus.shape_table_dict()
+        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
+
+        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
+        """
+
+        if np.any(self.shape_types == PolygonShape.name()):
+            raise RuntimeError("tabular shape representation can not deal with "
+                               "PolygonShapes")
+        d = {"type": self.shape_types.tolist(),
+             "x": self._xy[:, 0].tolist(),
+             "y": self._xy[:, 1].tolist(),
+             "width": self._sizes[:, 0].tolist(),
+             "height": self._sizes[:, 1].tolist(),
+             "attributes": [str(x) for x in self.attributes]
+             }
+        return d
+
+    def sort_by_excentricity(self):
+        """Sort order fo the objects in the array by excentricity, that is, by the
+        distance the center of the convex hull (from close to far)
+        """
+        d = self.distances(Point2D(self.convex_hull.centroid))
+        idx = np.argsort(d)
+        self._xy = self._xy[idx, :]
+        self._sizes = self._sizes[idx]
+        self._shapes = [self._shapes[i] for i in idx]
+        self._clear_cached()
 
     # def round_values(self, decimals: int = 0, int_type: type = np.int64) -> None: #FIXME rounding
     #     """rounds all values"""
