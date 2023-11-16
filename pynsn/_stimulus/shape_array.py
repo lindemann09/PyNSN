@@ -6,7 +6,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import shapely
@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 
 from .._shapes import Dot, Ellipse, Picture, Point2D, PolygonShape, Rectangle
 from .._shapes import ellipse_geometry as ellipse_geo
-from .._shapes.abc_shapes import AbstractCircularShape, AbstractShape
+from .._shapes.abc_shapes import AbstractCircularShape, AbstractShape, AttributeType
 from ..errors import NoSolutionError
 from ..random._rng import WalkAround
 from .convex_hull import ConvexHull
@@ -64,10 +64,9 @@ class ShapeArray(object):
             self._clear_cached()
         self._sizes = val
 
-    def scale(self, factor: Union[float, np.float_]):
-        """scale the size of all shapes"""
-        if factor != 1:
-            self.sizes = self._sizes * factor
+    @property
+    def attributes(self) -> List[AttributeType]:
+        return [s.attribute for s in self._shapes]
 
     @property
     def shapes(self) -> List[AbstractShape]:
@@ -87,10 +86,6 @@ class ShapeArray(object):
             poly = [s.polygon for s in self.shapes]
             self._cache_polygons = np.array(poly)
         return self._cache_polygons
-
-    @property
-    def attributes(self) -> List[Any]:
-        return [s.attribute for s in self._shapes]
 
     @property
     def ids(self) -> Dict[str, NDArray]:
@@ -253,51 +248,6 @@ class ShapeArray(object):
         if not isinstance(self._convex_hull, ConvexHull):
             self._convex_hull = ConvexHull(self.polygons)
         return self._convex_hull
-
-    def csv(self, skip_columns: Optional[Sequence[str]] = None) -> str:
-        """Comma-separated table representation the nsn stimulus
-
-        Args:
-            variable_names: if True first line include the variable names
-            hash_column: if True hash will be included as first column
-            skip_columns: list of column names that should not be exported
-        Returns:
-            CSV representation
-
-        """
-
-        d = self.todict()
-        rtn = ",".join(d.keys()) + "\n"
-        keys = list(d.keys())
-        if skip_columns is not None:
-            for sc in skip_columns:
-                try:
-                    keys.remove(sc)
-                except ValueError:
-                    pass
-
-        for i in range(len(self._shapes)):
-            row = ""
-            for k in keys:
-                row += f"{d[k][i]},"
-            row = row[:-1] + "\n"  # replace comma
-            rtn += row
-        return rtn
-
-    # def iter(self) -> Iterator:
-    #     """iterate over all objects
-
-    #     Parameters
-    #     ----------
-    #     indices: int or iterable of integer
-
-    #     Notes
-    #     -----
-    #     To iterate all object you might all use the class iterator __iter__:
-    #     >>> for obj in my_array:
-    #     >>>    print(obj)
-    #     """
-    #     pass
 
     def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float_]:
         """distances of a shape or Point2D to the elements in the shape array"""

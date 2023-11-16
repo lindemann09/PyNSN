@@ -3,8 +3,9 @@ from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+from pathlib import Path
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Union
+from typing import Optional, Union
 from typing import Sequence, Tuple
 
 import numpy as np
@@ -17,8 +18,12 @@ from .colour import Colour
 
 INCORRECT_COORDINATE = "xy has be an list of two numerals (x, y)"
 
-Coord2D = Tuple[float, float]
-Coord2DLike = Union[Coord2D, Sequence[float], NDArray]
+Numeric = Union[int, float, np.number]
+Coord2D = Tuple[Numeric, Numeric]
+Coord2DLike = Union[Coord2D, Sequence[Numeric], NDArray]
+
+AttributeType = Union[Numeric, Sequence[Numeric], dict, str, np.str_, NDArray,
+                      Sequence[str], Colour, Path, None]
 
 
 class AbstractPoint(metaclass=ABCMeta):
@@ -82,7 +87,7 @@ class AbstractShape(metaclass=ABCMeta):
     def __init__(self,
                  size: Coord2DLike,
                  xy: Coord2DLike,
-                 attribute: Any) -> None:
+                 attribute: AttributeType) -> None:
         self._xy = np.asarray(xy)
         if len(self._xy) != 2:
             raise ValueError(INCORRECT_COORDINATE)
@@ -128,16 +133,16 @@ class AbstractShape(metaclass=ABCMeta):
             shapely.prepare(self._polygon)
 
     @property
-    def attribute(self) -> Any:
+    def attribute(self) -> AttributeType:
         return self._attribute
 
     @attribute.setter
-    def attribute(self, val: Any):
+    def attribute(self, val: AttributeType):
         if val is None:
             self._attribute = None
         else:
             try:
-                self._attribute = Colour(val)
+                self._attribute = Colour(val)  # type: ignore
             except TypeError:
                 self._attribute = val
 

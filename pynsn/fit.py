@@ -1,5 +1,4 @@
 """Fitting module"""
-# pylint: disable=W0212
 import typing as _tp
 import numpy as _np
 import shapely as _shp
@@ -12,7 +11,7 @@ from ._stimulus import NSNStimulus as _NSNStimulus
 from ._stimulus import VisProp as _VisProp
 from .random import generator as _rnd_generator
 
-# FIXME module not yer tested
+# FIXME module not yet tested
 
 
 def total_surface_area(stim: _NSNStimulus,
@@ -24,13 +23,13 @@ def total_surface_area(stim: _NSNStimulus,
     Args:
         value: surface area
     """
-    stim.scale(value / stim.properties.total_surface_area)
+    stim.sizes = stim.sizes * (value / stim.properties.total_surface_area)
 
 
 def total_perimeter(stim: _NSNStimulus,
                     value: _tp.Union[float, _np.float_]) -> None:
     """fit the total parameter of the stimulus"""
-    stim.scale(value / stim.properties.total_perimeter)
+    stim.sizes = stim.sizes * (value / stim.properties.total_perimeter)
 
 
 def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
@@ -125,8 +124,8 @@ def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
 
     # centred points
     old_center = stim.convex_hull.centroid
-    stim.xy = stim._xy - old_center
-    centered_polar = _misc.cartesian2polar(stim._xy)
+    stim.xy = stim.xy - old_center
+    centered_polar = _misc.cartesian2polar(stim.xy)
 
     # iteratively determine scale
     while abs(current - value) > precision:

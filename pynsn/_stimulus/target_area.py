@@ -33,7 +33,7 @@ class TargetArea(object):
                 f"Target area is too small. size={shape.size}")
 
         self._shape = shape
-        if np.any(shape.xy == 0):
+        if np.any(shape.xy != 0):
             warnings.warn("TargetArea does not use shape position. "
                           "Shape Position will be set to (0, 0).",
                           UserWarning)

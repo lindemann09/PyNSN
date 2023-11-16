@@ -1,7 +1,6 @@
 """
 
 """
-# pylint: disable=W0212
 
 from __future__ import annotations
 
@@ -9,7 +8,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import enum
 from collections import OrderedDict
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 import shapely
@@ -130,15 +129,15 @@ class ArrayProperties(object):
             self._shape_arr.ids[Picture.name()]
         )
         if len(idx) > 0:
-            rtn[idx] = self._shape_arr._sizes[idx, 0] * \
-                self._shape_arr._sizes[idx, 1]
+            rtn[idx] = self._shape_arr.sizes[idx, 0] * \
+                self._shape_arr.sizes[idx, 1]
 
         # circular shapes area, Area = pi * r_x * r_y
         idx = np.append(
             self._shape_arr.ids[Dot.name()],
             self._shape_arr.ids[Ellipse.name()])
         if len(idx) > 0:
-            r = self._shape_arr._sizes[idx, :] / 2
+            r = self._shape_arr.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
 
         # polygons area
@@ -163,11 +162,11 @@ class ArrayProperties(object):
         # dots perimeter
         idx = self._shape_arr.ids[Dot.name()]
         if len(idx) > 0:
-            rtn[idx] = np.pi * self._shape_arr._sizes[idx, 0]
+            rtn[idx] = np.pi * self._shape_arr.sizes[idx, 0]
         # ellipse perimeter
         idx = self._shape_arr.ids[Ellipse.name()]
         if len(idx) > 0:
-            rtn[idx] = ellipse_geo.perimeter(self._shape_arr._sizes[idx, :])
+            rtn[idx] = ellipse_geo.perimeter(self._shape_arr.sizes[idx, :])
 
         return rtn
 
@@ -175,7 +174,7 @@ class ArrayProperties(object):
     def center_of_mass(self) -> NDArray:
         """center of mass of all objects"""
         areas = self.areas
-        weighted_sum = np.sum(self._shape_arr._xy *
+        weighted_sum = np.sum(self._shape_arr.xy *
                               np.atleast_2d(areas).T, axis=0)
         return weighted_sum / np.sum(areas)
 
@@ -243,7 +242,7 @@ class ArrayProperties(object):
     def field_area(self) -> np.float_:
         return np.float64(self._shape_arr.convex_hull.area)
 
-    def get(self, prop: VisProp) -> Any:
+    def get(self, prop: VisProp) -> Union[int, np.float_]:
         """returns a visual property"""
         if prop == VisProp.AV_PERIMETER:
             return self.average_perimeter

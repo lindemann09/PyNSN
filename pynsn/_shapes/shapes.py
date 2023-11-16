@@ -12,14 +12,15 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 from shapely import Polygon
 
-from .abc_shapes import AbstractPoint, AbstractShape, Coord2DLike, is_in_shape
+from .abc_shapes import (AbstractPoint, AbstractShape, Coord2DLike,
+                         is_in_shape, AttributeType)
 
 
 class Rectangle(AbstractShape):
@@ -27,7 +28,7 @@ class Rectangle(AbstractShape):
     def __init__(self,
                  size: Coord2DLike,
                  xy: Coord2DLike = (0, 0),
-                 attribute: Any = None
+                 attribute: AttributeType = None
                  ):
         """A Rectangle Shape"""
         super().__init__(size=size, xy=xy, attribute=attribute)
@@ -134,16 +135,16 @@ class Picture(Rectangle):
 
     @property
     def path(self) -> Path:
-        return self._attribute  # type: ignore
+        return Path(self._attribute)  # type: ignore
 
     def file_exists(self) -> bool:
         """Checks if the file exists"""
-        return self.path.isfile()  # type: ignore
+        return self.path.is_file()
 
 
 class PolygonShape(AbstractShape):
 
-    def __init__(self, polygon: Polygon, attribute: Any = None):
+    def __init__(self, polygon: Polygon, attribute: AttributeType = None):
         if not isinstance(polygon, Polygon):
             raise TypeError(
                 f"Polygon has to be a shapely.Polygon and not a {type(polygon)}")

@@ -1,5 +1,5 @@
-from ._shapes.abc_shapes import (AbstractCircularShape, AbstractPoint,
-                                 AbstractShape, Coord2DLike)
+from ._shapes.abc_shapes import (AbstractCircularShape, AbstractPoint, Numeric,
+                                 AbstractShape, Coord2DLike, AttributeType)
 from ._shapes.colour import ColourLike, RGBType
 from ._stimulus.convex_hull import ConvexHull
 from ._stimulus.properties import ArrayProperties

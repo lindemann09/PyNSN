@@ -10,7 +10,7 @@ from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import Any, Optional,  Union
+from typing import Optional,  Union
 from numpy.typing import NDArray
 
 import numpy as np
@@ -67,7 +67,7 @@ class Ellipse(AbstractCircularShape):
     def __init__(self,
                  size: Coord2DLike,
                  xy: Coord2DLike = (0, 0),
-                 attribute: Any = None
+                 attribute: AttributeType = None
                  ) -> None:
         """Initialize a dot
 
@@ -139,7 +139,7 @@ class Dot(AbstractCircularShape):
     def __init__(self,
                  diameter: float,
                  xy: Coord2DLike = (0, 0),
-                 attribute: Any = None
+                 attribute: AttributeType = None
                  ) -> None:
         """Initialize a dot
 
