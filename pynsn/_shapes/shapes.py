@@ -135,7 +135,7 @@ class Picture(Rectangle):
 
     @property
     def path(self) -> Path:
-        return Path(self._attribute)  # type: ignore
+        return self._attribute  # type: ignore
 
     def file_exists(self) -> bool:
         """Checks if the file exists"""
