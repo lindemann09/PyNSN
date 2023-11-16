@@ -1,3 +1,7 @@
+"""types used in pynsn"""
+
+# pylint: disable=W0611
+
 from ._shapes.abc_shapes import (AbstractCircularShape, AbstractPoint, Numeric,
                                  AbstractShape, Coord2DLike, AttributeType)
 from ._shapes.colour import ColourLike, RGBType

@@ -1,9 +1,8 @@
 import numpy as np
-import pygame
 from pynsn import random
 import pynsn
-from pynsn.image import pil_image, pygame_surface
-
+from pynsn.image import pil_image
+from pynsn import shape_table
 
 da = pynsn.Dot(xy=(-20, 120), diameter=5,  attribute=pynsn.Colour("black"))
 db = pynsn.Ellipse(xy=(20, 17), size=(120, 50), attribute="#FF0000")
@@ -51,3 +50,5 @@ stim.add_shapes(pynsn.Dot(diameter=10), n=10, random_position=True)
 
 a = pil_image.create(stim)
 a.save("shapes_test.png")
+
+

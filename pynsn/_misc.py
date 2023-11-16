@@ -16,7 +16,6 @@ IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
 
 def formated_json(d: dict, indent: int = 2) -> str:
-    print(d)
     json_str = orjson.dumps(
         d, option=orjson.OPT_SERIALIZE_NUMPY).decode("utf-8")
     if indent < 1:

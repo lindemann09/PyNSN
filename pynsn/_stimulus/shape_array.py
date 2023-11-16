@@ -189,32 +189,6 @@ class ShapeArray(object):
 
         return {"shape_array": [x.todict() for x in self.shapes]}
 
-    def shape_table_dict(self) -> dict:
-        """Tabular representation of the array of the shapes.
-
-        This representation can not deal with PolygonShapes. It"s useful to
-        create Pandas dataframe or Arrow Tables.
-
-        Examples
-        --------
-        >>> df_dict = stimulus.shape_table_dict()
-        >>> df = pandas.DataFame(df_dict) # Pandas dataframe
-
-        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
-        """
-
-        if np.any(self.shape_types == PolygonShape.name()):
-            raise RuntimeError("tabular shape representation can not deal with "
-                               "PolygonShapes")
-        d = {"type": self.shape_types.tolist(),
-             "x": self._xy[:, 0].tolist(),
-             "y": self._xy[:, 1].tolist(),
-             "width": self._sizes[:, 0].tolist(),
-             "height": self._sizes[:, 1].tolist(),
-             "attributes": [str(x) for x in self.attributes]
-             }
-        return d
-
     def sort_by_excentricity(self):
         """Sort order fo the objects in the array by excentricity, that is, by the
         distance the center of the convex hull (from close to far)

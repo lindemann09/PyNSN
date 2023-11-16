@@ -121,7 +121,7 @@ class NSNStimulus(ShapeArray):
                "colours": self._colours.todict()}
 
         if tabular:
-            rtn.update({"shape_table": self.shape_table_dict()})
+            rtn.update({"shape_table": table_dict(self)})
         else:
             rtn.update(super().todict())
 
@@ -307,3 +307,30 @@ class NSNStimulus(ShapeArray):
                                           ignore_overlaps=ignore_overlaps,
                                           target_area=area,
                                           max_iterations=max_iterations)
+
+
+def table_dict(stim:NSNStimulus) -> dict:
+    """Tabular representation of the array of the shapes.
+
+    This representation can not deal with PolygonShapes. It"s useful to
+    create Pandas dataframe or Arrow Tables.
+
+    Examples
+    --------
+    >>> df_dict = stimulus.table_dict()
+    >>> df = pandas.DataFrame(df_dict) # Pandas dataframe
+
+    >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
+    """
+
+    if np.any(stim.shape_types == PolygonShape.name()):
+        raise RuntimeError("tabular shape representation can not deal with "
+                            "PolygonShapes")
+    d = {"type": stim.shape_types.tolist(),
+            "x": stim.xy[:, 0].tolist(),
+            "y": stim.xy[:, 1].tolist(),
+            "width": stim.sizes[:, 0].tolist(),
+            "height": stim.sizes[:, 1].tolist(),
+            "attributes": [str(x) for x in stim.attributes]
+            }
+    return d
