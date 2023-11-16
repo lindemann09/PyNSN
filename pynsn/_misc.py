@@ -4,7 +4,7 @@ Draw a random number from a beta dirstribution
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-import json
+import orjson
 import sys
 from collections import OrderedDict
 from typing import Any, List, Sequence, Union
@@ -16,7 +16,9 @@ IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
 
 
 def formated_json(d: dict, indent: int = 2) -> str:
-    json_str = json.dumps(d)
+    print(d)
+    json_str = orjson.dumps(
+        d, option=orjson.OPT_SERIALIZE_NUMPY).decode("utf-8")
     if indent < 1:
         return json_str
     rtn = ""

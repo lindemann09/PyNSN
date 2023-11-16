@@ -80,8 +80,8 @@ class AbstractShape(metaclass=ABCMeta):
     """Abstract Shape Type Class"""
 
     def __init__(self,
-                 xy: Coord2DLike,
                  size: Coord2DLike,
+                 xy: Coord2DLike,
                  attribute: Any) -> None:
         self._xy = np.asarray(xy)
         if len(self._xy) != 2:

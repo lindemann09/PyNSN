@@ -33,11 +33,11 @@ class TargetArea(object):
                 f"Target area is too small. size={shape.size}")
 
         self._shape = shape
-        if tuple(shape.xy) != (0, 0):
+        if np.all(shape.xy == 0):
             warnings.warn("TargetArea does not use shape position. "
                           "Shape Position will be set to (0, 0).",
                           UserWarning)
-            self._shape.xy = (0, 0)
+            self._shape.xy = np.zeros(2)
 
         if self._shape.colour.value is None:
             self._shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)

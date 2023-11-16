@@ -25,12 +25,12 @@ from .abc_shapes import AbstractPoint, AbstractShape, Coord2DLike, is_in_shape
 class Rectangle(AbstractShape):
 
     def __init__(self,
-                 xy: Coord2DLike,
                  size: Coord2DLike,
+                 xy: Coord2DLike = (0, 0),
                  attribute: Any = None
                  ):
         """A Rectangle Shape"""
-        super().__init__(xy=xy, size=size, attribute=attribute)
+        super().__init__(size=size, xy=xy, attribute=attribute)
 
     @property
     def polygon(self) -> Polygon:
@@ -108,8 +108,10 @@ class Rectangle(AbstractShape):
 
 class Picture(Rectangle):
 
-    def __init__(self, xy: Coord2DLike, size: Coord2DLike,
-                 path: Union[Path, str]) -> None:
+    def __init__(self,
+                 size: Coord2DLike,
+                 path: Union[Path, str],
+                 xy: Coord2DLike = (0, 0)) -> None:
         """Initialize a Picture
 
         Rectangle can also consist of a picture
@@ -124,7 +126,7 @@ class Picture(Rectangle):
             path the picture file
         """
 
-        super().__init__(xy=xy, size=size, attribute=Path(path))
+        super().__init__(size=size, xy=xy, attribute=Path(path))
 
     def __repr__(self):
         return (f"Picture(xy={self._xy}, size={self.size}, " +
@@ -151,7 +153,7 @@ class PolygonShape(AbstractShape):
         size = b[2:4] - b[0:2]  # [bound width, bound height]
         shapely.prepare(polygon)
 
-        super().__init__(xy=(ctr.x, ctr.y), size=size, attribute=attribute)
+        super().__init__(size=size, xy=(ctr.x, ctr.y), attribute=attribute)
         self._polygon = polygon
 
     @property

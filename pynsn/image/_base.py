@@ -121,20 +121,17 @@ class AbstractArrayDraw(metaclass=ABCMeta):
         colours = nsn_stimulus.colours
         if isinstance(ta_shape, Dot):
             target_area_shape = Dot(
-                xy=(0, 0),
                 diameter=np.ceil(ta_shape.diameter) * aaf,
                 attribute=colours.target_area.value
             )
         elif isinstance(ta_shape, Ellipse):
             target_area_shape = Ellipse(
-                xy=(0, 0),
                 size=np.ceil(ta_shape.size) * aaf,
                 attribute=colours.target_area.value
             )
 
         elif isinstance(ta_shape, Rectangle):
             target_area_shape = Rectangle(
-                xy=(0, 0),
                 size=np.ceil(ta_shape.size) * aaf,
                 attribute=colours.target_area.value
             )

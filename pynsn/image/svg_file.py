@@ -36,7 +36,7 @@ class _SVGDraw(_base.AbstractArrayDraw):
         size = (f"{image_size[0]}px", f"{image_size[1]}px")
         image = _svg.Drawing(size=size, filename=kwargs['filename'])
         if background_colour is not None:
-            bkg_rect = _shapes.Rectangle(xy=(0, 0), size=image_size,
+            bkg_rect = _shapes.Rectangle(size=image_size,
                                          attribute=background_colour)
             _SVGDraw.draw_shape(image=image, shape=bkg_rect, opacity=100,
                                 scaling_factor=None)

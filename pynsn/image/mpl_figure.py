@@ -67,7 +67,7 @@ class _MatplotlibDraw(_base.AbstractArrayDraw):
                 xy=shape.xy, radius=shape.diameter / 2, color=col.value, lw=0)
         elif isinstance(shape, _shapes.Rectangle):
             plt_shape = _plt.Rectangle(
-                xy=shape.left_bottom.tolist(), width=shape.width, height=shape.height,
+                size=shape.size,  xy=shape.left_bottom.tolist(),
                 color=col.value, lw=0)
         else:
             raise NotImplementedError(

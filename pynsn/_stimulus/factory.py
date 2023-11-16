@@ -42,7 +42,7 @@ class StimulusFactory(object):
         """
         if not isinstance(target_area_shape, AbstractShape):
             # default target area
-            target_area_shape = Rectangle(xy=(0, 0), size=(400, 400))
+            target_area_shape = Rectangle(size=(400, 400))
         self._stim = NSNStimulus(target_area_shape=target_area_shape,
                                  min_distance=min_distance,
                                  min_distance_target_area=min_distance_target_area)

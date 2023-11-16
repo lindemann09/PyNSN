@@ -109,7 +109,7 @@ class RndDot(AbstractRndShape):
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Dot(xy=(0, 0), diameter=d, attribute=a)
+        return [Dot(diameter=d, attribute=a)
                 for d, a in zip(self._diameter.sample(n), attr)]
 
 
@@ -215,7 +215,7 @@ class RndRectangle(_RandShapeWidthHeight):
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Rectangle(xy=(0, 0), size=s, attribute=a)
+        return [Rectangle(size=s, attribute=a)
                 for s, a in zip(self._sample_sizes(n), attr)]
 
 
@@ -227,8 +227,7 @@ class RndEllipse(_RandShapeWidthHeight):
         else:
             attr = self._attributes.sample(n)
         size = self._sample_sizes(n)
-        return [Ellipse(xy=(0, 0), size=s, attribute=a)
-                for s, a in zip(size, attr)]
+        return [Ellipse(size=s, attribute=a) for s, a in zip(size, attr)]
 
 
 class RndPolygonShape(_RandShapeWidthHeight):
@@ -311,5 +310,5 @@ class RndPicture(_RandShapeWidthHeight):
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Picture(xy=(0, 0), size=s,
+        return [Picture(size=s,
                         path=a) for s, a in zip(self._sample_sizes(n), attr)]  # type: ignore

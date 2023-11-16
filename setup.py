@@ -15,7 +15,8 @@ if _vi.major < 3 or _vi.minor < 8:
     raise RuntimeError(f"{PACKAGE_NAME} requires Python 3.8 or larger.")
 
 install_requires = ["numpy>=1.26",
-                    "shapely==2.0",
+                    "shapely>=2.0",
+                    "orjson>=3.9",
                     "Pillow>=10.0"]
 
 extras_require = {

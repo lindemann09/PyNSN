@@ -65,8 +65,8 @@ class Point2D(AbstractPoint):
 class Ellipse(AbstractCircularShape):
 
     def __init__(self,
-                 xy: Coord2DLike,
                  size: Coord2DLike,
+                 xy: Coord2DLike = (0, 0),
                  attribute: Any = None
                  ) -> None:
         """Initialize a dot
@@ -77,7 +77,7 @@ class Ellipse(AbstractCircularShape):
         size : x and y diameter
         attribute : attribute (string, optional)
         """
-        super().__init__(xy=xy, size=size, attribute=attribute)
+        super().__init__(size=size, xy=xy,  attribute=attribute)
 
     @property
     def size(self) -> NDArray:
@@ -137,8 +137,8 @@ class Ellipse(AbstractCircularShape):
 class Dot(AbstractCircularShape):
 
     def __init__(self,
-                 xy: Coord2DLike,
                  diameter: float,
+                 xy: Coord2DLike = (0, 0),
                  attribute: Any = None
                  ) -> None:
         """Initialize a dot
@@ -149,7 +149,7 @@ class Dot(AbstractCircularShape):
         diameter : numeric
         attribute : attribute (string, optional)
         """
-        super().__init__(xy=xy, size=np.array((diameter, diameter)),
+        super().__init__(size=np.array((diameter, diameter)), xy=xy,
                          attribute=attribute)
 
     @property

@@ -22,7 +22,7 @@ class AbstractMultivarDistr(AbstractDistribution, metaclass=ABCMeta):
         y_range: relative bottom, top
         """
 
-        self._mu = np.array((0, 0))
+        self._mu = np.zeros(2)
         self._x_minmax = np.array((-1*np.inf, np.inf))
         self._y_minmax = np.array((-1*np.inf, np.inf))
         self._max_radius = np.inf
