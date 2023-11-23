@@ -17,8 +17,9 @@ Project homepage: https://github.com/lindemann09/PyNSN
 ## Dependencies
 
 * Python 3 (>=3.8)
-* numpy (>=1.20)
-* scipy (>=1.0)
+* numpy (>=1.26)
+* shapely (>=2.0)
+* orjson (>=3.9)
 * Pillow (>=5.0)
 
 ### Optional requirements
@@ -28,7 +29,7 @@ some features:
 
 * matplotlib (>=3.2)
 * svgwrite (>=1.4)
-* pygame (>=1.9)
+* pygame (>=2)
 * expyriment (>=0.9)
 
 
