@@ -9,7 +9,7 @@ PyNSN
 [![Python Version](https://img.shields.io/pypi/pyversions/pynsn?style=flat)](https://www.python.org)
 [![PyPI](https://img.shields.io/pypi/v/pynsn?style=flat)](https://pypi.org/project/pynsn/)
 
-Oliver Lindemann (lindemann@cognitive-psychology.eu)
+(c) Oliver Lindemann (lindemann@cognitive-psychology.eu)
 
 Project homepage: https://github.com/lindemann09/PyNSN
 
