@@ -285,5 +285,5 @@ def fit(stim: _NSNStimulus,
         return coverage(stim, value=value)
     else:
         raise NotImplementedError(
-            f"Not implemented for {property_flag.label()}"
+            f"Not implemented for {str(property_flag)}"
         )

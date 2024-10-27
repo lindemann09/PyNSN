@@ -112,25 +112,25 @@ class NSNStimulus(ShapeArray):
             pass
         return rtn.hexdigest()
 
-    def todict(self, tabular: bool = True) -> dict:
+    def to_dict(self, tabular: bool = True) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
-               "target_area": self.target_area.todict(),
+               "target_area": self.target_area.to_dict(),
                "min_distance": self.min_distance,
-               "colours": self._colours.todict()}
+               "colours": self._colours.to_dict()}
 
         if tabular:
-            rtn.update({"shape_table": table_dict(self)})
+            rtn.update({"shape_table": self.table_dict()})
         else:
-            rtn.update(super().todict())
+            rtn.update(super().to_dict())
 
         return rtn
 
-    def tojson(self,
-               filename: str = "",
-               indent: int = 2, tabular: bool = True) -> str:
-        d = self.todict(tabular=tabular)
+    def to_json(self,
+                filename: str = "",
+                indent: int = 2, tabular: bool = True) -> str:
+        d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if filename:
             with open(filename, "w", encoding="utf-8") as fl:
@@ -308,29 +308,28 @@ class NSNStimulus(ShapeArray):
                                           target_area=area,
                                           max_iterations=max_iterations)
 
+    def table_dict(self) -> dict:
+        """Tabular representation of the array of the shapes.
 
-def table_dict(stim:NSNStimulus) -> dict:
-    """Tabular representation of the array of the shapes.
+        This representation can not deal with PolygonShapes. It"s useful to
+        create Pandas dataframe or Arrow Tables.
 
-    This representation can not deal with PolygonShapes. It"s useful to
-    create Pandas dataframe or Arrow Tables.
+        Examples
+        --------
+        >>> df_dict = stimulus.table_dict()
+        >>> df = pandas.DataFrame(df_dict) # Pandas dataframe
 
-    Examples
-    --------
-    >>> df_dict = stimulus.table_dict()
-    >>> df = pandas.DataFrame(df_dict) # Pandas dataframe
+        >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
+        """
 
-    >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
-    """
-
-    if np.any(stim.shape_types == PolygonShape.name()):
-        raise RuntimeError("tabular shape representation can not deal with "
-                            "PolygonShapes")
-    d = {"type": stim.shape_types.tolist(),
-            "x": stim.xy[:, 0].tolist(),
-            "y": stim.xy[:, 1].tolist(),
-            "width": stim.sizes[:, 0].tolist(),
-            "height": stim.sizes[:, 1].tolist(),
-            "attributes": [str(x) for x in stim.attributes]
-            }
-    return d
+        if np.any(self.shape_types == PolygonShape.name()):
+            raise RuntimeError("tabular shape representation can not deal with "
+                               "PolygonShapes")
+        d = {"type": self.shape_types.tolist(),
+             "x": self.xy[:, 0].tolist(),
+             "y": self.xy[:, 1].tolist(),
+             "width": self.sizes[:, 0].tolist(),
+             "height": self.sizes[:, 1].tolist(),
+             "attributes": [str(x) for x in self.attributes]
+             }
+        return d

@@ -4,12 +4,12 @@ Draw a random number from a beta dirstribution
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-import orjson
 import sys
 from collections import OrderedDict
 from typing import Any, List, Sequence, Union
 
 import numpy as np
+import orjson
 from numpy.typing import ArrayLike, NDArray
 
 IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
@@ -98,7 +98,7 @@ def is_interactive_mode():
 
     """
     try:
-        __IPYTHON__
+        __IPYTHON__  # type: ignore
         return True
     except NameError:
         pass

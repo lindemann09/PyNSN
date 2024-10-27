@@ -80,11 +80,10 @@ class ShapeArray(object):
         return np.array([s.name() for s in self._shapes])
 
     @property
-    def polygons(self) -> NDArray[shapely.Polygon]:
+    def polygons(self) -> List[shapely.Polygon]:
         if self._cache_polygons is None:
             # build polygons
-            poly = [s.polygon for s in self.shapes]
-            self._cache_polygons = np.array(poly)
+            self._cache_polygons = [s.polygon for s in self.shapes]
         return self._cache_polygons
 
     @property
@@ -183,11 +182,11 @@ class ShapeArray(object):
 
         return [self.shapes[x] for x in ids]
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """Dict representation of the shape array
         """
 
-        return {"shape_array": [x.todict() for x in self.shapes]}
+        return {"shape_array": [x.to_dict() for x in self.shapes]}
 
     def sort_by_excentricity(self):
         """Sort order fo the objects in the array by excentricity, that is, by the

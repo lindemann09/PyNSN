@@ -10,6 +10,8 @@ from expyriment.stimuli import Canvas as _Canvas
 from . import _base
 from . import pil_image as _pil_image
 
+# TODO not tested
+
 
 class ExprimentNSNStimulus(_Canvas):
 

@@ -17,11 +17,12 @@ from .._shapes.shapes import PolygonShape
 ConstantLike = Union[float, int, str, dict, PolygonShape, Colour]
 CategoricalLike = Union[Sequence, NDArray]
 
+
 class AbstractDistribution(metaclass=ABCMeta):
     """Base class for all distribution"""
 
     @abstractmethod
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """Dict representation of the distribution"""
         return {"type": type(self).__name__}
 
@@ -62,6 +63,7 @@ class AbstractDistribution(metaclass=ABCMeta):
         else:
             return hist(samples, bins=100)[2]
 
+
 class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
     pass
 
@@ -80,9 +82,9 @@ class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
             raise TypeError(
                 f"min_max {minmax} has to be a tuple of two values")
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """Dict representation of the distribution"""
-        d = super().todict()
+        d = super().to_dict()
         d.update({"minmax": self._minmax.tolist()})
         return d
 
@@ -130,8 +132,8 @@ class Triangle(AbstractContinuousDistr):
         return _rng.generator.triangular(left=self._minmax[0], right=self._minmax[1],
                                          mode=self._mode, size=n)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"mode": self._mode})
         return d
 
@@ -151,8 +153,8 @@ class _AbstractDistrMuSigma(AbstractContinuousDistr, metaclass=ABCMeta):
             raise ValueError(f"mode ({mu}) has to be inside the defined "
                              f"min_max range ({self._minmax})")
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"mu": self._mu,
                   "sigma": self._sigma})
         return d
@@ -336,8 +338,8 @@ class Categorical(AbstractUnivarDistr):
 
         return np.asarray(dist)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"levels": self._levels.tolist(),
                   "weights": self._weights.tolist(),
                   "exact": self.exact_weighting})
@@ -361,6 +363,6 @@ class Constant(AbstractUnivarDistr):
     def sample(self, n: int) -> NDArray:
         return np.full(n, self.value)
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         return {"type": "Constant",
                 "value": self.value}

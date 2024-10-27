@@ -12,7 +12,7 @@ dynamic = ["version", "description"]
 requires-python = ">=3.8"
 dependencies =  ["numpy>=1.26",
                     "shapely>=2.0",
-                    "orjson>=3.9",
+                    "orjson>=3.10",
                     "Pillow>=10.0"]
 
 [project.optional-dependencies]

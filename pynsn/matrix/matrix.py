@@ -5,19 +5,21 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from .nsn_stimulus import NSNStimulus
-from .shape_array import ShapeArray
+from .._stimulus.nsn_stimulus import NSNStimulus
+from .._stimulus.shape_array import ShapeArray
 
 
-def distances(shape_array:ShapeArray) -> NDArray:
+def distances(shape_array: ShapeArray) -> NDArray:
     """Matrix with the distances between the shapes in the array"""
     return _relation_matrix(shape_array, what=0)
 
-def dwithin(shape_array:ShapeArray, distance: float) -> NDArray:
-    """Matrix with the booleans indication dwith between the shapes in the array"""
+
+def dwithin(shape_array: ShapeArray, distance: float) -> NDArray:
+    """Matrix with the booleans indication dwithin between the shapes in the array"""
     return _relation_matrix(shape_array, what=1, para=distance)
 
-def overlaps(shape_array:ShapeArray, min_distance: Optional[float] = None) -> NDArray:
+
+def overlaps(shape_array: ShapeArray, min_distance: Optional[float] = None) -> NDArray:
     if min_distance is None:
         if isinstance(shape_array, NSNStimulus):
             min_distance = shape_array.min_distance
@@ -26,7 +28,8 @@ def overlaps(shape_array:ShapeArray, min_distance: Optional[float] = None) -> ND
 
     return dwithin(shape_array, distance=min_distance)
 
-def _relation_matrix(arr:ShapeArray, what: int, para: float = 0) -> NDArray:
+
+def _relation_matrix(arr: ShapeArray, what: int, para: float = 0) -> NDArray:
     """helper function returning the relation between polygons
     0 = distance
     1 = dwithin

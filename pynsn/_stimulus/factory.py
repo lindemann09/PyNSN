@@ -13,7 +13,7 @@ from ..random._random_shape import AbstractRndShape
 from .nsn_stimulus import NSNStimulus
 from .stimulus_colours import StimulusColours
 
-# todo incremental_random_dot_array
+# TODO  incremental_random_dot_array
 
 
 class StimulusFactory(object):
@@ -83,23 +83,23 @@ class StimulusFactory(object):
                            ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
         return rtn
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the stimulus factory"""
         rtn = {}
         rtn.update({"type": self.__class__.__name__})
-        base_dict = self._stim.todict()
+        base_dict = self._stim.to_dict()
         del base_dict["shape_table"]
         del base_dict["hash"]
         rtn.update(base_dict)
         for x, s in enumerate(self._shapes):
             d = {"n": s[0]}
-            d.update(s[1].todict())
+            d.update(s[1].to_dict())
             rtn.update({f"shape{x}": d})
         return rtn
 
-    def tojson(self, filename: str = "", indent: int = 2) -> str:
+    def to_json(self, filename: str = "", indent: int = 2) -> str:
         """json representation of the stimulus factory"""
-        json_str = formated_json(self.todict(), indent=indent)
+        json_str = formated_json(self.to_dict(), indent=indent)
         if filename:
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)

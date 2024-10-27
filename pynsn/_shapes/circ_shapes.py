@@ -18,7 +18,7 @@ import shapely
 from shapely import Point, Polygon, affinity
 
 from .abc_shapes import AbstractCircularShape, AbstractPoint, \
-    AbstractShape, is_in_shape, Coord2DLike
+    AbstractShape, is_in_shape, Coord2DLike, AttributeType
 
 
 class Point2D(AbstractPoint):
@@ -57,7 +57,7 @@ class Point2D(AbstractPoint):
                                     min_dist_boarder=min_dist_boarder)
         else:
             return is_in_shape(self,
-                               b=shape.polygon,
+                               b=shape,
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
@@ -128,8 +128,8 @@ class Ellipse(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"size": self.size.tolist()})
         return d
 
@@ -194,8 +194,8 @@ class Dot(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"diameter": self.diameter})
         return d
 

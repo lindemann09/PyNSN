@@ -48,7 +48,6 @@ class AbstractPoint(metaclass=ABCMeta):
         return Point(self._xy)
 
     @classmethod
-    @property
     def name(cls) -> str:
         return str(cls.__name__)
 
@@ -75,7 +74,7 @@ class AbstractPoint(metaclass=ABCMeta):
         """True is shapes fully inside the shapes (dist)
         """
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the object"""
         return {"type": str(self.__class__.__name__),
                 "xy": self.xy.tolist()}
@@ -185,7 +184,7 @@ class AbstractShape(metaclass=ABCMeta):
 
     ## abstract methods ###
     @abstractmethod
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the object"""
         return {"type": self.name(),
                 "xy": self.xy.tolist(),

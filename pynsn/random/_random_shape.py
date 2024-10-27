@@ -54,15 +54,15 @@ class AbstractRndShape(metaclass=ABCMeta):
         return str(cls.__name__)
 
     def __repr__(self) -> str:
-        d = self.todict()
+        d = self.to_dict()
         del d['type']
         return f"{self.name()}({d})"
 
     @abstractmethod
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the object"""
         if isinstance(self.attributes, AbstractUnivarDistr):
-            attr = self.attributes.todict()
+            attr = self.attributes.to_dict()
         elif self.attributes is None:
             attr = None
         else:
@@ -94,10 +94,10 @@ class RndDot(AbstractRndShape):
     def diameter(self) -> Optional[AbstractUnivarDistr]:
         return self._diameter
 
-    def todict(self) -> dict:
-        rtn = super().todict()
+    def to_dict(self) -> dict:
+        rtn = super().to_dict()
         if isinstance(self._diameter, AbstractUnivarDistr):
-            d = self._diameter.todict()
+            d = self._diameter.to_dict()
         else:
             d = None
         rtn.update({"diameter": d})
@@ -173,20 +173,20 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
         """Distribution of proportion parameter (width/height)"""
         return self._size_proportion
 
-    def todict(self) -> dict:
-        rtn = super().todict()
+    def to_dict(self) -> dict:
+        rtn = super().to_dict()
         if self._width is None:
             w = None
         else:
-            w = self._width.todict()
+            w = self._width.to_dict()
         if self._height is None:
             h = None
         else:
-            h = self._height.todict()
+            h = self._height.to_dict()
         if self._size_proportion is None:
             s = None
         else:
-            s = self._size_proportion.todict()
+            s = self._size_proportion.to_dict()
         rtn.update({"width": w, "height": h, "size_proportion": s})
         return rtn
 
