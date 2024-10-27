@@ -4,17 +4,13 @@ venv:
 	python -m venv venv
 	. venv/bin/activate && \
 	pip install pip -U && \
-	pip install setuptools wheel && \
+	pip install flit && \
 	pip install -r requirements.txt && \
 	pip list
 
 build: venv
 	. venv/bin/activate && \
 	python setup.py sdist bdist_wheel
-
-publish:
-	twine check dist/*
-	twine upload dist/*
 
 docker_unittest:
 	docker build -t pynsn38 -f tests/Dockerfile-py38 . && \

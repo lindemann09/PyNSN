@@ -13,8 +13,6 @@ _HEXDEC = {v: int(v, 16)
            for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 RGBType = Tuple[int, int, int]
 
-ColourLike = Union[str, RGBType, Sequence[float], None]
-
 
 @total_ordering
 class Colour(object):
@@ -61,7 +59,7 @@ class Colour(object):
             'yellowgreen', 'expyriment_orange', 'expyriment_purple'
     """
 
-    def __init__(self, colour: Union[ColourLike, Colour]) -> None:
+    def __init__(self, colour: Union[str, RGBType, Sequence[float], None, Colour]) -> None:
         self._value = None
         self.set(colour)
 
@@ -88,7 +86,7 @@ class Colour(object):
         """Hextriplet code of the colour or None"""
         return self._value
 
-    def set(self, val: Union[ColourLike, Colour]) -> None:
+    def set(self, val: Union[str, RGBType, Sequence[float], None, Colour]) -> None:
         """Set the colour values
 
         Args:
@@ -328,3 +326,6 @@ class Colour(object):
         "expyriment_orange": "#FF9632",
         "expyriment_purple": "#A046FA",
     }
+
+
+ColourLike = Union[Colour, str, RGBType, Sequence[float], None]

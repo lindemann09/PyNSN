@@ -18,7 +18,8 @@ rnd_ell = random.RndRectangle(width=(40.8, 10.4), height=(20, 50),
 rnd_dot = random.RndDot(diameter=(40.8, 10),
                         attributes=["green", "black", "orange", "red"])
 
-if False:
+if True:
+
     nsn = pynsn.NSNStimulus(
         # target_area_shape=pynsn.Dot(diameter=500, attribute="#00FFFF"),
         target_area_shape=pynsn.Rectangle(size=(400, 500)),

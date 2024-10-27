@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from typing import Optional, Union
 
 from .. import _misc, defaults
 from .._shapes.colour import Colour, ColourLike
@@ -8,12 +7,12 @@ from .._shapes.colour import Colour, ColourLike
 class StimulusColours(object):
     def __init__(
         self,
-        target_area: Union[Colour, ColourLike] = defaults.COLOUR_TARGET_AREA,
-        object_default: Union[Colour, ColourLike] = defaults.COLOUR_OBJECT,
-        background: Optional[Colour] = None,
-        convex_hull: Optional[Colour] = None,
-        center_of_field_area: Optional[Colour] = None,
-        center_of_mass: Optional[Colour] = None,
+        target_area: ColourLike = defaults.COLOUR_TARGET_AREA,
+        object_default: ColourLike = defaults.COLOUR_OBJECT,
+        background: ColourLike = None,
+        convex_hull: ColourLike = None,
+        center_of_field_area: ColourLike = None,
+        center_of_mass: ColourLike = None,
         opacity_object: float = defaults.OPACITY_OBJECT,
         opacity_guides: float = defaults.OPACITY_GUIDES
     ):
@@ -52,7 +51,7 @@ class StimulusColours(object):
         return self._target_area
 
     @target_area.setter
-    def target_area(self, val: Colour):
+    def target_area(self, val: ColourLike):
         self._target_area = Colour(val)
 
     @property
@@ -61,7 +60,7 @@ class StimulusColours(object):
         return self._convex_hull
 
     @convex_hull.setter
-    def convex_hull(self, val: Colour):
+    def convex_hull(self, val: ColourLike):
         self._convex_hull = Colour(val)
 
     @property
@@ -70,7 +69,7 @@ class StimulusColours(object):
         return self._center_of_field_area
 
     @center_of_field_area.setter
-    def center_of_field_area(self, val: Colour):
+    def center_of_field_area(self, val: ColourLike):
         self._center_of_field_area = Colour(val)
 
     @property
@@ -79,7 +78,7 @@ class StimulusColours(object):
         return self._center_of_mass
 
     @center_of_mass.setter
-    def center_of_mass(self, val: Colour):
+    def center_of_mass(self, val: ColourLike):
         self._center_of_mass = Colour(val)
 
     @property
@@ -88,7 +87,7 @@ class StimulusColours(object):
         return self._background
 
     @background.setter
-    def background(self, val: Colour):
+    def background(self, val: ColourLike):
         self._background = Colour(val)
 
     @property
@@ -97,7 +96,7 @@ class StimulusColours(object):
         return self._object_default
 
     @object_default.setter
-    def object_default(self, val: Colour):
+    def object_default(self, val: ColourLike):
         self._object_default = Colour(val)
 
     @property
