@@ -105,7 +105,7 @@ class TargetArea(object):
             if self.is_object_inside(shape):
                 return shape
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """dict representation of the target area"""
-        return {"shape": self.shape.to_dict(),
+        return {"shape": self.shape.todict(),
                 "min_dist_boarder": self.min_dist_boarder}

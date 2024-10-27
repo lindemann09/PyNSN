@@ -1,4 +1,4 @@
-# minim distance between objects
+# minim distance between shapes
 MIN_DISTANCE = 2
 
 # Colours

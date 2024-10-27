@@ -34,12 +34,12 @@ def total_perimeter(stim: _NSNStimulus,
 
 def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
     """fit the average parameter of the stimulus"""
-    total_perimeter(stim, value * stim.n_objects)
+    total_perimeter(stim, value * stim.n_shapes)
 
 
 def average_surface_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
     """fits the average surface area of the stimulus"""
-    total_surface_area(stim, stim.n_objects * value)
+    total_surface_area(stim, stim.n_shapes * value)
 
 
 def numerosity(stim: _NSNStimulus, value: int,
@@ -51,12 +51,12 @@ def numerosity(stim: _NSNStimulus, value: int,
 
     # make a copy for the deviant
     if value <= 0:
-        stim.clear()
+        stim.shapes_clear()
     else:
         # add or remove random dots
-        change_numerosity = value - stim.n_objects
+        change_numerosity = value - stim.n_shapes
         if keep_convex_hull and change_numerosity < 0:
-            # find objects touching the convex hull (ch_shapes)
+            # find shapes touching the convex hull (ch_shapes)
             ring = _shp.get_exterior_ring(stim.convex_hull.polygon)
             ch_shapes = _np.flatnonzero(_shp.intersects(
                 stim.polygons, ring))
@@ -68,7 +68,7 @@ def numerosity(stim: _NSNStimulus, value: int,
                 # remove dots
                 if ch_shapes is not None:
                     # find a random object that is not in convex hull
-                    rnd_seq = _np.arange(stim.n_objects)
+                    rnd_seq = _np.arange(stim.n_shapes)
                     _rnd_generator.shuffle(rnd_seq)
                     delete_id = None
                     for x in rnd_seq:
@@ -79,13 +79,13 @@ def numerosity(stim: _NSNStimulus, value: int,
                         raise _NoSolutionError(
                             "Can't increase numerosity, while keeping field area.")
                 else:
-                    delete_id = _rnd_generator.integers(0, stim.n_objects)
+                    delete_id = _rnd_generator.integers(0, stim.n_shapes)
 
                 stim.delete(delete_id)
 
             else:
                 # add dot: copy a random dot
-                clone_id = _rnd_generator.integers(0, stim.n_objects)
+                clone_id = _rnd_generator.integers(0, stim.n_shapes)
                 rnd_object = stim.shapes[clone_id]
                 try:
                     rnd_object = stim.random_free_position(
@@ -114,7 +114,7 @@ def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
         precision = _defaults.FIT_SPACING_PRECISION
 
     current = stim.convex_hull.area
-    if stim.n_objects < 3 or current == 0:
+    if stim.n_shapes < 3 or current == 0:
         return None  # not defined
 
     scale = 1  # find good scale
@@ -198,7 +198,7 @@ def log_spacing(stim: _NSNStimulus,
     -------
 
     """
-    log_fa = 0.5 * value + 0.5 * _np.log2(stim.n_objects)
+    log_fa = 0.5 * value + 0.5 * _np.log2(stim.n_shapes)
     field_area(stim, value=2**log_fa, precision=precision)
 
 
@@ -214,7 +214,7 @@ def log_size(stim: _NSNStimulus,
     -------
 
     """
-    log_tsa = 0.5 * value + 0.5 * _np.log2(stim.n_objects)
+    log_tsa = 0.5 * value + 0.5 * _np.log2(stim.n_shapes)
     total_surface_area(stim, value=2**log_tsa)
 
 
@@ -231,7 +231,7 @@ def sparsity(stim: _NSNStimulus,
     -------
 
     """
-    field_area(stim, value=value * stim.n_objects, precision=precision)
+    field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
 def fit(stim: _NSNStimulus,

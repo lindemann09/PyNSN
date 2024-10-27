@@ -50,24 +50,24 @@ class AbstractRndShape(metaclass=ABCMeta):
         return self._attributes
 
     @classmethod
-    def name(cls) -> str:
-        return str(cls.__name__)
+    def shape_type(cls) -> str:
+        return cls.__name__
 
     def __repr__(self) -> str:
-        d = self.to_dict()
+        d = self.todict()
         del d['type']
-        return f"{self.name()}({d})"
+        return f"{self.shape_type()}({d})"
 
     @abstractmethod
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """dict representation of the object"""
         if isinstance(self.attributes, AbstractUnivarDistr):
-            attr = self.attributes.to_dict()
+            attr = self.attributes.todict()
         elif self.attributes is None:
             attr = None
         else:
             attr = str(self.attributes)
-        return {"type": self.name(), "attr": attr}
+        return {"type": self.shape_type(), "attr": attr}
 
     @abstractmethod
     def sample(self, n: int = 1) -> List[AbstractShape]:
@@ -94,10 +94,10 @@ class RndDot(AbstractRndShape):
     def diameter(self) -> Optional[AbstractUnivarDistr]:
         return self._diameter
 
-    def to_dict(self) -> dict:
-        rtn = super().to_dict()
+    def todict(self) -> dict:
+        rtn = super().todict()
         if isinstance(self._diameter, AbstractUnivarDistr):
-            d = self._diameter.to_dict()
+            d = self._diameter.todict()
         else:
             d = None
         rtn.update({"diameter": d})
@@ -173,20 +173,20 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
         """Distribution of proportion parameter (width/height)"""
         return self._size_proportion
 
-    def to_dict(self) -> dict:
-        rtn = super().to_dict()
+    def todict(self) -> dict:
+        rtn = super().todict()
         if self._width is None:
             w = None
         else:
-            w = self._width.to_dict()
+            w = self._width.todict()
         if self._height is None:
             h = None
         else:
-            h = self._height.to_dict()
+            h = self._height.todict()
         if self._size_proportion is None:
             s = None
         else:
-            s = self._size_proportion.to_dict()
+            s = self._size_proportion.todict()
         rtn.update({"width": w, "height": h, "size_proportion": s})
         return rtn
 
@@ -233,6 +233,7 @@ class RndEllipse(_RandShapeWidthHeight):
 class RndPolygonShape(_RandShapeWidthHeight):
 
     def __init__(self,
+                 # type: ignore
                  polygons: Union[shapely.Polygon, Sequence[shapely.Polygon], NDArray[shapely.Polygon]],
                  width: Optional[DistributionLike] = None,
                  height: Optional[DistributionLike] = None,

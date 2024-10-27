@@ -95,7 +95,7 @@ class ArrayProperties(object):
         if not short_format:
             rtn = ""
             first = True
-            for k, v in self.to_dict().items():
+            for k, v in self.todict().items():
                 if first and len(rtn) == 0:
                     rtn = "- "
                     first = False
@@ -115,6 +115,9 @@ class ArrayProperties(object):
             )
         return rtn.rstrip()
 
+    def __repr__(self) -> str:
+        return self.totext(short_format=True)
+
     def __str__(self) -> str:
         return self.totext()
 
@@ -122,11 +125,11 @@ class ArrayProperties(object):
     def areas(self) -> NDArray[np.float_]:
         """area of each object"""
 
-        rtn = np.full(self._shape_arr.n_objects, np.nan)
+        rtn = np.full(self._shape_arr.n_shapes, np.nan)
         # rects and polygons
         idx = np.append(
-            self._shape_arr.ids[Rectangle.name()],
-            self._shape_arr.ids[Picture.name()]
+            self._shape_arr.get_ids(Rectangle.shape_type()),
+            self._shape_arr.get_ids(Picture.shape_type())
         )
         if len(idx) > 0:
             rtn[idx] = self._shape_arr.sizes[idx, 0] * \
@@ -134,14 +137,14 @@ class ArrayProperties(object):
 
         # circular shapes area, Area = pi * r_x * r_y
         idx = np.append(
-            self._shape_arr.ids[Dot.name()],
-            self._shape_arr.ids[Ellipse.name()])
+            self._shape_arr.get_ids(Dot.shape_type()),
+            self._shape_arr.get_ids(Ellipse.shape_type()))
         if len(idx) > 0:
             r = self._shape_arr.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
 
         # polygons area
-        idx = self._shape_arr.ids[PolygonShape.name()]
+        idx = self._shape_arr.get_ids(PolygonShape.shape_type())
         if len(idx) > 0:
             rtn[idx] = shapely.area(self._shape_arr.polygons[idx])
         return rtn
@@ -150,21 +153,21 @@ class ArrayProperties(object):
     def perimeter(self) -> NDArray[np.float_]:
         """Perimeter for each object"""
 
-        rtn = np.full(self._shape_arr.n_objects, np.nan)
+        rtn = np.full(self._shape_arr.n_shapes, np.nan)
 
         idx = np.concatenate((
-            self._shape_arr.ids[Rectangle.name()],
-            self._shape_arr.ids[Picture.name()],
-            self._shape_arr.ids[PolygonShape.name()]
+            self._shape_arr.get_ids(Rectangle.shape_type()),
+            self._shape_arr.get_ids(Picture.shape_type()),
+            self._shape_arr.get_ids(PolygonShape.shape_type())
         ))
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shape_arr.polygons[idx])
         # dots perimeter
-        idx = self._shape_arr.ids[Dot.name()]
+        idx = self._shape_arr.get_ids(Dot.shape_type())
         if len(idx) > 0:
             rtn[idx] = np.pi * self._shape_arr.sizes[idx, 0]
         # ellipse perimeter
-        idx = self._shape_arr.ids[Ellipse.name()]
+        idx = self._shape_arr.get_ids(Ellipse.shape_type())
         if len(idx) > 0:
             rtn[idx] = ellipse_geo.perimeter(self._shape_arr.sizes[idx, :])
 
@@ -172,7 +175,7 @@ class ArrayProperties(object):
 
     @property
     def center_of_mass(self) -> NDArray:
-        """center of mass of all objects"""
+        """center of mass of all shapes"""
         areas = self.areas
         weighted_sum = np.sum(self._shape_arr.xy *
                               np.atleast_2d(areas).T, axis=0)
@@ -181,7 +184,7 @@ class ArrayProperties(object):
     @property
     def numerosity(self) -> int:
         """number of shapes"""
-        return self._shape_arr.n_objects
+        return self._shape_arr.n_shapes
 
     @property
     def total_surface_area(self) -> np.float_:
@@ -189,7 +192,7 @@ class ArrayProperties(object):
 
     @property
     def average_surface_area(self) -> np.float_:
-        if self._shape_arr.n_objects == 0:
+        if self._shape_arr.n_shapes == 0:
             return np.float64(np.nan)
         return np.nanmean(self.areas)
 
@@ -199,7 +202,7 @@ class ArrayProperties(object):
 
     @property
     def average_perimeter(self) -> np.float_:
-        if self._shape_arr.n_objects == 0:
+        if self._shape_arr.n_shapes == 0:
             return np.float64(np.nan)
         return np.nanmean(self.perimeter)
 
@@ -277,7 +280,7 @@ class ArrayProperties(object):
         else:
             raise ValueError("f{property_flag} is a unknown visual feature")
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
         rtn.extend([(str(x), self.get(x))

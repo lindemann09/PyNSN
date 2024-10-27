@@ -48,8 +48,8 @@ class AbstractPoint(metaclass=ABCMeta):
         return Point(self._xy)
 
     @classmethod
-    def name(cls) -> str:
-        return str(cls.__name__)
+    def shape_type(cls) -> str:
+        return cls.__name__
 
     @abstractmethod
     def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
@@ -74,7 +74,7 @@ class AbstractPoint(metaclass=ABCMeta):
         """True is shapes fully inside the shapes (dist)
         """
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """dict representation of the object"""
         return {"type": str(self.__class__.__name__),
                 "xy": self.xy.tolist()}
@@ -179,14 +179,14 @@ class AbstractShape(metaclass=ABCMeta):
             self._polygon = self.polygon
 
     @classmethod
-    def name(cls) -> str:
-        return str(cls.__name__)
+    def shape_type(cls) -> str:
+        return cls.__name__
 
     ## abstract methods ###
     @abstractmethod
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """dict representation of the object"""
-        return {"type": self.name(),
+        return {"type": self.shape_type(),
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
 

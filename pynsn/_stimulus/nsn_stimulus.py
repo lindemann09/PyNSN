@@ -7,7 +7,7 @@ from copy import deepcopy
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from hashlib import md5
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -112,25 +112,25 @@ class NSNStimulus(ShapeArray):
             pass
         return rtn.hexdigest()
 
-    def to_dict(self, tabular: bool = True) -> dict:
+    def todict(self, tabular: bool = True) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
-               "target_area": self.target_area.to_dict(),
+               "target_area": self.target_area.todict(),
                "min_distance": self.min_distance,
-               "colours": self._colours.to_dict()}
+               "colours": self._colours.todict()}
 
         if tabular:
             rtn.update({"shape_table": self.table_dict()})
         else:
-            rtn.update(super().to_dict())
+            rtn.update(super().todict())
 
         return rtn
 
-    def to_json(self,
-                filename: str = "",
-                indent: int = 2, tabular: bool = True) -> str:
-        d = self.to_dict(tabular=tabular)
+    def tojson(self,
+               filename: str = "",
+               indent: int = 2, tabular: bool = True) -> str:
+        d = self.todict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if filename:
             with open(filename, "w", encoding="utf-8") as fl:
@@ -146,7 +146,7 @@ class NSNStimulus(ShapeArray):
         neighbourhood.
 
         minimal_replacing: try to find a new random position is a neighbourhood,
-            otherwise overlapping object will be randomly replaced anywere in the
+            otherwise overlapping object will be randomly replaced anywhere in the
             search area
         returns True if position has been changed
 
@@ -195,14 +195,14 @@ class NSNStimulus(ShapeArray):
 
     def get_overlaps(self, index: int,
                      min_distance: Optional[float] = None) -> NDArray[np.bool_]:
-        """get overlaps with other objects. Ignores overlap with oneself."""
+        """get overlaps with other shapes. Ignores overlap with oneself."""
         if min_distance is None:
             min_distance = self.min_distance
         return super().get_overlaps(index, min_distance)
 
     def shape_overlaps(self, shape: Union[Point2D, AbstractShape],
                        min_distance: Optional[float] = None) -> NDArray[np.bool_]:
-        """Returns True for all elements that overlap  with the particular shape
+        """Returns True for all elements that overlap with the particular shape
         (i.e. taking into account the minimum distance).
         """
         # FIXME unreliable ellipses overlapping
@@ -216,69 +216,58 @@ class NSNStimulus(ShapeArray):
         """
         return self._target_area.is_object_inside(shape)
 
-    def add(self, shape: AbstractShape,
-            random_position: bool = False,
-            ignore_overlaps: bool = False,
-            inside_convex_hull: bool = False,
-            max_iterations: Optional[int] = None):
+    def shape_add(self, shape: AbstractShape,
+                  ignore_overlaps: bool = False):
         """"adds shape to random positions in the array"""
 
-        if random_position:
-            try:
-                shape = self.random_free_position(
-                    shape=shape,
-                    ignore_overlaps=ignore_overlaps,
-                    inside_convex_hull=inside_convex_hull,
-                    max_iterations=max_iterations)
-            except NoSolutionError as err:
-                raise NoSolutionError("Can't find a free position: "
-                                      + f"Current n={self.n_objects}") from err
-        else:
-            if not ignore_overlaps and np.any(self.shape_overlaps(shape)):
-                raise ShapeOverlapsError(f"Shape overlaps with array. {shape}")
-            if not self.target_area.is_object_inside(shape):
-                raise ShapeOutsideError(f"Shape outside target array. {shape}")
+        if not ignore_overlaps and np.any(self.shape_overlaps(shape)):
+            raise ShapeOverlapsError(f"Shape overlaps with array. {shape}")
+        if not self.target_area.is_object_inside(shape):
+            raise ShapeOutsideError(f"Shape outside target array. {shape}")
 
-        super().add(shape)
+        super().shape_add(shape)
 
-    def add_shapes(self,
-                   ref_object: Union[AbstractShape, AbstractRndShape],
-                   random_position: bool = False,
-                   n: int = 1,
-                   ignore_overlaps: bool = False,
-                   inside_convex_hull: bool = False,
-                   max_iterations: Optional[int] = None):
-        """Creates n copies of the shape or n instances of the random shape
+    def __add_random_pos(self,
+                         shape: AbstractShape,
+                         ignore_overlaps: bool = False,
+                         inside_convex_hull: bool = False,
+                         max_iterations: Optional[int] = None):
+        """"adds shape to random positions in the array"""
+
+        try:
+            shape = self.random_free_position(
+                shape=shape,
+                ignore_overlaps=ignore_overlaps,
+                inside_convex_hull=inside_convex_hull,
+                max_iterations=max_iterations)
+        except NoSolutionError as err:
+            raise NoSolutionError("Can't find a free position: "
+                                  + f"Current n={self.n_shapes}") from err
+
+        super().shape_add(shape)
+
+    def shape_add_random_pos(self,
+                             ref_object: Union[AbstractShape, AbstractRndShape],
+                             n: int = 1,
+                             ignore_overlaps: bool = False,
+                             inside_convex_hull: bool = False,
+                             max_iterations: Optional[int] = None):
+        """Creates n copies of the shape(s) or n instances of the random shape(s)
         and adds them at random positions to the array (default n=1)"""
 
         if isinstance(ref_object, AbstractRndShape):
-            self.add_shape_list(ref_object.sample(n),
-                                random_position=random_position,
-                                ignore_overlaps=ignore_overlaps,
-                                inside_convex_hull=inside_convex_hull,
-                                max_iterations=max_iterations)
+            for obj in ref_object.sample(n):
+                self.__add_random_pos(obj,
+                                      ignore_overlaps=ignore_overlaps,
+                                      inside_convex_hull=inside_convex_hull,
+                                      max_iterations=max_iterations)
         else:
             while n > 0:
-                new_object = deepcopy(ref_object)
-                self.add(new_object, random_position=random_position,
-                         ignore_overlaps=ignore_overlaps,
-                         inside_convex_hull=inside_convex_hull,
-                         max_iterations=max_iterations)
+                self.__add_random_pos(deepcopy(ref_object),
+                                      ignore_overlaps=ignore_overlaps,
+                                      inside_convex_hull=inside_convex_hull,
+                                      max_iterations=max_iterations)
                 n = n - 1
-
-    def add_shape_list(self,
-                       shape_list: Sequence[AbstractShape],
-                       random_position: bool = False,
-                       ignore_overlaps: bool = False,
-                       inside_convex_hull: bool = False,
-                       max_iterations: Optional[int] = None):
-        """"adds a list of the shapes to the array"""
-
-        for obj in shape_list:
-            self.add(obj, random_position=random_position,
-                     ignore_overlaps=ignore_overlaps,
-                     inside_convex_hull=inside_convex_hull,
-                     max_iterations=max_iterations)
 
     def random_free_position(self,
                              shape: AbstractShape,
@@ -322,14 +311,14 @@ class NSNStimulus(ShapeArray):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
-        if np.any(self.shape_types == PolygonShape.name()):
+        if np.any(self.get_shape_types() == PolygonShape.shape_type()):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
-        d = {"type": self.shape_types.tolist(),
+        d = {"type": self.get_shape_types().tolist(),
              "x": self.xy[:, 0].tolist(),
              "y": self.xy[:, 1].tolist(),
              "width": self.sizes[:, 0].tolist(),
              "height": self.sizes[:, 1].tolist(),
-             "attributes": [str(x) for x in self.attributes]
+             "attributes": [str(x) for x in self.get_attributes()]
              }
         return d

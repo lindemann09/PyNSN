@@ -82,8 +82,8 @@ class Rectangle(AbstractShape):
         return (f"Rectangle(xy={self._xy}, size={self.size}, "
                 + f"attribute='{self._attribute}')")
 
-    def to_dict(self) -> dict:
-        d = super().to_dict()
+    def todict(self) -> dict:
+        d = super().todict()
         d.update({"size": self.size.tolist()})
         return d
 
@@ -184,8 +184,8 @@ class PolygonShape(AbstractShape):
                            b_exterior_ring=shape_exterior_ring,
                            min_dist_boarder=min_dist_boarder)
 
-    def to_dict(self) -> dict:
-        d = super().to_dict()
+    def todict(self) -> dict:
+        d = super().todict()
         del d["xy"]
         d.update({"wkt": shapely.to_wkt(self.polygon)})
         return d

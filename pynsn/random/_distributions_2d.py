@@ -90,9 +90,9 @@ class AbstractMultivarDistr(AbstractDistribution, metaclass=ABCMeta):
         else:
             self._max_radius = val
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """Dict representation of the distribution"""
-        d = super().to_dict()
+        d = super().todict()
         d.update({"mu": self._mu.tolist(),
                   "max_radius": self._max_radius,
                   "x_minmax": self._x_minmax.tolist(),
@@ -235,8 +235,8 @@ class Normal2D(AbstractMultivarDistr):
         else:
             return rtn
 
-    def to_dict(self):
-        d = super().to_dict()
+    def todict(self):
+        d = super().todict()
         d.update({"sigma": self.sigma.tolist(),
                   "correlation": self.correlation})
         return d

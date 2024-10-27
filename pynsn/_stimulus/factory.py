@@ -43,13 +43,13 @@ class StimulusFactory(object):
         if not isinstance(target_area_shape, AbstractShape):
             # default target area
             target_area_shape = Rectangle(size=(400, 400))
-        self._stim = NSNStimulus(target_area_shape=target_area_shape,
+        self._base = NSNStimulus(target_area_shape=target_area_shape,
                                  min_distance=min_distance,
                                  min_distance_target_area=min_distance_target_area)
         if stimulus_colours is not None:
-            self._stim.colours = stimulus_colours
+            self._base.colours = stimulus_colours
             if target_area_shape.colour.value is not None:
-                self._stim.colours.target_area = target_area_shape.colour
+                self._base.colours.target_area = target_area_shape.colour
 
         if max_iterations is None:
             self.max_iterations = defaults.MAX_ITERATIONS
@@ -61,45 +61,45 @@ class StimulusFactory(object):
 
     @property
     def base_stimulus(self) -> NSNStimulus:
-        return self._stim
+        return self._base
 
     @base_stimulus.setter
     def base_stimulus(self, stim: NSNStimulus) -> None:
         assert isinstance(stim, NSNStimulus)
-        self._stim = stim
+        self._base = stim
 
-    def clear(self):
+    def shapes_clear(self):
         self._shapes = []
 
-    def add(self, shape: Union[AbstractShape, AbstractRndShape], n: int = 1):
+    def shape_add(self, shape: Union[AbstractShape, AbstractRndShape], n: int = 1):
         assert (isinstance(shape, AbstractShape) or
                 isinstance(shape, AbstractRndShape))
         self._shapes.append((n, shape))
 
-    def get(self) -> NSNStimulus:
-        rtn = deepcopy(self._stim)
+    def create(self) -> NSNStimulus:
+        rtn = deepcopy(self._base)
         for n, s in self._shapes:
-            rtn.add_shapes(ref_object=s, n=n, random_position=True,
-                           ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
+            rtn.shape_add_random_pos(ref_object=s, n=n,
+                                     ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
         return rtn
 
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """dict representation of the stimulus factory"""
         rtn = {}
         rtn.update({"type": self.__class__.__name__})
-        base_dict = self._stim.to_dict()
+        base_dict = self._base.todict()
         del base_dict["shape_table"]
         del base_dict["hash"]
         rtn.update(base_dict)
         for x, s in enumerate(self._shapes):
             d = {"n": s[0]}
-            d.update(s[1].to_dict())
+            d.update(s[1].todict())
             rtn.update({f"shape{x}": d})
         return rtn
 
-    def to_json(self, filename: str = "", indent: int = 2) -> str:
+    def tojson(self, filename: str = "", indent: int = 2) -> str:
         """json representation of the stimulus factory"""
-        json_str = formated_json(self.to_dict(), indent=indent)
+        json_str = formated_json(self.todict(), indent=indent)
         if filename:
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)

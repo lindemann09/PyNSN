@@ -12,14 +12,15 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import Dot, Ellipse, Picture, Point2D, PolygonShape, Rectangle
+from .._misc import IntOVector, delete_elements
+from .._shapes import Dot, Ellipse, Point2D
 from .._shapes import ellipse_geometry as ellipse_geo
-from .._shapes.abc_shapes import AbstractCircularShape, AbstractShape, AttributeType
+from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
+                                  AttributeType)
 from ..errors import NoSolutionError
 from ..random._rng import WalkAround
 from .convex_hull import ConvexHull
 from .target_area import TargetArea
-from .._misc import delete_elements, IntOVector
 
 
 class ShapeArray(object):
@@ -64,40 +65,34 @@ class ShapeArray(object):
             self._clear_cached()
         self._sizes = val
 
-    @property
-    def attributes(self) -> List[AttributeType]:
+    def get_attributes(self) -> List[AttributeType]:
         return [s.attribute for s in self._shapes]
 
     @property
     def shapes(self) -> List[AbstractShape]:
         """list of the shapes"""
         if self._shape_updated_required:
-            self.update_shapes()
+            self.shapes_update()
         return self._shapes
 
-    @property
-    def shape_types(self) -> NDArray[np.str_]:
-        return np.array([s.name() for s in self._shapes])
+    def get_shape_types(self) -> NDArray[np.str_]:
+        """np.array of shape types"""
+        return np.array([s.shape_type() for s in self._shapes])
 
     @property
-    def polygons(self) -> List[shapely.Polygon]:
+    def polygons(self) -> NDArray[shapely.Polygon]:  # type: ignore
+        """nparray of polygons"""
         if self._cache_polygons is None:
             # build polygons
-            self._cache_polygons = [s.polygon for s in self.shapes]
+            self._cache_polygons = np.array([s.polygon for s in self.shapes])
         return self._cache_polygons
 
-    @property
-    def ids(self) -> Dict[str, NDArray]:
-        """Dictionary of ids for the different shape types"""
-        if self._cache_ids is None:
-            self._cache_ids = {}
-            for st in [Dot.name(), Rectangle.name(), Ellipse.name(), Picture.name(), PolygonShape.name()]:
-                self._cache_ids[st] = np.flatnonzero(self.shape_types == st)
-        return self._cache_ids
+    def get_ids(self, shape_type: str) -> NDArray:
+        """np.array of ids for the different shape types"""
+        return np.flatnonzero(self.get_shape_types() == shape_type)
 
-    def update_shapes(self):
-        """Updates list shapes, if property arrays `xy` or `sizes` have changes.
-
+    def shapes_update(self):
+        """Updates list shapes, if property arrays `xy` or `sizes` have changed.
 
         Users have to call this method only, if `xy`or `sizes`has been manipulated
         manually in place (like `stim.xy[3, :] = (20, 10)`.
@@ -119,7 +114,7 @@ class ShapeArray(object):
         self._cache_ids = None
         self._cache_polygons = None
 
-    def add(self, shape: AbstractShape):
+    def shape_add(self, shape: AbstractShape):
         """add shape to the array"""
         if isinstance(shape, AbstractShape):
             self._shapes.append(shape)
@@ -132,64 +127,47 @@ class ShapeArray(object):
                 f"Can't add '{type(shape)}'. That's not a ShapeType."
             )
 
-    def join_shapes(self, other: ShapeArray) -> None:
+    def shapes_join(self, other: ShapeArray) -> None:
         """join with shapes of other array"""
         for x in other.shapes:
-            self.add(x)
+            self.shape_add(x)
 
-    def replace(self, index: int, shape: AbstractShape):
+    def shape_replace(self, index: int, shape: AbstractShape):
         self._shapes[index] = shape
         self._xy[index, :] = shape.xy
         self._sizes[index, :] = shape.size
         self._clear_cached()
 
-    def delete(self, index: IntOVector) -> None:
+    def shape_delete(self, index: IntOVector) -> None:
 
         self._shapes = delete_elements(self._shapes, index)
         self._xy = np.delete(self._xy, index, axis=0)
         self._sizes = np.delete(self._sizes, index, axis=0)
         self._clear_cached()
 
-    def clear(self):
+    def shapes_clear(self):
         """ """
         self._shapes = []
         self._xy = np.empty((0, 2), dtype=np.float64)
         self._sizes = np.empty((0, 2), dtype=np.float64)
         self._clear_cached()
 
-    def pop(self, index: Optional[int] = None) -> AbstractShape:
+    def shape_pop(self, index: Optional[int] = None) -> AbstractShape:
         """Remove and return item at index"""
         if index is None:
             index = len(self._shapes) - 1
         rtn = self.shapes[index]
-        self.delete(index)
+        self.shape_delete(index)
         return rtn
 
-    def get_shapes(self, index: IntOVector) -> List[AbstractShape]:
-        """Returns list with multiple selected objects
-
-        Since shapes property has to be list (and not a numpy.array), this method
-        allows slicing with a vector of ids (similar to numpy)
-
-        Note
-        ----
-        Use `shapes`if you need to entire list of shapes.
-        """
-        if isinstance(index, int):
-            ids = (index,)
-        else:
-            ids = index
-
-        return [self.shapes[x] for x in ids]
-
-    def to_dict(self) -> dict:
+    def todict(self) -> dict:
         """Dict representation of the shape array
         """
 
-        return {"shape_array": [x.to_dict() for x in self.shapes]}
+        return {"shape_array": [x.todict() for x in self.shapes]}
 
     def sort_by_excentricity(self):
-        """Sort order fo the objects in the array by excentricity, that is, by the
+        """Sort order fo the shapes in the array by excentricity, that is, by the
         distance the center of the convex hull (from close to far)
         """
         d = self.distances(Point2D(self.convex_hull.centroid))
@@ -211,7 +189,7 @@ class ShapeArray(object):
     #                               int_type=int_type)
 
     @property
-    def n_objects(self) -> int:
+    def n_shapes(self) -> int:
         """number of shapes"""
         return len(self._shapes)
 
@@ -219,7 +197,7 @@ class ShapeArray(object):
     def convex_hull(self) -> ConvexHull:
         """Convex hull polygon of the Shape Array"""
         if not isinstance(self._convex_hull, ConvexHull):
-            self._convex_hull = ConvexHull(self.polygons)
+            self._convex_hull = ConvexHull(self.polygons.tolist())
         return self._convex_hull
 
     def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float_]:
@@ -229,13 +207,13 @@ class ShapeArray(object):
             # circular target shape
             rtn = np.full(len(self._shapes), np.nan)
 
-            idx = self.ids[Dot.name()]
+            idx = self.get_ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
                                                     dots_xy=self._xy[idx, :],
                                                     dots_diameter=self._sizes[idx, 0])
-            idx = self.ids[Ellipse.name()]
+            idx = self.get_ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
@@ -268,7 +246,7 @@ class ShapeArray(object):
         if isinstance(shape, (Point2D, AbstractCircularShape)):
             rtn = np.full(len(self._shapes), False)
 
-            idx = self.ids[Dot.name()]
+            idx = self.get_ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
@@ -276,7 +254,7 @@ class ShapeArray(object):
                                                  dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
-            idx = self.ids[Ellipse.name()]
+            idx = self.get_ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,
@@ -311,7 +289,7 @@ class ShapeArray(object):
         return False
 
     def get_overlaps(self, index: int, min_distance: float = 0) -> NDArray[np.bool_]:
-        """get overlaps with other objects. Ignores overlap with oneself."""
+        """get overlaps with other shapes. Ignores overlap with oneself."""
         overlaps = self.dwithin(self.shapes[index], distance=min_distance)
         overlaps[index] = False  # ignore overlap with oneself
         return overlaps
@@ -408,7 +386,7 @@ class ShapeArray(object):
             except NoSolutionError:
                 return -1
 
-        self.replace(index, target)
+        self.shape_replace(index, target)
         return 1
 
 

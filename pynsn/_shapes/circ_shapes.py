@@ -128,8 +128,8 @@ class Ellipse(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def to_dict(self) -> dict:
-        d = super().to_dict()
+    def todict(self) -> dict:
+        d = super().todict()
         d.update({"size": self.size.tolist()})
         return d
 
@@ -194,8 +194,8 @@ class Dot(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def to_dict(self) -> dict:
-        d = super().to_dict()
+    def todict(self) -> dict:
+        d = super().todict()
         d.update({"diameter": self.diameter})
         return d
 

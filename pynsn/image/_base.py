@@ -149,7 +149,7 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                             opacity=1, scaling_factor=1)
 
         if nsn_stimulus.properties.numerosity > 0:
-            # draw objects
+            # draw shapes
             for obj in nsn_stimulus.shapes:
                 if obj.colour.value is None and not isinstance(obj, Picture):
                     # dot or rect: force colour, set default colour if no colour

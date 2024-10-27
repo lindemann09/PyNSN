@@ -1,14 +1,15 @@
-from numpy.typing import NDArray
 from typing import List
+
 import numpy as np
+from numpy.typing import NDArray
 from shapely import MultiPolygon, Polygon, get_coordinates
 
 
 class ConvexHull(object):
     """convenient wrapper class for calculating of convex hulls"""
 
-    def __init__(self, array_of_polygons: List[Polygon]) -> None:
-        polys = MultiPolygon(array_of_polygons)
+    def __init__(self, list_of_polygons: List[Polygon]) -> None:
+        polys = MultiPolygon(list_of_polygons)
         self._ch_polygon = polys.convex_hull
 
     @property

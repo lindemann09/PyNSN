@@ -26,7 +26,7 @@ if True:
         min_distance_target_area=10,
         min_distance=2)
     # random dot
-    nsn.add_shapes(rnd_ell, n=20, random_position=True)
+    nsn.shape_add_random_pos(rnd_ell, n=20)
     print(nsn.properties_txt(short_format=True))
     print(nsn.contains_overlaps())
     print(nsn.properties.numerosity)
@@ -36,17 +36,16 @@ if True:
         target_area_shape=pynsn.Rectangle((500, 400)),
         min_distance_target_area=10,
         min_distance=2)
-    factory.add(rnd_ell, 10)
-    factory.add(rnd_dot, 10)
+    factory.shape_add(rnd_ell, 10)
+    factory.shape_add(rnd_dot, 10)
 
-    nsn = factory.get()
-    factory.to_json(filename="demo.json")
-
-nsn.colours.convex_hull = "green"
+    nsn = factory.create()
+    factory.tojson(filename="demo.json")
 
 
 stim = pynsn.NSNStimulus(target_area_shape=pynsn.Dot(300))
-stim.add_shapes(pynsn.Dot(diameter=10), n=10, random_position=True)
+stim.shape_add_random_pos(pynsn.Dot(diameter=10), n=20)
+stim.colours.convex_hull = "green"
 
 a = pil_image.create(stim)
 a.save("shapes_test.png")

@@ -35,10 +35,10 @@ def _relation_matrix(arr: ShapeArray, what: int, para: float = 0) -> NDArray:
     1 = dwithin
     """
     arr = deepcopy(arr)
-    l = arr.n_objects
+    l = arr.n_shapes
     rtn = np.full((l, l), np.nan)
     for x in reversed(range(l)):
-        shape = arr.pop(x)
+        shape = arr.shape_pop(x)
         if what == 0:
             y = arr.distances(shape)
         elif what == 1:
