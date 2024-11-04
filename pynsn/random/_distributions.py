@@ -111,7 +111,7 @@ class Uniform(AbstractContinuousDistr):
                             "(a, b) with a <= b.")
         self._scale = self._minmax[1] - self._minmax[0]
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         dist = _rng.generator.random(size=n)
         return self._minmax[0] + dist * self._scale
 
@@ -128,7 +128,7 @@ class Triangle(AbstractContinuousDistr):
             raise ValueError(f"mode ({mode}) has to be inside the defined "
                              f"min_max range ({self._minmax})")
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         return _rng.generator.triangular(left=self._minmax[0], right=self._minmax[1],
                                          mode=self._mode, size=n)
 
@@ -181,7 +181,7 @@ class Normal(_AbstractDistrMuSigma):
             the range of the distribution
     """
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         rtn = np.array([])
         required = n
         while required > 0:
@@ -228,7 +228,7 @@ class Beta(_AbstractDistrMuSigma):
                 "Either Mu & Sigma or Alpha & Beta have to specified.")
         super().__init__(mu=mu, sigma=sigma, minmax=minmax)
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         if self._sigma is None or self._sigma == 0:
             return np.array([self._mu] * n)
 
@@ -307,7 +307,7 @@ class Categorical(AbstractUnivarDistr):
     def weights(self) -> NDArray:
         return self._weights
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         if len(self._weights) == 0:
             p = np.array([1 / len(self._levels)] * len(self._levels))
         else:

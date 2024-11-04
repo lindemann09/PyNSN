@@ -73,7 +73,7 @@ class TargetArea(object):
         return self._shape
 
     @property
-    def bound_sizes(self) -> NDArray[np.float_]:
+    def bound_sizes(self) -> NDArray[np.float64]:
         """width and height of bounds of the target area"""
         return self._shape.size
 

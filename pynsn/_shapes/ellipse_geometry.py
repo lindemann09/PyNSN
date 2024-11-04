@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def perimeter(sizes: NDArray) -> NDArray[np.float_]:
+def perimeter(sizes: NDArray) -> NDArray[np.float64]:
     """Ramanujan's second approximation of the ellipse perimeter"""
     s = np.atleast_2d(sizes)
     a = s[:, 0]
@@ -10,7 +10,7 @@ def perimeter(sizes: NDArray) -> NDArray[np.float_]:
     return np.pi * ((a+b) + (3*(a-b)**2) / (10*(a+b) + np.sqrt(a**2 + 14*a*b + b**2)))
 
 
-def diameter(size: NDArray, theta: NDArray) -> NDArray[np.float_]:
+def diameter(size: NDArray, theta: NDArray) -> NDArray[np.float64]:
     """Ellipse diameter at a certain angle
 
     Parameter

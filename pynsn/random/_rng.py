@@ -51,7 +51,7 @@ class WalkAround(object):
         self._radius = 0
         self.counter = 0
 
-    def next(self) -> NDArray[np.float_]:
+    def next(self) -> NDArray[np.float64]:
 
         if self.counter % self._attempts == 0:
             self._radius += self._delta

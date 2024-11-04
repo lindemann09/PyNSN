@@ -17,7 +17,7 @@ class ConvexHull(object):
         return self._ch_polygon  # type: ignore
 
     @property
-    def coordinates(self) -> NDArray[np.float_]:
+    def coordinates(self) -> NDArray[np.float64]:
         """Coordinates that shape the convex hull
 
         Returns:
@@ -31,7 +31,7 @@ class ConvexHull(object):
         return self._ch_polygon.area
 
     @property
-    def centroid(self) -> NDArray[np.float_]:
+    def centroid(self) -> NDArray[np.float64]:
         """Geometric Center of convex hull
 
         Returns:

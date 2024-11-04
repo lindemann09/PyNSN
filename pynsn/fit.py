@@ -15,7 +15,7 @@ from .random import generator as _rnd_generator
 
 
 def total_surface_area(stim: _NSNStimulus,
-                       value: _tp.Union[float, _np.float_]) -> None:
+                       value: _tp.Union[float, _np.float64]) -> None:
     """Set surface area.
 
     Resize all object to fit a specific surface area
@@ -27,17 +27,17 @@ def total_surface_area(stim: _NSNStimulus,
 
 
 def total_perimeter(stim: _NSNStimulus,
-                    value: _tp.Union[float, _np.float_]) -> None:
+                    value: _tp.Union[float, _np.float64]) -> None:
     """fit the total parameter of the stimulus"""
     stim.sizes = stim.sizes * (value / stim.properties.total_perimeter)
 
 
-def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
+def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float64]) -> None:
     """fit the average parameter of the stimulus"""
     total_perimeter(stim, value * stim.n_shapes)
 
 
-def average_surface_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_]) -> None:
+def average_surface_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64]) -> None:
     """fits the average surface area of the stimulus"""
     total_surface_area(stim, stim.n_shapes * value)
 
@@ -100,8 +100,8 @@ def numerosity(stim: _NSNStimulus, value: int,
                 stim.add(rnd_object)
 
 
-def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
-               precision: _tp.Optional[_tp.Union[float, _np.float_]] = None) -> None:
+def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
+               precision: _tp.Optional[_tp.Union[float, _np.float64]] = None) -> None:
     """changes the convex hull area to a desired size with certain precision
 
     uses scaling radial positions if field area has to be increased
@@ -140,7 +140,7 @@ def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
     stim.sizes = stim.xy + old_center  # move back
 
 
-def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
+def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
              precision: _tp.Optional[float] = None,
              fa2ta_ratio: _tp.Optional[float] = None) -> None:
     """
@@ -185,7 +185,7 @@ def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float_],
 
 
 def log_spacing(stim: _NSNStimulus,
-                value: _tp.Union[float, _np.float_],
+                value: _tp.Union[float, _np.float64],
                 precision: _tp.Optional[float] = None) -> None:
     """
 
@@ -203,7 +203,7 @@ def log_spacing(stim: _NSNStimulus,
 
 
 def log_size(stim: _NSNStimulus,
-             value: _tp.Union[float, _np.float_]) -> None:
+             value: _tp.Union[float, _np.float64]) -> None:
     """
 
     Parameters
@@ -219,7 +219,7 @@ def log_size(stim: _NSNStimulus,
 
 
 def sparsity(stim: _NSNStimulus,
-             value: _tp.Union[float, _np.float_], precision=None) -> None:
+             value: _tp.Union[float, _np.float64], precision=None) -> None:
     """
 
     Parameters

@@ -36,12 +36,12 @@ class ShapeArray(object):
         self._shape_updated_required = False
 
     @property
-    def xy(self) -> NDArray[np.float_]:
+    def xy(self) -> NDArray[np.float64]:
         """array of positions"""
         return self._xy
 
     @xy.setter
-    def xy(self, val: NDArray[np.float_]):
+    def xy(self, val: NDArray[np.float64]):
         if val.shape != self._xy.shape:
             raise ValueError(
                 f"xy has to be a numpy array with shape={self._xy.shape}")
@@ -51,12 +51,12 @@ class ShapeArray(object):
         self._xy = val
 
     @property
-    def sizes(self) -> NDArray[np.float_]:
+    def sizes(self) -> NDArray[np.float64]:
         """array of sizes"""
         return self._sizes
 
     @sizes.setter
-    def sizes(self, val: NDArray[np.float_]):
+    def sizes(self, val: NDArray[np.float64]):
         if val.shape != self._sizes.shape:
             raise ValueError(
                 f"xy has to be a numpy array with shape={self._sizes.shape}")
@@ -200,7 +200,7 @@ class ShapeArray(object):
             self._convex_hull = ConvexHull(self.polygons.tolist())
         return self._convex_hull
 
-    def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float_]:
+    def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float64]:
         """distances of a shape or Point2D to the elements in the shape array"""
 
         if isinstance(shape, (Point2D, AbstractCircularShape)):
@@ -391,8 +391,8 @@ class ShapeArray(object):
 
 
 def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],
-                             dots_xy: NDArray[np.float_],
-                             dots_diameter: NDArray[np.float_]) -> NDArray[np.float_]:
+                             dots_xy: NDArray[np.float64],
+                             dots_diameter: NDArray[np.float64]) -> NDArray[np.float64]:
     """Distances circular shape or Point to multiple dots
     """
     d_xy = dots_xy - obj.xy
@@ -412,8 +412,8 @@ def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],
 
 
 def _distance_circ_ellipse_array(obj: Union[Point2D, AbstractCircularShape],
-                                 ellipses_xy: NDArray[np.float_],
-                                 ellipse_sizes: NDArray[np.float_]) -> NDArray[np.float_]:
+                                 ellipses_xy: NDArray[np.float64],
+                                 ellipse_sizes: NDArray[np.float64]) -> NDArray[np.float64]:
     """Distance circular shape or Point2D to multiple ellipses
     """
     d_xy = ellipses_xy - obj.xy

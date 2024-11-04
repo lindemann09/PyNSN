@@ -158,7 +158,7 @@ class Uniform2D(AbstractMultivarDistr):
         self._xy_scale = (self._x_minmax[1] - self._x_minmax[0],
                           self._y_minmax[1] - self._y_minmax[0])
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         rtn = np.empty((0, 2), dtype=float)
         required = n
         while required > 0:
@@ -214,7 +214,7 @@ class Normal2D(AbstractMultivarDistr):
         cov[1, 0] = cov[0, 1]
         return cov
 
-    def sample(self, n: int) -> NDArray[np.float_]:
+    def sample(self, n: int) -> NDArray[np.float64]:
         rtn = None
         required = n
         while required > 0:

@@ -1,5 +1,5 @@
 """
-Draw a random number from a beta dirstribution
+Draw a random number from a beta distribution
 """
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
@@ -12,7 +12,7 @@ import numpy as np
 import orjson
 from numpy.typing import ArrayLike, NDArray
 
-IntOVector = Union[int, Sequence[int], NDArray[np.int_]]
+IntOVector = Union[int, Sequence[int], NDArray[np.integer]]
 
 
 def formated_json(d: dict, indent: int = 2) -> str:

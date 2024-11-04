@@ -62,17 +62,17 @@ class Rectangle(AbstractShape):
         return shapely.get_coordinates(self.polygon)[2]
 
     @property
-    def left_top(self) -> NDArray[np.float_]:
+    def left_top(self) -> NDArray[np.float64]:
         """Returns (left, top) as ndarray (x,y)"""
         return shapely.get_coordinates(self.polygon)[1]
 
     @property
-    def right_bottom(self) -> NDArray[np.float_]:
+    def right_bottom(self) -> NDArray[np.float64]:
         """Returns (right, bottom) as ndarray (x,y)"""
         return shapely.get_coordinates(self.polygon)[3]
 
     @property
-    def box(self) -> NDArray[np.float_]:
+    def box(self) -> NDArray[np.float64]:
         """Returns (left, bottom, right, top) as NDArray (x0, y0, x1, y1)"""
         return np.append(
             shapely.get_coordinates(self.polygon)[0],

@@ -122,7 +122,7 @@ class ArrayProperties(object):
         return self.totext()
 
     @property
-    def areas(self) -> NDArray[np.float_]:
+    def areas(self) -> NDArray[np.float64]:
         """area of each object"""
 
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
@@ -150,7 +150,7 @@ class ArrayProperties(object):
         return rtn
 
     @property
-    def perimeter(self) -> NDArray[np.float_]:
+    def perimeter(self) -> NDArray[np.float64]:
         """Perimeter for each object"""
 
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
@@ -187,27 +187,27 @@ class ArrayProperties(object):
         return self._shape_arr.n_shapes
 
     @property
-    def total_surface_area(self) -> np.float_:
+    def total_surface_area(self) -> np.float64:
         return np.nansum(self.areas)
 
     @property
-    def average_surface_area(self) -> np.float_:
+    def average_surface_area(self) -> np.float64:
         if self._shape_arr.n_shapes == 0:
             return np.float64(np.nan)
         return np.nanmean(self.areas)
 
     @property
-    def total_perimeter(self) -> np.float_:
+    def total_perimeter(self) -> np.float64:
         return np.nansum(self.perimeter)
 
     @property
-    def average_perimeter(self) -> np.float_:
+    def average_perimeter(self) -> np.float64:
         if self._shape_arr.n_shapes == 0:
             return np.float64(np.nan)
         return np.nanmean(self.perimeter)
 
     @property
-    def coverage(self) -> np.float_:
+    def coverage(self) -> np.float64:
         """percent coverage in the field area. It takes thus the object size
         into account. In contrast, the sparsity is only the ratio of field
         array and numerosity
@@ -219,7 +219,7 @@ class ArrayProperties(object):
             return self.total_surface_area / fa
 
     @property
-    def log_size(self) -> np.float_:
+    def log_size(self) -> np.float64:
         fa = self.field_area
         if fa == 0:
             return np.float64(np.nan)
@@ -227,7 +227,7 @@ class ArrayProperties(object):
             return np.log2(fa) + np.log2(self.average_surface_area)
 
     @property
-    def log_spacing(self) -> np.float_:
+    def log_spacing(self) -> np.float64:
         fa = self.field_area
         if fa == 0:
             return np.float64(np.nan)
@@ -235,17 +235,17 @@ class ArrayProperties(object):
             return np.log2(fa) + np.log2(self.sparsity)
 
     @property
-    def sparsity(self) -> np.float_:
+    def sparsity(self) -> np.float64:
         if self.numerosity == 0:
             return np.float64(np.nan)
         else:
             return self.field_area / self.numerosity
 
     @property
-    def field_area(self) -> np.float_:
+    def field_area(self) -> np.float64:
         return np.float64(self._shape_arr.convex_hull.area)
 
-    def get(self, prop: VisProp) -> Union[int, np.float_]:
+    def get(self, prop: VisProp) -> Union[int, np.float64]:
         """returns a visual property"""
         if prop == VisProp.AV_PERIMETER:
             return self.average_perimeter
