@@ -1,5 +1,5 @@
 import numpy as np
-from pynsn import random
+from pynsn import rnd
 import pynsn
 from pynsn.image import pil_image
 
@@ -13,9 +13,9 @@ ra = pynsn.Rectangle(xy=np.array((-70, -175)),
 rb = pynsn.Rectangle(xy=(-50, -45), size=(10, 10), attribute="#cc0F00")
 r_big = pynsn.Rectangle(xy=(10, -40), size=(150, 60), attribute="#000088")
 
-rnd_ell = random.RndRectangle(width=(40.8, 10.4), height=(20, 50),
+rnd_ell = rnd.RndRectangle(width=(40.8, 10.4), height=(20, 50),
                               attributes=["green", "black", "orange", "red"])
-rnd_dot = random.RndDot(diameter=(40.8, 10),
+rnd_dot = rnd.RndDot(diameter=(40.8, 10),
                         attributes=["green", "black", "orange", "red"])
 
 if True:

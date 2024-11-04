@@ -9,7 +9,7 @@ from .. import defaults
 from .._misc import formated_json
 from .._shapes import Dot, Ellipse, PolygonShape, Rectangle
 from .._shapes.abc_shapes import AbstractShape
-from ..random._random_shape import AbstractRndShape
+from ..rnd._random_shape import AbstractRndShape
 from .nsn_stimulus import NSNStimulus
 from .stimulus_colours import StimulusColours
 

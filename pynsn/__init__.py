@@ -16,6 +16,10 @@ if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 10):
 if _is_interactive_mode():
     print(f"PyNSN {__version__}")
 
+from . import defaults
+from . import errors
 from ._shapes import (Point2D, Dot, Rectangle, Picture, Ellipse, PolygonShape,
                       Colour)
 from ._stimulus import VisProp, NSNStimulus, StimulusFactory
+from . import rnd
+from . import fit

@@ -17,7 +17,7 @@ from .._misc import formated_json
 from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle
 from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError, ShapeOutsideError, ShapeOverlapsError
-from ..random._random_shape import AbstractRndShape
+from ..rnd._random_shape import AbstractRndShape
 from .properties import ArrayProperties
 from .shape_array import ShapeArray
 from .stimulus_colours import StimulusColours

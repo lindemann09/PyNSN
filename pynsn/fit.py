@@ -9,7 +9,7 @@ from . import defaults as _defaults
 from . import _misc
 from ._stimulus import NSNStimulus as _NSNStimulus
 from ._stimulus import VisProp as _VisProp
-from .random import generator as _rnd_generator
+from .rnd import generator as _rnd_generator
 
 # FIXME module not yet tested
 

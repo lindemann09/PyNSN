@@ -14,7 +14,7 @@ from .. import defaults
 from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle
 from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError
-from ..random._distributions_2d import AbstractMultivarDistr, Uniform2D
+from ..rnd._distributions_2d import AbstractMultivarDistr, Uniform2D
 
 
 class TargetArea(object):

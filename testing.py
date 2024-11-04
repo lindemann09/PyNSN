@@ -2,7 +2,7 @@
 import timeit
 import numpy as np
 import matplotlib.pyplot as plt
-from pynsn import random
+from pynsn import rnd
 import pynsn
 a = range(10)
 index = (8, 4, 2)
@@ -17,7 +17,7 @@ exit()
 
 start = timeit.timeit()
 
-d = random.Uniform2D(x_minmax=(-100, 100),
+d = rnd.Uniform2D(x_minmax=(-100, 100),
                      y_minmax=(20, 50))
 
 s = d.sample(1)
