@@ -4,6 +4,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from copy import deepcopy
 import typing as _tp
+import math as _math
 
 import numpy as _np
 from PIL import Image as _Image
@@ -34,6 +35,54 @@ def create(
     return _PILDraw().create_image(
         nsn_stimulus=nsn_stimulus, antialiasing=antialiasing
     )
+
+
+def dual_stimulus(left: _stimulus.NSNStimulus,
+                  right: _stimulus.NSNStimulus,
+                  # distance of centre of each stimulus to background image centre
+                  eccentricity: _tp.Optional[int] = None,
+                  padding: int = 10,
+                  antialiasing: _tp.Union[bool, int] = True,
+                  background_image: _tp.Optional[_Image.Image] = None):
+    """returns a pil image with two NSNStimuli, one left and one right
+
+    Note
+    ----
+    see create
+    """
+
+    im_left = create(left, antialiasing)
+    im_right = create(right, antialiasing)
+
+    l_w2 = im_left.size[0]/2  # left width div 2
+    r_w2 = im_right.size[0]/2
+
+    min_ecc = _math.ceil(max(l_w2, r_w2))
+    if eccentricity is None:
+        eccentricity = min_ecc + 50
+    if eccentricity < min_ecc:
+        raise ValueError(
+            "eccentricity is to smaller for stimuli of this size. " +
+            f"Needs to be at least {min_ecc}")
+
+    # height, width, center
+    c_x = _math.ceil(max(l_w2, r_w2)) + eccentricity + padding
+    c_y = _math.ceil(max(im_left.size[1], im_right.size[1]) / 2) + padding
+
+    # stim xy pos
+    l_x = _math.floor(c_x - eccentricity - l_w2)
+    r_x = _math.floor(c_x + eccentricity - r_w2)
+    l_y = _math.floor(c_y - im_left.size[1]/2)
+    r_y = _math.floor(c_y - im_right.size[1]/2)
+
+    if isinstance(background_image, _Image.Image):
+        im = background_image
+    else:
+        # (0, 0, 0, 0) is fully transparent
+        im = _Image.new("RGBA", (c_x*2, c_y*2), (0, 0, 0, 0))
+    im.paste(im_left, (l_x, l_y))
+    im.paste(im_right, (r_x, r_y))
+    return im
 
 
 class _PILDraw(_base.AbstractArrayDraw):
