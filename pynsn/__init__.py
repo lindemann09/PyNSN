@@ -2,7 +2,7 @@
 # pylint: disable=C0413
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = '0.9.1'
+__version__ = '0.9.2-dev0'
 
 from sys import version_info as _python_version_info
 from ._misc import is_interactive_mode as _is_interactive_mode
