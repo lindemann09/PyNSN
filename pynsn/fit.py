@@ -234,7 +234,7 @@ def sparsity(stim: _NSNStimulus,
     field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
-def fit(stim: _NSNStimulus,
+def adapt(stim: _NSNStimulus,
         property_flag: _VisProp, value: float) -> _tp.Any:
     """
     adapt_properties: continuous property or list of continuous properties
@@ -283,6 +283,53 @@ def fit(stim: _NSNStimulus,
 
     elif property_flag == _VisProp.COVERAGE:
         return coverage(stim, value=value)
+    else:
+        raise NotImplementedError(
+            f"Not implemented for {str(property_flag)}"
+        )
+
+def match(stim: _NSNStimulus,
+          ref: _NSNStimulus,
+          property_flag: _VisProp) -> _tp.Any:
+    """
+    Match the visual property of stimulus `stim` to stimulus `ref`
+    """
+       # type check
+    if not isinstance(property_flag, _VisProp):
+        raise ValueError(
+            f"{property_flag} is not a visual feature.")
+
+    rp = ref.properties
+    # Adapt
+    if property_flag == _VisProp.NUMEROSITY:
+        return numerosity(stim, value=rp.numerosity)
+
+    elif property_flag == _VisProp.AV_PERIMETER:
+        return average_perimeter(stim, value=rp.average_perimeter)
+
+    elif property_flag == _VisProp.TOTAL_PERIMETER:
+        return total_perimeter(stim, value=rp.total_perimeter)
+
+    elif property_flag == _VisProp.AV_SURFACE_AREA:
+        return average_surface_area(stim, value=rp.average_surface_area)
+
+    elif property_flag == _VisProp.TOTAL_SURFACE_AREA:
+        return total_surface_area(stim, value=rp.total_surface_area)
+
+    elif property_flag == _VisProp.LOG_SIZE:
+        return log_size(stim, value=rp.log_size)
+
+    elif property_flag == _VisProp.LOG_SPACING:
+        return log_spacing(stim, value=rp.log_spacing)
+
+    elif property_flag == _VisProp.SPARSITY:
+        return sparsity(stim, value=rp.sparsity)
+
+    elif property_flag == _VisProp.FIELD_AREA:
+        return field_area(stim, value=rp.field_area)
+
+    elif property_flag == _VisProp.COVERAGE:
+        return coverage(stim, value=rp.coverage)
     else:
         raise NotImplementedError(
             f"Not implemented for {str(property_flag)}"

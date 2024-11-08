@@ -83,6 +83,30 @@ class VisProp(enum.Flag):  # visual properties
         else:
             return "???"
 
+    def short_name(self) -> str:
+        if self == VisProp.NUMEROSITY:
+            return "N"
+        elif self == VisProp.LOG_SIZE:
+            return "logSize"
+        elif self == VisProp.TOTAL_SURFACE_AREA:
+            return "TSA"
+        elif self == VisProp.AV_SURFACE_AREA:
+            return "ASA"
+        elif self == VisProp.AV_PERIMETER:
+            return "AP"
+        elif self == VisProp.TOTAL_PERIMETER:
+            return "TP"
+        elif self == VisProp.LOG_SPACING:
+            return "logSpace"
+        elif self == VisProp.SPARSITY:
+            return "SP"
+        elif self == VisProp.FIELD_AREA:
+            return "FA"
+        elif self == VisProp.COVERAGE:
+            return "CO"
+        else:
+            return "???"
+
 
 class ArrayProperties(object):
     """Non-Symbolic Number Stimulus"""
@@ -92,8 +116,8 @@ class ArrayProperties(object):
         self._ch = None
 
     def totext(self, short_format: bool = False) -> str:
+        rtn = ""
         if not short_format:
-            rtn = ""
             first = True
             for k, v in self.todict().items():
                 if first and len(rtn) == 0:
@@ -103,16 +127,9 @@ class ArrayProperties(object):
                     rtn += " "
                 rtn += key_value_format(k, v) + "\n "
         else:
-            rtn = (
-                f"N: {self.numerosity}, "
-                + f"TSA: {self.total_surface_area:.2f}, "
-                + f"ISA: {self.average_surface_area:.2f}, "
-                + f"FA: {self.field_area:.2f}, "
-                + f"SPAR: {self.sparsity:.2f}, "
-                + f"logSIZE: {self.log_size:.2f}, "
-                + f"logSPACE: {self.log_spacing:.2f}, "
-                + f"COV: {self.coverage:.2f}"
-            )
+            for k, v in self.todict(short_format=True).items():
+                rtn += f"{k}: {v:.2f}, "
+            rtn = rtn[:-2]
         return rtn.rstrip()
 
     def __repr__(self) -> str:
@@ -280,9 +297,13 @@ class ArrayProperties(object):
         else:
             raise ValueError("f{property_flag} is a unknown visual feature")
 
-    def todict(self) -> dict:
+    def todict(self, short_format:bool=False) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
-        rtn.extend([(str(x), self.get(x))
+        if short_format:
+            rtn.extend([(x.short_name(), self.get(x))
+                   for x in list(VisProp)])  # type: ignore
+        else:
+            rtn.extend([(str(x), self.get(x))
                    for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)
