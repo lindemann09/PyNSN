@@ -2,7 +2,6 @@
 MIN_DISTANCE = 2
 
 # Colours
-COLOUR_TARGET_AREA = "#A1A1A1"
 COLOUR_OBJECT = "black"
 OPACITY_OBJECT: float = 1
 OPACITY_GUIDES: float = 0.5

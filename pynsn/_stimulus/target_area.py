@@ -39,9 +39,6 @@ class TargetArea(object):
                           UserWarning)
             self._shape.xy = np.zeros(2)
 
-        if self._shape.colour.value is None:
-            self._shape.attribute = Colour(defaults.COLOUR_TARGET_AREA)
-
         self._ring = shapely.get_exterior_ring(self._shape.polygon)
 
         # default random distribution is uniform

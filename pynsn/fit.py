@@ -99,7 +99,8 @@ def numerosity(stim: _NSNStimulus, value: int,
                 stim.shape_add(rnd_object)
 
 
-def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
+def field_area(stim: _NSNStimulus,
+               value: _tp.Union[float, _np.float64],
                precision: _tp.Optional[_tp.Union[float, _np.float64]] = None) -> None:
     """changes the convex hull area to a desired size with certain precision
 
@@ -136,7 +137,7 @@ def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
         if (current < value and step < 0) or (current > value and step > 0):
             step *= -0.2  # change direction and finer grain
 
-    stim.sizes = stim.xy + old_center  # move back
+    stim.xy = stim.xy + old_center  # move back
 
 
 def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],

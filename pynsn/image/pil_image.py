@@ -29,7 +29,6 @@ def create(
 
     antialiasing: True or integer
 
-    default_dot_colour: if colour is undefined in _lib
     """
 
     return _PILDraw().create_image(

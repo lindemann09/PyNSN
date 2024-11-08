@@ -7,7 +7,7 @@ from .._shapes.colour import Colour, ColourLike
 class StimulusColours(object):
     def __init__(
         self,
-        target_area: ColourLike = defaults.COLOUR_TARGET_AREA,
+        target_area: ColourLike = None,
         object_default: ColourLike = defaults.COLOUR_OBJECT,
         background: ColourLike = None,
         convex_hull: ColourLike = None,
