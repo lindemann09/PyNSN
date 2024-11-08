@@ -23,8 +23,7 @@ def total_surface_area(stim: _NSNStimulus,
     Args:
         value: surface area
     """
-    stim.sizes = stim.sizes * (value / stim.properties.total_surface_area)
-
+    stim.sizes = stim.sizes * _np.sqrt((value / stim.properties.total_surface_area))
 
 def total_perimeter(stim: _NSNStimulus,
                     value: _tp.Union[float, _np.float64]) -> None:
@@ -81,7 +80,7 @@ def numerosity(stim: _NSNStimulus, value: int,
                 else:
                     delete_id = _rnd_generator.integers(0, stim.n_shapes)
 
-                stim.delete(delete_id)
+                stim.shape_delete(delete_id)
 
             else:
                 # add dot: copy a random dot
@@ -97,7 +96,7 @@ def numerosity(stim: _NSNStimulus, value: int,
                     raise _NoSolutionError(
                         "Can't increase numerosity. No free position found.") from err
 
-                stim.add(rnd_object)
+                stim.shape_add(rnd_object)
 
 
 def field_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],

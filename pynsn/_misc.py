@@ -46,7 +46,7 @@ def delete_elements(lst: List, index: IntOVector) -> List:
     """delete multiple elements from list"""
     rtn = []
 
-    if isinstance(index, int):
+    if isinstance(index, (np.integer, int)):
         index = (index,)  # make iterable
     for c, s in enumerate(lst):
         if c not in index:
