@@ -84,6 +84,17 @@ class VisProp(enum.Flag):  # visual properties
             return "???"
 
     def short_name(self) -> str:
+        """Short names
+        N=Numerosity
+        TSA=Total surface area
+        ASA=Av. surface area
+        AP=Av. perimeter
+        TP=Total perimeter
+        SP=Sparsity
+        FA=Field area
+        CO=Coverage
+        """
+
         if self == VisProp.NUMEROSITY:
             return "N"
         elif self == VisProp.LOG_SIZE:
