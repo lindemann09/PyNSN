@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from pynsn import rnd
 import pynsn
@@ -49,10 +50,15 @@ stim.shape_add_random_pos(pynsn.Dot(diameter=10), n=20)
 stim.colours.convex_hull = "green"
 
 
-nsn.to_json("demo.json")
+print(nsn.properties_txt())
 
+nsn.to_json("demo.json", tabular=True)
+x = pynsn.NSNStimulus.from_json("demo.json")
 
-# pynsn.NSNStimulus.fromdict(d) # FIXME
+print(x.properties_txt())
 
 a = pil_image.create(nsn)
 a.save("shapes_test.png")
+
+a = pil_image.create(x)
+a.save("shapes_test2.png")

@@ -160,23 +160,6 @@ class ShapeArray(object):
         self.shape_delete(index)
         return rtn
 
-    def to_dict(self) -> dict:
-        """Dict representation of the shape array
-        """
-
-        return {"shape_array": [x.to_dict() for x in self.shapes]}
-
-    @staticmethod
-    def from_dict(d: Dict[str, Any]) -> ShapeArray:
-        """read shape array from dict"""
-        ##
-        rtn = ShapeArray()
-        for sd in d["shape_array"]:
-            s = dict_to_shape(sd)
-            if isinstance(s, AbstractShape):
-                rtn.shape_add(s)
-        return rtn
-
     def sort_by_excentricity(self):
         """Sort order fo the shapes in the array by excentricity, that is, by the
         distance the center of the convex hull (from close to far)

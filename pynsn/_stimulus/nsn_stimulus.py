@@ -3,6 +3,7 @@
 """
 from __future__ import annotations
 from copy import deepcopy
+import json
 from pathlib import Path
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
@@ -83,7 +84,7 @@ class NSNStimulus(ShapeArray):
         """
         return self._properties
 
-    def properties_txt(self, with_hash: bool = False, short_format: bool = False) -> str:
+    def properties_txt(self, with_hash: bool = True, short_format: bool = False) -> str:
         if with_hash:
             if not short_format:
                 rtn = f"- Hash  {self.hash()}\n "
@@ -113,7 +114,7 @@ class NSNStimulus(ShapeArray):
             pass
         return rtn.hexdigest()
 
-    def to_dict(self, tabular: bool = False) -> dict:
+    def to_dict(self, tabular: bool = True) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
@@ -124,7 +125,8 @@ class NSNStimulus(ShapeArray):
         if tabular:
             rtn.update({"shape_table": self.table_dict()})
         else:
-            rtn.update(super().to_dict())
+            d = {"shape_array": [x.to_dict() for x in self.shapes]}
+            rtn.update(d)
 
         return rtn
 
@@ -136,22 +138,46 @@ class NSNStimulus(ShapeArray):
                           min_distance_target_area=ta.min_dist_boarder,
                           min_distance=d["min_distance"])
         rtn.colours = StimulusColours.from_dict(d["colours"])
-        # add shapes
-        for sd in d["shape_array"]:
-            s = dict_to_shape(sd)
-            if isinstance(s, AbstractShape):
+
+        if "shape_array" in d:
+            # add shapes
+            for sd in d["shape_array"]:
+                s = dict_to_shape(sd)
+                if isinstance(s, AbstractShape):
+                    rtn.shape_add(s)
+        elif "shape_table" in d:
+            lst = zip(d["shape_table"]["type"],
+                      d["shape_table"]["x"], d["shape_table"]["y"],
+                      d["shape_table"]["width"], d["shape_table"]["height"],
+                      d["shape_table"]["attr"])
+            for t, x, y, w, h, attr in lst:
+                if t == Dot.shape_type():
+                    s = Dot(diameter=w, xy=(x, y), attribute=attr)
+                elif t == Ellipse.shape_type():
+                    s = Ellipse(size=(w, h), xy=(x, y), attribute=attr)
+                elif t == Rectangle.shape_type():
+                    s = Rectangle(size=(w, h), xy=(x, y), attribute=attr)
+                else:
+                    raise NotImplementedError(f"Type: {t}")
                 rtn.shape_add(s)
+
         return rtn
 
     def to_json(self,
                 filename: Union[None, str, Path] = None,
-                indent: int = 2, tabular: bool = False) -> str:
+                indent: int = 2, tabular: bool = True) -> str:
         d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)
         return json_str
+
+    @staticmethod
+    def from_json(file_path: Union[str, Path]) -> NSNStimulus:
+        with open(file_path, 'r') as fl:
+            d = json.load(fl)
+        return NSNStimulus.from_dict(d)
 
     def fix_overlaps(self,
                      inside_convex_hull: bool = False,
@@ -335,6 +361,6 @@ class NSNStimulus(ShapeArray):
              "y": self.xy[:, 1].tolist(),
              "width": self.sizes[:, 0].tolist(),
              "height": self.sizes[:, 1].tolist(),
-             "attributes": [str(x) for x in self.get_attributes()]
+             "attr": [str(x) for x in self.get_attributes()]
              }
         return d
