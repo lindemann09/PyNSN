@@ -1,7 +1,8 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
-from copy import copy, deepcopy
-from typing import Optional
+from copy import deepcopy
+from pathlib import Path
+from typing import Union
 
 import numpy as _np
 import svgwrite as _svg
@@ -10,7 +11,7 @@ from .. import _stimulus, _shapes
 from . import _base
 
 
-def create(filename: str,
+def create(filename: Union[str, Path],
            nsn_stimulus: _stimulus.NSNStimulus) -> _svg.Drawing:
     """SVG image/file, vector image format
 

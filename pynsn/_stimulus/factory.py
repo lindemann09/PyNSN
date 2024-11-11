@@ -3,6 +3,7 @@
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
+from pathlib import Path
 from typing import Optional, Union
 
 from .. import defaults
@@ -97,10 +98,12 @@ class StimulusFactory(object):
             rtn.update({f"shape{x}": d})
         return rtn
 
-    def tojson(self, filename: str = "", indent: int = 2) -> str:
+    def tojson(self,
+               filename: Union[None, str, Path] = None,
+               indent: int = 2) -> str:
         """json representation of the stimulus factory"""
         json_str = formated_json(self.todict(), indent=indent)
-        if filename:
+        if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)
         return json_str

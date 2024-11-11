@@ -3,6 +3,7 @@
 """
 from __future__ import annotations
 from copy import deepcopy
+from pathlib import Path
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
@@ -128,11 +129,11 @@ class NSNStimulus(ShapeArray):
         return rtn
 
     def tojson(self,
-               filename: str = "",
+               filename: Union[None, str, Path] = None,
                indent: int = 2, tabular: bool = True) -> str:
         d = self.todict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
-        if filename:
+        if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)
         return json_str
