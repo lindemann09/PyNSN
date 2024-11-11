@@ -9,12 +9,12 @@ def dict_to_shape(d: _tp.Dict[str, _tp.Any]) -> _tp.Optional[AbstractShape]:
     Returns None, if dict does not contain a shape"""
 
     if d["type"] == Dot.shape_type():
-        return Dot.fromdict(d)
+        return Dot.from_dict(d)
     elif d["type"] == Ellipse.shape_type():
-        return Ellipse.fromdict(d)
+        return Ellipse.from_dict(d)
     elif d["type"] == Rectangle.shape_type():
-        return Rectangle.fromdict(d)
+        return Rectangle.from_dict(d)
     elif d["type"] == PolygonShape.shape_type():
-        return PolygonShape.fromdict(d)
+        return PolygonShape.from_dict(d)
 
     return None

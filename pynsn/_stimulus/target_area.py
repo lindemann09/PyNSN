@@ -13,7 +13,7 @@ import shapely
 from numpy.typing import NDArray
 
 from .. import defaults
-from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle
+from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle, dict_to_shape
 from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError
 from ..rnd._distributions_2d import AbstractMultivarDistr, Uniform2D
@@ -104,13 +104,17 @@ class TargetArea(object):
             if self.is_object_inside(shape):
                 return shape
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the target area"""
-        return {"shape": self.shape.todict(),
+        return {"shape": self.shape.to_dict(),
                 "min_dist_boarder": self.min_dist_boarder}
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> TargetArea:
+    def from_dict(d: Dict[str, Any]) -> TargetArea:
         """read target area from dict"""
-        # the_dict["shape"]
-        raise NotImplementedError()  # FIXME
+        s = dict_to_shape(d["shape"])
+        if s is None:
+            raise RuntimeError("Can find shape for target array")
+        else:
+            return TargetArea(shape=s,  # type: ignore
+                              min_dist_boarder=d["min_dist_boarder"])

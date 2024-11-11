@@ -18,11 +18,12 @@ rnd_ell = rnd.RndRectangle(width=(40.8, 10.4), height=(20, 50),
 rnd_dot = rnd.RndDot(diameter=(40.8, 10),
                      attributes=["green", "black", "orange", "red"])
 
-if True:
+if False:
 
     nsn = pynsn.NSNStimulus(
         # target_area_shape=pynsn.Dot(diameter=500, attribute="#00FFFF"),
-        target_area_shape=pynsn.Rectangle(size=(400, 500)),
+        target_area_shape=pynsn.Rectangle(
+            size=(300, 500), attribute="#00FFFF"),
         min_distance_target_area=10,
         min_distance=2)
     # random dot
@@ -32,24 +33,26 @@ if True:
     print(nsn.properties.numerosity)
 
 if True:
+
     factory = pynsn.StimulusFactory(
-        target_area_shape=pynsn.Rectangle((500, 400)),
+        target_area_shape=pynsn.Rectangle((500, 400), attribute="white"),
         min_distance_target_area=10,
         min_distance=2)
     factory.shape_add(rnd_ell, 10)
     factory.shape_add(rnd_dot, 10)
 
     nsn = factory.create()
-    factory.tojson(filename="demo.json")
-
+    factory.to_json(filename="demo.json")
 
 stim = pynsn.NSNStimulus(target_area_shape=pynsn.Dot(300))
 stim.shape_add_random_pos(pynsn.Dot(diameter=10), n=20)
 stim.colours.convex_hull = "green"
 
-d = stim.todict()
+
+nsn.to_json("demo.json")
+
 
 # pynsn.NSNStimulus.fromdict(d) # FIXME
 
-a = pil_image.create(stim)
+a = pil_image.create(nsn)
 a.save("shapes_test.png")

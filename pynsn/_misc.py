@@ -26,7 +26,7 @@ def formated_json(d: dict, indent: int = 2) -> str:
     for x in json_str:
         if x == "{":
             i = i + indent
-            x = x + "\n" + " " * i
+            x = x + "\n" + " " * (i-1)
         elif x == "," and not block_newline:
             x = x + "\n" + " " * (i-1)  # -1, because a space follows
         elif x == "}":

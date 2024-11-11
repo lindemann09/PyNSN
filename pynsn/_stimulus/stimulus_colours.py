@@ -29,7 +29,7 @@ class StimulusColours(object):
         self.opacity_object = opacity_object
         self.opacity_guides = opacity_guides
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         return {
             "total_area": self.target_area.value,
             "background": self.background.value,
@@ -42,7 +42,7 @@ class StimulusColours(object):
         }
 
     @staticmethod
-    def fromdict(d: Dict[str, Any]) -> StimulusColours:
+    def from_dict(d: Dict[str, Any]) -> StimulusColours:
         return StimulusColours(
             target_area=d["total_area"],
             object_default=d["default_object"],
@@ -54,7 +54,7 @@ class StimulusColours(object):
             opacity_guides=d["info_opacity"])
 
     def __str__(self) -> str:
-        return _misc.dict_to_text(self.todict())
+        return _misc.dict_to_text(self.to_dict())
 
     @property
     def target_area(self) -> Colour:

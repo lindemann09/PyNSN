@@ -74,7 +74,7 @@ class AbstractPoint(metaclass=ABCMeta):
         """True is shapes fully inside the shapes (dist)
         """
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the object"""
         return {"type": self.shape_type(),
                 "xy": self.xy.tolist()}
@@ -184,15 +184,16 @@ class AbstractShape(metaclass=ABCMeta):
 
     ## abstract methods ###
     @abstractmethod
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the object"""
         return {"type": self.shape_type(),
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]):
-        raise NotImplementedError()  # FIXME
+    @abstractmethod
+    def from_dict(d: Dict[str, Any]):
+        pass
 
     @property
     @abstractmethod

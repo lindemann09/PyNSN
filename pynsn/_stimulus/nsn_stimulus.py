@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 
 from .. import defaults
 from .._misc import formated_json
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle
+from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, dict_to_shape
 from .._shapes.abc_shapes import AbstractShape
 from ..errors import NoSolutionError, ShapeOutsideError, ShapeOverlapsError
 from ..rnd._random_shape import AbstractRndShape
@@ -86,13 +86,13 @@ class NSNStimulus(ShapeArray):
     def properties_txt(self, with_hash: bool = False, short_format: bool = False) -> str:
         if with_hash:
             if not short_format:
-                rtn = f"- Hash {self.hash()}\n "
+                rtn = f"- Hash  {self.hash()}\n "
             else:
                 rtn = "HASH: {} ".format(self.hash())
         else:
             rtn = ""
 
-        return rtn + self._properties.totext(short_format)
+        return rtn + self._properties.to_text(short_format)[1:]
 
     def hash(self) -> str:
         """Hash (MD5 hash) of the array
@@ -113,36 +113,40 @@ class NSNStimulus(ShapeArray):
             pass
         return rtn.hexdigest()
 
-    def todict(self, tabular: bool = False) -> dict:
+    def to_dict(self, tabular: bool = False) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
-               "target_area": self.target_area.todict(),
+               "target_area": self.target_area.to_dict(),
                "min_distance": self.min_distance,
-               "colours": self._colours.todict()}
+               "colours": self._colours.to_dict()}
 
         if tabular:
             rtn.update({"shape_table": self.table_dict()})
         else:
-            rtn.update(super().todict())
+            rtn.update(super().to_dict())
 
         return rtn
 
     @staticmethod
-    def fromdict(d: Dict[str, Any]) -> NSNStimulus:
+    def from_dict(d: Dict[str, Any]) -> NSNStimulus:
         """read shape array from dict"""
-        ta = TargetArea.fromdict(d)
+        ta = TargetArea.from_dict(d["target_area"])
         rtn = NSNStimulus(target_area_shape=ta.shape,
                           min_distance_target_area=ta.min_dist_boarder,
                           min_distance=d["min_distance"])
-        rtn.colours = StimulusColours.fromdict(d)
-        rtn.add_shapes_from_dict(d)  # call shape_array function
+        rtn.colours = StimulusColours.from_dict(d["colours"])
+        # add shapes
+        for sd in d["shape_array"]:
+            s = dict_to_shape(sd)
+            if isinstance(s, AbstractShape):
+                rtn.shape_add(s)
         return rtn
 
-    def tojson(self,
-               filename: Union[None, str, Path] = None,
-               indent: int = 2, tabular: bool = True) -> str:
-        d = self.todict(tabular=tabular)
+    def to_json(self,
+                filename: Union[None, str, Path] = None,
+                indent: int = 2, tabular: bool = False) -> str:
+        d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding="utf-8") as fl:

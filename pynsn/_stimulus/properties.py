@@ -126,11 +126,11 @@ class ArrayProperties(object):
         self._shape_arr = shape_array
         self._ch = None
 
-    def totext(self, short_format: bool = False) -> str:
+    def to_text(self, short_format: bool = False) -> str:
         rtn = ""
         if not short_format:
             first = True
-            for k, v in self.todict().items():
+            for k, v in self.to_dict().items():
                 if first and len(rtn) == 0:
                     rtn = "- "
                     first = False
@@ -138,16 +138,16 @@ class ArrayProperties(object):
                     rtn += " "
                 rtn += key_value_format(k, v) + "\n "
         else:
-            for k, v in self.todict(short_format=True).items():
+            for k, v in self.to_dict(short_format=True).items():
                 rtn += f"{k}: {v:.2f}, "
             rtn = rtn[:-2]
         return rtn.rstrip()
 
     def __repr__(self) -> str:
-        return self.totext(short_format=True)
+        return self.to_text(short_format=True)
 
     def __str__(self) -> str:
-        return self.totext()
+        return self.to_text()
 
     @property
     def areas(self) -> NDArray[np.float64]:
@@ -308,13 +308,13 @@ class ArrayProperties(object):
         else:
             raise ValueError("f{property_flag} is a unknown visual feature")
 
-    def todict(self, short_format:bool=False) -> dict:
+    def to_dict(self, short_format: bool = False) -> dict:
         """Dictionary with the visual properties"""
         rtn = []
         if short_format:
             rtn.extend([(x.short_name(), self.get(x))
-                   for x in list(VisProp)])  # type: ignore
+                        for x in list(VisProp)])  # type: ignore
         else:
             rtn.extend([(str(x), self.get(x))
-                   for x in list(VisProp)])  # type: ignore
+                        for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)

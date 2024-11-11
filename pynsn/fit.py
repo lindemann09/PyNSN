@@ -11,8 +11,6 @@ from ._stimulus import NSNStimulus as _NSNStimulus
 from ._stimulus import VisProp as _VisProp
 from .rnd import generator as _rnd_generator
 
-# FIXME module not yet tested
-
 
 def total_surface_area(stim: _NSNStimulus,
                        value: _tp.Union[float, _np.float64]) -> None:
@@ -23,7 +21,9 @@ def total_surface_area(stim: _NSNStimulus,
     Args:
         value: surface area
     """
-    stim.sizes = stim.sizes * _np.sqrt((value / stim.properties.total_surface_area))
+    stim.sizes = stim.sizes * \
+        _np.sqrt((value / stim.properties.total_surface_area))
+
 
 def total_perimeter(stim: _NSNStimulus,
                     value: _tp.Union[float, _np.float64]) -> None:
@@ -235,7 +235,7 @@ def sparsity(stim: _NSNStimulus,
 
 
 def adapt(stim: _NSNStimulus,
-        property_flag: _VisProp, value: float) -> _tp.Any:
+          property_flag: _VisProp, value: float) -> _tp.Any:
     """
     adapt_properties: continuous property or list of continuous properties
     several properties to be adapted
@@ -288,13 +288,14 @@ def adapt(stim: _NSNStimulus,
             f"Not implemented for {str(property_flag)}"
         )
 
+
 def match(stim: _NSNStimulus,
           ref: _NSNStimulus,
           property_flag: _VisProp) -> _tp.Any:
     """
     Match the visual property of stimulus `stim` to stimulus `ref`
     """
-       # type check
+    # type check
     if not isinstance(property_flag, _VisProp):
         raise ValueError(
             f"{property_flag} is not a visual feature.")

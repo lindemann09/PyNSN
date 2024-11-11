@@ -160,14 +160,14 @@ class ShapeArray(object):
         self.shape_delete(index)
         return rtn
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """Dict representation of the shape array
         """
 
-        return {"shape_array": [x.todict() for x in self.shapes]}
+        return {"shape_array": [x.to_dict() for x in self.shapes]}
 
     @staticmethod
-    def fromdict(d: Dict[str, Any]) -> ShapeArray:
+    def from_dict(d: Dict[str, Any]) -> ShapeArray:
         """read shape array from dict"""
         ##
         rtn = ShapeArray()

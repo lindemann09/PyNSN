@@ -82,14 +82,14 @@ class Rectangle(AbstractShape):
         return (f"Rectangle(xy={self._xy}, size={self.size}, "
                 + f"attribute='{self._attribute}')")
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"size": self.size.tolist()})
         return d
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> Rectangle:
-        raise NotImplementedError()  # FIXME
+    def from_dict(d: Dict[str, Any]) -> Rectangle:
+        return Rectangle(size=d["size"], xy=d["xy"], attribute=d["attr"])
 
     def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
         if isinstance(shape, AbstractPoint):
@@ -188,12 +188,12 @@ class PolygonShape(AbstractShape):
                            b_exterior_ring=shape_exterior_ring,
                            min_dist_boarder=min_dist_boarder)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         del d["xy"]
         d.update({"wkt": shapely.to_wkt(self.polygon)})
         return d
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> PolygonShape:
+    def from_dict(the_dict: Dict[str, Any]) -> PolygonShape:
         raise NotImplementedError()  # FIXME

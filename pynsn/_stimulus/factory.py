@@ -87,31 +87,33 @@ class StimulusFactory(object):
                                      ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
         return rtn
 
-    def todict(self) -> dict:
+    def to_dict(self) -> dict:
         """dict representation of the stimulus factory"""
         rtn = {}
         rtn.update({"type": self.__class__.__name__})
-        base_dict = self._base.todict(tabular=False)
-        print(base_dict)
-        del base_dict["shape_array"]
-        del base_dict["hash"]
+        base_dict = self._base.to_dict(tabular=False)
+        try:
+            del base_dict["shape_array"]
+            del base_dict["hash"]
+        except KeyError:
+            pass
         rtn.update(base_dict)
         for x, s in enumerate(self._shapes):
             d = {"n": s[0]}
-            d.update(s[1].todict())
+            d.update(s[1].to_dict())
             rtn.update({f"shape{x}": d})
         return rtn
 
-    def tojson(self,
-               filename: Union[None, str, Path] = None,
-               indent: int = 2) -> str:
+    def to_json(self,
+                filename: Union[None, str, Path] = None,
+                indent: int = 2) -> str:
         """json representation of the stimulus factory"""
-        json_str = formated_json(self.todict(), indent=indent)
+        json_str = formated_json(self.to_dict(), indent=indent)
         if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)
         return json_str
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> StimulusFactory:
+    def from_dict(the_dict: Dict[str, Any]) -> StimulusFactory:
         raise NotImplementedError()  # FIXME

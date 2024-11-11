@@ -128,14 +128,14 @@ class Ellipse(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"size": self.size.tolist()})
         return d
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> Ellipse:
-        raise NotImplementedError()  # FIXME
+    def from_dict(d: Dict[str, Any]) -> Ellipse:
+        return Ellipse(size=d["size"], xy=d["xy"], attribute=d["attr"])
 
 
 class Dot(AbstractCircularShape):
@@ -198,14 +198,14 @@ class Dot(AbstractCircularShape):
                                b_exterior_ring=shape_exterior_ring,
                                min_dist_boarder=min_dist_boarder)
 
-    def todict(self) -> dict:
-        d = super().todict()
+    def to_dict(self) -> dict:
+        d = super().to_dict()
         d.update({"diameter": self.diameter})
         return d
 
     @staticmethod
-    def fromdict(the_dict: Dict[str, Any]) -> Dot:
-        raise NotImplementedError()  # FIXME
+    def from_dict(d: Dict[str, Any]) -> Dot:
+        return Dot(diameter=d["diameter"], xy=d["xy"], attribute=d["attr"])
 
 
 def _distance_circ_circ(a: Union[AbstractPoint, AbstractCircularShape],
