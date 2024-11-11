@@ -5,7 +5,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from pathlib import Path
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 from typing import Sequence, Tuple
 
 import numpy as np
@@ -76,7 +76,7 @@ class AbstractPoint(metaclass=ABCMeta):
 
     def todict(self) -> dict:
         """dict representation of the object"""
-        return {"type": str(self.__class__.__name__),
+        return {"type": self.shape_type(),
                 "xy": self.xy.tolist()}
 
 
@@ -189,6 +189,10 @@ class AbstractShape(metaclass=ABCMeta):
         return {"type": self.shape_type(),
                 "xy": self.xy.tolist(),
                 "attr": str(self.attribute)}
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]):
+        raise NotImplementedError()  # FIXME
 
     @property
     @abstractmethod

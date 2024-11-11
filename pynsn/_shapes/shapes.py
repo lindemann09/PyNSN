@@ -12,7 +12,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import shapely
@@ -86,6 +86,10 @@ class Rectangle(AbstractShape):
         d = super().todict()
         d.update({"size": self.size.tolist()})
         return d
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> Rectangle:
+        raise NotImplementedError()  # FIXME
 
     def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
         if isinstance(shape, AbstractPoint):
@@ -189,3 +193,7 @@ class PolygonShape(AbstractShape):
         del d["xy"]
         d.update({"wkt": shapely.to_wkt(self.polygon)})
         return d
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> PolygonShape:
+        raise NotImplementedError()  # FIXME

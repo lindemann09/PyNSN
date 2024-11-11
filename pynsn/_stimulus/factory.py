@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 """
 """
+
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from .. import defaults
 from .._misc import formated_json
@@ -88,8 +91,9 @@ class StimulusFactory(object):
         """dict representation of the stimulus factory"""
         rtn = {}
         rtn.update({"type": self.__class__.__name__})
-        base_dict = self._base.todict()
-        del base_dict["shape_table"]
+        base_dict = self._base.todict(tabular=False)
+        print(base_dict)
+        del base_dict["shape_array"]
         del base_dict["hash"]
         rtn.update(base_dict)
         for x, s in enumerate(self._shapes):
@@ -107,3 +111,7 @@ class StimulusFactory(object):
             with open(filename, "w", encoding="utf-8") as fl:
                 fl.write(json_str)
         return json_str
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> StimulusFactory:
+        raise NotImplementedError()  # FIXME

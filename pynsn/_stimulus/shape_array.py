@@ -13,7 +13,7 @@ import shapely
 from numpy.typing import NDArray
 
 from .._misc import IntOVector, delete_elements
-from .._shapes import Dot, Ellipse, Point2D
+from .._shapes import Dot, Ellipse, Point2D, dict_to_shape
 from .._shapes import ellipse_geometry as ellipse_geo
 from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
                                   AttributeType)
@@ -166,6 +166,17 @@ class ShapeArray(object):
 
         return {"shape_array": [x.todict() for x in self.shapes]}
 
+    @staticmethod
+    def fromdict(d: Dict[str, Any]) -> ShapeArray:
+        """read shape array from dict"""
+        ##
+        rtn = ShapeArray()
+        for sd in d["shape_array"]:
+            s = dict_to_shape(sd)
+            if isinstance(s, AbstractShape):
+                rtn.shape_add(s)
+        return rtn
+
     def sort_by_excentricity(self):
         """Sort order fo the shapes in the array by excentricity, that is, by the
         distance the center of the convex hull (from close to far)
@@ -293,12 +304,6 @@ class ShapeArray(object):
         overlaps = self.dwithin(self.shapes[index], distance=min_distance)
         overlaps[index] = False  # ignore overlap with oneself
         return overlaps
-
-    @staticmethod
-    def from_dict(the_dict: Dict[str, Any]) -> ShapeArray:
-        """read shape array from dict"""
-        ##
-        raise NotImplementedError()  # FIXME
 
     def _random_free_position(self,
                               shape: AbstractShape,

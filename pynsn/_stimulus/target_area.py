@@ -1,10 +1,12 @@
 """
 
 """
+from __future__ import annotations
+
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import warnings
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import shapely
@@ -106,3 +108,9 @@ class TargetArea(object):
         """dict representation of the target area"""
         return {"shape": self.shape.todict(),
                 "min_dist_boarder": self.min_dist_boarder}
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> TargetArea:
+        """read target area from dict"""
+        # the_dict["shape"]
+        raise NotImplementedError()  # FIXME

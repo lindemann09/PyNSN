@@ -14,9 +14,9 @@ rb = pynsn.Rectangle(xy=(-50, -45), size=(10, 10), attribute="#cc0F00")
 r_big = pynsn.Rectangle(xy=(10, -40), size=(150, 60), attribute="#000088")
 
 rnd_ell = rnd.RndRectangle(width=(40.8, 10.4), height=(20, 50),
-                              attributes=["green", "black", "orange", "red"])
+                           attributes=["green", "black", "orange", "red"])
 rnd_dot = rnd.RndDot(diameter=(40.8, 10),
-                        attributes=["green", "black", "orange", "red"])
+                     attributes=["green", "black", "orange", "red"])
 
 if True:
 
@@ -46,6 +46,10 @@ if True:
 stim = pynsn.NSNStimulus(target_area_shape=pynsn.Dot(300))
 stim.shape_add_random_pos(pynsn.Dot(diameter=10), n=20)
 stim.colours.convex_hull = "green"
+
+d = stim.todict()
+
+# pynsn.NSNStimulus.fromdict(d) # FIXME
 
 a = pil_image.create(stim)
 a.save("shapes_test.png")

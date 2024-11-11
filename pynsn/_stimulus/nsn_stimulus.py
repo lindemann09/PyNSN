@@ -8,7 +8,7 @@ from pathlib import Path
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from hashlib import md5
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -113,7 +113,7 @@ class NSNStimulus(ShapeArray):
             pass
         return rtn.hexdigest()
 
-    def todict(self, tabular: bool = True) -> dict:
+    def todict(self, tabular: bool = False) -> dict:
         """Dict representation of the shape array
         """
         rtn = {"hash": self.hash(),
@@ -126,6 +126,17 @@ class NSNStimulus(ShapeArray):
         else:
             rtn.update(super().todict())
 
+        return rtn
+
+    @staticmethod
+    def fromdict(d: Dict[str, Any]) -> NSNStimulus:
+        """read shape array from dict"""
+        ta = TargetArea.fromdict(d)
+        rtn = NSNStimulus(target_area_shape=ta.shape,
+                          min_distance_target_area=ta.min_dist_boarder,
+                          min_distance=d["min_distance"])
+        rtn.colours = StimulusColours.fromdict(d)
+        rtn.add_shapes_from_dict(d)  # call shape_array function
         return rtn
 
     def tojson(self,
@@ -219,7 +230,7 @@ class NSNStimulus(ShapeArray):
 
     def shape_add(self, shape: AbstractShape,
                   ignore_overlaps: bool = False):
-        """"adds shape to random positions in the array"""
+        """"adds shape to array"""
 
         if not ignore_overlaps and np.any(self.shape_overlaps(shape)):
             raise ShapeOverlapsError(f"Shape overlaps with array. {shape}")

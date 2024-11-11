@@ -1,4 +1,5 @@
-from collections import OrderedDict
+from __future__ import annotations
+from typing import Any, Dict
 
 from .. import _misc, defaults
 from .._shapes.colour import Colour, ColourLike
@@ -29,18 +30,28 @@ class StimulusColours(object):
         self.opacity_guides = opacity_guides
 
     def todict(self) -> dict:
-        return OrderedDict(
-            {
-                "total_area": self.target_area.value,
-                "background": self.background.value,
-                "default_object": self.object_default.value,
-                "convex_hull": self.convex_hull.value,
-                "center_of_field_area": self.center_of_field_area.value,
-                "center_of_mass": self.center_of_mass.value,
-                "object_opacity": self.opacity_object,
-                "info_opacity": self.opacity_guides,
-            }
-        )
+        return {
+            "total_area": self.target_area.value,
+            "background": self.background.value,
+            "default_object": self.object_default.value,
+            "convex_hull": self.convex_hull.value,
+            "center_of_field_area": self.center_of_field_area.value,
+            "center_of_mass": self.center_of_mass.value,
+            "object_opacity": self.opacity_object,
+            "info_opacity": self.opacity_guides,
+        }
+
+    @staticmethod
+    def fromdict(d: Dict[str, Any]) -> StimulusColours:
+        return StimulusColours(
+            target_area=d["total_area"],
+            object_default=d["default_object"],
+            background=d["background"],
+            convex_hull=d["convex_hull"],
+            center_of_field_area=d["center_of_field_area"],
+            center_of_mass=d["center_of_mass"],
+            opacity_object=d["object_opacity"],
+            opacity_guides=d["info_opacity"])
 
     def __str__(self) -> str:
         return _misc.dict_to_text(self.todict())

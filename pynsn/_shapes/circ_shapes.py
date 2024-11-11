@@ -10,7 +10,7 @@ from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from typing import Optional,  Union
+from typing import Any, Dict, Optional,  Union
 from numpy.typing import NDArray
 
 import numpy as np
@@ -133,6 +133,10 @@ class Ellipse(AbstractCircularShape):
         d.update({"size": self.size.tolist()})
         return d
 
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> Ellipse:
+        raise NotImplementedError()  # FIXME
+
 
 class Dot(AbstractCircularShape):
 
@@ -198,6 +202,10 @@ class Dot(AbstractCircularShape):
         d = super().todict()
         d.update({"diameter": self.diameter})
         return d
+
+    @staticmethod
+    def fromdict(the_dict: Dict[str, Any]) -> Dot:
+        raise NotImplementedError()  # FIXME
 
 
 def _distance_circ_circ(a: Union[AbstractPoint, AbstractCircularShape],
