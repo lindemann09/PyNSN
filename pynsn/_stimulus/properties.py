@@ -86,11 +86,11 @@ class VisProp(enum.Flag):  # visual properties
     def short_name(self) -> str:
         """Short names
         N=Numerosity
-        TSA=Total surface area
-        ASA=Av. surface area
-        AP=Av. perimeter
+        TSA = Total surface area
+        ASA = Av. surface area (also item surface area)
+        AP = Av. perimeter
         TP=Total perimeter
-        SP=Sparsity
+        SP=Sparsity  (1/density)
         FA=Field area
         CO=Coverage
         """
@@ -248,11 +248,10 @@ class ArrayProperties(object):
 
     @property
     def log_size(self) -> np.float64:
-        fa = self.field_area
-        if fa == 0:
+        if self.numerosity == 0:
             return np.float64(np.nan)
         else:
-            return np.log2(fa) + np.log2(self.average_surface_area)
+            return np.log2(self.total_surface_area) + np.log2(self.average_surface_area)
 
     @property
     def log_spacing(self) -> np.float64:
