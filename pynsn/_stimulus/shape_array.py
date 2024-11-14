@@ -17,7 +17,7 @@ from .._shapes import Dot, Ellipse, Point2D
 from .._shapes import ellipse_geometry as ellipse_geo
 from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
                                   AttributeType)
-from ..errors import NoSolutionError
+from ..exceptions import NoSolutionError
 from ..rnd._rng import WalkAround
 from .convex_hull import ConvexHull
 from .target_area import TargetArea

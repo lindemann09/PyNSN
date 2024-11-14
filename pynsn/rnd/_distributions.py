@@ -9,7 +9,7 @@ from typing import Optional, Sequence, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from ..errors import NoSolutionError
+from ..exceptions import NoSolutionError
 from . import _rng
 from .._shapes.colour import Colour
 from .._shapes.shapes import PolygonShape

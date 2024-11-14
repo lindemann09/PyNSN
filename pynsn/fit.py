@@ -3,13 +3,13 @@ import typing as _tp
 import numpy as _np
 import shapely as _shp
 
-from pynsn.errors import NoSolutionError as _NoSolutionError
 
 from . import defaults as _defaults
 from . import _misc
 from . import NSNStimulus as _NSNStimulus
 from . import VisProp as _VisProp
 from .rnd import generator as _rnd_generator
+from .exceptions import NoSolutionError as _NoSolutionError
 
 
 def total_surface_area(stim: _NSNStimulus,

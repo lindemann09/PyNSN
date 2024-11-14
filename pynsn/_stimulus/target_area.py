@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 from .. import defaults
 from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle, dict_to_shape
 from .._shapes.abc_shapes import AbstractShape
-from ..errors import NoSolutionError
+from ..exceptions import NoSolutionError
 from ..rnd._distributions_2d import AbstractMultivarDistr, Uniform2D
 
 

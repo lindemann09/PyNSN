@@ -2,9 +2,17 @@
 
 """
 from __future__ import annotations
-from copy import deepcopy
+
 import json
+import warnings
+from copy import deepcopy
 from pathlib import Path
+
+from ..rnd._random_shape import AbstractRndShape
+from .properties import ArrayProperties
+from .shape_array import ShapeArray
+from .stimulus_colours import StimulusColours
+from .target_area import TargetArea
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
@@ -16,14 +24,11 @@ from numpy.typing import NDArray
 
 from .. import defaults
 from .._misc import formated_json
-from .._shapes import Dot, Ellipse, Point2D, PolygonShape, Rectangle, dict_to_shape
+from .._shapes import (Dot, Ellipse, Point2D, PolygonShape, Rectangle,
+                       dict_to_shape)
 from .._shapes.abc_shapes import AbstractShape
-from ..errors import NoSolutionError, ShapeOutsideError, ShapeOverlapsError
-from ..rnd._random_shape import AbstractRndShape
-from .properties import ArrayProperties
-from .shape_array import ShapeArray
-from .stimulus_colours import StimulusColours
-from .target_area import TargetArea
+from ..exceptions import (NoSolutionError, ShapeOutsideError, ShapeOutsideWarning,
+                          ShapeOverlapsError)
 
 
 class NSNStimulus(ShapeArray):
@@ -263,9 +268,17 @@ class NSNStimulus(ShapeArray):
         """"adds shape to array"""
 
         if not ignore_overlaps and np.any(self.shape_overlaps(shape)):
-            raise ShapeOverlapsError(f"Shape overlaps with array. {shape}")
+            txt = f"Shape overlaps with array. {shape}"
+            if defaults.WARNINGS:
+                warnings.warn(txt, ShapeOutsideWarning)
+            else:
+                raise ShapeOverlapsError(txt)
         if not self.target_area.is_object_inside(shape):
-            raise ShapeOutsideError(f"Shape outside target array. {shape}")
+            txt = f"Shape outside target array. {shape}"
+            if defaults.WARNINGS:
+                warnings.warn(txt, ShapeOutsideWarning)
+            else:
+                raise ShapeOutsideError(txt)
 
         super().shape_add(shape)
 
