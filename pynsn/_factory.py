@@ -1,7 +1,7 @@
-from __future__ import annotations
+"""
+"""
 
-"""
-"""
+from __future__ import annotations
 
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
@@ -9,13 +9,13 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-from .. import defaults
-from .._misc import formated_json
-from .._shapes import Dot, Ellipse, PolygonShape, Rectangle
-from .._shapes.abc_shapes import AbstractShape
-from ..rnd._random_shape import AbstractRndShape
-from .nsn_stimulus import NSNStimulus
-from .stimulus_colours import StimulusColours
+from . import defaults
+from ._misc import formated_json
+from ._shapes import Dot, Ellipse, PolygonShape, Rectangle
+from ._shapes.abc_shapes import AbstractShape
+from .rnd._random_shape import AbstractRndShape
+from ._stimulus.nsn_stimulus import NSNStimulus
+from ._stimulus.stimulus_colours import StimulusColours
 
 # TODO  incremental_random_dot_array
 

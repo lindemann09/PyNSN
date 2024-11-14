@@ -6,8 +6,8 @@ from typing import Any, Optional
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .._stimulus import NSNStimulus
-from .._shapes import Dot, Picture, Rectangle, Ellipse
+from .. import NSNStimulus
+from .. import Dot, Picture, Rectangle, Ellipse
 
 # helper for type checking and error raising error
 

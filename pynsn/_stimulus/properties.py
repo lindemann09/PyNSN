@@ -35,29 +35,14 @@ class VisProp(enum.Flag):  # visual properties
     LOG_SPACING = enum.auto()
     LOG_SIZE = enum.auto()
 
-    @staticmethod
-    def size_properties() -> tuple:
-        return (
-            VisProp.LOG_SIZE,
-            VisProp.TOTAL_SURFACE_AREA,
-            VisProp.AV_SURFACE_AREA,
-            VisProp.AV_PERIMETER,
-            VisProp.TOTAL_PERIMETER,
-        )
-
-    @staticmethod
-    def space_properties() -> tuple:
-        return (VisProp.LOG_SPACING, VisProp.SPARSITY, VisProp.FIELD_AREA)
-
     def is_dependent_from(self, other: Any) -> bool:
         """returns true if both properties are not independent"""
-        is_size_prop = self in VisProp.size_properties()
-        is_space_prop = self in VisProp.space_properties()
-        other_size_prop = other in VisProp.size_properties()
-        other_space_prop = other in VisProp.space_properties()
+        is_size_prop = self in SIZE_PROPERTIES
+        is_space_prop = self in SPACE_PROPERTIES
+        other_size_prop = other in SIZE_PROPERTIES
+        other_space_prop = other in SPACE_PROPERTIES
         return (is_size_prop and other_size_prop) or (
-            is_space_prop and other_space_prop
-        )
+            is_space_prop and other_space_prop)
 
     def __str__(self) -> str:
         if self == VisProp.NUMEROSITY:
@@ -67,9 +52,9 @@ class VisProp(enum.Flag):  # visual properties
         elif self == VisProp.TOTAL_SURFACE_AREA:
             return "Total surface area"
         elif self == VisProp.AV_SURFACE_AREA:
-            return "Av. surface area"
+            return "Av. item surface area"
         elif self == VisProp.AV_PERIMETER:
-            return "Av. perimeter"
+            return "Av. item perimeter"
         elif self == VisProp.TOTAL_PERIMETER:
             return "Total perimeter"
         elif self == VisProp.LOG_SPACING:
@@ -85,14 +70,14 @@ class VisProp(enum.Flag):  # visual properties
 
     def short_name(self) -> str:
         """Short names
-        N=Numerosity
+        N = Numerosity
         TSA = Total surface area
         ASA = Av. surface area (also item surface area)
         AP = Av. perimeter
-        TP=Total perimeter
-        SP=Sparsity  (1/density)
-        FA=Field area
-        CO=Coverage
+        TP = Total perimeter
+        SP = Sparsity  (=1/density)
+        FA = Field area
+        CO = Coverage
         """
 
         if self == VisProp.NUMEROSITY:
@@ -117,6 +102,12 @@ class VisProp(enum.Flag):  # visual properties
             return "CO"
         else:
             return "???"
+
+
+SPACE_PROPERTIES = (VisProp.LOG_SPACING, VisProp.SPARSITY, VisProp.FIELD_AREA)
+SIZE_PROPERTIES = (VisProp.LOG_SIZE, VisProp.TOTAL_SURFACE_AREA,
+                   VisProp.AV_SURFACE_AREA, VisProp.AV_PERIMETER,
+                   VisProp.TOTAL_PERIMETER)
 
 
 class ArrayProperties(object):

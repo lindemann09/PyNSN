@@ -7,8 +7,8 @@ from pynsn.errors import NoSolutionError as _NoSolutionError
 
 from . import defaults as _defaults
 from . import _misc
-from ._stimulus import NSNStimulus as _NSNStimulus
-from ._stimulus import VisProp as _VisProp
+from . import NSNStimulus as _NSNStimulus
+from . import VisProp as _VisProp
 from .rnd import generator as _rnd_generator
 
 

@@ -7,7 +7,7 @@ from matplotlib import pyplot as _plt
 from matplotlib.figure import Figure as _Figure
 
 from .. import _shapes
-from .._stimulus import NSNStimulus
+from .. import NSNStimulus as _NSNStimulus
 from . import _base
 from .._stimulus.stimulus_colours import StimulusColours
 
@@ -15,7 +15,7 @@ from .._stimulus.stimulus_colours import StimulusColours
 
 
 def create(
-    nsn_stimulus: NSNStimulus,
+    nsn_stimulus: _NSNStimulus,
     colours: Optional[StimulusColours] = None,
     dpi: float = 100,
 ) -> _Figure:

@@ -6,14 +6,14 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import shapely
 from numpy.typing import NDArray
 
 from .._misc import IntOVector, delete_elements
-from .._shapes import Dot, Ellipse, Point2D, dict_to_shape
+from .._shapes import Dot, Ellipse, Point2D
 from .._shapes import ellipse_geometry as ellipse_geo
 from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
                                   AttributeType)

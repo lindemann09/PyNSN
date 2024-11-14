@@ -12,14 +12,14 @@ from PIL import ImageDraw as _ImageDraw
 
 from . import _base
 from .. import _shapes
-from .. import _stimulus
+from .. import NSNStimulus as _NSNStimulus
 # TODO pillow supports no alpha/opacity
 
 RESAMPLING = _Image.Resampling.LANCZOS
 
 
 def create(
-    nsn_stimulus: _stimulus.NSNStimulus,
+    nsn_stimulus: _NSNStimulus,
     antialiasing: _tp.Union[bool, int] = True,
 ) -> _Image.Image:
     # ImageParameter
@@ -36,8 +36,8 @@ def create(
     )
 
 
-def dual_stimulus(left: _stimulus.NSNStimulus,
-                  right: _stimulus.NSNStimulus,
+def dual_stimulus(left: _NSNStimulus,
+                  right: _NSNStimulus,
                   # distance of centre of each stimulus to background image centre
                   eccentricity: _tp.Optional[int] = None,
                   padding: int = 10,

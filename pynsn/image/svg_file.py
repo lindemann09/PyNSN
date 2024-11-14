@@ -7,12 +7,13 @@ from typing import Union
 import numpy as _np
 import svgwrite as _svg
 
-from .. import _stimulus, _shapes
+from .. import _shapes
 from . import _base
+from .. import NSNStimulus as _NSNStimulus
 
 
 def create(filename: Union[str, Path],
-           nsn_stimulus: _stimulus.NSNStimulus) -> _svg.Drawing:
+           nsn_stimulus: _NSNStimulus) -> _svg.Drawing:
     """SVG image/file, vector image format
 
     Parameters
