@@ -2,18 +2,20 @@
 """
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
-from copy import deepcopy
-import typing as _tp
 import math as _math
+import typing as _tp
+from copy import deepcopy
 
 import numpy as _np
 from PIL import Image as _Image
 from PIL import ImageDraw as _ImageDraw
 
-from . import _base
-from .. import _shapes
 from .. import NSNStimulus as _NSNStimulus
 from .. import NSNStimulusPair as _NSNStimulusPair
+from .. import _shapes
+from ..defaults import VERT_ECCENTRICITY_STIMPAIR
+from . import _base
+
 # TODO pillow supports no alpha/opacity
 
 RESAMPLING = _Image.Resampling.LANCZOS
@@ -38,57 +40,51 @@ def create(
 
 
 def create_stim_pair(stim_pair: _NSNStimulusPair,
-                     a_is_right: bool = False,
-                     # distance of centre of each stimulus to background image centre
-                     eccentricity: _tp.Optional[int] = None,
+                     postion_a: _tp.Optional[_tp.Tuple[int, int]] = None,
+                     postion_b: _tp.Optional[_tp.Tuple[int, int]] = None,
+                     swap_positions: bool = False,
                      padding: int = 10,
                      antialiasing: _tp.Union[bool, int] = True,
-                     background_image: _tp.Optional[_Image.Image] = None):
+                     background_image: _tp.Optional[_Image.Image] = None) -> _Image.Image:
     """returns a pil image with two NSNStimuli, one left and one right
 
     Note
     ----
     see create
     """
-    if a_is_right:
-        right = stim_pair.stim_a
-        left = stim_pair.stim_b
-    else:
-        left = stim_pair.stim_a
-        right = stim_pair.stim_b
+    if postion_a is None:
+        postion_a = (-VERT_ECCENTRICITY_STIMPAIR, 0)
+    if postion_b is None:
+        postion_b = (+VERT_ECCENTRICITY_STIMPAIR, 0)
 
-    im_left = create(left, antialiasing)
-    im_right = create(right, antialiasing)
+    if swap_positions:
+        tmp = postion_a
+        postion_a = postion_b
+        postion_b = tmp
 
-    l_w2 = im_left.size[0]/2  # left width div 2
-    r_w2 = im_right.size[0]/2
+    im = (create(stim_pair.stim_a, antialiasing),
+          create(stim_pair.stim_b, antialiasing))
 
-    min_ecc = _math.ceil(max(l_w2, r_w2))
-    if eccentricity is None:
-        eccentricity = min_ecc + 50
-    if eccentricity < min_ecc:
-        raise ValueError(
-            "eccentricity is to smaller for stimuli of this size. " +
-            f"Needs to be at least {min_ecc}")
-
+    max_width = max(im[0].size[0], im[1].size[0])
+    max_height = max(im[0].size[1], im[1].size[1])
+    max_abs_x = max(abs(postion_a[0]), abs(postion_b[0]))
+    max_abs_y = max(abs(postion_a[1]), abs(postion_b[1]))
     # height, width, center
-    c_x = _math.ceil(max(l_w2, r_w2)) + eccentricity + padding
-    c_y = _math.ceil(max(im_left.size[1], im_right.size[1]) / 2) + padding
-
-    # stim xy pos
-    l_x = _math.floor(c_x - eccentricity - l_w2)
-    r_x = _math.floor(c_x + eccentricity - r_w2)
-    l_y = _math.floor(c_y - im_left.size[1]/2)
-    r_y = _math.floor(c_y - im_right.size[1]/2)
+    bkg_size2 = (max_abs_x + _math.ceil(max_width/2) + padding,
+                 max_abs_y + _math.ceil(max_height/2) + padding)
 
     if isinstance(background_image, _Image.Image):
-        im = background_image
+        bkg = background_image
     else:
         # (0, 0, 0, 0) is fully transparent
-        im = _Image.new("RGBA", (c_x*2, c_y*2), (0, 0, 0, 0))
-    im.paste(im_left, (l_x, l_y))
-    im.paste(im_right, (r_x, r_y))
-    return im
+        bkg = _Image.new("RGBA",
+                         (bkg_size2[0]*2, bkg_size2[1]*2), (0, 0, 0, 0))
+
+    bkg.paste(im[0], (postion_a[0] + bkg_size2[0] - im[0].size[0]//2,
+                      postion_a[1] + bkg_size2[1] - im[0].size[1]//2))
+    bkg.paste(im[1], (postion_b[0] + bkg_size2[0] - im[1].size[0]//2,
+                      postion_b[1] + bkg_size2[1] - im[1].size[1]//2))
+    return bkg
 
 
 class _PILDraw(_base.AbstractArrayDraw):
