@@ -5,36 +5,34 @@ from pathlib import Path as _Path
 
 import pandas as _pd
 
-from . import NSNStimulus as _NSNStimulus
-from . import NSNStimulusPair as _NSNStimulusPair
-from . import _misc
+from . import NSNStimulus, NSNStimulusPair, _misc
 
-
-ListStimPairs = _tp.List[_NSNStimulusPair]
+ListNSNStimuli = _tp.List[NSNStimulus]
+ListNSNStimPairs = _tp.List[NSNStimulusPair]
 
 
 class CollectionStimulusPairs():
     """set of NSNNumPairs"""
 
-    def __init__(self, lst: _tp.Union[None, ListStimPairs] = None) -> None:
+    def __init__(self, lst: _tp.Union[None, ListNSNStimPairs] = None) -> None:
 
         if isinstance(lst, _tp.List):
             for x in lst:
-                if not isinstance(x, _NSNStimulusPair):
+                if not isinstance(x, NSNStimulusPair):
                     raise RuntimeError(
                         f"lst must be a list of NSNStimulusPairs and not {type(x)}")
             self.pairs = lst
         else:
-            self.pairs: ListStimPairs = []
+            self.pairs: ListNSNStimPairs = []
         self._prop_a = _pd.DataFrame()
         self._prop_b = _pd.DataFrame()
 
-    def append(self, stim_a: _NSNStimulus, stim_b: _NSNStimulus,
+    def append(self, stim_a: NSNStimulus, stim_b: NSNStimulus,
                name: str = "no_name"):
         """append two stimulus to the collection
         """
 
-        self.pairs.append(_NSNStimulusPair(stim_a, stim_b, name))
+        self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
         self._prop_a = _pd.DataFrame()
         self._prop_b = _pd.DataFrame()
 
@@ -57,7 +55,7 @@ class CollectionStimulusPairs():
         rtn = CollectionStimulusPairs()
         for d in folder.iterdir():
             if d.is_dir():
-                rtn.pairs.append(_NSNStimulusPair.from_json(d))
+                rtn.pairs.append(NSNStimulusPair.from_json(d))
 
         return rtn
 

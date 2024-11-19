@@ -13,6 +13,7 @@ from PIL import ImageDraw as _ImageDraw
 from . import _base
 from .. import _shapes
 from .. import NSNStimulus as _NSNStimulus
+from .. import NSNStimulusPair as _NSNStimulusPair
 # TODO pillow supports no alpha/opacity
 
 RESAMPLING = _Image.Resampling.LANCZOS
@@ -36,19 +37,25 @@ def create(
     )
 
 
-def dual_stimulus(left: _NSNStimulus,
-                  right: _NSNStimulus,
-                  # distance of centre of each stimulus to background image centre
-                  eccentricity: _tp.Optional[int] = None,
-                  padding: int = 10,
-                  antialiasing: _tp.Union[bool, int] = True,
-                  background_image: _tp.Optional[_Image.Image] = None):
+def create_stim_pair(stim_pair: _NSNStimulusPair,
+                     a_is_right: bool = False,
+                     # distance of centre of each stimulus to background image centre
+                     eccentricity: _tp.Optional[int] = None,
+                     padding: int = 10,
+                     antialiasing: _tp.Union[bool, int] = True,
+                     background_image: _tp.Optional[_Image.Image] = None):
     """returns a pil image with two NSNStimuli, one left and one right
 
     Note
     ----
     see create
     """
+    if a_is_right:
+        right = stim_pair.stim_a
+        left = stim_pair.stim_b
+    else:
+        left = stim_pair.stim_a
+        right = stim_pair.stim_b
 
     im_left = create(left, antialiasing)
     im_right = create(right, antialiasing)
