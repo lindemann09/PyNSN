@@ -16,10 +16,10 @@ dependencies =  ["numpy>=2.1.3",
                     "Pillow>=11.0"]
 
 [project.optional-dependencies]
+collections = ["pandas>=2.2"]
 svg = ["svgwrite>=1.4"]
 pygame = ["pygame>=2.5"]
 #expyriment = ["expyriment>=0.10"]
-matplotlib = ["matplotlib>=3.9"]
 test = [
     "pytest >=2.7.3"
 ]

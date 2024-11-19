@@ -89,6 +89,15 @@ def dict_to_text(the_dict: dict) -> str:
     return rtn.rstrip()
 
 
+def dict_of_arrays(array_of_dicts: list):
+    rtn = {}
+    # Loop over each key in the first dictionary
+    for key in array_of_dicts[0].keys():
+        # Extract each key's values across all dictionaries
+        rtn[key] = [d[key] for d in array_of_dicts]
+    return rtn
+
+
 def is_interactive_mode():
     """Returns if Python is running in interactive mode (such as IDLE or IPthon)
 
