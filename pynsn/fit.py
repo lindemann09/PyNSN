@@ -1,15 +1,16 @@
 """Fitting module"""
 import typing as _tp
+
 import numpy as _np
 import shapely as _shp
 
-
-from . import defaults as _defaults
-from . import _misc
 from . import NSNStimulus as _NSNStimulus
+from . import NSNStimulusPair as _NSNStimulusPair
 from . import VisProp as _VisProp
-from .rnd import generator as _rnd_generator
+from . import _misc
+from . import defaults as _defaults
 from .exceptions import NoSolutionError as _NoSolutionError
+from .rnd import generator as _rnd_generator
 
 
 def total_surface_area(stim: _NSNStimulus,
@@ -234,104 +235,159 @@ def sparsity(stim: _NSNStimulus,
     field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
-def adapt(stim: _NSNStimulus,
-          property_flag: _VisProp, value: float) -> _tp.Any:
-    """
-    adapt_properties: continuous property or list of continuous properties
-    several properties to be adapted
-    if adapt nsn stimulus is specified, array will be adapt to adapt_dot_array, otherwise
-    the values defined in adapt_properties is used.
-    some adapting requires realignement to avoid overlaps. However,
-    realigment might result in a different field area. Thus, realign after
-    adapting for  Size parameter and realign before adapting space
-    parameter.
+def property_adapt(stim: _NSNStimulus,
+                   prop: _VisProp,
+                   value: _tp.Union[float, _np.float64]) -> _tp.Any:
+    """Adapt visual property `prop` of NSNStimulus
 
+
+    Note:
+    Realignment might be required after adapting visual properties
     """
 
-    # type check
-    if not isinstance(property_flag, _VisProp):
+    if not isinstance(prop, _VisProp):
         raise ValueError(
-            f"{property_flag} is not a visual feature.")
+            f"{prop} is not a visual feature.")
 
     # Adapt
-    if property_flag == _VisProp.NUMEROSITY:
+    if prop == _VisProp.NUMEROSITY:
         return numerosity(stim, value=int(value))
 
-    elif property_flag == _VisProp.AV_PERIMETER:
+    elif prop == _VisProp.AV_PERIMETER:
         return average_perimeter(stim, value=value)
 
-    elif property_flag == _VisProp.TOTAL_PERIMETER:
+    elif prop == _VisProp.TOTAL_PERIMETER:
         return total_perimeter(stim, value=value)
 
-    elif property_flag == _VisProp.AV_SURFACE_AREA:
+    elif prop == _VisProp.AV_SURFACE_AREA:
         return average_surface_area(stim, value=value)
 
-    elif property_flag == _VisProp.TOTAL_SURFACE_AREA:
+    elif prop == _VisProp.TOTAL_SURFACE_AREA:
         return total_surface_area(stim, value=value)
 
-    elif property_flag == _VisProp.LOG_SIZE:
+    elif prop == _VisProp.LOG_SIZE:
         return log_size(stim, value=value)
 
-    elif property_flag == _VisProp.LOG_SPACING:
+    elif prop == _VisProp.LOG_SPACING:
         return log_spacing(stim, value=value)
 
-    elif property_flag == _VisProp.SPARSITY:
+    elif prop == _VisProp.SPARSITY:
         return sparsity(stim, value=value)
 
-    elif property_flag == _VisProp.FIELD_AREA:
+    elif prop == _VisProp.FIELD_AREA:
         return field_area(stim, value=value)
 
-    elif property_flag == _VisProp.COVERAGE:
+    elif prop == _VisProp.COVERAGE:
         return coverage(stim, value=value)
     else:
         raise NotImplementedError(
-            f"Not implemented for {str(property_flag)}"
+            f"Not implemented for {str(prop)}"
         )
 
 
-def match(stim: _NSNStimulus,
-          ref: _NSNStimulus,
-          property_flag: _VisProp) -> _tp.Any:
+def property_match(stim: _NSNStimulus,
+                   ref: _NSNStimulus,
+                   prop: _VisProp) -> _tp.Any:
     """
     Match the visual property of stimulus `stim` to stimulus `ref`
     """
     # type check
-    if not isinstance(property_flag, _VisProp):
+    if not isinstance(prop, _VisProp):
         raise ValueError(
-            f"{property_flag} is not a visual feature.")
+            f"{prop} is not a visual feature.")
 
     rp = ref.properties
     # Adapt
-    if property_flag == _VisProp.NUMEROSITY:
+    if prop == _VisProp.NUMEROSITY:
         return numerosity(stim, value=rp.numerosity)
 
-    elif property_flag == _VisProp.AV_PERIMETER:
+    elif prop == _VisProp.AV_PERIMETER:
         return average_perimeter(stim, value=rp.average_perimeter)
 
-    elif property_flag == _VisProp.TOTAL_PERIMETER:
+    elif prop == _VisProp.TOTAL_PERIMETER:
         return total_perimeter(stim, value=rp.total_perimeter)
 
-    elif property_flag == _VisProp.AV_SURFACE_AREA:
+    elif prop == _VisProp.AV_SURFACE_AREA:
         return average_surface_area(stim, value=rp.average_surface_area)
 
-    elif property_flag == _VisProp.TOTAL_SURFACE_AREA:
+    elif prop == _VisProp.TOTAL_SURFACE_AREA:
         return total_surface_area(stim, value=rp.total_surface_area)
 
-    elif property_flag == _VisProp.LOG_SIZE:
+    elif prop == _VisProp.LOG_SIZE:
         return log_size(stim, value=rp.log_size)
 
-    elif property_flag == _VisProp.LOG_SPACING:
+    elif prop == _VisProp.LOG_SPACING:
         return log_spacing(stim, value=rp.log_spacing)
 
-    elif property_flag == _VisProp.SPARSITY:
+    elif prop == _VisProp.SPARSITY:
         return sparsity(stim, value=rp.sparsity)
 
-    elif property_flag == _VisProp.FIELD_AREA:
+    elif prop == _VisProp.FIELD_AREA:
         return field_area(stim, value=rp.field_area)
 
-    elif property_flag == _VisProp.COVERAGE:
+    elif prop == _VisProp.COVERAGE:
         return coverage(stim, value=rp.coverage)
     else:
         raise NotImplementedError(
-            f"Not implemented for {str(property_flag)}"
+            f"Not implemented for {str(prop)}"
         )
+
+
+def property_difference(stim_pair: _NSNStimulusPair,
+                        prop: _VisProp,
+                        delta: _tp.Union[float, _np.float64],
+                        adapt_stim: str = "both"):
+    """Adapt visual property difference of NSNStimulusPair. Changes the property
+    `prop` of the stimuli so that difference is equal to `delta`.
+
+    There are three different adapt methods:
+        `"a"`: change the properties of stimulus A only
+        `"b"`: change the properties of stimulus B only
+        `"both"`: change the stimulus A and B, each by 50% for the required change
+    """
+    p_a = stim_pair.stim_a.properties.get(prop)
+    p_b = stim_pair.stim_b.properties.get(prop)
+    rc = _np.float64(delta) - (p_a - p_b)  # required change
+
+    if adapt_stim == "both":
+        rc = rc / 2
+        property_adapt(stim_pair.stim_a, prop, p_a + rc)
+        property_adapt(stim_pair.stim_b, prop, p_b - rc)
+    elif adapt_stim == "a":
+        property_adapt(stim_pair.stim_a, prop, p_a + rc)
+    elif adapt_stim == "b":
+        property_adapt(stim_pair.stim_b, prop, p_b - rc)
+    else:
+        raise ValueError(f"Unknown adapt method {adapt_stim}. " +
+                         "Must be either 'both', 'a' or 'b'")
+
+
+def property_ratio(stim_pair: _NSNStimulusPair,
+                   prop: _VisProp,
+                   ratio: _tp.Union[float, _np.float64],
+                   adapt_stim: str = "both"):
+    """Adapt visual property ratio of NSNStimulusPair. Changes the property
+    `prop` of the two stimuli so that ratio is equal to `delta`.
+
+    There are three different adapt methods:
+        `"a"`: change the properties of stimulus A only
+        `"b"`: change the properties of stimulus B only
+        `"both"`: change the stimulus A and B, each by 50% for the required change
+    """
+
+    pa = stim_pair.stim_a.properties.get(prop)
+    pb = stim_pair.stim_b.properties.get(prop)
+
+    rc = _np.float64(ratio) / (pa/pb)  # required change
+
+    if adapt_stim == "both":
+        rc = _np.sqrt(rc)
+        property_adapt(stim_pair.stim_a, prop, pa * rc)
+        property_adapt(stim_pair.stim_b, prop, pb / rc)
+    elif adapt_stim == "a":
+        property_adapt(stim_pair.stim_a, prop, pa * rc)
+    elif adapt_stim == "b":
+        property_adapt(stim_pair.stim_b, prop, pb / rc)
+    else:
+        raise ValueError(f"Unknown adapt method {property_adapt}. " +
+                         "Must be either 'both', 'a' or 'b'")
