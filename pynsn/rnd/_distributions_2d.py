@@ -8,7 +8,7 @@ from . import _rng
 from ._distributions import AbstractDistribution
 
 
-class AbstractMultivarDistr(AbstractDistribution, metaclass=ABCMeta):
+class Abstract2dDistr(AbstractDistribution, metaclass=ABCMeta):
     """Abstract class for Multivariate (2D) distributions """
 
     def __init__(self,
@@ -121,7 +121,7 @@ class AbstractMultivarDistr(AbstractDistribution, metaclass=ABCMeta):
             return arr
 
 
-class Uniform2D(AbstractMultivarDistr):
+class Uniform2D(Abstract2dDistr):
 
     def __init__(self,
                  x_minmax:  Optional[ArrayLike] = None,
@@ -174,7 +174,7 @@ class Uniform2D(AbstractMultivarDistr):
         return rtn
 
 
-class Normal2D(AbstractMultivarDistr):
+class Normal2D(Abstract2dDistr):
 
     def __init__(self, mu: ArrayLike,
                  sigma: ArrayLike,

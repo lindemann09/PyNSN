@@ -6,7 +6,7 @@ import shapely as _shp
 
 from . import NSNStimulus as _NSNStimulus
 from . import NSNStimulusPair as _NSNStimulusPair
-from . import VisProp as _VisProp
+from . import VisProp as VisProp
 from . import _misc
 from . import defaults as _defaults
 from .exceptions import NoSolutionError as _NoSolutionError
@@ -236,7 +236,7 @@ def sparsity(stim: _NSNStimulus,
 
 
 def property_adapt(stim: _NSNStimulus,
-                   prop: _VisProp,
+                   prop: VisProp,
                    value: _tp.Union[float, _np.float64]) -> _tp.Any:
     """Adapt visual property `prop` of NSNStimulus
 
@@ -245,39 +245,39 @@ def property_adapt(stim: _NSNStimulus,
     Realignment might be required after adapting visual properties
     """
 
-    if not isinstance(prop, _VisProp):
+    if not isinstance(prop, VisProp):
         raise ValueError(
             f"{prop} is not a visual feature.")
 
     # Adapt
-    if prop == _VisProp.NUMEROSITY:
+    if prop == VisProp.NUMEROSITY:
         return numerosity(stim, value=int(value))
 
-    elif prop == _VisProp.AV_PERIMETER:
+    elif prop == VisProp.AV_PERIMETER:
         return average_perimeter(stim, value=value)
 
-    elif prop == _VisProp.TOTAL_PERIMETER:
+    elif prop == VisProp.TOTAL_PERIMETER:
         return total_perimeter(stim, value=value)
 
-    elif prop == _VisProp.AV_SURFACE_AREA:
+    elif prop == VisProp.AV_SURFACE_AREA:
         return average_surface_area(stim, value=value)
 
-    elif prop == _VisProp.TOTAL_SURFACE_AREA:
+    elif prop == VisProp.TOTAL_SURFACE_AREA:
         return total_surface_area(stim, value=value)
 
-    elif prop == _VisProp.LOG_SIZE:
+    elif prop == VisProp.LOG_SIZE:
         return log_size(stim, value=value)
 
-    elif prop == _VisProp.LOG_SPACING:
+    elif prop == VisProp.LOG_SPACING:
         return log_spacing(stim, value=value)
 
-    elif prop == _VisProp.SPARSITY:
+    elif prop == VisProp.SPARSITY:
         return sparsity(stim, value=value)
 
-    elif prop == _VisProp.FIELD_AREA:
+    elif prop == VisProp.FIELD_AREA:
         return field_area(stim, value=value)
 
-    elif prop == _VisProp.COVERAGE:
+    elif prop == VisProp.COVERAGE:
         return coverage(stim, value=value)
     else:
         raise NotImplementedError(
@@ -287,45 +287,45 @@ def property_adapt(stim: _NSNStimulus,
 
 def property_match(stim: _NSNStimulus,
                    ref: _NSNStimulus,
-                   prop: _VisProp) -> _tp.Any:
+                   prop: VisProp) -> _tp.Any:
     """
     Match the visual property of stimulus `stim` to stimulus `ref`
     """
     # type check
-    if not isinstance(prop, _VisProp):
+    if not isinstance(prop, VisProp):
         raise ValueError(
             f"{prop} is not a visual feature.")
 
     rp = ref.properties
     # Adapt
-    if prop == _VisProp.NUMEROSITY:
+    if prop == VisProp.NUMEROSITY:
         return numerosity(stim, value=rp.numerosity)
 
-    elif prop == _VisProp.AV_PERIMETER:
+    elif prop == VisProp.AV_PERIMETER:
         return average_perimeter(stim, value=rp.average_perimeter)
 
-    elif prop == _VisProp.TOTAL_PERIMETER:
+    elif prop == VisProp.TOTAL_PERIMETER:
         return total_perimeter(stim, value=rp.total_perimeter)
 
-    elif prop == _VisProp.AV_SURFACE_AREA:
+    elif prop == VisProp.AV_SURFACE_AREA:
         return average_surface_area(stim, value=rp.average_surface_area)
 
-    elif prop == _VisProp.TOTAL_SURFACE_AREA:
+    elif prop == VisProp.TOTAL_SURFACE_AREA:
         return total_surface_area(stim, value=rp.total_surface_area)
 
-    elif prop == _VisProp.LOG_SIZE:
+    elif prop == VisProp.LOG_SIZE:
         return log_size(stim, value=rp.log_size)
 
-    elif prop == _VisProp.LOG_SPACING:
+    elif prop == VisProp.LOG_SPACING:
         return log_spacing(stim, value=rp.log_spacing)
 
-    elif prop == _VisProp.SPARSITY:
+    elif prop == VisProp.SPARSITY:
         return sparsity(stim, value=rp.sparsity)
 
-    elif prop == _VisProp.FIELD_AREA:
+    elif prop == VisProp.FIELD_AREA:
         return field_area(stim, value=rp.field_area)
 
-    elif prop == _VisProp.COVERAGE:
+    elif prop == VisProp.COVERAGE:
         return coverage(stim, value=rp.coverage)
     else:
         raise NotImplementedError(
@@ -334,7 +334,7 @@ def property_match(stim: _NSNStimulus,
 
 
 def property_difference(stim_pair: _NSNStimulusPair,
-                        prop: _VisProp,
+                        prop: VisProp,
                         delta: _tp.Union[float, _np.float64],
                         adapt_stim: str = "both"):
     """Adapt visual property difference of NSNStimulusPair. Changes the property
@@ -363,7 +363,7 @@ def property_difference(stim_pair: _NSNStimulusPair,
 
 
 def property_ratio(stim_pair: _NSNStimulusPair,
-                   prop: _VisProp,
+                   prop: VisProp,
                    ratio: _tp.Union[float, _np.float64],
                    adapt_stim: str = "both"):
     """Adapt visual property ratio of NSNStimulusPair. Changes the property

@@ -16,7 +16,7 @@ from .. import defaults
 from .._shapes import Colour, Dot, Ellipse, Point2D, PolygonShape, Rectangle, dict_to_shape
 from .._shapes.abc_shapes import AbstractShape
 from ..exceptions import NoSolutionError
-from ..rnd._distributions_2d import AbstractMultivarDistr, Uniform2D
+from ..rnd._distributions_2d import Abstract2dDistr, Uniform2D
 
 
 class TargetArea(object):
@@ -76,10 +76,10 @@ class TargetArea(object):
         """width and height of bounds of the target area"""
         return self._shape.size
 
-    def random_xy_inside_bounds(self, distr: Optional[AbstractMultivarDistr] = None) -> NDArray:
+    def random_xy_inside_bounds(self, distr: Optional[Abstract2dDistr] = None) -> NDArray:
         """returns a random position inside the bounds of the target area
         """
-        if isinstance(distr, AbstractMultivarDistr):
+        if isinstance(distr, Abstract2dDistr):
             return distr.sample(1)[0]
         else:
             return self._default_distr.sample(1)[0]

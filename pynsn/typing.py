@@ -11,6 +11,6 @@ from ._stimulus.shape_array import ShapeArray
 from ._stimulus.stimulus_colours import StimulusColours
 from ._stimulus.target_area import TargetArea
 from .rnd._distributions import (AbstractDistribution, AbstractUnivarDistr,
-                                    AbstractContinuousDistr, CategoricalLike, ConstantLike)
-from .rnd._distributions_2d import AbstractMultivarDistr
+                                 AbstractContinuousDistr, CategoricalLike, ConstantLike)
+from .rnd._distributions_2d import Abstract2dDistr
 from .rnd._random_shape import AbstractRndShape, DistributionLike
