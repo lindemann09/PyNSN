@@ -14,27 +14,9 @@ PyNSN
 Project homepage: https://github.com/lindemann09/PyNSN
 
 
-## Dependencies
+## Installing 
 
-* Python 3 (>=3.8)
-* numpy (>=1.26)
-* shapely (>=2.0)
-* orjson (>=3.9)
-* Pillow (>=5.0)
-
-### Optional requirements
-
-Additional Python packages, which are optional and required only for
-some features:
-
-* matplotlib (>=3.2)
-* svgwrite (>=1.4)
-* pygame (>=2)
-* expyriment (>=0.9)
-
-
-
-## Installing via `pip`
+requires Python 3 (>=3.10)
 
 ```
 python -m pip install pynsn

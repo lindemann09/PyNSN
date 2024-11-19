@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing as tp
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from .._stimulus import NSNStimulus, NSNStimulusPair
