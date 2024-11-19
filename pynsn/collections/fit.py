@@ -97,7 +97,7 @@ def _modify_2d_distributions(dist: _rnd.Abstract2dDistr,
         if _np.abs(r1) <= max_corr:
             r2 = _np.corrcoef(number_list, values[:, 1])[0, 1]
             if _np.abs(r2) <= max_corr:
-                return values, (r1, r2)
+                return values, (float(r1), float(r2))
 
 
 def _modify_distributions(dist: _rnd.AbstractUnivarDistr,
@@ -109,4 +109,4 @@ def _modify_distributions(dist: _rnd.AbstractUnivarDistr,
         values = dist.sample(n)
         r = _np.corrcoef(number_list, values)[0, 1]
         if _np.abs(r) <= max_corr:
-            return _np.atleast_2d(values).T, r
+            return _np.atleast_2d(values).T, float(r)
