@@ -17,10 +17,7 @@ from .._shapes import Dot, Ellipse, Point2D
 from .._shapes import ellipse_geometry as ellipse_geo
 from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
                                   AttributeType)
-from ..exceptions import NoSolutionError
-from ..rnd._rng import WalkAround
 from .convex_hull import ConvexHull
-from .target_area import TargetArea
 
 
 class ShapeArray(object):
@@ -65,7 +62,7 @@ class ShapeArray(object):
             self._clear_cached()
         self._sizes = val
 
-    def get_attributes(self) -> List[AttributeType]:
+    def attributes(self) -> List[AttributeType]:
         return [s.attribute for s in self._shapes]
 
     @property
@@ -75,7 +72,7 @@ class ShapeArray(object):
             self.shapes_update()
         return self._shapes
 
-    def get_shape_types(self) -> NDArray[np.str_]:
+    def shape_types(self) -> NDArray[np.str_]:
         """np.array of shape types"""
         return np.array([s.shape_type() for s in self._shapes])
 
@@ -87,9 +84,9 @@ class ShapeArray(object):
             self._cache_polygons = np.array([s.polygon for s in self.shapes])
         return self._cache_polygons
 
-    def get_ids(self, shape_type: str) -> NDArray:
+    def ids(self, shape_type: str) -> NDArray:
         """np.array of ids for the different shape types"""
-        return np.flatnonzero(self.get_shape_types() == shape_type)
+        return np.flatnonzero(self.shape_types() == shape_type)
 
     def shapes_update(self):
         """Updates list shapes, if property arrays `xy` or `sizes` have changed.
@@ -160,8 +157,8 @@ class ShapeArray(object):
         self.shape_delete(index)
         return rtn
 
-    def sort_by_excentricity(self):
-        """Sort order fo the shapes in the array by excentricity, that is, by the
+    def sort_by_eccentricity(self):
+        """Sort order of the shapes in the array by eccentricity, that is, by the
         distance the center of the convex hull (from close to far)
         """
         d = self.distances(Point2D(self.convex_hull.centroid))
@@ -170,17 +167,6 @@ class ShapeArray(object):
         self._sizes = self._sizes[idx]
         self._shapes = [self._shapes[i] for i in idx]
         self._clear_cached()
-
-    # def round_values(self, decimals: int = 0, int_type: type = np.int64) -> None: #FIXME rounding
-    #     """rounds all values"""
-
-    #     if decimals is None:
-    #         return
-    #     self._xy = round2(self._xy, decimals=decimals, int_type=int_type)
-    #     self._dot_diameter = round2(self._dot_diameter, decimals=decimals,
-    #                                 int_type=int_type)
-    #     self._rect_sizes = round2(self._rect_sizes, decimals=decimals,
-    #                               int_type=int_type)
 
     @property
     def n_shapes(self) -> int:
@@ -201,13 +187,13 @@ class ShapeArray(object):
             # circular target shape
             rtn = np.full(len(self._shapes), np.nan)
 
-            idx = self.get_ids(Dot.shape_type())
+            idx = self.ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
                 rtn[idx] = _distance_circ_dot_array(obj=shape,
                                                     dots_xy=self._xy[idx, :],
                                                     dots_diameter=self._sizes[idx, 0])
-            idx = self.get_ids(Ellipse.shape_type())
+            idx = self.ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 rtn[idx] = _distance_circ_ellipse_array(obj=shape,
@@ -240,7 +226,7 @@ class ShapeArray(object):
         if isinstance(shape, (Point2D, AbstractCircularShape)):
             rtn = np.full(len(self._shapes), False)
 
-            idx = self.get_ids(Dot.shape_type())
+            idx = self.ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
                 dists = _distance_circ_dot_array(obj=shape,
@@ -248,7 +234,7 @@ class ShapeArray(object):
                                                  dots_diameter=self._sizes[idx, 0])
                 rtn[idx] = dists < distance
 
-            idx = self.get_ids(Ellipse.shape_type())
+            idx = self.ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
                 dists = _distance_circ_ellipse_array(obj=shape,
@@ -273,109 +259,20 @@ class ShapeArray(object):
 
         return rtn
 
-    def contains_overlaps(self, min_distance: float = 0) -> bool:
+    def has_overlaps(self, min_distance: float = 0) -> bool:
         """Returns True for two or more elements overlap (i.e. taking
         into account the minimum distance).
         """
         for x in range(len(self._shapes)):
-            if np.any(self.get_overlaps(x, min_distance)) > 0:
+            if np.any(self.overlaps(x, min_distance)) > 0:
                 return True
         return False
 
-    def get_overlaps(self, index: int, min_distance: float = 0) -> NDArray[np.bool_]:
+    def overlaps(self, index: int, min_distance: float = 0) -> NDArray[np.bool_]:
         """get overlaps with other shapes. Ignores overlap with oneself."""
         overlaps = self.dwithin(self.shapes[index], distance=min_distance)
         overlaps[index] = False  # ignore overlap with oneself
         return overlaps
-
-    def _random_free_position(self,
-                              shape: AbstractShape,
-                              min_distance: float,
-                              target_area: TargetArea,
-                              ignore_overlaps: bool,
-                              max_iterations: int) -> AbstractShape:
-        """returns the object at random free position
-
-        raises exception if not found
-        """
-
-        cnt = 0
-        while True:
-            if cnt > max_iterations:
-                raise NoSolutionError(
-                    "Can't find a free position for this polygon")
-            cnt += 1
-            # propose a random position
-            shape.xy = target_area.random_xy_inside_bounds()
-
-            if not target_area.is_object_inside(shape):
-                continue
-
-            if ignore_overlaps:
-                return shape
-            else:
-                # find overlaps
-                overlaps = self.dwithin(shape, distance=min_distance)
-                if not np.any(overlaps):
-                    return shape
-
-    def _fix_overlap(self,
-                     index: int,
-                     min_distance: float,
-                     minimal_replacing: bool,
-                     target_area: TargetArea,
-                     max_iterations: int) -> int:
-        """Move an selected object that overlaps to an free position in the
-        neighbourhood.
-
-        minimal_replacing: try to find a new random position is a neighbourhood,
-            otherwise overlapping object will be randomly replaced anywere in the
-            search area
-
-
-        Returns
-        -------
-         0: if no overlaps exist
-        -1: if object overlaps, but no new position could be found
-         1: if object was replaced
-
-        occupied space: see generator generate
-        """
-
-        if not np.any(self.get_overlaps(index, min_distance)):
-            return 0  # no overlap
-
-        target = self.shapes[index]
-
-        if minimal_replacing:
-            walk = WalkAround(target.xy)
-            outside_cnt = 0
-            while True:
-                if walk.counter > max_iterations or outside_cnt > 20:
-                    return -1  # can't find a free position
-
-                target.xy = walk.next()
-                if not target_area.is_object_inside(target):
-                    outside_cnt += 1
-                else:
-                    outside_cnt = 0
-                    overlaps = self.dwithin(target, distance=min_distance)
-                    overlaps[index] = False  # ignore overlap with oneself
-                    if not np.any(overlaps):
-                        break  # place found
-        else:
-            # random position anywhere
-            try:
-                target = self._random_free_position(target,
-                                                    min_distance=min_distance,
-                                                    target_area=target_area,
-                                                    ignore_overlaps=False,
-                                                    max_iterations=max_iterations)
-            except NoSolutionError:
-                return -1
-
-        self.shape_replace(index, target)
-        return 1
 
 
 def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],

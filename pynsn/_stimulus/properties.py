@@ -172,8 +172,8 @@ class ArrayProperties(object):
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
         # rects and polygons
         idx = np.append(
-            self._shape_arr.get_ids(Rectangle.shape_type()),
-            self._shape_arr.get_ids(Picture.shape_type())
+            self._shape_arr.ids(Rectangle.shape_type()),
+            self._shape_arr.ids(Picture.shape_type())
         )
         if len(idx) > 0:
             rtn[idx] = self._shape_arr.sizes[idx, 0] * \
@@ -181,14 +181,14 @@ class ArrayProperties(object):
 
         # circular shapes area, Area = pi * r_x * r_y
         idx = np.append(
-            self._shape_arr.get_ids(Dot.shape_type()),
-            self._shape_arr.get_ids(Ellipse.shape_type()))
+            self._shape_arr.ids(Dot.shape_type()),
+            self._shape_arr.ids(Ellipse.shape_type()))
         if len(idx) > 0:
             r = self._shape_arr.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
 
         # polygons area
-        idx = self._shape_arr.get_ids(PolygonShape.shape_type())
+        idx = self._shape_arr.ids(PolygonShape.shape_type())
         if len(idx) > 0:
             rtn[idx] = shapely.area(self._shape_arr.polygons[idx])
         return rtn
@@ -200,18 +200,18 @@ class ArrayProperties(object):
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
 
         idx = np.concatenate((
-            self._shape_arr.get_ids(Rectangle.shape_type()),
-            self._shape_arr.get_ids(Picture.shape_type()),
-            self._shape_arr.get_ids(PolygonShape.shape_type())
+            self._shape_arr.ids(Rectangle.shape_type()),
+            self._shape_arr.ids(Picture.shape_type()),
+            self._shape_arr.ids(PolygonShape.shape_type())
         ))
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shape_arr.polygons[idx])
         # dots perimeter
-        idx = self._shape_arr.get_ids(Dot.shape_type())
+        idx = self._shape_arr.ids(Dot.shape_type())
         if len(idx) > 0:
             rtn[idx] = np.pi * self._shape_arr.sizes[idx, 0]
         # ellipse perimeter
-        idx = self._shape_arr.get_ids(Ellipse.shape_type())
+        idx = self._shape_arr.ids(Ellipse.shape_type())
         if len(idx) > 0:
             rtn[idx] = ellipse_geo.perimeter(self._shape_arr.sizes[idx, :])
 

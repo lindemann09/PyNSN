@@ -110,7 +110,7 @@ class StimulusFactory(object):
         """json representation of the stimulus factory"""
         json_str = formated_json(self.to_dict(), indent=indent)
         if isinstance(filename, (Path, str)):
-            with open(filename, "w", encoding="utf-8") as fl:
+            with open(filename, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)
         return json_str
 

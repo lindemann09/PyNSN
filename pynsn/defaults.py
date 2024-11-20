@@ -15,3 +15,5 @@ WARNINGS = True
 
 # stimulus pairs
 VERT_ECCENTRICITY_STIMPAIR = 350
+
+FILE_ENCODING = "utf-8"

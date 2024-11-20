@@ -3,20 +3,13 @@
 """
 from __future__ import annotations
 
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
+
 import json
 import warnings
 from copy import deepcopy
-from pathlib import Path
-
-from ..rnd._random_shape import AbstractRndShape
-from .properties import ArrayProperties
-from .shape_array import ShapeArray
-from .stimulus_colours import StimulusColours
-from .target_area import TargetArea
-
-__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-
 from hashlib import md5
+from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
 import numpy as np
@@ -27,11 +20,17 @@ from .._misc import formated_json
 from .._shapes import (Dot, Ellipse, Point2D, PolygonShape, Rectangle,
                        dict_to_shape)
 from .._shapes.abc_shapes import AbstractShape
-from ..exceptions import (NoSolutionError, ShapeOutsideError, ShapeOutsideWarning,
-                          ShapeOverlapsError)
+from ..exceptions import (NoSolutionError, ShapeOutsideError,
+                          ShapeOutsideWarning, ShapeOverlapsError)
+from ..rnd._random_shape import AbstractRndShape
+from ..rnd._rng import WalkAround
+from . import shape_array
+from .properties import ArrayProperties
+from .stimulus_colours import StimulusColours
+from .target_area import TargetArea
 
 
-class NSNStimulus(ShapeArray):
+class NSNStimulus(shape_array.ShapeArray):
     """Non-Symbolic Number Stimulus
 
     NSN-Stimulus are restricted to a certain target area. The classes are
@@ -174,15 +173,76 @@ class NSNStimulus(ShapeArray):
         d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
         if isinstance(filename, (Path, str)):
-            with open(filename, "w", encoding="utf-8") as fl:
+            with open(filename, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)
         return json_str
 
     @staticmethod
     def from_json(file_path: Union[str, Path]) -> NSNStimulus:
-        with open(file_path, 'r') as fl:
+        with open(file_path, 'r', encoding=defaults.FILE_ENCODING) as fl:
             d = json.load(fl)
         return NSNStimulus.from_dict(d)
+
+    def _fix_overlaps(self,
+                      index: int,
+                      min_distance: float,
+                      minimal_replacing: bool,
+                      target_area: TargetArea,
+                      max_iterations: Optional[int] = None) -> int:
+        """Move an selected object that overlaps to an free position in the
+        neighbourhood.
+
+        minimal_replacing: try to find a new random position is a neighbourhood,
+            otherwise overlapping object will be randomly replaced anywere in the
+            search area
+
+
+        Returns
+        -------
+         0: if no overlaps exist
+        -1: if object overlaps, but no new position could be found
+         1: if object was replaced
+
+        occupied space: see generator generate
+        """
+
+        if not np.any(self.overlaps(index, min_distance)):
+            return 0  # no overlap
+
+        if max_iterations is None:
+            max_iterations = defaults.MAX_ITERATIONS
+
+        target = self.shapes[index]
+
+        if minimal_replacing:
+            walk = WalkAround(target.xy)
+            outside_cnt = 0
+            while True:
+                if walk.counter > max_iterations or outside_cnt > 20:
+                    return -1  # can't find a free position
+
+                target.xy = walk.next()
+                if not target_area.is_object_inside(target):
+                    outside_cnt += 1
+                else:
+                    outside_cnt = 0
+                    overlaps = self.dwithin(target, distance=min_distance)
+                    overlaps[index] = False  # ignore overlap with oneself
+                    if not np.any(overlaps):
+                        break  # place found
+        else:
+            # random position anywhere
+            try:
+                target = rnd_free_pos(target,
+                                      nsn_stim=self,
+                                      inside_convex_hull=False,
+                                      ignore_overlaps=False,
+                                      max_iterations=max_iterations)
+            except NoSolutionError:
+                return -1
+
+        self.shape_replace(index, target)
+        return 1
 
     def fix_overlaps(self,
                      inside_convex_hull: bool = False,
@@ -200,11 +260,9 @@ class NSNStimulus(ShapeArray):
         raise exception if not found
         occupied space: see generator generate
         """
-        if max_iterations is None:
-            max_iterations = defaults.MAX_ITERATIONS
 
         if sort_before:
-            self.sort_by_excentricity()
+            self.sort_by_eccentricity()
 
         if inside_convex_hull:
             area = TargetArea(
@@ -218,11 +276,11 @@ class NSNStimulus(ShapeArray):
         while cnt < 20:
             resp = np.empty(0, dtype=int)
             for x in range(len(self._shapes)):
-                r = self._fix_overlap(index=x,
-                                      min_distance=self.min_distance,
-                                      minimal_replacing=minimal_replacing,
-                                      target_area=area,
-                                      max_iterations=max_iterations)
+                r = self._fix_overlaps(index=x,
+                                       min_distance=self.min_distance,
+                                       minimal_replacing=minimal_replacing,
+                                       target_area=area,
+                                       max_iterations=max_iterations)
                 resp = np.append(resp, r)
             if np.any(resp == 1):
                 changes = True
@@ -232,20 +290,20 @@ class NSNStimulus(ShapeArray):
 
         raise NoSolutionError("Can't find a solution with no overlaps")
 
-    def contains_overlaps(self, min_distance: Optional[float] = None) -> bool:
+    def has_overlaps(self, min_distance: Optional[float] = None) -> bool:
         """Returns True for two or more elements overlap (i.e. taking
         into account the minimum distance).
         """
         if min_distance is None:
             min_distance = self.min_distance
-        return super().contains_overlaps(min_distance)
+        return super().has_overlaps(min_distance)
 
-    def get_overlaps(self, index: int,
-                     min_distance: Optional[float] = None) -> NDArray[np.bool_]:
+    def overlaps(self, index: int,
+                 min_distance: Optional[float] = None) -> NDArray[np.bool_]:
         """get overlaps with other shapes. Ignores overlap with oneself."""
         if min_distance is None:
             min_distance = self.min_distance
-        return super().get_overlaps(index, min_distance)
+        return super().overlaps(index, min_distance)
 
     def shape_overlaps(self, shape: Union[Point2D, AbstractShape],
                        min_distance: Optional[float] = None) -> NDArray[np.bool_]:
@@ -290,8 +348,9 @@ class NSNStimulus(ShapeArray):
         """"adds shape to random positions in the array"""
 
         try:
-            shape = self.random_free_position(
+            shape = rnd_free_pos(
                 shape=shape,
+                nsn_stim=self,
                 ignore_overlaps=ignore_overlaps,
                 inside_convex_hull=inside_convex_hull,
                 max_iterations=max_iterations)
@@ -324,38 +383,10 @@ class NSNStimulus(ShapeArray):
                                       max_iterations=max_iterations)
                 n = n - 1
 
-    def random_free_position(self,
-                             shape: AbstractShape,
-                             ignore_overlaps: bool = False,
-                             inside_convex_hull: bool = False,
-                             max_iterations: Optional[int] = None) -> AbstractShape:
-        """moves the object to a random free position
-
-        raise exception if not found
-        """
-        if not isinstance(shape, AbstractShape):
-            raise NotImplementedError("Not implemented for "
-                                      f"{type(shape).__name__}")
-        if max_iterations is None:
-            max_iterations = defaults.MAX_ITERATIONS
-
-        if inside_convex_hull:
-            area = TargetArea(
-                shape=PolygonShape(self.convex_hull.polygon),
-                min_dist_boarder=self._target_area.min_dist_boarder)
-        else:
-            area = self._target_area
-
-        return self._random_free_position(shape=shape,
-                                          min_distance=self.min_distance,
-                                          ignore_overlaps=ignore_overlaps,
-                                          target_area=area,
-                                          max_iterations=max_iterations)
-
     def table_dict(self) -> dict:
         """Tabular representation of the array of the shapes.
 
-        This representation can not deal with PolygonShapes. It"s useful to
+        This representation can not deal with PolygonShapes. It's useful to
         create Pandas dataframe or Arrow Tables.
 
         Examples
@@ -366,14 +397,58 @@ class NSNStimulus(ShapeArray):
         >>> table = pyarrow.Table.from_pydict(df_dict) # Arrow Table
         """
 
-        if np.any(self.get_shape_types() == PolygonShape.shape_type()):
+        if np.any(self.shape_types() == PolygonShape.shape_type()):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
-        d = {"type": self.get_shape_types().tolist(),
+        d = {"type": self.shape_types().tolist(),
              "x": self.xy[:, 0].tolist(),
              "y": self.xy[:, 1].tolist(),
              "width": self.sizes[:, 0].tolist(),
              "height": self.sizes[:, 1].tolist(),
-             "attr": [str(x) for x in self.get_attributes()]
+             "attr": [str(x) for x in self.attributes()]
              }
         return d
+
+
+def rnd_free_pos(shape: AbstractShape,
+                 nsn_stim: NSNStimulus,
+                 ignore_overlaps: bool = False,
+                 inside_convex_hull: bool = False,
+                 max_iterations: Optional[int] = None) -> AbstractShape:
+    """moves the object to a random free position
+
+    raise exception if not found
+    """
+
+    if not isinstance(shape, AbstractShape):
+        raise NotImplementedError("Not implemented for "
+                                  f"{type(shape).__name__}")
+    if max_iterations is None:
+        max_iterations = defaults.MAX_ITERATIONS
+
+    if inside_convex_hull:
+        area = TargetArea(
+            shape=PolygonShape(nsn_stim.convex_hull.polygon),
+            min_dist_boarder=nsn_stim.target_area.min_dist_boarder)
+    else:
+        area = nsn_stim.target_area
+
+    cnt = 0
+    while True:
+        if cnt > max_iterations:
+            raise NoSolutionError(
+                "Can't find a free position for this object")
+        cnt += 1
+        # propose a random position
+        shape.xy = area.random_xy_inside_bounds()
+
+        if not area.is_object_inside(shape):
+            continue
+
+        if ignore_overlaps:
+            return shape
+        else:
+            # find overlaps
+            overlaps = nsn_stim.dwithin(shape, distance=nsn_stim.min_distance)
+            if not np.any(overlaps):
+                return shape

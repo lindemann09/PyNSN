@@ -6,6 +6,7 @@ import shapely as _shp
 
 from . import NSNStimulus as _NSNStimulus
 from . import NSNStimulusPair as _NSNStimulusPair
+from ._stimulus.nsn_stimulus import rnd_free_pos as _rnd_free_pos
 from ._stimulus.properties import VisProp as _VisProp
 from ._stimulus.properties import ensure_vis_prop as _ensure_vis_prop
 from . import _misc
@@ -89,8 +90,10 @@ def numerosity(stim: _NSNStimulus, value: int,
                 clone_id = _rnd_generator.integers(0, stim.n_shapes)
                 rnd_object = stim.shapes[clone_id]
                 try:
-                    rnd_object = stim.random_free_position(
-                        shape=rnd_object, ignore_overlaps=False,
+                    rnd_object = _rnd_free_pos(
+                        shape=rnd_object,
+                        nsn_stim=stim,
+                        ignore_overlaps=False,
                         inside_convex_hull=keep_convex_hull,
                         max_iterations=max_iterations)
                 except _NoSolutionError as err:
