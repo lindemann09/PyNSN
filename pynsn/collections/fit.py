@@ -18,19 +18,16 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
                                feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
     prop_a = _ensure_vis_prop(prop_a)
-    prop_b = _ensure_vis_prop(prop_b)  # FIXME None not yet supported
+    if prop_b is not None:
+        prop_b = _ensure_vis_prop(prop_b)
 
     num_ratios = collection.property_ratios(_VisProp.N).to_numpy()
-    num_ratios = collection.property_dataframe()["N"].to_numpy()
     rnd_values, target_correlations = _get_rnd_target_values(
         num_ratios, distr=distr, prop_a=prop_a, prop_b=prop_b,
         max_corr=max_corr)
 
-    # print(rnd_values)
-    # print(collection.property_ratios([prop_a, prop_b]))
     n = len(collection.pairs)
     for i, sp in enumerate(collection.pairs):
-        before = sp.property_difference
         if feedback:
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
@@ -40,7 +37,7 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
     if feedback:
         print(" "*70)
 
-    # print(collection.property_ratios([prop_a, prop_b]))
+    collection.reset_properties_dataframe()
     return target_correlations
 
 
@@ -53,7 +50,8 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
                                     feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
     prop_a = _ensure_vis_prop(prop_a)
-    prop_b = _ensure_vis_prop(prop_b)  # FIXME None not yet supported
+    if prop_b is not None:
+        prop_b = _ensure_vis_prop(prop_b)
 
     num_dist = collection.property_differences(_VisProp.N).to_numpy()
     rnd_values, target_correlations = _get_rnd_target_values(
@@ -70,6 +68,8 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
             _stim_fit.property_difference(sp, prop_b, rnd_values[i, 1])
     if feedback:
         print(" "*70)
+
+    collection.reset_properties_dataframe()
 
     return target_correlations
 

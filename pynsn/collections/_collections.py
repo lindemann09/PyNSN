@@ -18,7 +18,7 @@ OptionalVisPropList = None | VisProp | str | VisPropList
 
 
 class CollectionStimulusPairs():
-    """set of NSNNumPairs"""
+    """Collection of NSNNumPairs"""
 
     def __init__(self, lst: tp.Union[None, ListNSNStimPairs] = None) -> None:
 
@@ -30,8 +30,8 @@ class CollectionStimulusPairs():
             self.pairs = lst
         else:
             self.pairs: ListNSNStimPairs = []
-        self._prop_a = pd.DataFrame()
-        self._prop_b = pd.DataFrame()
+        self._prop_df_a = pd.DataFrame()
+        self._prop_df_b = pd.DataFrame()
 
     def append(self, stim_a: NSNStimulus, stim_b: NSNStimulus,
                name: str = "no_name"):
@@ -39,13 +39,22 @@ class CollectionStimulusPairs():
         """
 
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
-        self._prop_a = pd.DataFrame()
-        self._prop_b = pd.DataFrame()
+        self._prop_df_a = pd.DataFrame()
+        self._prop_df_b = pd.DataFrame()
 
     def to_json(self, folder: tp.Union[str, Path]):
         """Save the collection as json files organized in subfolder"""
         for x in self.pairs:
             x.to_json(folder)
+
+    def reset_properties_dataframe(self):
+        """reset dataframe of visual properties
+
+        If the array `CollectionStimulusPairs.pairs` have been changed directly,
+        the method needs to be called to ensure get valid property data
+        """
+        self._prop_df_a = pd.DataFrame()
+        self._prop_df_b = pd.DataFrame()
 
     @staticmethod
     def from_json(folder: tp.Union[str, Path]) -> CollectionStimulusPairs:
@@ -65,34 +74,35 @@ class CollectionStimulusPairs():
 
         return rtn
 
-    def calc_properties(self):
-        """calculate all visual properties
-
-        If the array `CollectionStimulusPairs.pairs` have been changed directly,
-        the method needs to be called to ensure get valid property data
-        """
+    def _calc_properties(self):
+        """re-calculate all`visual properties,
+        should be called by private methods after `reset_properties`"""
 
         a = []
         b = []
         for x in self.pairs:
-            pa = x.stim_b.properties.to_dict(True)
-            pb = x.stim_a.properties.to_dict(True)
+            pa = x.stim_a.properties.to_dict(True)
+            pb = x.stim_b.properties.to_dict(True)
             a.append(pa)
             b.append(pb)
 
-        self._prop_a = pd.DataFrame(_misc.dict_of_arrays(a))
-        self._prop_b = pd.DataFrame(_misc.dict_of_arrays(b))
+        self._prop_df_a = pd.DataFrame(_misc.dict_of_arrays(a))
+        self._prop_df_b = pd.DataFrame(_misc.dict_of_arrays(b))
 
     def property_dataframe(self) -> pd.DataFrame:
+        """Dataframe with all properties of the two stimuli (`a` & `b`)
 
-        if len(self._prop_a) != len(self.pairs):
-            self.calc_properties()
+        The dataframe contains additional the name of the pairs
+        """
+
+        if len(self._prop_df_a) != len(self.pairs):
+            self._calc_properties()
 
         names = [x.name for x in self.pairs]
-        a = self._prop_a.copy()
+        a = self._prop_df_a.copy()
         a["stim"] = "a"
         a["name"] = names
-        b = self._prop_b.copy()
+        b = self._prop_df_b.copy()
         b["stim"] = "b"
         b["name"] = names
         return pd.concat([a, b])
@@ -103,32 +113,32 @@ class CollectionStimulusPairs():
         optionally specify `props`
         """
 
-        if len(self._prop_a) != len(self.pairs):
-            self.calc_properties()
+        if len(self._prop_df_a) != len(self.pairs):
+            self._calc_properties()
 
         if props is None:
-            return self._prop_a - self._prop_b
+            return self._prop_df_a - self._prop_df_b
         elif isinstance(props, tp.List):
             cols = [p.as_string() for p in ensure_vis_prop_list(props)]
         else:
             cols = ensure_vis_prop(props).as_string()
 
-        return self._prop_a[cols] - self._prop_b[cols]
+        return self._prop_df_a[cols] - self._prop_df_b[cols]
 
     def property_ratios(self, props: OptionalVisPropList = None) -> pd.DataFrame:
-        """ratios of properties  between stimuli A & B
+        """ratios of properties between stimuli A & B
 
         optionally specify `props`
         """
 
-        if len(self._prop_a) != len(self.pairs):
-            self.calc_properties()
+        if len(self._prop_df_a) != len(self.pairs):
+            self._calc_properties()
 
         if props is None:
-            return self._prop_a / self._prop_b
+            return self._prop_df_a / self._prop_df_b
         elif isinstance(props, tp.List):
             cols = [p.as_string() for p in ensure_vis_prop_list(props)]
         else:
             cols = ensure_vis_prop(props).as_string()
 
-        return self._prop_a[cols] / self._prop_b[cols]
+        return self._prop_df_a[cols] / self._prop_df_b[cols]
