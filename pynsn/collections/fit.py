@@ -23,8 +23,7 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
 
     num_ratios = collection.property_ratios(_VisProp.N).to_numpy()
     rnd_values, target_correlations = _get_rnd_target_values(
-        num_ratios, distr=distr, prop_a=prop_a, prop_b=prop_b,
-        max_corr=max_corr)
+        num_ratios, distr=distr, prop_a=prop_a, prop_b=prop_b, max_corr=max_corr)
 
     n = len(collection.pairs)
     for i, sp in enumerate(collection.pairs):
@@ -86,27 +85,29 @@ def _get_rnd_target_values(number_list: _ntp.NDArray,
             raise ValueError(f"'{prop_a.name}' and '{prop_b.name}' depend" +
                              " on each other and can't be varied independently")
         if isinstance(distr, _rnd.Abstract2dDistr):
-            return _modify_2d_distributions(distr,
-                                            number_list=number_list,
-                                            max_corr=max_corr)
+            return __modify_2d_distributions(distr,
+                                             number_list=number_list,
+                                             max_corr=max_corr)
         else:
-            raise ValueError("distr has to be a 2 dimensional distribution")
+            raise ValueError("distr has to be a 2 dimensional distribution," +
+                             " if two properties should be fitted")
     else:
         if isinstance(distr, _rnd.AbstractUnivarDistr):
-            return _modify_distributions(distr,
-                                         number_list=number_list,
-                                         max_corr=max_corr)
+            return __modify_distributions(distr,
+                                          number_list=number_list,
+                                          max_corr=max_corr)
         else:
-            raise ValueError("distr has to be a univariate distribution")
+            raise ValueError("distr has to be a univariate distribution," +
+                             " if one property should be fitted")
 
 
-def _modify_2d_distributions(dist: _rnd.Abstract2dDistr,
-                             number_list: _ntp.NDArray,
-                             max_corr=0.01) -> _tp.Tuple[_ntp.NDArray[_np.float64], _tp.Tuple[float, float]]:
+def __modify_2d_distributions(distr: _rnd.Abstract2dDistr,
+                              number_list: _ntp.NDArray,
+                              max_corr=0.01) -> _tp.Tuple[_ntp.NDArray[_np.float64], _tp.Tuple[float, float]]:
 
     n = len(number_list)
     while True:
-        values = dist.sample(n)
+        values = distr.sample(n)
         r1 = _np.corrcoef(number_list, values[:, 0])[0, 1]
         if _np.abs(r1) <= max_corr:
             r2 = _np.corrcoef(number_list, values[:, 1])[0, 1]
@@ -114,13 +115,13 @@ def _modify_2d_distributions(dist: _rnd.Abstract2dDistr,
                 return values, (float(r1), float(r2))
 
 
-def _modify_distributions(dist: _rnd.AbstractUnivarDistr,
-                          number_list: _ntp.NDArray,
-                          max_corr=0.01,) -> _tp.Tuple[_ntp.NDArray[_np.float64], float]:
+def __modify_distributions(distr: _rnd.AbstractUnivarDistr,
+                           number_list: _ntp.NDArray,
+                           max_corr=0.01,) -> _tp.Tuple[_ntp.NDArray[_np.float64], float]:
 
     n = len(number_list)
     while True:
-        values = dist.sample(n)
+        values = distr.sample(n)
         r = _np.corrcoef(number_list, values)[0, 1]
         if _np.abs(r) <= max_corr:
             return _np.atleast_2d(values).T, float(r)
