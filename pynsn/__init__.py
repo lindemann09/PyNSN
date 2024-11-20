@@ -20,8 +20,7 @@ from . import defaults
 from . import exceptions
 from ._shapes import (Point2D, Dot, Rectangle, Picture, Ellipse, PolygonShape,
                       Colour)
-from ._stimulus import (NSNStimulus, NSNStimulusPair, VisProp,
-                        SPACE_PROPERTIES, SIZE_PROPERTIES)
+from ._stimulus import (NSNStimulus, NSNStimulusPair, VisProp)
 from ._factory import StimulusFactory
 from . import rnd
 from . import fit

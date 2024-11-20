@@ -8,7 +8,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import enum
 from collections import OrderedDict
-from typing import Any, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import shapely
@@ -20,94 +20,119 @@ from .._shapes import ellipse_geometry as ellipse_geo
 from .shape_array import ShapeArray
 
 
-class VisProp(enum.Flag):  # visual properties
-    NUMEROSITY = enum.auto()
+class VisProp(enum.Enum):  # visual properties
+    """Visual Properties
 
-    AV_SURFACE_AREA = enum.auto()
-    AV_PERIMETER = enum.auto()
+        `N` = Numerosity
 
-    TOTAL_SURFACE_AREA = enum.auto()
-    TOTAL_PERIMETER = enum.auto()
-    SPARSITY = enum.auto()
-    FIELD_AREA = enum.auto()
-    COVERAGE = enum.auto()
+        `TSA` = Total surface area
+
+        `ASA` = Av. surface area or item surface area
+
+        `AP` = Av. perimeter
+
+        `TP` = Total perimeter
+
+        `SP` = Sparsity  (=1/density)
+
+        `FA` = Field area
+
+        `CO` = Coverage
+
+        `LOG_SIZE`
+
+        `LOG_SPACING`
+    """
+
+    N = enum.auto()
+
+    ASA = enum.auto()
+    AP = enum.auto()
+
+    TSA = enum.auto()
+    TP = enum.auto()
+    SP = enum.auto()
+    FA = enum.auto()
+    CO = enum.auto()
 
     LOG_SPACING = enum.auto()
     LOG_SIZE = enum.auto()
 
-    def is_dependent_from(self, other: Any) -> bool:
-        """returns true if both properties are not independent"""
-        is_size_prop = self in SIZE_PROPERTIES
-        is_space_prop = self in SPACE_PROPERTIES
-        other_size_prop = other in SIZE_PROPERTIES
-        other_space_prop = other in SPACE_PROPERTIES
-        return (is_size_prop and other_size_prop) or (
-            is_space_prop and other_space_prop)
+    @classmethod
+    def strings(cls) -> Dict[str, VisProp]:
+        return {"N": VisProp.N,
+                "TSA": VisProp.TSA,
+                "ASA": VisProp.ASA,
+                "AP": VisProp.AP,
+                "TP": VisProp.TP,
+                "SP": VisProp.SP,
+                "FA": VisProp.FA,
+                "CO": VisProp.CO,
+                "logSize": VisProp.LOG_SIZE,
+                "logSpace": VisProp.LOG_SPACING}
+
+    @classmethod
+    def space_properties(cls) -> Tuple[VisProp, VisProp, VisProp]:
+        """tuple of all space properties"""
+        return (cls.SP, cls.FA, cls.LOG_SPACING)
+
+    @classmethod
+    def size_properties(cls) -> Tuple[VisProp, VisProp, VisProp, VisProp, VisProp]:
+        """tuple of all size properties"""
+        return (cls.TSA, cls.ASA, cls.AP, cls.TP, cls.LOG_SIZE)
+
+    @classmethod
+    def get(cls, txt: str):
+        """get visual property from simple string representation
+
+        see `as_string()`
+        """
+        return VisProp.strings()[txt]
 
     def __str__(self) -> str:
-        if self == VisProp.NUMEROSITY:
+        return self.as_string()
+
+    def label(self) -> str:
+        """long text representation of the visual property"""
+
+        if self == VisProp.N:
             return "Numerosity"
         elif self == VisProp.LOG_SIZE:
             return "Log size"
-        elif self == VisProp.TOTAL_SURFACE_AREA:
+        elif self == VisProp.TSA:
             return "Total surface area"
-        elif self == VisProp.AV_SURFACE_AREA:
+        elif self == VisProp.ASA:
             return "Av. item surface area"
-        elif self == VisProp.AV_PERIMETER:
+        elif self == VisProp.AP:
             return "Av. item perimeter"
-        elif self == VisProp.TOTAL_PERIMETER:
+        elif self == VisProp.TP:
             return "Total perimeter"
         elif self == VisProp.LOG_SPACING:
             return "Log spacing"
-        elif self == VisProp.SPARSITY:
+        elif self == VisProp.SP:
             return "Sparsity"
-        elif self == VisProp.FIELD_AREA:
+        elif self == VisProp.FA:
             return "Field area"
-        elif self == VisProp.COVERAGE:
+        elif self == VisProp.CO:
             return "Coverage"
         else:
             return "???"
 
-    def short_name(self) -> str:
-        """Short names
-        N = Numerosity
-        TSA = Total surface area
-        ASA = Av. surface area (also item surface area)
-        AP = Av. perimeter
-        TP = Total perimeter
-        SP = Sparsity  (=1/density)
-        FA = Field area
-        CO = Coverage
-        """
+    def as_string(self) -> str:
+        """Short name as string"""
+        for k, v in VisProp.strings().items():
+            if self == v:
+                return k
+        return "???"
 
-        if self == VisProp.NUMEROSITY:
-            return "N"
-        elif self == VisProp.LOG_SIZE:
-            return "logSize"
-        elif self == VisProp.TOTAL_SURFACE_AREA:
-            return "TSA"
-        elif self == VisProp.AV_SURFACE_AREA:
-            return "ASA"
-        elif self == VisProp.AV_PERIMETER:
-            return "AP"
-        elif self == VisProp.TOTAL_PERIMETER:
-            return "TP"
-        elif self == VisProp.LOG_SPACING:
-            return "logSpace"
-        elif self == VisProp.SPARSITY:
-            return "SP"
-        elif self == VisProp.FIELD_AREA:
-            return "FA"
-        elif self == VisProp.COVERAGE:
-            return "CO"
-        else:
-            return "???"
-
-
-SPACE_PROPERTIES = (VisProp.LOG_SPACING, VisProp.SPARSITY, VisProp.FIELD_AREA)
-SIZE_PROPERTIES = (VisProp.LOG_SIZE, VisProp.TOTAL_SURFACE_AREA,
-                   VisProp.AV_SURFACE_AREA, VisProp.AV_PERIMETER,
-                   VisProp.TOTAL_PERIMETER)
+    def is_dependent_from(self, other: Any) -> bool:
+        """returns true if both properties are not independent"""
+        is_size_prop = self in VisProp.size_properties()
+        is_space_prop = self in VisProp.space_properties()
+        other_size_prop = other in VisProp.size_properties()
+        other_space_prop = other in VisProp.space_properties()
+        return (is_size_prop and other_size_prop) or (
+            is_space_prop and other_space_prop)
 
 
 class ArrayProperties(object):
@@ -265,16 +290,16 @@ class ArrayProperties(object):
 
     def get(self, prop: VisProp) -> Union[int, np.float64]:
         """returns a visual property"""
-        if prop == VisProp.AV_PERIMETER:
+        if prop == VisProp.AP:
             return self.average_perimeter
 
-        elif prop == VisProp.TOTAL_PERIMETER:
+        elif prop == VisProp.TP:
             return self.total_perimeter
 
-        elif prop == VisProp.AV_SURFACE_AREA:
+        elif prop == VisProp.ASA:
             return self.average_surface_area
 
-        elif prop == VisProp.TOTAL_SURFACE_AREA:
+        elif prop == VisProp.TSA:
             return self.total_surface_area
 
         elif prop == VisProp.LOG_SIZE:
@@ -283,16 +308,16 @@ class ArrayProperties(object):
         elif prop == VisProp.LOG_SPACING:
             return self.log_spacing
 
-        elif prop == VisProp.SPARSITY:
+        elif prop == VisProp.SP:
             return self.sparsity
 
-        elif prop == VisProp.FIELD_AREA:
+        elif prop == VisProp.FA:
             return self.field_area
 
-        elif prop == VisProp.COVERAGE:
+        elif prop == VisProp.CO:
             return self.coverage
 
-        elif prop == VisProp.NUMEROSITY:
+        elif prop == VisProp.N:
             return self.numerosity
 
         else:
@@ -302,9 +327,39 @@ class ArrayProperties(object):
         """Dictionary with the visual properties"""
         rtn = []
         if short_format:
-            rtn.extend([(x.short_name(), self.get(x))
+            rtn.extend([(x.as_string(), self.get(x))
                         for x in list(VisProp)])  # type: ignore
         else:
             rtn.extend([(str(x), self.get(x))
                         for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)
+
+# helper
+
+
+VisPropList = List[str] | List[VisProp] | List[Union[str, VisProp]]
+
+
+def ensure_vis_prop(prop: Union[str, VisProp]) -> VisProp:
+    """helper fnc: creates a VisProp and raises if that is no possible"""
+
+    if isinstance(prop, VisProp):
+        return prop
+    elif isinstance(prop, str):
+        return VisProp.strings()[prop]
+    else:
+        raise ValueError(f"{prop} is not a visual feature.")
+
+
+def ensure_vis_prop_list(prop: VisPropList) -> List[VisProp]:
+    """helper fnc: creates a VisProp and raises if that is no possible"""
+
+    rtn = []
+    for p in prop:
+        if isinstance(p, VisProp):
+            rtn.append(p)
+        elif isinstance(p, str):
+            rtn.append(VisProp.strings()[p])
+        else:
+            raise ValueError(f"{p} is not a visual feature.")
+    return rtn

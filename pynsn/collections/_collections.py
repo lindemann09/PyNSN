@@ -5,12 +5,16 @@ from pathlib import Path
 
 import pandas as pd
 
-from .._stimulus import NSNStimulus, NSNStimulusPair
 from .. import _misc
-from .. import VisProp
+from .._stimulus import NSNStimulus, NSNStimulusPair
+from .._stimulus.properties import (VisProp, VisPropList, ensure_vis_prop,
+                                    ensure_vis_prop_list)
 
 ListNSNStimuli = tp.List[NSNStimulus]
 ListNSNStimPairs = tp.List[NSNStimulusPair]
+
+
+OptionalVisPropList = None | VisProp | str | VisPropList
 
 
 class CollectionStimulusPairs():
@@ -93,8 +97,7 @@ class CollectionStimulusPairs():
         b["name"] = names
         return pd.concat([a, b])
 
-    def stimulus_differences(self,
-                             props: tp.Union[None, VisProp, tp.List[VisProp]] = None) -> pd.DataFrame:
+    def property_differences(self, props: OptionalVisPropList = None) -> pd.DataFrame:
         """differences of properties between stimuli A & B
 
         optionally specify `props`
@@ -106,14 +109,13 @@ class CollectionStimulusPairs():
         if props is None:
             return self._prop_a - self._prop_b
         elif isinstance(props, tp.List):
-            cols = [p.short_name() for p in props]
+            cols = [p.as_string() for p in ensure_vis_prop_list(props)]
         else:
-            cols = props.short_name()
+            cols = ensure_vis_prop(props).as_string()
 
         return self._prop_a[cols] - self._prop_b[cols]
 
-    def stimulus_ratios(self,
-                        props: tp.Union[None, VisProp, tp.List[VisProp]] = None) -> pd.DataFrame:
+    def property_ratios(self, props: OptionalVisPropList = None) -> pd.DataFrame:
         """ratios of properties  between stimuli A & B
 
         optionally specify `props`
@@ -125,8 +127,8 @@ class CollectionStimulusPairs():
         if props is None:
             return self._prop_a / self._prop_b
         elif isinstance(props, tp.List):
-            cols = [p.short_name() for p in props]
+            cols = [p.as_string() for p in ensure_vis_prop_list(props)]
         else:
-            cols = props.short_name()
+            cols = ensure_vis_prop(props).as_string()
 
         return self._prop_a[cols] / self._prop_b[cols]
