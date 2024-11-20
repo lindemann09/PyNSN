@@ -1,27 +1,19 @@
 from __future__ import annotations
 
+import gzip
 import json
 import typing as tp
 from pathlib import Path
-import gzip
 
 import pandas as pd
 
-from .. import defaults
-
-from .. import _misc
+from .. import _misc, defaults
 from .._stimulus import NSNStimulus, NSNStimulusPair
-from .._stimulus.properties import (VisProp, VisPropList, ensure_vis_prop,
-                                    ensure_vis_prop_list)
-
-ListNSNStimuli = tp.List[NSNStimulus]
-ListNSNStimPairs = tp.List[NSNStimulusPair]
+from .._stimulus.properties import ensure_vis_prop, ensure_vis_prop_list
+from ._abc_coll import AbstractCollection, ListNSNStimPairs, OptionalVisPropList
 
 
-OptionalVisPropList = None | VisProp | str | VisPropList
-
-
-class CollectionStimulusPairs():
+class CollectionStimulusPairs(AbstractCollection):
     """Collection of NSNNumPairs"""
 
     def __init__(self, lst: tp.Union[None, ListNSNStimPairs] = None) -> None:
@@ -43,8 +35,7 @@ class CollectionStimulusPairs():
         """
 
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
-        self._prop_df_a = pd.DataFrame()
-        self._prop_df_b = pd.DataFrame()
+        self.reset_properties_dataframe()
 
     def save(self, path: tp.Union[str, Path], zipped: bool = True):
         """Save the collection as json files organized in subfolder"""

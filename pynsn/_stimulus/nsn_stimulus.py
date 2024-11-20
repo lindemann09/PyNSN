@@ -29,6 +29,8 @@ from .properties import ArrayProperties
 from .stimulus_colours import StimulusColours
 from .target_area import TargetArea
 
+# TODO add optional names?
+
 
 class NSNStimulus(shape_array.ShapeArray):
     """Non-Symbolic Number Stimulus

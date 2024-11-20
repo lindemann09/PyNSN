@@ -3,7 +3,7 @@ import typing as _tp
 
 import numpy as _np
 import numpy.typing as _ntp
-from ._collections import CollectionStimulusPairs
+from ._coll_stim_pairs import CollectionStimulusPairs
 from .. import rnd as _rnd
 from .._stimulus.properties import VisProp as _VisProp
 from .._stimulus.properties import ensure_vis_prop as _ensure_vis_prop
