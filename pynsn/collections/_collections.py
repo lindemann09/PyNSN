@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 import typing as tp
 from pathlib import Path
+import gzip
 
 import pandas as pd
+
+from .. import defaults
 
 from .. import _misc
 from .._stimulus import NSNStimulus, NSNStimulusPair
@@ -42,10 +46,49 @@ class CollectionStimulusPairs():
         self._prop_df_a = pd.DataFrame()
         self._prop_df_b = pd.DataFrame()
 
-    def to_json(self, folder: tp.Union[str, Path]):
+    def save(self, path: tp.Union[str, Path], zipped: bool = True):
         """Save the collection as json files organized in subfolder"""
+
+        json_str = "["
         for x in self.pairs:
-            x.to_json(folder)
+            s = x.to_json(path=None, indent=2, tabular=True)
+            json_str += "\n" + s[1:-1] + ","
+        json_str = json_str[:-1] + "\n]"
+
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if zipped:
+            with gzip.open(path, "wt", encoding=defaults.FILE_ENCODING) as fl:
+                fl.write(json_str)
+        else:
+            with open(path, "w", encoding=defaults.FILE_ENCODING) as fl:
+                fl.write(json_str)
+
+    @staticmethod
+    def load(path: tp.Union[str, Path], zipped: bool = True) -> CollectionStimulusPairs:
+        """Load collection from folder with json files
+
+        see `to_json`
+        """
+        path = Path(path)
+        if not path.is_file():
+            raise RuntimeError(f"Can't find {path}.")
+        if zipped:
+            with gzip.open(path, 'rt', encoding=defaults.FILE_ENCODING) as fl:
+                dicts = json.load(fl)
+        else:
+            with open(path, 'r', encoding=defaults.FILE_ENCODING) as fl:
+                dicts = json.load(fl)
+
+        rtn = CollectionStimulusPairs()
+        while len(dicts) > 0:
+            c = dicts.pop(0)
+            a = dicts.pop(0)
+            b = dicts.pop(0)
+            rtn.append(NSNStimulus.from_dict(a),
+                       NSNStimulus.from_dict(b),
+                       name=c["name"])
+        return rtn
 
     def reset_properties_dataframe(self):
         """reset dataframe of visual properties
@@ -55,24 +98,6 @@ class CollectionStimulusPairs():
         """
         self._prop_df_a = pd.DataFrame()
         self._prop_df_b = pd.DataFrame()
-
-    @staticmethod
-    def from_json(folder: tp.Union[str, Path]) -> CollectionStimulusPairs:
-        """Load collection from subfolders with json files
-
-        see `to_json`
-        """
-        folder = Path(folder)
-        if not folder.is_dir():
-            raise RuntimeError(
-                f"Can't load from {folder}. It's not a directory")
-
-        rtn = CollectionStimulusPairs()
-        for d in folder.iterdir():
-            if d.is_dir():
-                rtn.pairs.append(NSNStimulusPair.from_json(d))
-
-        return rtn
 
     def _calc_properties(self):
         """re-calculate all`visual properties,

@@ -16,6 +16,7 @@ IntOVector = Union[int, Sequence[int], NDArray[np.integer]]
 
 
 def formated_json(d: dict, indent: int = 2) -> str:
+    """this function can  handle numpy arrays"""
     json_str = orjson.dumps(
         d, option=orjson.OPT_SERIALIZE_NUMPY).decode("utf-8")
     if indent < 1:
@@ -99,7 +100,7 @@ def dict_of_arrays(array_of_dicts: list):
 
 
 def is_interactive_mode():
-    """Returns if Python is running in interactive mode (such as IDLE or IPthon)
+    """Returns if Python is running in interactive mode (such as IDLE or IPython)
 
     Returns
     -------

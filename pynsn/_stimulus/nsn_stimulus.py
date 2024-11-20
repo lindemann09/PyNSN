@@ -168,18 +168,23 @@ class NSNStimulus(shape_array.ShapeArray):
         return rtn
 
     def to_json(self,
-                filename: Union[None, str, Path] = None,
+                path: Union[None, str, Path] = None,
                 indent: int = 2, tabular: bool = True) -> str:
         d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
-        if isinstance(filename, (Path, str)):
-            with open(filename, "w", encoding=defaults.FILE_ENCODING) as fl:
+
+        if isinstance(path, (Path, str)):
+            with open(path, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)
         return json_str
 
     @staticmethod
-    def from_json(file_path: Union[str, Path]) -> NSNStimulus:
-        with open(file_path, 'r', encoding=defaults.FILE_ENCODING) as fl:
+    def from_json(path: Union[str, Path]) -> NSNStimulus:
+
+        path = Path(path)
+        if not path.is_file():
+            raise RuntimeError(f"Can't find {path}.")
+        with open(path, 'r', encoding=defaults.FILE_ENCODING) as fl:
             d = json.load(fl)
         return NSNStimulus.from_dict(d)
 
@@ -193,7 +198,7 @@ class NSNStimulus(shape_array.ShapeArray):
         neighbourhood.
 
         minimal_replacing: try to find a new random position is a neighbourhood,
-            otherwise overlapping object will be randomly replaced anywere in the
+            otherwise overlapping object will be randomly replaced anywhere in the
             search area
 
 
