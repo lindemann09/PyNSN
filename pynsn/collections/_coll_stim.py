@@ -19,10 +19,10 @@ from ._abc_coll import AbstractCollection, ListNSNStimuli
 class CollectionStimuli(AbstractCollection):
     """Collection of NSNNumPairs"""
 
-    def __init__(self, lst: tp.Union[None, NSNStimulus] = None) -> None:
+    def __init__(self, lst: None | ListNSNStimuli = None) -> None:
 
         if isinstance(lst, tp.List):
-            for x in lst:
+            for x in lst:  # type check
                 if not isinstance(x, NSNStimulus):
                     raise RuntimeError(
                         f"lst must be a list of NSNStimulus and not {type(x)}")
@@ -36,7 +36,7 @@ class CollectionStimuli(AbstractCollection):
         """
 
         self.stimuli.append(stim)
-        self.reset_properties_dataframe()
+        self.reset_properties()
 
     def save(self, path: tp.Union[str, Path], zipped: bool = True):
         """Save the collection as json files organized in subfolder"""
@@ -77,8 +77,8 @@ class CollectionStimuli(AbstractCollection):
             rtn.append(NSNStimulus.from_dict(d))
         return rtn
 
-    def reset_properties_dataframe(self):
-        """reset dataframe of visual properties
+    def reset_properties(self):
+        """resets visual properties
 
         If the array `CollectionStimuli.stimuli` have been changed directly,
         the method needs to be called to ensure get valid property data
@@ -109,9 +109,12 @@ class CollectionStimuli(AbstractCollection):
         rtn["names"] = [x.name for x in self.stimuli]
         return rtn
 
-    def correlation(self, properties: None | VPList = None) -> pd.DataFrame:
-        """Correlation of the visual properties"""
-        df = self.property_dataframe()
+    def corr(self, properties: None | VPList = None) -> pd.DataFrame:
+        """Pairwise Pearson correlation between  of the visual properties"""
+        if len(self._prop_df) != len(self.stimuli):
+            self._calc_properties()
+
+        df = self._prop_df
         if properties is not None:
             prop_names = [ensure_vp(p).name for p in properties]
             df = df[prop_names]

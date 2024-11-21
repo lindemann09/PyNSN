@@ -41,7 +41,7 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
     if feedback:
         print(" "*70)
 
-    collection.reset_properties_dataframe()
+    collection.reset_properties()
     return target_correlations
 
 
@@ -73,7 +73,7 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
     if feedback:
         print(" "*70)
 
-    collection.reset_properties_dataframe()
+    collection.reset_properties()
 
     return target_correlations
 

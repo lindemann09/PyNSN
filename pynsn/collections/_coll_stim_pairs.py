@@ -20,7 +20,7 @@ class CollectionStimulusPairs(AbstractCollection):
     def __init__(self, lst: tp.Union[None, ListNSNStimPairs] = None) -> None:
 
         if isinstance(lst, tp.List):
-            for x in lst:
+            for x in lst:  # type check
                 if not isinstance(x, NSNStimulusPair):
                     raise RuntimeError(
                         f"lst must be a list of NSNStimulusPairs and not {type(x)}")
@@ -36,7 +36,7 @@ class CollectionStimulusPairs(AbstractCollection):
         """
 
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
-        self.reset_properties_dataframe()
+        self.reset_properties()
 
     def save(self, path: tp.Union[str, Path], zipped: bool = True):
         """Save the collection as json files organized in subfolder"""
@@ -82,7 +82,7 @@ class CollectionStimulusPairs(AbstractCollection):
                        name=c["name"])
         return rtn
 
-    def reset_properties_dataframe(self):
+    def reset_properties(self):
         """reset dataframe of visual properties
 
         If the array `CollectionStimulusPairs.pairs` have been changed directly,
@@ -165,13 +165,12 @@ class CollectionStimulusPairs(AbstractCollection):
         stim_id : {'a', 'b'}
         """
 
-        rtn = CollectionStimuli()
-        for pair in self.pairs:
-            if stim_id == "a":
-                rtn.append(pair.stim_a)
-            elif stim_id == "b":
-                rtn.append(pair.stim_b)
-            else:
-                raise ValueError(f"Unknown stimulus id '{stim_id}'. " +
-                                 "Must be either 'a' or 'b'")
-        return rtn
+        if stim_id == "a":
+            rtn = [pair.stim_a for pair in self.pairs]
+        elif stim_id == "b":
+            rtn = [pair.stim_b for pair in self.pairs]
+        else:
+            raise ValueError(f"Unknown stimulus id '{stim_id}'. " +
+                             "Must be either 'a' or 'b'")
+
+        return CollectionStimuli(rtn)
