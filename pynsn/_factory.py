@@ -7,7 +7,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from . import defaults
 from ._misc import formated_json
@@ -18,6 +18,8 @@ from ._stimulus.nsn_stimulus import NSNStimulus
 from ._stimulus.stimulus_colours import StimulusColours
 
 # TODO  incremental_random_dot_array
+
+FactoryShapesList = List[Tuple[int, AbstractShape | AbstractRndShape]]
 
 
 class StimulusFactory(object):
@@ -61,7 +63,7 @@ class StimulusFactory(object):
             self.max_iterations = max_iterations
 
         self.ignore_overlaps = ignore_overlaps
-        self._shapes = []
+        self._shapes: FactoryShapesList = []
 
     @property
     def base_stimulus(self) -> NSNStimulus:
@@ -72,16 +74,22 @@ class StimulusFactory(object):
         assert isinstance(stim, NSNStimulus)
         self._base = stim
 
+    def shapes(self) -> FactoryShapesList:
+        return self._shapes
+
     def shapes_clear(self):
-        self._shapes = []
+        self._shapes: FactoryShapesList = []
 
     def shape_add(self, shape: Union[AbstractShape, AbstractRndShape], n: int = 1):
         assert (isinstance(shape, AbstractShape) or
                 isinstance(shape, AbstractRndShape))
         self._shapes.append((n, shape))
 
-    def create(self) -> NSNStimulus:
+    def create(self, name: Optional[str] = None) -> NSNStimulus:
         rtn = deepcopy(self._base)
+        if name is not None:
+            rtn.name = name
+
         for n, s in self._shapes:
             rtn.shape_add_random_pos(ref_object=s, n=n,
                                      ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)
@@ -92,11 +100,10 @@ class StimulusFactory(object):
         rtn = {}
         rtn.update({"type": self.__class__.__name__})
         base_dict = self._base.to_dict(tabular=False)
-        try:
-            del base_dict["shape_array"]
-            del base_dict["hash"]
-        except KeyError:
-            pass
+
+        for key in ("shape_array", "hash", "name"):
+            base_dict.pop(key, None)  # avoid KeyError
+
         rtn.update(base_dict)
         for x, s in enumerate(self._shapes):
             d = {"n": s[0]}

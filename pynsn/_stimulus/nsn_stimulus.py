@@ -42,7 +42,8 @@ class NSNStimulus(shape_array.ShapeArray):
     def __init__(self,
                  target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
                  min_distance: int = defaults.MIN_DISTANCE,
-                 min_distance_target_area: int = defaults.MIN_DISTANCE
+                 min_distance_target_area: int = defaults.MIN_DISTANCE,
+                 name: Optional[str] = None
                  ) -> None:
 
         super().__init__()
@@ -51,6 +52,7 @@ class NSNStimulus(shape_array.ShapeArray):
         self.min_distance = min_distance
         self._properties = ArrayProperties(self)
         self._colours = StimulusColours(target_area=self._target_area.colour)
+        self.name = name
 
     @property
     def target_area(self) -> TargetArea:
@@ -123,10 +125,16 @@ class NSNStimulus(shape_array.ShapeArray):
     def to_dict(self, tabular: bool = True) -> dict:
         """Dict representation of the shape array
         """
-        rtn = {"hash": self.hash(),
-               "target_area": self.target_area.to_dict(),
-               "min_distance": self.min_distance,
-               "colours": self._colours.to_dict()}
+        if self.name is not None:
+            rtn: Dict[str, Any] = {"name": self.name}
+
+        else:
+            rtn: Dict[str, Any] = {}
+
+        rtn.update({"hash": self.hash(),
+                    "target_area": self.target_area.to_dict(),
+                    "min_distance": self.min_distance,
+                    "colours": self._colours.to_dict()})
 
         if tabular:
             rtn.update({"shape_table": self.table_dict()})
@@ -139,10 +147,15 @@ class NSNStimulus(shape_array.ShapeArray):
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> NSNStimulus:
         """read shape array from dict"""
+        try:
+            name = d["name"]
+        except KeyError:
+            name = None
         ta = TargetArea.from_dict(d["target_area"])
         rtn = NSNStimulus(target_area_shape=ta.shape,
                           min_distance_target_area=ta.min_dist_boarder,
-                          min_distance=d["min_distance"])
+                          min_distance=d["min_distance"],
+                          name=name)
         rtn.colours = StimulusColours.from_dict(d["colours"])
 
         if "shape_array" in d:
@@ -174,7 +187,6 @@ class NSNStimulus(shape_array.ShapeArray):
                 indent: int = 2, tabular: bool = True) -> str:
         d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent)
-
         if isinstance(path, (Path, str)):
             with open(path, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)
