@@ -5,23 +5,23 @@ import numpy as _np
 import numpy.typing as _ntp
 from ._coll_stim_pairs import CollectionStimulusPairs
 from .. import rnd as _rnd
-from .._stimulus.properties import VisProp as _VisProp
-from .._stimulus.properties import ensure_vis_prop as _ensure_vis_prop
+from .._stimulus.properties import VP as _VP
+from .._stimulus.properties import ensure_vp as _ensure_vp
 from .. import fit as _stim_fit
 
 
 def property_ratio_correlation(collection: CollectionStimulusPairs,
                                distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                               prop_a: _tp.Union[str, _VisProp],
-                               prop_b: _tp.Union[None, str, _VisProp] = None,
+                               prop_a: _tp.Union[str, _VP],
+                               prop_b: _tp.Union[None, str, _VP] = None,
                                max_corr: float = 0.01,
                                feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
-    prop_a = _ensure_vis_prop(prop_a)
+    prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
-        prop_b = _ensure_vis_prop(prop_b)
+        prop_b = _ensure_vp(prop_b)
 
-    num_ratios = collection.property_ratios(_VisProp.N).to_numpy()
+    num_ratios = collection.property_ratios(_VP.N).to_numpy()
     rnd_values, target_correlations = _get_rnd_target_values(
         num_ratios, distr=distr, prop_a=prop_a, prop_b=prop_b, max_corr=max_corr)
 
@@ -31,7 +31,7 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
         _stim_fit.property_ratio(sp, prop_a, rnd_values[i, 0])
-        if isinstance(prop_b, _VisProp):
+        if isinstance(prop_b, _VP):
             _stim_fit.property_ratio(sp, prop_b, rnd_values[i, 1])
     if feedback:
         print(" "*70)
@@ -42,17 +42,17 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
 
 def property_difference_correlation(collection: CollectionStimulusPairs,
                                     distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                                    prop_a: _tp.Union[str, _VisProp],
+                                    prop_a: _tp.Union[str, _VP],
                                     prop_b: _tp.Union[None,
-                                                      str, _VisProp] = None,
+                                                      str, _VP] = None,
                                     max_corr: float = 0.01,
                                     feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
-    prop_a = _ensure_vis_prop(prop_a)
+    prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
-        prop_b = _ensure_vis_prop(prop_b)
+        prop_b = _ensure_vp(prop_b)
 
-    num_dist = collection.property_differences(_VisProp.N).to_numpy()
+    num_dist = collection.property_differences(_VP.N).to_numpy()
     rnd_values, target_correlations = _get_rnd_target_values(
         num_dist, distr=distr, prop_a=prop_a, prop_b=prop_b,
         max_corr=max_corr)
@@ -63,7 +63,7 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
         _stim_fit.property_difference(sp, prop_a, rnd_values[i, 0])
-        if isinstance(prop_b, _VisProp):
+        if isinstance(prop_b, _VP):
             _stim_fit.property_difference(sp, prop_b, rnd_values[i, 1])
     if feedback:
         print(" "*70)
@@ -77,10 +77,10 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
 
 def _get_rnd_target_values(number_list: _ntp.NDArray,
                            distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                           prop_a: _VisProp,
-                           prop_b: _tp.Optional[_VisProp] = None,
+                           prop_a: _VP,
+                           prop_b: _tp.Optional[_VP] = None,
                            max_corr=0.01):
-    if isinstance(prop_b, _VisProp):
+    if isinstance(prop_b, _VP):
         if prop_a.is_dependent_from(prop_b):
             raise ValueError(f"'{prop_a.name}' and '{prop_b.name}' depend" +
                              " on each other and can't be varied independently")

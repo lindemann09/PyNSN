@@ -8,7 +8,7 @@ import numpy as np
 
 from .. import defaults
 from .nsn_stimulus import NSNStimulus
-from .properties import VisProp, ensure_vis_prop
+from .properties import VP, ensure_vp
 
 
 class NSNStimulusPair():
@@ -52,16 +52,16 @@ class NSNStimulusPair():
                                stim_b=NSNStimulus.from_dict(b),
                                name=c["name"])
 
-    def property_difference(self, prop: Union[str, VisProp]) -> np.float64:
+    def property_difference(self, prop: Union[str, VP]) -> np.float64:
         """difference of property `prop` between stimulus A & B"""
-        prop = ensure_vis_prop(prop)
+        prop = ensure_vp(prop)
         rtn = self.stim_a.properties.get(
             prop) - self.stim_b.properties.get(prop)
         return np.float64(rtn)
 
-    def property_ratio(self, prop: Union[str, VisProp]) -> np.float64:
+    def property_ratio(self, prop: Union[str, VP]) -> np.float64:
         """ratio of property `prop` between stimulus A & B"""
-        prop = ensure_vis_prop(prop)
+        prop = ensure_vp(prop)
         rtn = self.stim_a.properties.get(
             prop) / self.stim_b.properties.get(prop)
         return np.float64(rtn)

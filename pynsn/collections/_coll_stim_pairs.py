@@ -9,8 +9,8 @@ import pandas as pd
 
 from .. import _misc, defaults
 from .._stimulus import NSNStimulus, NSNStimulusPair
-from .._stimulus.properties import ensure_vis_prop, ensure_vis_prop_list
-from ._abc_coll import AbstractCollection, ListNSNStimPairs, OptionalVisPropList
+from .._stimulus.properties import ensure_vp, ensure_vis_prop_list
+from ._abc_coll import AbstractCollection, ListNSNStimPairs, OptionalVPList
 
 
 class CollectionStimulusPairs(AbstractCollection):
@@ -123,7 +123,7 @@ class CollectionStimulusPairs(AbstractCollection):
         b["name"] = names
         return pd.concat([a, b])
 
-    def property_differences(self, props: OptionalVisPropList = None) -> pd.DataFrame:
+    def property_differences(self, props: OptionalVPList = None) -> pd.DataFrame:
         """differences of properties between stimuli A & B
 
         optionally specify `props`
@@ -137,11 +137,11 @@ class CollectionStimulusPairs(AbstractCollection):
         elif isinstance(props, tp.List):
             cols = [p.name for p in ensure_vis_prop_list(props)]
         else:
-            cols = ensure_vis_prop(props).name
+            cols = ensure_vp(props).name
 
         return self._prop_df_a[cols] - self._prop_df_b[cols]
 
-    def property_ratios(self, props: OptionalVisPropList = None) -> pd.DataFrame:
+    def property_ratios(self, props: OptionalVPList = None) -> pd.DataFrame:
         """ratios of properties between stimuli A & B
 
         optionally specify `props`
@@ -155,6 +155,6 @@ class CollectionStimulusPairs(AbstractCollection):
         elif isinstance(props, tp.List):
             cols = [p.name for p in ensure_vis_prop_list(props)]
         else:
-            cols = ensure_vis_prop(props).name
+            cols = ensure_vp(props).name
 
         return self._prop_df_a[cols] / self._prop_df_b[cols]
