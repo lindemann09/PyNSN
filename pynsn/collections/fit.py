@@ -3,31 +3,64 @@ import typing as _tp
 
 import numpy as _np
 import numpy.typing as _ntp
-from ._coll_stim_pairs import CollectionStimulusPairs
+
+from .. import fit as _stim_fit
 from .. import rnd as _rnd
 from .._stimulus.properties import VP as _VP
 from .._stimulus.properties import ensure_vp as _ensure_vp
-from .. import fit as _stim_fit
+from ._coll_stim_pairs import CollectionStimuli as _CollectionStimuli
+from ._coll_stim_pairs import CollectionStimulusPairs as _CollectionStimulusPairs
 
 
-def property_ratio_correlation(collection: CollectionStimulusPairs,
-                               distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                               prop_a: _tp.Union[str, _VP],
-                               prop_b: _tp.Union[None, str, _VP] = None,
+def property_correlation(stimuli: _CollectionStimuli,
+                         distr: _rnd.AbstractUnivarDistr,
+                         prop_a: str | _VP,
+                         prop_b: None | str | _VP = None,
+                         max_corr: float = 0.01,
+                         feedback: bool = True) -> _tp.Tuple[float, float] | float:
+    prop_a = _ensure_vp(prop_a)
+    if prop_b is not None:
+        prop_b = _ensure_vp(prop_b)
+
+    nums = _np.array([s.properties.numerosity for s in stimuli.stimuli])
+    rnd_values, target_correlations = _check_prop_and_rnd_target_values(
+        nums, distr=distr, prop_a=prop_a, prop_b=prop_b, max_corr=max_corr)
+
+    n = len(stimuli.stimuli)
+    for i, sp in enumerate(stimuli.stimuli):
+        if feedback:
+            _sys.stdout.write(
+                f"fitting {i+1}/{n} {sp.name}                 \r")
+        _stim_fit.property_adapt(sp, prop_a, rnd_values[i, 0])
+
+        if isinstance(prop_b, _VP):
+            _stim_fit.property_adapt(sp, prop_b, rnd_values[i, 1])
+
+    if feedback:
+        print(" "*70)
+
+    stimuli.reset_properties()
+    return target_correlations
+
+
+def property_ratio_correlation(pairs: _CollectionStimulusPairs,
+                               distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                               prop_a: str | _VP,
+                               prop_b: None | str | _VP = None,
                                max_corr: float = 0.01,
                                adapt_stim: str = "both",
-                               feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
+                               feedback: bool = True) -> _tp.Tuple[float, float] | float:
 
     prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
         prop_b = _ensure_vp(prop_b)
 
-    num_ratios = collection.property_ratios(_VP.N).to_numpy()
-    rnd_values, target_correlations = _get_rnd_target_values(
+    num_ratios = pairs.property_ratios(_VP.N).to_numpy()
+    rnd_values, target_correlations = _check_prop_and_rnd_target_values(
         num_ratios, distr=distr, prop_a=prop_a, prop_b=prop_b, max_corr=max_corr)
 
-    n = len(collection.pairs)
-    for i, sp in enumerate(collection.pairs):
+    n = len(pairs.pairs)
+    for i, sp in enumerate(pairs.pairs):
         if feedback:
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
@@ -41,15 +74,14 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
     if feedback:
         print(" "*70)
 
-    collection.reset_properties()
+    pairs.reset_properties()
     return target_correlations
 
 
-def property_difference_correlation(collection: CollectionStimulusPairs,
-                                    distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                                    prop_a: _tp.Union[str, _VP],
-                                    prop_b: _tp.Union[None,
-                                                      str, _VP] = None,
+def property_difference_correlation(pairs: _CollectionStimulusPairs,
+                                    distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                                    prop_a: str | _VP,
+                                    prop_b: None | str | _VP = None,
                                     max_corr: float = 0.01,
                                     feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
@@ -57,13 +89,13 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
     if prop_b is not None:
         prop_b = _ensure_vp(prop_b)
 
-    num_dist = collection.property_differences(_VP.N).to_numpy()
-    rnd_values, target_correlations = _get_rnd_target_values(
+    num_dist = pairs.property_differences(_VP.N).to_numpy()
+    rnd_values, target_correlations = _check_prop_and_rnd_target_values(
         num_dist, distr=distr, prop_a=prop_a, prop_b=prop_b,
         max_corr=max_corr)
 
-    n = len(collection.pairs)
-    for i, sp in enumerate(collection.pairs):
+    n = len(pairs.pairs)
+    for i, sp in enumerate(pairs.pairs):
         if feedback:
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
@@ -73,18 +105,18 @@ def property_difference_correlation(collection: CollectionStimulusPairs,
     if feedback:
         print(" "*70)
 
-    collection.reset_properties()
+    pairs.reset_properties()
 
     return target_correlations
 
 # helper
 
 
-def _get_rnd_target_values(number_list: _ntp.NDArray,
-                           distr: _tp.Union[_rnd.AbstractUnivarDistr, _rnd.Abstract2dDistr],
-                           prop_a: _VP,
-                           prop_b: _tp.Optional[_VP] = None,
-                           max_corr=0.01):
+def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
+                                      distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                                      prop_a: _VP,
+                                      prop_b: None | _VP = None,
+                                      max_corr=0.01):
     if isinstance(prop_b, _VP):
         if prop_a.is_dependent_from(prop_b):
             raise ValueError(f"'{prop_a.name}' and '{prop_b.name}' depend" +
