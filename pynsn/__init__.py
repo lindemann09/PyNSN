@@ -18,10 +18,10 @@ if _is_interactive_mode():
 
 from . import defaults
 from . import exceptions
-from . import typing
 from ._shapes import (Point2D, Dot, Rectangle, Picture, Ellipse, PolygonShape,
                       Colour)
 from ._stimulus import (NSNStimulus, NSNStimulusPair, VP)
 from . import rnd
 from .rnd._factory import StimulusFactory
 from . import fit
+from . import typing  # must be important as last model

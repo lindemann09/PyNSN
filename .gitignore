@@ -49,7 +49,7 @@ venv/
 */.ipynb_checkpoints/
 examples/pynsn
 
-test-*
+test*
 *.json
 *.svg
 *.png

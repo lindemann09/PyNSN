@@ -38,7 +38,7 @@ class AbstractDistribution(metaclass=ABCMeta):
 
         """
 
-    def pyplot_samples(self, n=100000):
+    def pyplot_samples(self, n=100000):  # FIXME to plot
         """Creating a visualization of the distribution with ``matplotlib.pyplot``
 
         Args:
