@@ -59,19 +59,6 @@ class VisProp(enum.Enum):  # visual properties
     LOG_SIZE = enum.auto()
 
     @classmethod
-    def strings(cls) -> Dict[str, VisProp]:
-        return {"N": VisProp.N,
-                "TSA": VisProp.TSA,
-                "ASA": VisProp.ASA,
-                "AP": VisProp.AP,
-                "TP": VisProp.TP,
-                "SP": VisProp.SP,
-                "FA": VisProp.FA,
-                "CO": VisProp.CO,
-                "logSize": VisProp.LOG_SIZE,
-                "logSpace": VisProp.LOG_SPACING}
-
-    @classmethod
     def space_properties(cls) -> Tuple[VisProp, VisProp, VisProp]:
         """tuple of all space properties"""
         return (cls.SP, cls.FA, cls.LOG_SPACING)
@@ -81,18 +68,8 @@ class VisProp(enum.Enum):  # visual properties
         """tuple of all size properties"""
         return (cls.TSA, cls.ASA, cls.AP, cls.TP, cls.LOG_SIZE)
 
-    @classmethod
-    def get(cls, txt: str):
-        """get visual property from simple string representation
-
-        see `as_string()`
-        """
-        return VisProp.strings()[txt]
-
-    def __str__(self) -> str:
-        return self.as_string()
-
-    def label(self) -> str:
+    @property
+    def long_label(self) -> str:
         """long text representation of the visual property"""
 
         if self == VisProp.N:
@@ -117,13 +94,6 @@ class VisProp(enum.Enum):  # visual properties
             return "Coverage"
         else:
             return "???"
-
-    def as_string(self) -> str:
-        """Short name as string"""
-        for k, v in VisProp.strings().items():
-            if self == v:
-                return k
-        return "???"
 
     def is_dependent_from(self, other: Any) -> bool:
         """returns true if both properties are not independent"""
@@ -327,10 +297,10 @@ class ArrayProperties(object):
         """Dictionary with the visual properties"""
         rtn = []
         if short_format:
-            rtn.extend([(x.as_string(), self.get(x))
+            rtn.extend([(x.name, self.get(x))
                         for x in list(VisProp)])  # type: ignore
         else:
-            rtn.extend([(str(x), self.get(x))
+            rtn.extend([(x.long_label, self.get(x))
                         for x in list(VisProp)])  # type: ignore
         return OrderedDict(rtn)
 
@@ -346,7 +316,7 @@ def ensure_vis_prop(prop: Union[str, VisProp]) -> VisProp:
     if isinstance(prop, VisProp):
         return prop
     elif isinstance(prop, str):
-        return VisProp.strings()[prop]
+        return VisProp[prop]
     else:
         raise ValueError(f"{prop} is not a visual feature.")
 
@@ -359,7 +329,7 @@ def ensure_vis_prop_list(prop: VisPropList) -> List[VisProp]:
         if isinstance(p, VisProp):
             rtn.append(p)
         elif isinstance(p, str):
-            rtn.append(VisProp.strings()[p])
+            rtn.append(VisProp[p])
         else:
             raise ValueError(f"{p} is not a visual feature.")
     return rtn

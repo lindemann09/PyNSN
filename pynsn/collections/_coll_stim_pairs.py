@@ -135,9 +135,9 @@ class CollectionStimulusPairs(AbstractCollection):
         if props is None:
             return self._prop_df_a - self._prop_df_b
         elif isinstance(props, tp.List):
-            cols = [p.as_string() for p in ensure_vis_prop_list(props)]
+            cols = [p.name for p in ensure_vis_prop_list(props)]
         else:
-            cols = ensure_vis_prop(props).as_string()
+            cols = ensure_vis_prop(props).name
 
         return self._prop_df_a[cols] - self._prop_df_b[cols]
 
@@ -153,8 +153,8 @@ class CollectionStimulusPairs(AbstractCollection):
         if props is None:
             return self._prop_df_a / self._prop_df_b
         elif isinstance(props, tp.List):
-            cols = [p.as_string() for p in ensure_vis_prop_list(props)]
+            cols = [p.name for p in ensure_vis_prop_list(props)]
         else:
-            cols = ensure_vis_prop(props).as_string()
+            cols = ensure_vis_prop(props).name
 
         return self._prop_df_a[cols] / self._prop_df_b[cols]
