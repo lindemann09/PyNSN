@@ -11,6 +11,7 @@ from .. import _misc, defaults
 from .._stimulus import NSNStimulus, NSNStimulusPair
 from .._stimulus.properties import ensure_vp, VPOrList
 from ._abc_coll import AbstractCollection, ListNSNStimPairs
+from ._coll_stim import CollectionStimuli
 
 
 class CollectionStimulusPairs(AbstractCollection):
@@ -158,3 +159,19 @@ class CollectionStimulusPairs(AbstractCollection):
             cols = ensure_vp(props).name
 
         return self._prop_df_a[cols] / self._prop_df_b[cols]
+
+    def collection_stimuli(self, stim_id: str) -> CollectionStimuli:
+        """
+        stim_id : {'a', 'b'}
+        """
+
+        rtn = CollectionStimuli()
+        for pair in self.pairs:
+            if stim_id == "a":
+                rtn.append(pair.stim_a)
+            elif stim_id == "b":
+                rtn.append(pair.stim_b)
+            else:
+                raise ValueError(f"Unknown stimulus id '{stim_id}'. " +
+                                 "Must be either 'a' or 'b'")
+        return rtn

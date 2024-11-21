@@ -15,6 +15,7 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
                                prop_a: _tp.Union[str, _VP],
                                prop_b: _tp.Union[None, str, _VP] = None,
                                max_corr: float = 0.01,
+                               adapt_stim: str = "both",
                                feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
 
     prop_a = _ensure_vp(prop_a)
@@ -30,9 +31,13 @@ def property_ratio_correlation(collection: CollectionStimulusPairs,
         if feedback:
             _sys.stdout.write(
                 f"fitting {i+1}/{n} {sp.name}                 \r")
-        _stim_fit.property_ratio(sp, prop_a, rnd_values[i, 0])
+        _stim_fit.property_ratio(
+            sp, prop_a, rnd_values[i, 0], adapt_stim=adapt_stim)
+
         if isinstance(prop_b, _VP):
-            _stim_fit.property_ratio(sp, prop_b, rnd_values[i, 1])
+            _stim_fit.property_ratio(
+                sp, prop_b, rnd_values[i, 1], adapt_stim=adapt_stim)
+
     if feedback:
         print(" "*70)
 

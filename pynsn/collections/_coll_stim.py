@@ -9,6 +9,7 @@ import pandas as pd
 
 from .. import _misc, defaults
 from .._stimulus import NSNStimulus
+from .._stimulus.properties import VPList, ensure_vp
 from ._abc_coll import AbstractCollection, ListNSNStimuli
 
 # FIXME not yet tested
@@ -103,7 +104,15 @@ class CollectionStimuli(AbstractCollection):
 
         if len(self._prop_df) != len(self.stimuli):
             self._calc_properties()
-        # names = [x.name for x in self.stimuli]
-        # rtn = self._prop_df.copy()
-        # rtn["name"] = names
-        return self._prop_df
+
+        rtn = self._prop_df.copy()
+        rtn["names"] = [x.name for x in self.stimuli]
+        return rtn
+
+    def correlation(self, properties: None | VPList = None) -> pd.DataFrame:
+        """Correlation of the visual properties"""
+        df = self.property_dataframe()
+        if properties is not None:
+            prop_names = [ensure_vp(p).name for p in properties]
+            df = df[prop_names]
+        return df.corr()
