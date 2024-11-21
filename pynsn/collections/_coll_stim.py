@@ -12,9 +12,6 @@ from .._stimulus import NSNStimulus
 from .._stimulus.properties import VPList, ensure_vp
 from ._abc_coll import AbstractCollection, ListNSNStimuli
 
-# FIXME not yet tested
-# TODO NSNStimuli have no names yet
-
 
 class CollectionStimuli(AbstractCollection):
     """Collection of NSNNumPairs"""
@@ -110,7 +107,7 @@ class CollectionStimuli(AbstractCollection):
         return rtn
 
     def corr(self, properties: None | VPList = None) -> pd.DataFrame:
-        """Pairwise Pearson correlation between  of the visual properties"""
+        """Pairwise Pearson correlation between visual properties"""
         if len(self._prop_df) != len(self.stimuli):
             self._calc_properties()
 
@@ -118,4 +115,5 @@ class CollectionStimuli(AbstractCollection):
         if properties is not None:
             prop_names = [ensure_vp(p).name for p in properties]
             df = df[prop_names]
+
         return df.corr()

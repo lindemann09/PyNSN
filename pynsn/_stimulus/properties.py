@@ -8,7 +8,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import enum
 from collections import OrderedDict
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 import shapely
