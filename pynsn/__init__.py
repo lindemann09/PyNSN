@@ -2,7 +2,7 @@
 # pylint: disable=C0413
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = '1.0.7-dev5'
+__version__ = '1.0.7-dev6'
 
 from sys import version_info as _python_version_info
 from ._misc import is_interactive_mode as _is_interactive_mode
@@ -18,9 +18,10 @@ if _is_interactive_mode():
 
 from . import defaults
 from . import exceptions
+from . import typing
 from ._shapes import (Point2D, Dot, Rectangle, Picture, Ellipse, PolygonShape,
                       Colour)
 from ._stimulus import (NSNStimulus, NSNStimulusPair, VP)
-from ._factory import StimulusFactory
 from . import rnd
+from .rnd._factory import StimulusFactory
 from . import fit

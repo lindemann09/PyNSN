@@ -308,6 +308,7 @@ class ArrayProperties(object):
 
 
 VPList = List[str] | List[VP] | List[Union[str, VP]]
+VPOrList = VP | str | VPList
 
 
 def ensure_vp(prop: Union[str, VP]) -> VP:
@@ -319,17 +320,3 @@ def ensure_vp(prop: Union[str, VP]) -> VP:
         return VP[prop]
     else:
         raise ValueError(f"{prop} is not a visual feature.")
-
-
-def ensure_vis_prop_list(prop: VPList) -> List[VP]:
-    """helper fnc: creates a VP and raises if that is no possible"""
-
-    rtn = []
-    for p in prop:
-        if isinstance(p, VP):
-            rtn.append(p)
-        elif isinstance(p, str):
-            rtn.append(VP[p])
-        else:
-            raise ValueError(f"{p} is not a visual feature.")
-    return rtn
