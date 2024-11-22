@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 
@@ -22,7 +21,7 @@ class NSNStimulusPair():
         self.name = name
 
     def to_json(self,
-                path: Union[None, str, Path] = None,
+                path:  str | Path | None = None,
                 indent: int = 2, tabular: bool = True,
                 decimals=None):
         """Save the StimulusPair as folder with json files"""
@@ -39,7 +38,7 @@ class NSNStimulusPair():
         return json_str
 
     @staticmethod
-    def from_json(path: Union[str, Path]) -> NSNStimulusPair:
+    def from_json(path: str | Path) -> NSNStimulusPair:
         """Load StimulusPair from json file
 
         see `to_json`
@@ -55,14 +54,14 @@ class NSNStimulusPair():
                                stim_b=NSNStimulus.from_dict(b),
                                name=c["name"])
 
-    def property_difference(self, prop: Union[str, VP]) -> np.float64:
+    def property_difference(self, prop: str | VP) -> np.float64:
         """difference of property `prop` between stimulus A & B"""
         prop = ensure_vp(prop)
         rtn = self.stim_a.properties.get(
             prop) - self.stim_b.properties.get(prop)
         return np.float64(rtn)
 
-    def property_ratio(self, prop: Union[str, VP]) -> np.float64:
+    def property_ratio(self, prop: str | VP) -> np.float64:
         """ratio of property `prop` between stimulus A & B"""
         prop = ensure_vp(prop)
         rtn = self.stim_a.properties.get(

@@ -3,7 +3,7 @@ import always the entire module and call `rng.generator` to ensure that you
 access of the newly initialized random generator, after calling `init_random_generator`
 """
 
-from typing import Optional, Sequence, Union
+from typing import Sequence
 
 import numpy as np
 import shapely
@@ -14,7 +14,7 @@ from .._misc import polar2cartesian
 generator = np.random.default_rng()
 
 
-def init_random_generator(seed: Union[int, NDArray, Sequence, None] = None):
+def init_random_generator(seed: int | NDArray | Sequence | None = None):
     """Init random generator and set random seed (optional)
 
     Parameters
@@ -65,10 +65,10 @@ class BrownianMotion(object):
     """Random walk of shapley.Points or Polygons"""
 
     def __init__(self,
-                 point_or_polygon: Union[shapely.Point, shapely.Polygon],
-                 walk_area: Optional[shapely.Polygon] = None,
+                 point_or_polygon: shapely.Point | shapely.Polygon,
+                 walk_area: shapely.Polygon | None = None,
                  delta: float = 2,
-                 bounce_boarder=True):
+                 bounce_boarder: bool = True):
         """performs brownian motion (random walk) of an position of shapely.polygon
 
         walk area can be limited.
@@ -113,7 +113,7 @@ class BrownianMotion(object):
         return self._position
 
     @property
-    def polygon(self) -> Union[shapely.Point, shapely.Polygon]:
+    def polygon(self) -> shapely.Point | shapely.Polygon:
         """current polygon in the random walk"""
         return self._geom
 
@@ -125,7 +125,7 @@ class BrownianMotion(object):
         """
         return shapely.get_coordinates(self._geom.centroid)
 
-    def next(self, dt=1) -> None:
+    def next(self, dt: float = 1) -> None:
         """do the next step in the random walk"""
         self.counter += 1
         while True:

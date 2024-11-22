@@ -1,5 +1,5 @@
 import sys as _sys
-import typing as _tp
+from typing import Tuple as _Tuple
 
 import numpy as _np
 import numpy.typing as _ntp
@@ -17,7 +17,7 @@ def property_correlation(stimuli: _CollectionStimuli,
                          prop_a: str | _VP,
                          prop_b: None | str | _VP = None,
                          max_corr: float = 0.01,
-                         feedback: bool = True) -> _tp.Tuple[float, float] | float:
+                         feedback: bool = True) -> _Tuple[float, float] | float:
     prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
         prop_b = _ensure_vp(prop_b)
@@ -49,7 +49,7 @@ def property_ratio_correlation(pairs: _CollectionStimulusPairs,
                                prop_b: None | str | _VP = None,
                                max_corr: float = 0.01,
                                adapt_stim: str = "both",
-                               feedback: bool = True) -> _tp.Tuple[float, float] | float:
+                               feedback: bool = True) -> _Tuple[float, float] | float:
 
     prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
@@ -83,7 +83,7 @@ def property_difference_correlation(pairs: _CollectionStimulusPairs,
                                     prop_a: str | _VP,
                                     prop_b: None | str | _VP = None,
                                     max_corr: float = 0.01,
-                                    feedback: bool = True) -> _tp.Union[_tp.Tuple[float, float], float]:
+                                    feedback: bool = True) -> _Tuple[float, float] | float:
 
     prop_a = _ensure_vp(prop_a)
     if prop_b is not None:
@@ -140,7 +140,7 @@ def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
 
 def __modify_2d_distributions(distr: _rnd.Abstract2dDistr,
                               number_list: _ntp.NDArray,
-                              max_corr=0.01) -> _tp.Tuple[_ntp.NDArray[_np.float64], _tp.Tuple[float, float]]:
+                              max_corr=0.01) -> _Tuple[_ntp.NDArray[_np.float64], _Tuple[float, float]]:
 
     n = len(number_list)
     while True:
@@ -154,7 +154,7 @@ def __modify_2d_distributions(distr: _rnd.Abstract2dDistr,
 
 def __modify_distributions(distr: _rnd.AbstractUnivarDistr,
                            number_list: _ntp.NDArray,
-                           max_corr=0.01,) -> _tp.Tuple[_ntp.NDArray[_np.float64], float]:
+                           max_corr=0.01,) -> _Tuple[_ntp.NDArray[_np.float64], float]:
 
     n = len(number_list)
     while True:

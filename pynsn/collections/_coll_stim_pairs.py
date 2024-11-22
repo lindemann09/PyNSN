@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import gzip
 import json
-import typing as tp
 from pathlib import Path
+from typing import List
 
 import pandas as pd
 
@@ -16,9 +16,9 @@ from ._coll_stim import CollectionStimuli
 
 class CollectionStimulusPairs(AbstractCollection):
 
-    def __init__(self, lst: tp.Union[None, ListNSNStimPairs] = None) -> None:
+    def __init__(self, lst: ListNSNStimPairs | None = None) -> None:
 
-        if isinstance(lst, tp.List):
+        if isinstance(lst, List):
             for x in lst:  # type check
                 if not isinstance(x, NSNStimulusPair):
                     raise RuntimeError(
@@ -46,7 +46,7 @@ class CollectionStimulusPairs(AbstractCollection):
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
         self.reset_properties()
 
-    def save(self, path: tp.Union[str, Path],
+    def save(self, path: str | Path,
              zipped: bool = False,
              decimals: None | int = None):
         """Save the collection as json files organized in subfolder
@@ -77,7 +77,7 @@ class CollectionStimulusPairs(AbstractCollection):
                 fl.write(json_str)
 
     @staticmethod
-    def load(path: tp.Union[str, Path],
+    def load(path: str | Path,
              zipped: bool = False) -> CollectionStimulusPairs:
         """Load collection from folder with json files
 
@@ -156,7 +156,7 @@ class CollectionStimulusPairs(AbstractCollection):
 
         if props is None:
             return self._prop_df_a - self._prop_df_b
-        elif isinstance(props, tp.List):
+        elif isinstance(props, List):
             cols = [ensure_vp(p).name for p in props]
         else:
             cols = ensure_vp(props).name
@@ -174,7 +174,7 @@ class CollectionStimulusPairs(AbstractCollection):
 
         if props is None:
             return self._prop_df_a / self._prop_df_b
-        elif isinstance(props, tp.List):
+        elif isinstance(props, List):
             cols = [ensure_vp(p).name for p in props]
         else:
             cols = ensure_vp(props).name

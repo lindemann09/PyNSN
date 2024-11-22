@@ -6,7 +6,7 @@ The named colour are the 140 HTML colour names:
 from __future__ import annotations
 
 from functools import total_ordering
-from typing import Sequence, Union, Tuple
+from typing import Sequence, Tuple
 
 _NUMERALS = "0123456789abcdefABCDEF"
 _HEXDEC = {v: int(v, 16)
@@ -59,7 +59,7 @@ class Colour(object):
             'yellowgreen', 'expyriment_orange', 'expyriment_purple'
     """
 
-    def __init__(self, colour: Union[str, RGBType, Sequence[float], None, Colour]) -> None:
+    def __init__(self, colour: str | RGBType | Sequence[float] | Colour | None) -> None:
         self._value = None
         self.set(colour)
 
@@ -82,11 +82,11 @@ class Colour(object):
         return self._value != other._value
 
     @property
-    def value(self) -> Union[str, None]:
+    def value(self) -> str | None:
         """Hextriplet code of the colour or None"""
         return self._value
 
-    def set(self, val: Union[str, RGBType, Sequence[float], None, Colour]) -> None:
+    def set(self, val: str | RGBType | Sequence[float] | Colour | None) -> None:
         """Set the colour values
 
         Args:
@@ -124,12 +124,12 @@ class Colour(object):
                 raise TypeError(error_txt.format(val)) from err
 
     @property
-    def rgb(self) -> Union[RGBType, None]:
+    def rgb(self) -> RGBType | None:
         """RGB code of the colour"""
         if self._value is not None:
             return Colour.convert_hextriplet_to_rgb(self._value)
 
-    def get_rgb_alpha(self, alpha: float) -> Union[Tuple[int, int, int, int], None]:
+    def get_rgb_alpha(self, alpha: float) -> Tuple[int, int, int, int] | None:
         """RBG with alpha values
 
         Args:
@@ -328,4 +328,4 @@ class Colour(object):
     }
 
 
-ColourLike = Union[Colour, str, RGBType, Sequence[float], None]
+ColourLike = Colour | str | RGBType | Sequence[float] | None

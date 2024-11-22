@@ -6,7 +6,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import warnings
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 import numpy as np
 import shapely
@@ -22,7 +22,7 @@ from ..rnd._distributions_2d import Abstract2dDistr, Uniform2D
 class TargetArea(object):
 
     def __init__(self,
-                 shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
+                 shape: Dot | Rectangle | Ellipse | PolygonShape,
                  min_dist_boarder: int = 2
                  ) -> None:
 
@@ -52,7 +52,7 @@ class TargetArea(object):
         shapely.prepare(self._shape.polygon)
         shapely.prepare(self._ring)
 
-    def is_object_inside(self, shape: Union[Point2D, AbstractShape]) -> bool:
+    def is_object_inside(self, shape: Point2D | AbstractShape) -> bool:
         """returns True if shape is fully inside Target area
 
         takes into account the minimum distance to boarder"""
@@ -67,7 +67,7 @@ class TargetArea(object):
         return self._shape.colour
 
     @property
-    def shape(self) -> Union[Dot, Rectangle, Ellipse, PolygonShape]:
+    def shape(self) -> Dot | Rectangle | Ellipse | PolygonShape:
         """Shape describing the target area"""
         return self._shape
 
@@ -76,7 +76,7 @@ class TargetArea(object):
         """width and height of bounds of the target area"""
         return self._shape.size
 
-    def random_xy_inside_bounds(self, distr: Optional[Abstract2dDistr] = None) -> NDArray:
+    def random_xy_inside_bounds(self, distr: Abstract2dDistr | None = None) -> NDArray:
         """returns a random position inside the bounds of the target area
         """
         if isinstance(distr, Abstract2dDistr):
@@ -85,7 +85,7 @@ class TargetArea(object):
             return self._default_distr.sample(1)[0]
 
     def random_position(self, shape: AbstractShape,
-                        max_iterations: Optional[int] = None) -> AbstractShape:
+                        max_iterations: int | None = None) -> AbstractShape:
         """returns the object at random free position inside the target area
 
         takes into account the minimum distance to boarder

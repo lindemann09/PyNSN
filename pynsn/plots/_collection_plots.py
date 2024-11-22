@@ -1,5 +1,5 @@
 from math import ceil
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -10,7 +10,7 @@ from ..collections._coll_stim_pairs import CollectionStimulusPairs, CollectionSt
 
 
 def property_regression(stimuli: CollectionStimuli,
-                        dv: Union[str, VP],
+                        dv: str | VP,
                         iv: VPOrList,
                         figsize: Tuple[float, float] = (10, 8)):
 
@@ -28,7 +28,7 @@ def property_regression(stimuli: CollectionStimuli,
 
 
 def property_difference_regression(stim_pairs: CollectionStimulusPairs,
-                                   dv: Union[str, VP],
+                                   dv: str | VP,
                                    iv: VPOrList,
                                    figsize: Tuple[float, float] = (10, 8)):
 
@@ -44,7 +44,7 @@ def property_difference_regression(stim_pairs: CollectionStimulusPairs,
 
 
 def property_ratio_regression(stim_pairs: CollectionStimulusPairs,
-                              dv: Union[str, VP],
+                              dv: str | VP,
                               iv: VPOrList,
                               figsize: Tuple[float, float] = (10, 8)):
 

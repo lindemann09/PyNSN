@@ -8,7 +8,7 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import enum
 from collections import OrderedDict
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple
 
 import numpy as np
 import shapely
@@ -258,7 +258,7 @@ class ArrayProperties(object):
     def field_area(self) -> np.float64:
         return np.float64(self._shape_arr.convex_hull.area)
 
-    def get(self, prop: VP) -> Union[int, np.float64]:
+    def get(self, prop: VP) -> int | np.float64:
         """returns a visual property"""
         if prop == VP.AP:
             return self.average_perimeter
@@ -307,11 +307,11 @@ class ArrayProperties(object):
 # helper
 
 
-VPList = List[str] | List[VP] | List[Union[str, VP]]
+VPList = List[str] | List[VP] | List[str | VP]
 VPOrList = VP | str | VPList
 
 
-def ensure_vp(prop: Union[str, VP]) -> VP:
+def ensure_vp(prop: str | VP) -> VP:
     """helper fnc: creates a VP and raises if that is no possible"""
 
     if isinstance(prop, VP):

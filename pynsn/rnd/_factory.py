@@ -7,7 +7,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
 from .. import defaults
 from .._misc import formated_json
@@ -27,13 +27,12 @@ class StimulusFactory(object):
     """
 
     def __init__(self,
-                 target_area_shape: Union[Dot, Rectangle,
-                                          Ellipse, PolygonShape, None] = None,
+                 target_area_shape: Dot | Rectangle | Ellipse | PolygonShape | None = None,
                  min_distance: int = defaults.MIN_DISTANCE,
                  min_distance_target_area: int = defaults.MIN_DISTANCE,
-                 stimulus_colours: Optional[StimulusColours] = None,
+                 stimulus_colours: StimulusColours | None = None,
                  ignore_overlaps: bool = False,
-                 max_iterations: Optional[int] = None
+                 max_iterations: int | None = None
                  ) -> None:
         """
 
@@ -80,12 +79,12 @@ class StimulusFactory(object):
     def shapes_clear(self):
         self._shapes: FactoryShapesList = []
 
-    def shape_add(self, shape: Union[AbstractShape, AbstractRndShape], n: int = 1):
+    def shape_add(self, shape: AbstractShape | AbstractRndShape, n: int = 1):
         assert (isinstance(shape, AbstractShape) or
                 isinstance(shape, AbstractRndShape))
         self._shapes.append((n, shape))
 
-    def create(self, name: Optional[str] = None) -> NSNStimulus:
+    def create(self, name: str | None = None) -> NSNStimulus:
         rtn = deepcopy(self._base)
         if name is not None:
             rtn.name = name
@@ -112,7 +111,7 @@ class StimulusFactory(object):
         return rtn
 
     def to_json(self,
-                filename: Union[None, str, Path] = None,
+                filename: str | Path | None = None,
                 indent: int = 2,
                 decimals: None | int = None) -> str:
         """json representation of the stimulus factory"""

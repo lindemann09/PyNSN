@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -13,9 +12,9 @@ class Abstract2dDistr(AbstractDistribution, metaclass=ABCMeta):
 
     def __init__(self,
                  mu: ArrayLike,
-                 x_minmax: Optional[ArrayLike],
-                 y_minmax: Optional[ArrayLike],
-                 max_radius: Optional[float]) -> None:
+                 x_minmax: ArrayLike | None,
+                 y_minmax: ArrayLike | None,
+                 max_radius: float | None) -> None:
         """
         mu:
         x_range: array with one negative and one positive value
@@ -43,8 +42,8 @@ class Abstract2dDistr(AbstractDistribution, metaclass=ABCMeta):
         return self._y_minmax
 
     def set_limits(self, mu: ArrayLike,
-                   x_minmax: Optional[ArrayLike],
-                   y_minmax: Optional[ArrayLike]) -> None:
+                   x_minmax: ArrayLike | None,
+                   y_minmax: ArrayLike | None) -> None:
 
         self._mu = np.asarray(mu)
         if len(self._mu) != 2:
@@ -82,7 +81,7 @@ class Abstract2dDistr(AbstractDistribution, metaclass=ABCMeta):
         return self._max_radius
 
     @max_radius.setter
-    def max_radius(self, val: Optional[float]):
+    def max_radius(self, val: float | None):
         if val is None or np.isnan(val):
             self._max_radius = np.inf
         elif val <= 0:
@@ -124,10 +123,10 @@ class Abstract2dDistr(AbstractDistribution, metaclass=ABCMeta):
 class Uniform2D(Abstract2dDistr):
 
     def __init__(self,
-                 x_minmax:  Optional[ArrayLike] = None,
-                 y_minmax:  Optional[ArrayLike] = None,
-                 radial_mu: Optional[ArrayLike] = None,
-                 max_radius: Optional[float] = None):
+                 x_minmax:  ArrayLike | None = None,
+                 y_minmax:  ArrayLike | None = None,
+                 radial_mu: ArrayLike | None = None,
+                 max_radius: float | None = None):
         """Two dimensional uniform distribution with cut-off either cardinal or
         radial
 
@@ -179,9 +178,9 @@ class Normal2D(Abstract2dDistr):
     def __init__(self, mu: ArrayLike,
                  sigma: ArrayLike,
                  correlation: float = 0,
-                 x_minmax:  Optional[ArrayLike] = None,
-                 y_minmax:  Optional[ArrayLike] = None,
-                 max_radius: Optional[float] = None):
+                 x_minmax:  ArrayLike | None = None,
+                 y_minmax:  ArrayLike | None = None,
+                 max_radius: float | None = None):
         """Two dimensional normal distribution with optional cut-off (radial or
         cartesian)
 

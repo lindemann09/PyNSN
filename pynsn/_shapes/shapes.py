@@ -12,7 +12,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 import numpy as np
 import shapely
@@ -91,20 +91,20 @@ class Rectangle(AbstractShape):
     def from_dict(d: Dict[str, Any]) -> Rectangle:
         return Rectangle(size=d["size"], xy=d["xy"], attribute=d["attr"])
 
-    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
+    def distance(self, shape: AbstractPoint | AbstractShape) -> float:
         if isinstance(shape, AbstractPoint):
             return shapely.distance(self.polygon, shape.xy_point)
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], distance: float) -> bool:
+    def dwithin(self, shape:  AbstractPoint | AbstractShape, distance: float) -> bool:
         if isinstance(shape, AbstractPoint):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=distance)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=distance)
 
     def is_inside(self, shape: AbstractShape,
-                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  shape_exterior_ring: shapely.LinearRing | None = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,
                            b_exterior_ring=shape_exterior_ring,
@@ -115,7 +115,7 @@ class Picture(Rectangle):
 
     def __init__(self,
                  size: Coord2DLike,
-                 path: Union[Path, str],
+                 path: Path | str,
                  xy: Coord2DLike = (0, 0)) -> None:
         """Initialize a Picture
 
@@ -169,20 +169,20 @@ class PolygonShape(AbstractShape):
         return (f"PolygonShape(xy={self._xy}, size={self.size}, "
                 + f"attribute='{self._attribute}')")
 
-    def distance(self, shape: Union[AbstractPoint, AbstractShape]) -> float:
+    def distance(self, shape:  AbstractPoint | AbstractShape) -> float:
         if isinstance(shape, AbstractPoint):
             return shapely.distance(self.polygon, shape.xy_point)
         else:
             return shapely.distance(self.polygon, shape.polygon)
 
-    def dwithin(self, shape: Union[AbstractPoint, AbstractShape], distance: float) -> bool:
+    def dwithin(self, shape:  AbstractPoint | AbstractShape, distance: float) -> bool:
         if isinstance(shape, AbstractPoint):
             return shapely.dwithin(self.polygon, shape.xy_point, distance=distance)
         else:
             return shapely.dwithin(self.polygon, shape.polygon, distance=distance)
 
     def is_inside(self, shape: AbstractShape,
-                  shape_exterior_ring: Optional[shapely.LinearRing] = None,
+                  shape_exterior_ring: shapely.LinearRing | None = None,
                   min_dist_boarder: float = 0) -> bool:
         return is_in_shape(self, b=shape,
                            b_exterior_ring=shape_exterior_ring,

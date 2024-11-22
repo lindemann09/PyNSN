@@ -1,7 +1,7 @@
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -80,12 +80,11 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                     (e.g. pillow image, axes (matplotlib) or svgdraw object)
         """
 
-    def create_image(
-        self,
-        nsn_stimulus: NSNStimulus,
-        antialiasing: Optional[float] = None,
-        **kwargs
-    ) -> Any:
+    def create_image(self,
+                     nsn_stimulus: NSNStimulus,
+                     antialiasing: float | None = None,
+                     **kwargs
+                     ) -> Any:
         """create image
 
         Parameters

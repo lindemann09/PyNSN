@@ -3,8 +3,8 @@
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 import math as _math
-import typing as _tp
 from copy import deepcopy
+from typing import Tuple as _Tuple
 
 import numpy as _np
 from PIL import Image as _Image
@@ -23,7 +23,7 @@ RESAMPLING = _Image.Resampling.LANCZOS
 
 def create(
     nsn_stimulus: _NSNStimulus,
-    antialiasing: _tp.Union[bool, int] = True,
+    antialiasing: bool | int = True,
 ) -> _Image.Image:
     # ImageParameter
     """use PIL colours (see PIL.ImageColor.colormap)
@@ -40,12 +40,12 @@ def create(
 
 
 def create_stim_pair(stim_pair: _NSNStimulusPair,
-                     postion_a: _tp.Optional[_tp.Tuple[int, int]] = None,
-                     postion_b: _tp.Optional[_tp.Tuple[int, int]] = None,
+                     postion_a: _Tuple[int, int] | None = None,
+                     postion_b: _Tuple[int, int] | None = None,
                      swap_positions: bool = False,
                      padding: int = 10,
-                     antialiasing: _tp.Union[bool, int] = True,
-                     background_image: _tp.Optional[_Image.Image] = None) -> _Image.Image:
+                     antialiasing: bool | int = True,
+                     background_image: _Image.Image | None = None) -> _Image.Image:
     """returns a pil image with two NSNStimuli, one left and one right
 
     Note

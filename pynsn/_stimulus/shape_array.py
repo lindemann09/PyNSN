@@ -6,7 +6,7 @@ from __future__ import annotations
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 
-from typing import List, Optional, Union
+from typing import List
 
 import numpy as np
 import shapely
@@ -149,7 +149,7 @@ class ShapeArray(object):
         self._sizes = np.empty((0, 2), dtype=np.float64)
         self._clear_cached()
 
-    def shape_pop(self, index: Optional[int] = None) -> AbstractShape:
+    def shape_pop(self, index: int | None = None) -> AbstractShape:
         """Remove and return item at index"""
         if index is None:
             index = len(self._shapes) - 1
@@ -180,7 +180,7 @@ class ShapeArray(object):
             self._convex_hull = ConvexHull(self.polygons.tolist())
         return self._convex_hull
 
-    def distances(self, shape: Union[Point2D, AbstractShape]) -> NDArray[np.float64]:
+    def distances(self, shape: Point2D | AbstractShape) -> NDArray[np.float64]:
         """distances of a shape or Point2D to the elements in the shape array"""
 
         if isinstance(shape, (Point2D, AbstractCircularShape)):
@@ -214,7 +214,7 @@ class ShapeArray(object):
             # non-circular shape as target
             return shapely.distance(shape.polygon, self.polygons)
 
-    def dwithin(self, shape: Union[Point2D, AbstractShape],  distance: float = 0) -> NDArray[np.bool_]:
+    def dwithin(self, shape: Point2D | AbstractShape,  distance: float = 0) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
         specified distance.
 
@@ -275,7 +275,7 @@ class ShapeArray(object):
         return overlaps
 
 
-def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],
+def _distance_circ_dot_array(obj: Point2D | AbstractCircularShape,
                              dots_xy: NDArray[np.float64],
                              dots_diameter: NDArray[np.float64]) -> NDArray[np.float64]:
     """Distances circular shape or Point to multiple dots
@@ -296,7 +296,7 @@ def _distance_circ_dot_array(obj: Union[Point2D, AbstractCircularShape],
     return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (dots_diameter + circ_dia) / 2
 
 
-def _distance_circ_ellipse_array(obj: Union[Point2D, AbstractCircularShape],
+def _distance_circ_ellipse_array(obj: Point2D | AbstractCircularShape,
                                  ellipses_xy: NDArray[np.float64],
                                  ellipse_sizes: NDArray[np.float64]) -> NDArray[np.float64]:
     """Distance circular shape or Point2D to multiple ellipses

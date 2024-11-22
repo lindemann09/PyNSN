@@ -5,7 +5,7 @@ from .circ_shapes import Point2D, Dot, Ellipse
 from .colour import Colour
 
 
-def dict_to_shape(d: _tp.Dict[str, _tp.Any]) -> _tp.Optional[AbstractShape]:
+def dict_to_shape(d: _tp.Dict[str, _tp.Any]) -> AbstractShape | None:
     """helper function converts dict to a shape.
     Returns None, if dict does not contain a shape"""
 

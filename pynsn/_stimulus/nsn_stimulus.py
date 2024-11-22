@@ -10,7 +10,7 @@ import warnings
 from copy import deepcopy
 from hashlib import md5
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -40,10 +40,10 @@ class NSNStimulus(shape_array.ShapeArray):
     """
 
     def __init__(self,
-                 target_area_shape: Union[Dot, Rectangle, Ellipse, PolygonShape],
+                 target_area_shape: Dot | Rectangle | Ellipse | PolygonShape,
                  min_distance: int = defaults.MIN_DISTANCE,
                  min_distance_target_area: int = defaults.MIN_DISTANCE,
-                 name: Optional[str] = None
+                 name: str | None = None
                  ) -> None:
 
         super().__init__()
@@ -211,7 +211,7 @@ class NSNStimulus(shape_array.ShapeArray):
         return json_str
 
     @staticmethod
-    def from_json(path: Union[str, Path]) -> NSNStimulus:
+    def from_json(path: str | Path) -> NSNStimulus:
 
         path = Path(path)
         if not path.is_file():
@@ -225,7 +225,7 @@ class NSNStimulus(shape_array.ShapeArray):
                       min_distance: float,
                       minimal_replacing: bool,
                       target_area: TargetArea,
-                      max_iterations: Optional[int] = None) -> int:
+                      max_iterations: int | None = None) -> int:
         """Move an selected object that overlaps to an free position in the
         neighbourhood.
 
@@ -285,7 +285,7 @@ class NSNStimulus(shape_array.ShapeArray):
                      inside_convex_hull: bool = False,
                      minimal_replacing: bool = True,
                      sort_before: bool = True,
-                     max_iterations: Optional[int] = None) -> bool:
+                     max_iterations: int | None = None) -> bool:
         """move an selected object that overlaps to an free position in the
         neighbourhood.
 
@@ -327,7 +327,7 @@ class NSNStimulus(shape_array.ShapeArray):
 
         raise NoSolutionError("Can't find a solution with no overlaps")
 
-    def has_overlaps(self, min_distance: Optional[float] = None) -> bool:
+    def has_overlaps(self, min_distance: float | None = None) -> bool:
         """Returns True for two or more elements overlap (i.e. taking
         into account the minimum distance).
         """
@@ -336,14 +336,14 @@ class NSNStimulus(shape_array.ShapeArray):
         return super().has_overlaps(min_distance)
 
     def overlaps(self, index: int,
-                 min_distance: Optional[float] = None) -> NDArray[np.bool_]:
+                 min_distance: float | None = None) -> NDArray[np.bool_]:
         """get overlaps with other shapes. Ignores overlap with oneself."""
         if min_distance is None:
             min_distance = self.min_distance
         return super().overlaps(index, min_distance)
 
-    def shape_overlaps(self, shape: Union[Point2D, AbstractShape],
-                       min_distance: Optional[float] = None) -> NDArray[np.bool_]:
+    def shape_overlaps(self, shape: Point2D | AbstractShape,
+                       min_distance: float | None = None) -> NDArray[np.bool_]:
         """Returns True for all elements that overlap with the particular shape
         (i.e. taking into account the minimum distance).
         """
@@ -353,7 +353,7 @@ class NSNStimulus(shape_array.ShapeArray):
             min_distance = self.min_distance
         return self.dwithin(shape, distance=min_distance)
 
-    def inside_target_area(self, shape: Union[Point2D, AbstractShape]) -> bool:
+    def inside_target_area(self, shape: Point2D | AbstractShape) -> bool:
         """Returns True if shape is inside target area.
         """
         return self._target_area.is_object_inside(shape)
@@ -381,7 +381,7 @@ class NSNStimulus(shape_array.ShapeArray):
                          shape: AbstractShape,
                          ignore_overlaps: bool = False,
                          inside_convex_hull: bool = False,
-                         max_iterations: Optional[int] = None):
+                         max_iterations: int | None = None):
         """"adds shape to random positions in the array"""
 
         try:
@@ -398,11 +398,11 @@ class NSNStimulus(shape_array.ShapeArray):
         super().shape_add(shape)
 
     def shape_add_random_pos(self,
-                             ref_object: Union[AbstractShape, AbstractRndShape],
+                             ref_object: AbstractShape | AbstractRndShape,
                              n: int = 1,
                              ignore_overlaps: bool = False,
                              inside_convex_hull: bool = False,
-                             max_iterations: Optional[int] = None):
+                             max_iterations: int | None = None):
         """Creates n copies of the shape(s) or n instances of the random shape(s)
         and adds them at random positions to the array (default n=1)"""
 
@@ -451,7 +451,7 @@ def rnd_free_pos(shape: AbstractShape,
                  nsn_stim: NSNStimulus,
                  ignore_overlaps: bool = False,
                  inside_convex_hull: bool = False,
-                 max_iterations: Optional[int] = None) -> AbstractShape:
+                 max_iterations: int | None = None) -> AbstractShape:
     """moves the object to a random free position
 
     raise exception if not found

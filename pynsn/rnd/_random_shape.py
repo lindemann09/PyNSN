@@ -1,23 +1,22 @@
 """
 """
-
-from copy import deepcopy
-import shapely
 __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
+from copy import deepcopy
 from pathlib import Path
-from typing import List, Optional, Sequence, Union
+from typing import List, Sequence
 
 import numpy as np
+import shapely
 from numpy.typing import NDArray
 
+from .._shapes import (AbstractShape, Dot, Ellipse, Picture, PolygonShape,
+                       Rectangle)
 from ._distributions import (AbstractUnivarDistr, Categorical, CategoricalLike,
                              Constant, ConstantLike)
 
-from .._shapes import Dot, Ellipse, Rectangle, Picture, PolygonShape, AbstractShape
-
-DistributionLike = Union[AbstractUnivarDistr, ConstantLike, CategoricalLike]
+DistributionLike = AbstractUnivarDistr | ConstantLike | CategoricalLike
 
 
 def _make_distr(value: DistributionLike) -> AbstractUnivarDistr:
@@ -33,7 +32,7 @@ def _make_distr(value: DistributionLike) -> AbstractUnivarDistr:
 
 class AbstractRndShape(metaclass=ABCMeta):
 
-    def __init__(self, attributes: Optional[DistributionLike] = None):
+    def __init__(self, attributes: DistributionLike | None = None):
         """
 
         Parameters
@@ -45,11 +44,11 @@ class AbstractRndShape(metaclass=ABCMeta):
             self._attributes = _make_distr(attributes)
 
     @property
-    def attributes(self) -> Optional[AbstractUnivarDistr]:
+    def attributes(self) -> AbstractUnivarDistr | None:
         """Distribution of attributes """
         return self._attributes
 
-    @classmethod
+    @ classmethod
     def shape_type(cls) -> str:
         return cls.__name__
 
@@ -58,7 +57,7 @@ class AbstractRndShape(metaclass=ABCMeta):
         del d['type']
         return f"{self.shape_type()}({d})"
 
-    @abstractmethod
+    @ abstractmethod
     def to_dict(self) -> dict:
         """dict representation of the object"""
         if isinstance(self.attributes, AbstractUnivarDistr):
@@ -69,7 +68,7 @@ class AbstractRndShape(metaclass=ABCMeta):
             attr = str(self.attributes)
         return {"type": self.shape_type(), "attr": attr}
 
-    @abstractmethod
+    @ abstractmethod
     def sample(self, n: int = 1) -> List[AbstractShape]:
         """get n random variants of shapes
 
@@ -84,14 +83,14 @@ class RndDot(AbstractRndShape):
 
     def __init__(self,
                  diameter: DistributionLike,
-                 attributes: Optional[DistributionLike] = None):
+                 attributes: DistributionLike | None = None):
         """Define distributions parameter
         """
         super().__init__(attributes=attributes)
         self._diameter = _make_distr(diameter)
 
-    @property
-    def diameter(self) -> Optional[AbstractUnivarDistr]:
+    @ property
+    def diameter(self) -> AbstractUnivarDistr | None:
         return self._diameter
 
     def to_dict(self) -> dict:
@@ -116,23 +115,33 @@ class RndDot(AbstractRndShape):
 class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
 
     def __init__(self,
-                 width: Optional[DistributionLike] = None,
-                 height: Optional[DistributionLike] = None,
-                 size_proportion: Optional[DistributionLike] = None,
-                 attributes: Optional[DistributionLike] = None):
+                 width: DistributionLike | None = None,
+                 height: DistributionLike | None = None,
+                 size_proportion: DistributionLike | None = None,
+                 attributes: DistributionLike | None = None):
         """Define distributions parameter
 
-        Args:
-            width: distribution of width (Optional)
-            height: distribution of height (Optional)
-            proportion: distribution of proportions width/height (Optional)
+        Parameters
+        ----------
+        width : DistributionLike | None, optional
+            distribution of width , by default None
+        height : DistributionLike | None, optional
+            distribution of height, by default None
+        size_proportion : DistributionLike | None, optional
+            distribution of proportions width/height, by default None
+        attributes : DistributionLike | None, optional
+            distribution of attributes, by default None
 
-        Notes:
-            Define either rectangle width and height or rectangle proportion together
-            with either width or height.
+        Raises
+        ------
+        TypeError
+            if not two of the three rectangle parameter are defined
 
-        Raises:
-            TypeError: if not two of the three rectangle parameter are defined
+        Notes
+        -----
+        Define either rectangle width and height or rectangle proportion together
+        with either width or height.
+
         """
 
         super().__init__(attributes)
@@ -159,17 +168,17 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
             self._size_proportion = _make_distr(size_proportion)
 
     @property
-    def width(self) -> Optional[AbstractUnivarDistr]:
+    def width(self) -> AbstractUnivarDistr | None:
         """Distribution of width parameter"""
         return self._width
 
     @property
-    def height(self) -> Optional[AbstractUnivarDistr]:
+    def height(self) -> AbstractUnivarDistr | None:
         """Distribution of height parameter"""
         return self._height
 
     @property
-    def size_proportion(self) -> Optional[AbstractUnivarDistr]:
+    def size_proportion(self) -> AbstractUnivarDistr | None:
         """Distribution of proportion parameter (width/height)"""
         return self._size_proportion
 
@@ -233,25 +242,38 @@ class RndEllipse(_RandShapeWidthHeight):
 class RndPolygonShape(_RandShapeWidthHeight):
 
     def __init__(self,
-                 # type: ignore
-                 polygons: Union[shapely.Polygon, Sequence[shapely.Polygon], NDArray[shapely.Polygon]],
-                 width: Optional[DistributionLike] = None,
-                 height: Optional[DistributionLike] = None,
-                 size_proportion: Optional[DistributionLike] = None,
-                 attributes: Optional[DistributionLike] = None):
+                 polygons: (shapely.Polygon | Sequence[shapely.Polygon] |
+                            NDArray[shapely.Polygon]),  # type: ignore
+                 width: DistributionLike | None = None,
+                 height: DistributionLike | None = None,
+                 size_proportion: DistributionLike | None = None,
+                 attributes: DistributionLike | None = None):
         """Define distributions parameter
 
-        Args:
-            width: distribution of width (Optional)
-            height: distribution of height (Optional)
-            proportion: distribution of proportions width/height (Optional)
 
-        Notes:
+        Parameters
+        ----------
+        polygons : shapely.Polygon  |  Sequence[shapely.Polygon]  |  NDArray[shapely.Polygon]
+            _description_
+        width : DistributionLike | None, optional
+            distribution of width, by default None
+        height : DistributionLike | None, optional
+            distribution of height, by default None
+        size_proportion : DistributionLike | None, optional
+            distribution of proportions width/height , by default None
+        attributes : DistributionLike | None, optional
+            distribution of attributes, by default None
+
+        Raises
+        ------
+        TypeError :
+            if not two of the three rectangle parameter are defined
+
+        Notes
+        ------
             Define either rectangle width and height or rectangle proportion together
             with either width or height.
 
-        Raises:
-            TypeError: if not two of the three rectangle parameter are defined
         """
         if width is None and height is None:
             width = -1
@@ -266,7 +288,7 @@ class RndPolygonShape(_RandShapeWidthHeight):
             self._polygons = Categorical([PolygonShape(p) for p in polygons])
 
     @property
-    def polygons(self) -> Union[Constant, Categorical]:
+    def polygons(self) -> Constant | Categorical:
         return self._polygons
 
     def sample(self, n: int = 1) -> List[PolygonShape]:
@@ -289,11 +311,10 @@ class RndPolygonShape(_RandShapeWidthHeight):
 class RndPicture(_RandShapeWidthHeight):
 
     def __init__(self,
-                 width: Optional[DistributionLike] = None,
-                 height: Optional[DistributionLike] = None,
-                 size_proportion: Optional[DistributionLike] = None,
-                 path: Union[Categorical, Constant, str, Path, Sequence[Path],
-                             Sequence[str], None] = None):
+                 width: DistributionLike | None = None,
+                 height: DistributionLike | None = None,
+                 size_proportion: DistributionLike | None = None,
+                 path: Categorical | Constant | str | Path | Sequence[Path] | Sequence[str] | None = None):
         """Define distributions parameter
         """
         if isinstance(path, (str, Path)):

@@ -4,7 +4,7 @@ __author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
-from typing import Optional, Sequence, Tuple, Union
+from typing import Sequence, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -14,8 +14,8 @@ from . import _rng
 from .._shapes.colour import Colour
 from .._shapes.shapes import PolygonShape
 
-ConstantLike = Union[float, int, str, dict, PolygonShape, Colour]
-CategoricalLike = Union[Sequence, NDArray]
+ConstantLike = float | int | str | dict | PolygonShape | Colour
+CategoricalLike = Sequence | NDArray
 
 
 class AbstractDistribution(metaclass=ABCMeta):
@@ -72,7 +72,7 @@ class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
     """Univariate Continuous Distribution
     """
 
-    def __init__(self, minmax: Optional[ArrayLike]):
+    def __init__(self, minmax: ArrayLike | None):
         if minmax is None:
             self._minmax = np.array((None, None))
         else:
@@ -144,7 +144,7 @@ class Triangle(AbstractContinuousDistr):
 
 class _AbstractDistrMuSigma(AbstractContinuousDistr, metaclass=ABCMeta):
 
-    def __init__(self, mu: float, sigma: float, minmax: Optional[ArrayLike] = None):
+    def __init__(self, mu: float, sigma: float, minmax: ArrayLike | None = None):
         super().__init__(minmax)
         self._mu = mu
         self._sigma = abs(sigma)
@@ -200,7 +200,7 @@ class Normal(_AbstractDistrMuSigma):
 class Beta(_AbstractDistrMuSigma):
 
     def __init__(self, mu=None, sigma=None, alpha=None, beta=None,
-                 minmax: Optional[ArrayLike] = None):
+                 minmax: ArrayLike | None = None):
         """Beta distribution defined by the number range, min_max=(min, max),
          the mean and the standard deviation (std)
 
@@ -283,7 +283,7 @@ class Categorical(AbstractUnivarDistr):
 
     def __init__(self,
                  levels: CategoricalLike,
-                 weights: Optional[ArrayLike] = None,
+                 weights: ArrayLike | None = None,
                  exact_weighting=False):
         """Distribution of category. Samples from discrete categories
          with optional weights for each category or category.
