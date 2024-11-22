@@ -26,8 +26,7 @@ python -m pip install pynsn
 
 By default, PyNSN is able to write [SVG](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics)
 or [Pillow](https://pillow.readthedocs.io/en/stable/) images.
-To generate [Pygame](https://www.pygame.org/news) or
-[Matplotlib](https://matplotlib.org/stable/index.html) images or stimuli
+To generate [Pygame](https://www.pygame.org/news) images or stimuli
 for [Expyriment](http://expyriment.org), please install the respective
 packages.
 

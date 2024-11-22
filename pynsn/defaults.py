@@ -13,9 +13,11 @@ FIT_FA2TA_RATIO = 0.5
 
 WARNINGS = True
 
-# stimulus pairs
-VERT_ECCENTRICITY_STIMPAIR = 350
-
+# saving
 FILE_ENCODING = "utf-8"
-
 JSON_FLOAT_ROUNDING = 2
+
+
+# plotting
+PLOT_PROPERTY_LIST = ["TSA", "FA", "ASA", "SP", "LOG_SPACING", "LOG_SIZE"]
+VERT_ECCENTRICITY_STIMPAIR = 350  # for stimulus pairs
