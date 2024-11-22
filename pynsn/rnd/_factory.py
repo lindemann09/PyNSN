@@ -113,9 +113,11 @@ class StimulusFactory(object):
 
     def to_json(self,
                 filename: Union[None, str, Path] = None,
-                indent: int = 2) -> str:
+                indent: int = 2,
+                decimals: None | int = None) -> str:
         """json representation of the stimulus factory"""
-        json_str = formated_json(self.to_dict(), indent=indent)
+        json_str = formated_json(
+            self.to_dict(), indent=indent, decimals=decimals)
         if isinstance(filename, (Path, str)):
             with open(filename, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)

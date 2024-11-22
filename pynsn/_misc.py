@@ -4,21 +4,24 @@ Draw a random number from a beta distribution
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
+import json
 import sys
 from collections import OrderedDict
 from typing import Any, List, Sequence, Union
 
 import numpy as np
-import orjson
 from numpy.typing import ArrayLike, NDArray
+
+from . import defaults
 
 IntOVector = Union[int, Sequence[int], NDArray[np.integer]]
 
 
-def formated_json(d: dict, indent: int = 2) -> str:
-    """this function can  handle numpy arrays"""
-    json_str = orjson.dumps(
-        d, option=orjson.OPT_SERIALIZE_NUMPY).decode("utf-8")
+def formated_json(d: dict, indent: int, decimals: None | int) -> str:
+    if decimals is None:
+        decimals = defaults.JSON_FLOAT_ROUNDING
+    x = dict_convert_numpy(d, decimals)
+    json_str = json.dumps(x, indent=None)
     if indent < 1:
         return json_str
     rtn = ""
@@ -96,6 +99,40 @@ def dict_of_arrays(array_of_dicts: list):
     for key in array_of_dicts[0].keys():
         # Extract each key's values across all dictionaries
         rtn[key] = [d[key] for d in array_of_dicts]
+    return rtn
+
+
+def dict_convert_numpy(d: dict, decimals: None | int = None) -> dict:
+    """converts all numpy arrays in a dictionary to lists of Python scalars
+    and, optionally, tries to round floating point data.
+
+    """
+
+    rtn = {}
+    for k, v in d.items():
+        if isinstance(v, np.ndarray):
+            if np.issubdtype(v.dtype, np.integer):
+                rtn[k] = v.tolist()
+            elif np.issubdtype(v.dtype, np.floating):
+                if isinstance(decimals, int):
+                    v = np.round(v, decimals=decimals)
+                rtn[k] = v.astype(float).tolist()
+            else:
+                rtn[k] = v.tolist()
+                # raise TypeError(f"Can't handle dtype={v.dtype}, "
+                #                "only integer or floating arrays")
+
+        elif isinstance(v, dict):
+            rtn[k] = dict_convert_numpy(v, decimals=decimals)
+        elif isinstance(v, np.floating):
+            if isinstance(decimals, int):
+                v = np.round(v, decimals=decimals)
+            rtn[k] = float(v)
+        elif isinstance(v, np.integer):
+            rtn[k] = int(v)
+        else:
+            rtn[k] = v
+
     return rtn
 
 

@@ -35,12 +35,14 @@ class CollectionStimuli(AbstractCollection):
         self.stimuli.append(stim)
         self.reset_properties()
 
-    def save(self, path: tp.Union[str, Path], zipped: bool = True):
+    def save(self, path: tp.Union[str, Path],
+             zipped: bool = False,
+             decimals=None):
         """Save the collection as json files organized in subfolder"""
 
         json_str = "["
         for x in self.stimuli:
-            s = x.to_json(path=None, indent=2, tabular=True)
+            s = x.to_json(path=None, indent=2, tabular=True, decimals=decimals)
             json_str += f"\n{s},"
         json_str = json_str[:-1] + "\n]"
 
@@ -54,7 +56,8 @@ class CollectionStimuli(AbstractCollection):
                 fl.write(json_str)
 
     @staticmethod
-    def load(path: tp.Union[str, Path], zipped: bool = True) -> CollectionStimuli:
+    def load(path: tp.Union[str, Path],
+             zipped: bool = False) -> CollectionStimuli:
         """Load collection from folder with json files
 
         see `to_json`

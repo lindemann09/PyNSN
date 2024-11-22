@@ -184,9 +184,10 @@ class NSNStimulus(shape_array.ShapeArray):
 
     def to_json(self,
                 path: Union[None, str, Path] = None,
-                indent: int = 2, tabular: bool = True) -> str:
+                indent: int = 2, tabular: bool = True,
+                decimals: None | int = None) -> str:
         d = self.to_dict(tabular=tabular)
-        json_str = formated_json(d, indent=indent)
+        json_str = formated_json(d, indent=indent, decimals=decimals)
         if isinstance(path, (Path, str)):
             with open(path, "w", encoding=defaults.FILE_ENCODING) as fl:
                 fl.write(json_str)
@@ -419,11 +420,11 @@ class NSNStimulus(shape_array.ShapeArray):
         if np.any(self.shape_types() == PolygonShape.shape_type()):
             raise RuntimeError("tabular shape representation can not deal with "
                                "PolygonShapes")
-        d = {"type": self.shape_types().tolist(),
-             "x": self.xy[:, 0].tolist(),
-             "y": self.xy[:, 1].tolist(),
-             "width": self.sizes[:, 0].tolist(),
-             "height": self.sizes[:, 1].tolist(),
+        d = {"type": self.shape_types(),
+             "x": self.xy[:, 0],
+             "y": self.xy[:, 1],
+             "width": self.sizes[:, 0],
+             "height": self.sizes[:, 1],
              "attr": [str(x) for x in self.attributes()]
              }
         return d

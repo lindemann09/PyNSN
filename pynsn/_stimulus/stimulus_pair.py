@@ -23,11 +23,14 @@ class NSNStimulusPair():
 
     def to_json(self,
                 path: Union[None, str, Path] = None,
-                indent: int = 2, tabular: bool = True):
+                indent: int = 2, tabular: bool = True,
+                decimals=None):
         """Save the StimulusPair as folder with json files"""
 
-        a = self.stim_a.to_json(indent=indent, tabular=tabular)
-        b = self.stim_b.to_json(indent=indent, tabular=tabular)
+        a = self.stim_a.to_json(
+            indent=indent, tabular=tabular, decimals=decimals)
+        b = self.stim_b.to_json(
+            indent=indent, tabular=tabular, decimals=decimals)
         c = '{"name":"' + self.name + '"}'
         json_str = f"[{c},\n{a},\n{b}]"
         if isinstance(path, (Path, str)):
