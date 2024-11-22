@@ -5,7 +5,8 @@ import numpy as _np
 import numpy.typing as _ntp
 
 from .. import fit as _stim_fit
-from .. import rnd as _rnd
+from ..rnd._distributions import AbstractUnivarDistr as _AbstractUnivarDistr
+from ..rnd._distributions_2d import Abstract2dDistr as _Abstract2dDistr
 from .._stimulus.properties import VP as _VP
 from .._stimulus.properties import ensure_vp as _ensure_vp
 from ._coll_stim_pairs import CollectionStimuli as _CollectionStimuli
@@ -13,7 +14,7 @@ from ._coll_stim_pairs import CollectionStimulusPairs as _CollectionStimulusPair
 
 
 def property_correlation(stimuli: _CollectionStimuli,
-                         distr: _rnd.AbstractUnivarDistr,
+                         distr: _AbstractUnivarDistr,
                          prop_a: str | _VP,
                          prop_b: None | str | _VP = None,
                          max_corr: float = 0.01,
@@ -44,7 +45,7 @@ def property_correlation(stimuli: _CollectionStimuli,
 
 
 def property_ratio_correlation(pairs: _CollectionStimulusPairs,
-                               distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                               distr: _AbstractUnivarDistr | _Abstract2dDistr,
                                prop_a: str | _VP,
                                prop_b: None | str | _VP = None,
                                max_corr: float = 0.01,
@@ -79,7 +80,7 @@ def property_ratio_correlation(pairs: _CollectionStimulusPairs,
 
 
 def property_difference_correlation(pairs: _CollectionStimulusPairs,
-                                    distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                                    distr: _AbstractUnivarDistr | _Abstract2dDistr,
                                     prop_a: str | _VP,
                                     prop_b: None | str | _VP = None,
                                     max_corr: float = 0.01,
@@ -113,7 +114,7 @@ def property_difference_correlation(pairs: _CollectionStimulusPairs,
 
 
 def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
-                                      distr: _rnd.AbstractUnivarDistr | _rnd.Abstract2dDistr,
+                                      distr: _AbstractUnivarDistr | _Abstract2dDistr,
                                       prop_a: _VP,
                                       prop_b: None | _VP = None,
                                       max_corr=0.01):
@@ -121,7 +122,7 @@ def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
         if prop_a.is_dependent_from(prop_b):
             raise ValueError(f"'{prop_a.name}' and '{prop_b.name}' depend" +
                              " on each other and can't be varied independently")
-        if isinstance(distr, _rnd.Abstract2dDistr):
+        if isinstance(distr, _Abstract2dDistr):
             return __modify_2d_distributions(distr,
                                              number_list=number_list,
                                              max_corr=max_corr)
@@ -129,7 +130,7 @@ def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
             raise ValueError("distr has to be a 2 dimensional distribution," +
                              " if two properties should be fitted")
     else:
-        if isinstance(distr, _rnd.AbstractUnivarDistr):
+        if isinstance(distr, _AbstractUnivarDistr):
             return __modify_distributions(distr,
                                           number_list=number_list,
                                           max_corr=max_corr)
@@ -138,7 +139,7 @@ def _check_prop_and_rnd_target_values(number_list: _ntp.NDArray,
                              " if one property should be fitted")
 
 
-def __modify_2d_distributions(distr: _rnd.Abstract2dDistr,
+def __modify_2d_distributions(distr: _Abstract2dDistr,
                               number_list: _ntp.NDArray,
                               max_corr=0.01) -> _Tuple[_ntp.NDArray[_np.float64], _Tuple[float, float]]:
 
@@ -152,7 +153,7 @@ def __modify_2d_distributions(distr: _rnd.Abstract2dDistr,
                 return values, (float(r1), float(r2))
 
 
-def __modify_distributions(distr: _rnd.AbstractUnivarDistr,
+def __modify_distributions(distr: _AbstractUnivarDistr,
                            number_list: _ntp.NDArray,
                            max_corr=0.01,) -> _Tuple[_ntp.NDArray[_np.float64], float]:
 

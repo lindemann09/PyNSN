@@ -38,31 +38,6 @@ class AbstractDistribution(metaclass=ABCMeta):
 
         """
 
-    def pyplot_samples(self, n=100000):  # FIXME to plot
-        """Creating a visualization of the distribution with ``matplotlib.pyplot``
-
-        Args:
-            n: number of sample (optional)
-
-        Returns:
-            ``pyplot.figure()``
-
-        Raises:
-            ImportError: if ``matplotlib`` is not installed
-        """
-        try:
-            from matplotlib.pyplot import hist, hist2d
-        except ImportError as err:
-            raise ImportError(
-                "To use pyplot_samples, please install matplotlib.") from err
-
-        samples = self.sample(n=n)
-
-        if samples.ndim == 2:
-            return hist2d(samples[:, 0], samples[:, 1], bins=(100, 100))[2]
-        else:
-            return hist(samples, bins=100)[2]
-
 
 class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
     pass
