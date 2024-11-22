@@ -7,14 +7,14 @@ __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 import json
 import sys
 from collections import OrderedDict
-from typing import Any, List, Sequence, Union
+from typing import Any, List, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from . import defaults
 
-IntOVector = Union[int, Sequence[int], NDArray[np.integer]]
+IntOVector = int | Sequence[int] | NDArray[np.integer]
 
 
 def formated_json(d: dict, indent: int, decimals: None | int) -> str:

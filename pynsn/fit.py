@@ -16,7 +16,7 @@ from .rnd import generator as _rnd_generator
 
 
 def total_surface_area(stim: _NSNStimulus,
-                       value: _tp.Union[float, _np.float64]) -> None:
+                       value: float | _np.floating) -> None:
     """Set surface area.
 
     Resize all object to fit a specific surface area
@@ -29,24 +29,24 @@ def total_surface_area(stim: _NSNStimulus,
 
 
 def total_perimeter(stim: _NSNStimulus,
-                    value: _tp.Union[float, _np.float64]) -> None:
+                    value: float | _np.floating) -> None:
     """fit the total parameter of the stimulus"""
     stim.sizes = stim.sizes * (value / stim.properties.total_perimeter)
 
 
-def average_perimeter(stim: _NSNStimulus, value: _tp.Union[float, _np.float64]) -> None:
+def average_perimeter(stim: _NSNStimulus, value: float | _np.floating) -> None:
     """fit the average parameter of the stimulus"""
     total_perimeter(stim, value * stim.n_shapes)
 
 
-def average_surface_area(stim: _NSNStimulus, value: _tp.Union[float, _np.float64]) -> None:
+def average_surface_area(stim: _NSNStimulus, value: float | _np.floating) -> None:
     """fits the average surface area of the stimulus"""
     total_surface_area(stim, stim.n_shapes * value)
 
 
 def numerosity(stim: _NSNStimulus, value: int,
                keep_convex_hull: bool = False,
-               max_iterations: _tp.Optional[int] = None) -> None:
+               max_iterations: int | None = None) -> None:
     """
     fitting the numerosity
     """
@@ -105,8 +105,8 @@ def numerosity(stim: _NSNStimulus, value: int,
 
 
 def field_area(stim: _NSNStimulus,
-               value: _tp.Union[float, _np.float64],
-               precision: _tp.Optional[_tp.Union[float, _np.float64]] = None) -> None:
+               value: float | _np.floating,
+               precision: float | _np.floating | None = None) -> None:
     """changes the convex hull area to a desired size with certain precision
 
     uses scaling radial positions if field area has to be increased
@@ -145,20 +145,21 @@ def field_area(stim: _NSNStimulus,
     stim.xy = stim.xy + old_center  # move back
 
 
-def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
-             precision: _tp.Optional[float] = None,
-             fa2ta_ratio: _tp.Optional[float] = None) -> None:
-    """
+def coverage(stim: _NSNStimulus, value: float | _np.floating,
+             precision: float | None = None,
+             fa2ta_ratio: float | None = None) -> None:
+    """_summary_
 
     Parameters
     ----------
-    value
-    precision
-    fa2ta_ratio
-
-    Returns
-    -------
-
+    stim : _NSNStimulus
+        _description_
+    value : float | _np.floating
+        _description_
+    precision : float | None, optional
+        _description_, by default None
+    fa2ta_ratio : float | None, optional
+        _description_, by default None
     """
 
     # TODO check drifting outwards if extra space is small and adapt_FA2TA_ratio=1
@@ -190,58 +191,57 @@ def coverage(stim: _NSNStimulus, value: _tp.Union[float, _np.float64],
 
 
 def log_spacing(stim: _NSNStimulus,
-                value: _tp.Union[float, _np.float64],
-                precision: _tp.Optional[float] = None) -> None:
-    """
+                value: float | _np.floating,
+                precision: float | None = None) -> None:
+    """_summary_
 
     Parameters
     ----------
-    value
-    precision
-
-    Returns
-    -------
-
+    stim : _NSNStimulus
+        _description_
+    value : float | _np.floating
+        _description_
+    precision : float | None, optional
+        _description_, by default None
     """
     log_fa = 0.5 * value + 0.5 * _np.log2(stim.n_shapes)
     field_area(stim, value=2**log_fa, precision=precision)
 
 
 def log_size(stim: _NSNStimulus,
-             value: _tp.Union[float, _np.float64]) -> None:
-    """
+             value: float | _np.floating) -> None:
+    """_summary_
 
     Parameters
     ----------
-    value
-
-    Returns
-    -------
-
+    stim : _NSNStimulus
+        _description_
+    value : float | _np.floating
+        _description_
     """
     log_tsa = 0.5 * value + 0.5 * _np.log2(stim.n_shapes)
     total_surface_area(stim, value=2**log_tsa)
 
 
 def sparsity(stim: _NSNStimulus,
-             value: _tp.Union[float, _np.float64], precision=None) -> None:
-    """
+             value: float | _np.floating, precision=None) -> None:
+    """_summary_
 
     Parameters
     ----------
-    value
-    precision
-
-    Returns
-    -------
-
+    stim : _NSNStimulus
+        _description_
+    value : float | _np.floating
+        _description_
+    precision : _type_, optional
+        _description_, by default None
     """
     field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
 def property_adapt(stim: _NSNStimulus,
-                   prop: _tp.Union[str, _VP],
-                   value: _tp.Union[float, _np.float64]) -> _tp.Any:
+                   prop: str | _VP,
+                   value: float | _np.floating) -> _tp.Any:
     """Adapt visual property `prop` of NSNStimulus
 
 
@@ -289,7 +289,7 @@ def property_adapt(stim: _NSNStimulus,
 
 def property_match(stim: _NSNStimulus,
                    ref: _NSNStimulus,
-                   prop: _tp.Union[str, _VP]) -> _tp.Any:
+                   prop: str | _VP) -> _tp.Any:
     """
     Match the visual property of stimulus `stim` to stimulus `ref`
     """
@@ -333,8 +333,8 @@ def property_match(stim: _NSNStimulus,
 
 
 def property_difference(stim_pair: _NSNStimulusPair,
-                        prop: _tp.Union[str, _VP],
-                        delta: _tp.Union[float, _np.float64],
+                        prop: str | _VP,
+                        delta: float | _np.floating,
                         adapt_stim: str = "both"):
     """Adapt visual property difference of NSNStimulusPair. Changes the property
     `prop` of the stimuli so that difference is equal to `delta`.
@@ -348,7 +348,7 @@ def property_difference(stim_pair: _NSNStimulusPair,
 
     p_a = stim_pair.stim_a.properties.get(prop)
     p_b = stim_pair.stim_b.properties.get(prop)
-    rc = _np.float64(delta) - (p_a - p_b)  # required change
+    rc = delta - (p_a - p_b)  # required change
 
     if adapt_stim == "both":
         rc = rc / 2
@@ -364,8 +364,8 @@ def property_difference(stim_pair: _NSNStimulusPair,
 
 
 def property_ratio(stim_pair: _NSNStimulusPair,
-                   prop: _tp.Union[str, _VP],
-                   ratio: _tp.Union[float, _np.float64],
+                   prop: str | _VP,
+                   ratio: float | _np.floating,
                    adapt_stim: str = "both"):
     """Adapt visual property ratio of NSNStimulusPair. Changes the property
     `prop` of the two stimuli so that ratio is equal to `delta`.
@@ -380,7 +380,7 @@ def property_ratio(stim_pair: _NSNStimulusPair,
     pa = stim_pair.stim_a.properties.get(prop)
     pb = stim_pair.stim_b.properties.get(prop)
 
-    rc = _np.float64(ratio) / (pa/pb)  # required change
+    rc = ratio / (pa/pb)  # required change
 
     if adapt_stim == "both":
         rc = _np.sqrt(rc)

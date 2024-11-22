@@ -15,7 +15,6 @@ from ._coll_stim import CollectionStimuli
 
 
 class CollectionStimulusPairs(AbstractCollection):
-    """Collection of NSNNumPairs"""
 
     def __init__(self, lst: tp.Union[None, ListNSNStimPairs] = None) -> None:
 
@@ -33,6 +32,15 @@ class CollectionStimulusPairs(AbstractCollection):
     def append(self, stim_a: NSNStimulus, stim_b: NSNStimulus,
                name: str = "no_name"):
         """append two stimulus to the collection
+
+        Parameters
+        ----------
+        stim_a : NSNStimulus
+            first stimulus
+        stim_b : NSNStimulus
+            second stimulus
+        name : str, optional
+            stimulus name, default "no_name"
         """
 
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
@@ -40,8 +48,18 @@ class CollectionStimulusPairs(AbstractCollection):
 
     def save(self, path: tp.Union[str, Path],
              zipped: bool = False,
-             decimals=None):
-        """Save the collection as json files organized in subfolder"""
+             decimals: None | int = None):
+        """Save the collection as json files organized in subfolder
+
+        Parameters
+        ----------
+        path : str or Path
+            _description_
+        zipped : bool, optional
+            _description_, by default False
+        decimals : int or None, optional
+            _description_, by default None
+        """
 
         json_str = "["
         for x in self.pairs:

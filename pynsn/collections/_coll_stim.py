@@ -30,6 +30,11 @@ class CollectionStimuli(AbstractCollection):
 
     def append(self, stim: NSNStimulus):
         """append stimulus to the collection
+
+        Parameters
+        ----------
+        stim : NSNStimulus
+
         """
 
         self.stimuli.append(stim)
@@ -37,7 +42,7 @@ class CollectionStimuli(AbstractCollection):
 
     def save(self, path: tp.Union[str, Path],
              zipped: bool = False,
-             decimals=None):
+             decimals: int | None = None):
         """Save the collection as json files organized in subfolder"""
 
         json_str = "["

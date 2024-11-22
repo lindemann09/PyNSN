@@ -183,9 +183,26 @@ class NSNStimulus(shape_array.ShapeArray):
         return rtn
 
     def to_json(self,
-                path: Union[None, str, Path] = None,
+                path:  str | Path | None = None,
                 indent: int = 2, tabular: bool = True,
-                decimals: None | int = None) -> str:
+                decimals: int | None = None) -> str:
+        """JSON representation of the object
+
+        Parameters
+        ----------
+        path : str | Path | None, optional
+            _description_, by default None
+        indent : int, optional
+            _description_, by default 2
+        tabular : bool, optional
+            _description_, by default True
+        decimals : int | None, optional
+            _description_, by default None
+
+        Returns
+        -------
+        str
+        """
         d = self.to_dict(tabular=tabular)
         json_str = formated_json(d, indent=indent, decimals=decimals)
         if isinstance(path, (Path, str)):
