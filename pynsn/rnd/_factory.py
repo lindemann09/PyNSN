@@ -84,11 +84,33 @@ class StimulusFactory(object):
                 isinstance(shape, AbstractRndShape))
         self._shapes.append((n, shape))
 
-    def create(self, name: str | None = None) -> NSNStimulus:
+    def create(self, name: str | None = None,
+               extra_distance_target_area: int | None = None,
+               ) -> NSNStimulus:
+        """Create a random stimulus
+
+        Parameters
+        ----------
+        name : str | None, optional
+            _description_, by default None
+        extra_distance_target_area : int | None, optional
+            extra minimum distance to the boarder of the target area, by default None.
+
+            The random process considers this plus the stimulus property `min_distance_target_area`
+            as defined while instantiation of StimulusFactory
+
+
+        Returns
+        -------
+        NSNStimulus
+        """
+
         rtn = deepcopy(self._base)
+        if extra_distance_target_area is not None:
+            rtn.target_area.min_dist_boarder += extra_distance_target_area
+
         if name is not None:
             rtn.name = name
-
         for n, s in self._shapes:
             rtn.shape_add_random_pos(ref_object=s, n=n,
                                      ignore_overlaps=self.ignore_overlaps, max_iterations=self.max_iterations)

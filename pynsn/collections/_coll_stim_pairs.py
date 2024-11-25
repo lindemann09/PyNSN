@@ -4,6 +4,7 @@ import gzip
 import json
 from pathlib import Path
 from typing import List
+import warnings
 
 import pandas as pd
 
@@ -92,15 +93,26 @@ class CollectionStimulusPairs(AbstractCollection):
         else:
             with open(path, 'r', encoding=defaults.FILE_ENCODING) as fl:
                 dicts = json.load(fl)
-
         rtn = CollectionStimulusPairs()
         while len(dicts) > 0:
             c = dicts.pop(0)
             a = dicts.pop(0)
             b = dicts.pop(0)
-            rtn.append(NSNStimulus.from_dict(a),
-                       NSNStimulus.from_dict(b),
-                       name=c["name"])
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                # FIXME this kind of warning handling needs to be implemented also in _coll_stim
+                warnings.simplefilter("always")  # Catch all warnings
+                s1 = NSNStimulus.from_dict(a)
+                for w in caught_warnings:
+                    print(f"{s1.name}: {w.message}")
+
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter("always")  # Catch all warnings
+                s2 = NSNStimulus.from_dict(b)
+                for w in caught_warnings:
+                    print(f"{s2.name}: {w.message}")
+
+            rtn.append(s1, s2, name=c["name"])
+
         return rtn
 
     def reset_properties(self):
