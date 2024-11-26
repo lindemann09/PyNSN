@@ -3,6 +3,8 @@ from typing import Tuple as _Tuple
 
 import numpy as _np
 import numpy.typing as _ntp
+from scipy.stats import linregress as _linregress
+import pandas as _pd
 
 from .. import fit as _stim_fit
 from ..rnd._distributions import AbstractUnivarDistr as _AbstractUnivarDistr
@@ -41,6 +43,64 @@ def property_correlation(stimuli: _CollectionStimuli,
         print(" "*70)
 
     stimuli.reset_properties()
+    return target_correlations
+
+
+def _minimize_correlation(ref_var:_pd.Series,
+                          tar_var: _pd.Series,
+                          omega: float = 1) -> _Tuple[_pd.Series, float]:
+    n = len(tar_var)
+    if len(ref_var) != n:
+        raise ValueError("ref_var and tar_var have to have the same length!")
+
+    cdata = _np.array([ref_var, tar_var]).T
+    means = _np.mean(cdata, axis=0)
+    for i in range(cdata.shape[1]):
+        cdata[:, i] = cdata[:, i] - means[i]
+    reg = _linregress(cdata[:, 0], cdata[:, 1])
+
+    dat = tar_var - omega * reg.slope * cdata[:, 0]  # type: ignore
+    reg = _linregress(cdata[:, 0], dat)
+    return dat, float(reg.rvalue)  # type: ignore
+
+
+def minimize_correlation_property_ratio(pairs: _CollectionStimulusPairs,
+                                        prop_a: str | _VP,
+                                        prop_b: None | str | _VP = None,
+                                        omega: float = 1, # FIXME not needed
+                                        adapt_stim: str = "both",
+                                        feedback: bool = True) -> _Tuple[float, float] | float:
+    prop_a = _ensure_vp(prop_a)
+    props = pairs.property_ratios([_VP.N, prop_a])
+    pa, target_correlations = _minimize_correlation(
+        ref_var=props.loc[:, "N"], tar_var=props.loc[:, prop_a.name], omega=omega)
+
+    if prop_b is not None:
+        prop_b = _ensure_vp(prop_b)
+        tmp = pairs.property_ratios([prop_b])
+        pb, rb = _minimize_correlation(ref_var=props.loc[:, "N"],
+                                       tar_var=tmp.loc[:, prop_b.name],
+                                       omega=omega)
+        target_correlations = (target_correlations, rb)
+    else:
+        pb = None
+
+    # fitting
+    n = len(pairs.pairs)
+    for i, sp in enumerate(pairs.pairs):
+        if feedback:
+            _sys.stdout.write(
+                f"fitting {i+1}/{n} {sp.name}                 \r")
+        _stim_fit.property_ratio(sp, prop_a, pa[i], adapt_stim=adapt_stim)
+
+        if isinstance(pb, _pd.Series):
+            _stim_fit.property_ratio(
+                sp, prop_b, pb[i], adapt_stim=adapt_stim)  # type: ignore
+
+    if feedback:
+        print(" "*70)
+
+    pairs.reset_properties()
     return target_correlations
 
 
