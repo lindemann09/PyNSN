@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
@@ -9,10 +9,10 @@ from typing import Sequence, Tuple
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from ..exceptions import NoSolutionError
-from . import _rng
 from .._shapes.colour import Colour
 from .._shapes.shapes import PolygonShape
+from ..exceptions import NoSolutionError
+from . import _rng
 
 ConstantLike = float | int | str | dict | PolygonShape | Colour
 CategoricalLike = Sequence | NDArray
@@ -44,8 +44,7 @@ class AbstractUnivarDistr(AbstractDistribution, metaclass=ABCMeta):
 
 
 class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
-    """Univariate Continuous Distribution
-    """
+    """Univariate Continuous Distribution"""
 
     def __init__(self, minmax: ArrayLike | None):
         if minmax is None:
@@ -54,8 +53,7 @@ class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
             # FIXME make properties with setter!
             self._minmax = np.asarray(minmax)
         if len(self._minmax) != 2:
-            raise TypeError(
-                f"min_max {minmax} has to be a tuple of two values")
+            raise TypeError(f"min_max {minmax} has to be a tuple of two values")
 
     def to_dict(self) -> dict:
         """Dict representation of the distribution"""
@@ -69,8 +67,7 @@ class AbstractContinuousDistr(AbstractUnivarDistr, metaclass=ABCMeta):
 
 
 class Uniform(AbstractContinuousDistr):
-    """
-    """
+    """ """
 
     def __init__(self, minmax: ArrayLike):
         """Uniform distribution defined by the number range, min_max=(min, max)
@@ -82,8 +79,10 @@ class Uniform(AbstractContinuousDistr):
 
         super().__init__(minmax)
         if self._minmax[0] > self._minmax[1]:
-            raise TypeError(f"min_max {minmax} has to be a tuple of two values "
-                            "(a, b) with a <= b.")
+            raise TypeError(
+                f"min_max {minmax} has to be a tuple of two values "
+                "(a, b) with a <= b."
+            )
         self._scale = self._minmax[1] - self._minmax[0]
 
     def sample(self, n: int) -> NDArray[np.float64]:
@@ -92,20 +91,23 @@ class Uniform(AbstractContinuousDistr):
 
 
 class Triangle(AbstractContinuousDistr):
-    """Triangle
-    """
+    """Triangle"""
 
     def __init__(self, mode: float, minmax: ArrayLike):
         super().__init__(minmax=minmax)
         self._mode = mode
-        if (self._minmax[0] is not None and mode <= self._minmax[0]) or \
-                (self._minmax[1] is not None and mode >= self._minmax[1]):
-            raise ValueError(f"mode ({mode}) has to be inside the defined "
-                             f"min_max range ({self._minmax})")
+        if (self._minmax[0] is not None and mode <= self._minmax[0]) or (
+            self._minmax[1] is not None and mode >= self._minmax[1]
+        ):
+            raise ValueError(
+                f"mode ({mode}) has to be inside the defined "
+                f"min_max range ({self._minmax})"
+            )
 
     def sample(self, n: int) -> NDArray[np.float64]:
-        return _rng.generator.triangular(left=self._minmax[0], right=self._minmax[1],
-                                         mode=self._mode, size=n)
+        return _rng.generator.triangular(
+            left=self._minmax[0], right=self._minmax[1], mode=self._mode, size=n
+        )
 
     def to_dict(self) -> dict:
         d = super().to_dict()
@@ -118,20 +120,21 @@ class Triangle(AbstractContinuousDistr):
 
 
 class _AbstractDistrMuSigma(AbstractContinuousDistr, metaclass=ABCMeta):
-
     def __init__(self, mu: float, sigma: float, minmax: ArrayLike | None = None):
         super().__init__(minmax)
         self._mu = mu
         self._sigma = abs(sigma)
-        if (self._minmax[0] is not None and mu <= self._minmax[0]) or \
-                (self._minmax[1] is not None and mu >= self._minmax[1]):
-            raise ValueError(f"mode ({mu}) has to be inside the defined "
-                             f"min_max range ({self._minmax})")
+        if (self._minmax[0] is not None and mu <= self._minmax[0]) or (
+            self._minmax[1] is not None and mu >= self._minmax[1]
+        ):
+            raise ValueError(
+                f"mode ({mu}) has to be inside the defined "
+                f"min_max range ({self._minmax})"
+            )
 
     def to_dict(self) -> dict:
         d = super().to_dict()
-        d.update({"mu": self._mu,
-                  "sigma": self._sigma})
+        d.update({"mu": self._mu, "sigma": self._sigma})
         return d
 
     @property
@@ -160,8 +163,7 @@ class Normal(_AbstractDistrMuSigma):
         rtn = np.array([])
         required = n
         while required > 0:
-            draw = _rng.generator.normal(
-                loc=self._mu, scale=self._sigma, size=required)
+            draw = _rng.generator.normal(loc=self._mu, scale=self._sigma, size=required)
             if self._minmax[0] is not None:
                 draw = np.delete(draw, draw < self._minmax[0])
             if self._minmax[1] is not None:
@@ -173,9 +175,14 @@ class Normal(_AbstractDistrMuSigma):
 
 
 class Beta(_AbstractDistrMuSigma):
-
-    def __init__(self, mu=None, sigma=None, alpha=None, beta=None,
-                 minmax: ArrayLike | None = None):
+    def __init__(
+        self,
+        mu=None,
+        sigma=None,
+        alpha=None,
+        beta=None,
+        minmax: ArrayLike | None = None,
+    ):
         """Beta distribution defined by the number range, min_max=(min, max),
          the mean and the standard deviation (std)
 
@@ -199,8 +206,7 @@ class Beta(_AbstractDistrMuSigma):
             minmax = np.asarray(minmax)
             mu, sigma = Beta._calc_mu_sigma(alpha, beta, minmax)
         elif mu is None or sigma is None or alpha is not None or beta is not None:
-            raise TypeError(
-                "Either Mu & Sigma or Alpha & Beta have to specified.")
+            raise TypeError("Either Mu & Sigma or Alpha & Beta have to specified.")
         super().__init__(mu=mu, sigma=sigma, minmax=minmax)
 
     def sample(self, n: int) -> NDArray[np.float64]:
@@ -227,7 +233,7 @@ class Beta(_AbstractDistrMuSigma):
         r = float(self._minmax[1] - self._minmax[0])
         m = (self._mu - self._minmax[0]) / r  # mean
         std = self._sigma / r
-        x = (m * (1 - m) / std ** 2) - 1
+        x = (m * (1 - m) / std**2) - 1
         return x * m, (1 - m) * x
 
     @property
@@ -239,7 +245,9 @@ class Beta(_AbstractDistrMuSigma):
         return self.shape_parameter[1]
 
     @staticmethod
-    def _calc_mu_sigma(alpha: float, beta: float, min_max: NDArray) -> Tuple[float, float]:
+    def _calc_mu_sigma(
+        alpha: float, beta: float, min_max: NDArray
+    ) -> Tuple[float, float]:
         a = alpha
         b = beta
         r = min_max[1] - min_max[0]
@@ -253,15 +261,16 @@ class Beta(_AbstractDistrMuSigma):
 
 
 class Categorical(AbstractUnivarDistr):
-    """Categorical
-    """
+    """Categorical"""
 
-    def __init__(self,
-                 levels: CategoricalLike,
-                 weights: ArrayLike | None = None,
-                 exact_weighting=False):
+    def __init__(
+        self,
+        levels: CategoricalLike,
+        weights: ArrayLike | None = None,
+        exact_weighting=False,
+    ):
         """Distribution of category. Samples from discrete categories
-         with optional weights for each category or category.
+        with optional weights for each category or category.
         """
 
         self._levels = np.asarray(copy(levels))
@@ -272,7 +281,8 @@ class Categorical(AbstractUnivarDistr):
             self._weights = np.asarray(weights)
             if len(self._levels) != len(self._weights):
                 raise ValueError(
-                    "Number weights does not match the number of category levels")
+                    "Number weights does not match the number of category levels"
+                )
 
     @property
     def levels(self) -> NDArray:
@@ -298,13 +308,16 @@ class Categorical(AbstractUnivarDistr):
                     # greatest common denominator
                     gcd = np.gcd.reduce(self._weights)
                     info = "\nSample size has to be a multiple of {}.".format(
-                        int(np.sum(self._weights / gcd)))
+                        int(np.sum(self._weights / gcd))
+                    )
                 except:
                     info = ""
 
-                raise NoSolutionError(f"Can't find n={n} samples that" +
-                                      f" are exactly distributed as specified by the weights (p={p}). " +
-                                      info)
+                raise NoSolutionError(
+                    f"Can't find n={n} samples that"
+                    + f" are exactly distributed as specified by the weights (p={p}). "
+                    + info
+                )
 
             dist = []
             for lev, n in zip(self._levels, n_distr):
@@ -315,14 +328,17 @@ class Categorical(AbstractUnivarDistr):
 
     def to_dict(self) -> dict:
         d = super().to_dict()
-        d.update({"levels": self._levels.tolist(),
-                  "weights": self._weights.tolist(),
-                  "exact": self.exact_weighting})
+        d.update(
+            {
+                "levels": self._levels.tolist(),
+                "weights": self._weights.tolist(),
+                "exact": self.exact_weighting,
+            }
+        )
         return d
 
 
 class Constant(AbstractUnivarDistr):
-
     def __init__(self, value: ConstantLike) -> None:
         """Helper class to "sample" constance.
 
@@ -339,5 +355,7 @@ class Constant(AbstractUnivarDistr):
         return np.full(n, self.value)
 
     def to_dict(self) -> dict:
-        return {"type": "Constant",
-                "value": self.value}
+        return {"type": "Constant", "value": self.value}
+
+
+DistributionLike = AbstractUnivarDistr | ConstantLike | CategoricalLike

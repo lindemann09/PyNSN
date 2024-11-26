@@ -6,20 +6,17 @@ from typing import Any
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from .. import NSNStimulus
-from .. import Dot, Picture, Rectangle, Ellipse
+from .. import Dot, Ellipse, NSNStimulus, Picture, Rectangle
 
 # helper for type checking and error raising error
 
 
 def check_nsn_stimulus(obj):  # FIXME simpler (function not needed anymore)
     if not isinstance(obj, (NSNStimulus)):
-        raise TypeError(
-            "NSNStimulus expected, but not {}".format(type(obj).__name__))
+        raise TypeError("NSNStimulus expected, but not {}".format(type(obj).__name__))
 
 
-def cartesian2image_coordinates(xy: ArrayLike,
-                                image_size: ArrayLike) -> NDArray:
+def cartesian2image_coordinates(xy: ArrayLike, image_size: ArrayLike) -> NDArray:
     """convert cartesian to image coordinates with (0,0) at top left and
     reversed y axis
 
@@ -80,11 +77,9 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                     (e.g. pillow image, axes (matplotlib) or svgdraw object)
         """
 
-    def create_image(self,
-                     nsn_stimulus: NSNStimulus,
-                     antialiasing: float | None = None,
-                     **kwargs
-                     ) -> Any:
+    def create_image(
+        self, nsn_stimulus: NSNStimulus, antialiasing: float | None = None, **kwargs
+    ) -> Any:
         """create image
 
         Parameters
@@ -121,31 +116,27 @@ class AbstractArrayDraw(metaclass=ABCMeta):
         if isinstance(ta_shape, Dot):
             target_area_shape = Dot(
                 diameter=np.ceil(ta_shape.diameter) * aaf,
-                attribute=colours.target_area.value
+                attribute=colours.target_area.value,
             )
         elif isinstance(ta_shape, Ellipse):
             target_area_shape = Ellipse(
-                size=np.ceil(ta_shape.size) * aaf,
-                attribute=colours.target_area.value
+                size=np.ceil(ta_shape.size) * aaf, attribute=colours.target_area.value
             )
 
         elif isinstance(ta_shape, Rectangle):
             target_area_shape = Rectangle(
-                size=np.ceil(ta_shape.size) * aaf,
-                attribute=colours.target_area.value
+                size=np.ceil(ta_shape.size) * aaf, attribute=colours.target_area.value
             )
         else:
             raise NotImplementedError()  # should never happen
 
-        image_size = (round(target_area_shape.width),
-                      round(target_area_shape.height))
+        image_size = (round(target_area_shape.width), round(target_area_shape.height))
         img = self.get_image(
             image_size=image_size, background_colour=colours.background.value, **kwargs
         )
 
         if colours.target_area.value is not None:
-            self.draw_shape(img, target_area_shape,
-                            opacity=1, scaling_factor=1)
+            self.draw_shape(img, target_area_shape, opacity=1, scaling_factor=1)
 
         if nsn_stimulus.properties.numerosity > 0:
             # draw shapes
@@ -154,16 +145,20 @@ class AbstractArrayDraw(metaclass=ABCMeta):
                     # dot or rect: force colour, set default colour if no colour
                     obj.attribute = colours.object_default
                 self.draw_shape(
-                    img, obj, opacity=colours.opacity_object, scaling_factor=aaf)
+                    img, obj, opacity=colours.opacity_object, scaling_factor=aaf
+                )
 
             # draw convex hulls
             if colours.convex_hull.value is not None:
                 coords = nsn_stimulus.convex_hull.coordinates
                 if len(coords) > 1:
-                    self.draw_convex_hull(img, points=coords,
-                                          convex_hull_colour=colours.convex_hull,
-                                          opacity=colours.opacity_guides,
-                                          scaling_factor=aaf)
+                    self.draw_convex_hull(
+                        img,
+                        points=coords,
+                        convex_hull_colour=colours.convex_hull,
+                        opacity=colours.opacity_guides,
+                        scaling_factor=aaf,
+                    )
             #  and center of mass
             if colours.center_of_field_area.value is not None:
                 obj = Dot(

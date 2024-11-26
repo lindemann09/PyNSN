@@ -17,12 +17,12 @@ class CollectionStimuli(AbstractCollection):
     """Collection of NSNNumPairs"""
 
     def __init__(self, lst: None | ListNSNStimuli = None) -> None:
-
         if isinstance(lst, List):
             for x in lst:  # type check
                 if not isinstance(x, NSNStimulus):
                     raise RuntimeError(
-                        f"lst must be a list of NSNStimulus and not {type(x)}")
+                        f"lst must be a list of NSNStimulus and not {type(x)}"
+                    )
             self.stimuli = lst
         else:
             self.stimuli: ListNSNStimuli = []
@@ -40,9 +40,7 @@ class CollectionStimuli(AbstractCollection):
         self.stimuli.append(stim)
         self.reset_properties()
 
-    def save(self, path: str | Path,
-             zipped: bool = False,
-             decimals: int | None = None):
+    def save(self, path: str | Path, zipped: bool = False, decimals: int | None = None):
         """Save the collection as json files organized in subfolder"""
 
         json_str = "["
@@ -61,8 +59,7 @@ class CollectionStimuli(AbstractCollection):
                 fl.write(json_str)
 
     @staticmethod
-    def load(path: str | Path,
-             zipped: bool = False) -> CollectionStimuli:
+    def load(path: str | Path, zipped: bool = False) -> CollectionStimuli:
         """Load collection from folder with json files
 
         see `to_json`
@@ -71,10 +68,10 @@ class CollectionStimuli(AbstractCollection):
         if not path.is_file():
             raise RuntimeError(f"Can't find {path}.")
         if zipped:
-            with gzip.open(path, 'rt', encoding=defaults.FILE_ENCODING) as fl:
+            with gzip.open(path, "rt", encoding=defaults.FILE_ENCODING) as fl:
                 dicts = json.load(fl)
         else:
-            with open(path, 'r', encoding=defaults.FILE_ENCODING) as fl:
+            with open(path, "r", encoding=defaults.FILE_ENCODING) as fl:
                 dicts = json.load(fl)
 
         rtn = CollectionStimuli()

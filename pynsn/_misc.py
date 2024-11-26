@@ -30,9 +30,9 @@ def formated_json(d: dict, indent: int, decimals: None | int) -> str:
     for x in json_str:
         if x == "{":
             i = i + indent
-            x = x + "\n" + " " * (i-1)
+            x = x + "\n" + " " * (i - 1)
         elif x == "," and not block_newline:
-            x = x + "\n" + " " * (i-1)  # -1, because a space follows
+            x = x + "\n" + " " * (i - 1)  # -1, because a space follows
         elif x == "}":
             i -= indent
             x = "\n" + " " * i + x
@@ -158,12 +158,12 @@ def is_interactive_mode():
 def polar2cartesian(polar: ArrayLike) -> NDArray:
     """polar has to be an 2D-array representing polar coordinates (radius, angle)"""
     polar = np.atleast_2d(polar)
-    return np.array([polar[:, 0] * np.cos(polar[:, 1]),
-                    polar[:, 0] * np.sin(polar[:, 1])]).T
+    return np.array(
+        [polar[:, 0] * np.cos(polar[:, 1]), polar[:, 0] * np.sin(polar[:, 1])]
+    ).T
 
 
-def cartesian2polar(xy: ArrayLike,
-                    radii_only: bool = False) -> NDArray[np.floating]:
+def cartesian2polar(xy: ArrayLike, radii_only: bool = False) -> NDArray[np.floating]:
     """polar coordinates (radius, angle)
 
     if only radii required you may consider radii_only=True for faster

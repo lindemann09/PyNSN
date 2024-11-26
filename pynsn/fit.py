@@ -1,4 +1,5 @@
 """Fitting module"""
+
 import typing as _tp
 
 import numpy as _np
@@ -6,17 +7,16 @@ import shapely as _shp
 
 from . import NSNStimulus as _NSNStimulus
 from . import NSNStimulusPair as _NSNStimulusPair
+from . import _misc
+from . import defaults as _defaults
 from ._stimulus.nsn_stimulus import rnd_free_pos as _rnd_free_pos
 from ._stimulus.properties import VP as _VP
 from ._stimulus.properties import ensure_vp as _ensure_vp
-from . import _misc
-from . import defaults as _defaults
 from .exceptions import NoSolutionError as _NoSolutionError
 from .rnd import generator as _rnd_generator
 
 
-def total_surface_area(stim: _NSNStimulus,
-                       value: float | _np.floating) -> None:
+def total_surface_area(stim: _NSNStimulus, value: float | _np.floating) -> None:
     """Set surface area.
 
     Resize all object to fit a specific surface area
@@ -24,12 +24,10 @@ def total_surface_area(stim: _NSNStimulus,
     Args:
         value: surface area
     """
-    stim.sizes = stim.sizes * \
-        _np.sqrt((value / stim.properties.total_surface_area))
+    stim.sizes = stim.sizes * _np.sqrt((value / stim.properties.total_surface_area))
 
 
-def total_perimeter(stim: _NSNStimulus,
-                    value: float | _np.floating) -> None:
+def total_perimeter(stim: _NSNStimulus, value: float | _np.floating) -> None:
     """fit the total parameter of the stimulus"""
     stim.sizes = stim.sizes * (value / stim.properties.total_perimeter)
 
@@ -44,9 +42,12 @@ def average_surface_area(stim: _NSNStimulus, value: float | _np.floating) -> Non
     total_surface_area(stim, stim.n_shapes * value)
 
 
-def numerosity(stim: _NSNStimulus, value: int,
-               keep_convex_hull: bool = False,
-               max_iterations: int | None = None) -> None:
+def numerosity(
+    stim: _NSNStimulus,
+    value: int,
+    keep_convex_hull: bool = False,
+    max_iterations: int | None = None,
+) -> None:
     """
     fitting the numerosity
     """
@@ -60,8 +61,7 @@ def numerosity(stim: _NSNStimulus, value: int,
         if keep_convex_hull and change_numerosity < 0:
             # find shapes touching the convex hull (ch_shapes)
             ring = _shp.get_exterior_ring(stim.convex_hull.polygon)
-            ch_shapes = _np.flatnonzero(_shp.intersects(
-                stim.polygons, ring))
+            ch_shapes = _np.flatnonzero(_shp.intersects(stim.polygons, ring))
         else:
             ch_shapes = None
 
@@ -79,7 +79,8 @@ def numerosity(stim: _NSNStimulus, value: int,
                             break
                     if delete_id is None:
                         raise _NoSolutionError(
-                            "Can't increase numerosity, while keeping field area.")
+                            "Can't increase numerosity, while keeping field area."
+                        )
                 else:
                     delete_id = _rnd_generator.integers(0, stim.n_shapes)
 
@@ -95,18 +96,22 @@ def numerosity(stim: _NSNStimulus, value: int,
                         nsn_stim=stim,
                         ignore_overlaps=False,
                         inside_convex_hull=keep_convex_hull,
-                        max_iterations=max_iterations)
+                        max_iterations=max_iterations,
+                    )
                 except _NoSolutionError as err:
                     # no free position
                     raise _NoSolutionError(
-                        "Can't increase numerosity. No free position found.") from err
+                        "Can't increase numerosity. No free position found."
+                    ) from err
 
                 stim.shape_add(rnd_object)
 
 
-def field_area(stim: _NSNStimulus,
-               value: float | _np.floating,
-               precision: float | _np.floating | None = None) -> None:
+def field_area(
+    stim: _NSNStimulus,
+    value: float | _np.floating,
+    precision: float | _np.floating | None = None,
+) -> None:
     """changes the convex hull area to a desired size with certain precision
 
     uses scaling radial positions if field area has to be increased
@@ -145,9 +150,12 @@ def field_area(stim: _NSNStimulus,
     stim.xy = stim.xy + old_center  # move back
 
 
-def coverage(stim: _NSNStimulus, value: float | _np.floating,
-             precision: float | None = None,
-             fa2ta_ratio: float | None = None) -> None:
+def coverage(
+    stim: _NSNStimulus,
+    value: float | _np.floating,
+    precision: float | None = None,
+    fa2ta_ratio: float | None = None,
+) -> None:
     """_summary_
 
     Parameters
@@ -185,14 +193,14 @@ def coverage(stim: _NSNStimulus, value: float | _np.floating,
     if abs(d_ta_change) > 0:
         total_surface_area(stim, ta + d_ta_change)
 
-    field_area(stim,
-               value=stim.properties.total_surface_area / value,
-               precision=precision)
+    field_area(
+        stim, value=stim.properties.total_surface_area / value, precision=precision
+    )
 
 
-def log_spacing(stim: _NSNStimulus,
-                value: float | _np.floating,
-                precision: float | None = None) -> None:
+def log_spacing(
+    stim: _NSNStimulus, value: float | _np.floating, precision: float | None = None
+) -> None:
     """_summary_
 
     Parameters
@@ -208,8 +216,7 @@ def log_spacing(stim: _NSNStimulus,
     field_area(stim, value=2**log_fa, precision=precision)
 
 
-def log_size(stim: _NSNStimulus,
-             value: float | _np.floating) -> None:
+def log_size(stim: _NSNStimulus, value: float | _np.floating) -> None:
     """_summary_
 
     Parameters
@@ -223,8 +230,7 @@ def log_size(stim: _NSNStimulus,
     total_surface_area(stim, value=2**log_tsa)
 
 
-def sparsity(stim: _NSNStimulus,
-             value: float | _np.floating, precision=None) -> None:
+def sparsity(stim: _NSNStimulus, value: float | _np.floating, precision=None) -> None:
     """_summary_
 
     Parameters
@@ -239,9 +245,9 @@ def sparsity(stim: _NSNStimulus,
     field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
-def property_adapt(stim: _NSNStimulus,
-                   prop: str | _VP,
-                   value: float | _np.floating) -> _tp.Any:
+def property_adapt(
+    stim: _NSNStimulus, prop: str | _VP, value: float | _np.floating
+) -> _tp.Any:
     """Adapt visual property `prop` of NSNStimulus
 
 
@@ -282,14 +288,10 @@ def property_adapt(stim: _NSNStimulus,
     elif prop == _VP.CO:
         return coverage(stim, value=value)
     else:
-        raise NotImplementedError(
-            f"Not implemented for {str(prop)}"
-        )
+        raise NotImplementedError(f"Not implemented for {str(prop)}")
 
 
-def property_match(stim: _NSNStimulus,
-                   ref: _NSNStimulus,
-                   prop: str | _VP) -> _tp.Any:
+def property_match(stim: _NSNStimulus, ref: _NSNStimulus, prop: str | _VP) -> _tp.Any:
     """
     Match the visual property of stimulus `stim` to stimulus `ref`
     """
@@ -327,15 +329,15 @@ def property_match(stim: _NSNStimulus,
     elif prop == _VP.CO:
         return coverage(stim, value=rp.coverage)
     else:
-        raise NotImplementedError(
-            f"Not implemented for {str(prop)}"
-        )
+        raise NotImplementedError(f"Not implemented for {str(prop)}")
 
 
-def property_difference(stim_pair: _NSNStimulusPair,
-                        prop: str | _VP,
-                        delta: float | _np.floating,
-                        adapt_stim: str = "both"):
+def property_difference(
+    stim_pair: _NSNStimulusPair,
+    prop: str | _VP,
+    delta: float | _np.floating,
+    adapt_stim: str = "both",
+):
     """Adapt visual property difference of NSNStimulusPair. Changes the property
     `prop` of the stimuli so that difference is equal to `delta`.
 
@@ -359,14 +361,17 @@ def property_difference(stim_pair: _NSNStimulusPair,
     elif adapt_stim == "b":
         property_adapt(stim_pair.stim_b, prop, p_b - rc)
     else:
-        raise ValueError(f"Unknown adapt method {adapt_stim}. " +
-                         "Must be either 'both', 'a' or 'b'")
+        raise ValueError(
+            f"Unknown adapt method {adapt_stim}. " + "Must be either 'both', 'a' or 'b'"
+        )
 
 
-def property_ratio(stim_pair: _NSNStimulusPair,
-                   prop: str | _VP,
-                   ratio: float | _np.floating,
-                   adapt_stim: str = "both"):
+def property_ratio(
+    stim_pair: _NSNStimulusPair,
+    prop: str | _VP,
+    ratio: float | _np.floating,
+    adapt_stim: str = "both",
+):
     """Adapt visual property ratio of NSNStimulusPair. Changes the property
     `prop` of the two stimuli so that ratio is equal to `delta`.
 
@@ -380,7 +385,7 @@ def property_ratio(stim_pair: _NSNStimulusPair,
     pa = stim_pair.stim_a.properties.get(prop)
     pb = stim_pair.stim_b.properties.get(prop)
 
-    rc = ratio / (pa/pb)  # required change
+    rc = ratio / (pa / pb)  # required change
 
     if adapt_stim == "both":
         rc = _np.sqrt(rc)
@@ -391,5 +396,7 @@ def property_ratio(stim_pair: _NSNStimulusPair,
     elif adapt_stim == "b":
         property_adapt(stim_pair.stim_b, prop, pb / rc)
     else:
-        raise ValueError(f"Unknown adapt method {property_adapt}. " +
-                         "Must be either 'both', 'a' or 'b'")
+        raise ValueError(
+            f"Unknown adapt method {property_adapt}. "
+            + "Must be either 'both', 'a' or 'b'"
+        )

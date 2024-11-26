@@ -16,22 +16,20 @@ from ._coll_stim import CollectionStimuli
 
 
 class CollectionStimulusPairs(AbstractCollection):
-
     def __init__(self, lst: ListNSNStimPairs | None = None) -> None:
-
         if isinstance(lst, List):
             for x in lst:  # type check
                 if not isinstance(x, NSNStimulusPair):
                     raise RuntimeError(
-                        f"lst must be a list of NSNStimulusPairs and not {type(x)}")
+                        f"lst must be a list of NSNStimulusPairs and not {type(x)}"
+                    )
             self.pairs = lst
         else:
             self.pairs: ListNSNStimPairs = []
         self._prop_df_a = pd.DataFrame()
         self._prop_df_b = pd.DataFrame()
 
-    def append(self, stim_a: NSNStimulus, stim_b: NSNStimulus,
-               name: str = "no_name"):
+    def append(self, stim_a: NSNStimulus, stim_b: NSNStimulus, name: str = "no_name"):
         """append two stimulus to the collection
 
         Parameters
@@ -47,9 +45,7 @@ class CollectionStimulusPairs(AbstractCollection):
         self.pairs.append(NSNStimulusPair(stim_a, stim_b, name))
         self.reset_properties()
 
-    def save(self, path: str | Path,
-             zipped: bool = False,
-             decimals: None | int = None):
+    def save(self, path: str | Path, zipped: bool = False, decimals: None | int = None):
         """Save the collection as json files organized in subfolder
 
         Parameters
@@ -78,8 +74,7 @@ class CollectionStimulusPairs(AbstractCollection):
                 fl.write(json_str)
 
     @staticmethod
-    def load(path: str | Path,
-             zipped: bool = False) -> CollectionStimulusPairs:
+    def load(path: str | Path, zipped: bool = False) -> CollectionStimulusPairs:
         """Load collection from folder with json files
 
         see `to_json`
@@ -88,10 +83,10 @@ class CollectionStimulusPairs(AbstractCollection):
         if not path.is_file():
             raise RuntimeError(f"Can't find {path}.")
         if zipped:
-            with gzip.open(path, 'rt', encoding=defaults.FILE_ENCODING) as fl:
+            with gzip.open(path, "rt", encoding=defaults.FILE_ENCODING) as fl:
                 dicts = json.load(fl)
         else:
-            with open(path, 'r', encoding=defaults.FILE_ENCODING) as fl:
+            with open(path, "r", encoding=defaults.FILE_ENCODING) as fl:
                 dicts = json.load(fl)
         rtn = CollectionStimulusPairs()
         while len(dicts) > 0:
@@ -157,7 +152,7 @@ class CollectionStimulusPairs(AbstractCollection):
         b["name"] = names
         return pd.concat([a, b])
 
-    def property_differences(self, props:  None | VPOrList = None) -> pd.DataFrame:
+    def property_differences(self, props: None | VPOrList = None) -> pd.DataFrame:
         """differences of properties between stimuli A & B
 
         optionally specify `props`
@@ -175,7 +170,7 @@ class CollectionStimulusPairs(AbstractCollection):
 
         return self._prop_df_a[cols] - self._prop_df_b[cols]
 
-    def property_ratios(self, props:  None | VPOrList = None) -> pd.DataFrame:
+    def property_ratios(self, props: None | VPOrList = None) -> pd.DataFrame:
         """ratios of properties between stimuli A & B
 
         optionally specify `props`
@@ -203,7 +198,8 @@ class CollectionStimulusPairs(AbstractCollection):
         elif stim_id == "b":
             rtn = [pair.stim_b for pair in self.pairs]
         else:
-            raise ValueError(f"Unknown stimulus id '{stim_id}'. " +
-                             "Must be either 'a' or 'b'")
+            raise ValueError(
+                f"Unknown stimulus id '{stim_id}'. " + "Must be either 'a' or 'b'"
+            )
 
         return CollectionStimuli(rtn)

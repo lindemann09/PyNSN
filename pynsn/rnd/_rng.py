@@ -7,7 +7,7 @@ from typing import Sequence
 
 import numpy as np
 import shapely
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from .._misc import polar2cartesian
 
@@ -38,10 +38,9 @@ class WalkAround(object):
     """Jump at random positions in the surrounding of a position with constantly
     increasing jump radius"""
 
-    def __init__(self,
-                 xy: ArrayLike,
-                 delta: int = 2,
-                 attempts_per_radius: int = 2) -> None:
+    def __init__(
+        self, xy: ArrayLike, delta: int = 2, attempts_per_radius: int = 2
+    ) -> None:
         self._xy = np.asarray(xy)
         if len(self._xy) != 2:
             raise ValueError("xy has be an list of two numerals (x, y)")
@@ -52,23 +51,24 @@ class WalkAround(object):
         self.counter = 0
 
     def next(self) -> NDArray[np.float64]:
-
         if self.counter % self._attempts == 0:
             self._radius += self._delta
         self.counter += 1
 
-        rnd_angle = 2*np.pi*generator.random()
+        rnd_angle = 2 * np.pi * generator.random()
         return polar2cartesian((self._radius, rnd_angle))[0] + self._xy
 
 
 class BrownianMotion(object):
     """Random walk of shapley.Points or Polygons"""
 
-    def __init__(self,
-                 point_or_polygon: shapely.Point | shapely.Polygon,
-                 walk_area: shapely.Polygon | None = None,
-                 delta: float = 2,
-                 bounce_boarder: bool = True):
+    def __init__(
+        self,
+        point_or_polygon: shapely.Point | shapely.Polygon,
+        walk_area: shapely.Polygon | None = None,
+        delta: float = 2,
+        bounce_boarder: bool = True,
+    ):
         """performs brownian motion (random walk) of an position of shapely.polygon
 
         walk area can be limited.
@@ -99,7 +99,7 @@ class BrownianMotion(object):
         self._geom = point_or_polygon
         self._start_geom = self._geom
 
-        self.scale = delta ** 2
+        self.scale = delta**2
         self.bounce = bounce_boarder
         self.counter: int = 0
         self._position = np.zeros(2)
@@ -131,8 +131,9 @@ class BrownianMotion(object):
         while True:
             step = generator.normal(loc=0, scale=self.scale * dt, size=2)
             new_geom = shapely.transform(self._geom, lambda x: x + step)
-            if not isinstance(self.area, shapely.Polygon) or \
-                    self.area.contains_properly(new_geom):
+            if not isinstance(
+                self.area, shapely.Polygon
+            ) or self.area.contains_properly(new_geom):
                 # unbounded area or inside area -> good step
                 self._geom = new_geom
                 self._position = self._position + step

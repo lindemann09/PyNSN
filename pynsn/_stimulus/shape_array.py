@@ -1,6 +1,5 @@
-"""
+""" """
 
-"""
 from __future__ import annotations
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
@@ -15,8 +14,7 @@ from numpy.typing import NDArray
 from .._misc import IntOVector, delete_elements
 from .._shapes import Dot, Ellipse, Point2D
 from .._shapes import ellipse_geometry as ellipse_geo
-from .._shapes.abc_shapes import (AbstractCircularShape, AbstractShape,
-                                  AttributeType)
+from .._shapes.abc_shapes import AbstractCircularShape, AbstractShape, AttributeType
 from .convex_hull import ConvexHull
 
 
@@ -40,8 +38,7 @@ class ShapeArray(object):
     @xy.setter
     def xy(self, val: NDArray[np.float64]):
         if val.shape != self._xy.shape:
-            raise ValueError(
-                f"xy has to be a numpy array with shape={self._xy.shape}")
+            raise ValueError(f"xy has to be a numpy array with shape={self._xy.shape}")
         if np.any(self._xy != val):  # any change
             self._shape_updated_required = True
             self._clear_cached()
@@ -56,7 +53,8 @@ class ShapeArray(object):
     def sizes(self, val: NDArray[np.float64]):
         if val.shape != self._sizes.shape:
             raise ValueError(
-                f"xy has to be a numpy array with shape={self._sizes.shape}")
+                f"xy has to be a numpy array with shape={self._sizes.shape}"
+            )
         if np.any(self._sizes != val):
             self._shape_updated_required = True
             self._clear_cached()
@@ -116,13 +114,10 @@ class ShapeArray(object):
         if isinstance(shape, AbstractShape):
             self._shapes.append(shape)
             self._xy = np.append(self._xy, np.atleast_2d(shape.xy), axis=0)
-            self._sizes = np.append(
-                self._sizes, np.atleast_2d(shape.size), axis=0)
+            self._sizes = np.append(self._sizes, np.atleast_2d(shape.size), axis=0)
             self._clear_cached()
         else:
-            raise TypeError(
-                f"Can't add '{type(shape)}'. That's not a ShapeType."
-            )
+            raise TypeError(f"Can't add '{type(shape)}'. That's not a ShapeType.")
 
     def shapes_join(self, other: ShapeArray) -> None:
         """join with shapes of other array"""
@@ -136,7 +131,6 @@ class ShapeArray(object):
         self._clear_cached()
 
     def shape_delete(self, index: IntOVector) -> None:
-
         self._shapes = delete_elements(self._shapes, index)
         self._xy = np.delete(self._xy, index, axis=0)
         self._sizes = np.delete(self._sizes, index, axis=0)
@@ -190,31 +184,35 @@ class ShapeArray(object):
             idx = self.ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
-                rtn[idx] = _distance_circ_dot_array(obj=shape,
-                                                    dots_xy=self._xy[idx, :],
-                                                    dots_diameter=self._sizes[idx, 0])
+                rtn[idx] = _distance_circ_dot_array(
+                    obj=shape,
+                    dots_xy=self._xy[idx, :],
+                    dots_diameter=self._sizes[idx, 0],
+                )
             idx = self.ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                rtn[idx] = _distance_circ_ellipse_array(obj=shape,
-                                                        ellipses_xy=self._xy[idx, :],
-                                                        ellipse_sizes=self._sizes[idx, :])
+                rtn[idx] = _distance_circ_ellipse_array(
+                    obj=shape,
+                    ellipses_xy=self._xy[idx, :],
+                    ellipse_sizes=self._sizes[idx, :],
+                )
             # check if non-circular shapes are in shape_array
             idx = np.flatnonzero(np.isnan(rtn))
             if len(idx) > 0:
                 if isinstance(shape, AbstractCircularShape):
-                    rtn[idx] = shapely.distance(
-                        shape.polygon, self.polygons[idx])
+                    rtn[idx] = shapely.distance(shape.polygon, self.polygons[idx])
                 else:
-                    rtn[idx] = shapely.distance(
-                        shape.xy_point, self.polygons[idx])
+                    rtn[idx] = shapely.distance(shape.xy_point, self.polygons[idx])
             return rtn
 
         else:
             # non-circular shape as target
             return shapely.distance(shape.polygon, self.polygons)
 
-    def dwithin(self, shape: Point2D | AbstractShape,  distance: float = 0) -> NDArray[np.bool_]:
+    def dwithin(
+        self, shape: Point2D | AbstractShape, distance: float = 0
+    ) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
         specified distance.
 
@@ -229,17 +227,21 @@ class ShapeArray(object):
             idx = self.ids(Dot.shape_type())
             if len(idx) > 0:
                 # circular -> dots in shape array
-                dists = _distance_circ_dot_array(obj=shape,
-                                                 dots_xy=self._xy[idx, :],
-                                                 dots_diameter=self._sizes[idx, 0])
+                dists = _distance_circ_dot_array(
+                    obj=shape,
+                    dots_xy=self._xy[idx, :],
+                    dots_diameter=self._sizes[idx, 0],
+                )
                 rtn[idx] = dists < distance
 
             idx = self.ids(Ellipse.shape_type())
             if len(idx) > 0:
                 # circular -> ellipses in shape array
-                dists = _distance_circ_ellipse_array(obj=shape,
-                                                     ellipses_xy=self._xy[idx, :],
-                                                     ellipse_sizes=self._sizes[idx, :])
+                dists = _distance_circ_ellipse_array(
+                    obj=shape,
+                    ellipses_xy=self._xy[idx, :],
+                    ellipse_sizes=self._sizes[idx, :],
+                )
                 rtn[idx] = dists < distance
 
             # check if non-circular shapes are in shape_array
@@ -247,15 +249,16 @@ class ShapeArray(object):
             if len(idx) > 0:
                 if isinstance(shape, AbstractCircularShape):
                     rtn[idx] = shapely.dwithin(
-                        shape.polygon, self.polygons[idx],  distance=distance)
+                        shape.polygon, self.polygons[idx], distance=distance
+                    )
                 else:
                     rtn[idx] = shapely.dwithin(
-                        shape.xy_point, self.polygons[idx],  distance=distance)
+                        shape.xy_point, self.polygons[idx], distance=distance
+                    )
 
         else:
             # non-circular shape
-            rtn = shapely.dwithin(
-                shape.polygon, self.polygons, distance=distance)
+            rtn = shapely.dwithin(shape.polygon, self.polygons, distance=distance)
 
         return rtn
 
@@ -275,11 +278,12 @@ class ShapeArray(object):
         return overlaps
 
 
-def _distance_circ_dot_array(obj: Point2D | AbstractCircularShape,
-                             dots_xy: NDArray[np.float64],
-                             dots_diameter: NDArray[np.float64]) -> NDArray[np.float64]:
-    """Distances circular shape or Point to multiple dots
-    """
+def _distance_circ_dot_array(
+    obj: Point2D | AbstractCircularShape,
+    dots_xy: NDArray[np.float64],
+    dots_diameter: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Distances circular shape or Point to multiple dots"""
     d_xy = dots_xy - obj.xy
     if isinstance(obj, Point2D):
         circ_dia = 0
@@ -287,8 +291,8 @@ def _distance_circ_dot_array(obj: Point2D | AbstractCircularShape,
         circ_dia = obj.diameter
     elif isinstance(obj, Ellipse):
         circ_dia = ellipse_geo.diameter(
-            size=np.atleast_2d(obj.size),
-            theta=np.arctan2(d_xy[:, 1], d_xy[:, 0]))  # ellipse radius to each dot in the array
+            size=np.atleast_2d(obj.size), theta=np.arctan2(d_xy[:, 1], d_xy[:, 0])
+        )  # ellipse radius to each dot in the array
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(obj)}")
 
@@ -296,11 +300,12 @@ def _distance_circ_dot_array(obj: Point2D | AbstractCircularShape,
     return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (dots_diameter + circ_dia) / 2
 
 
-def _distance_circ_ellipse_array(obj: Point2D | AbstractCircularShape,
-                                 ellipses_xy: NDArray[np.float64],
-                                 ellipse_sizes: NDArray[np.float64]) -> NDArray[np.float64]:
-    """Distance circular shape or Point2D to multiple ellipses
-    """
+def _distance_circ_ellipse_array(
+    obj: Point2D | AbstractCircularShape,
+    ellipses_xy: NDArray[np.float64],
+    ellipse_sizes: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Distance circular shape or Point2D to multiple ellipses"""
     d_xy = ellipses_xy - obj.xy
     theta = np.arctan2(d_xy[:, 1], d_xy[:, 0])
     # radii of ellipses in array to circ_shape
@@ -310,10 +315,11 @@ def _distance_circ_ellipse_array(obj: Point2D | AbstractCircularShape,
     elif isinstance(obj, Dot):
         shape_dia = obj.diameter
     elif isinstance(obj, Ellipse):
-        shape_dia = ellipse_geo.diameter(size=np.atleast_2d(obj.size),
-                                         theta=theta)  # ellipse radius to each ellipse in the array
+        shape_dia = ellipse_geo.diameter(
+            size=np.atleast_2d(obj.size), theta=theta
+        )  # ellipse radius to each ellipse in the array
     else:
         raise RuntimeError(f"Unknown circular shape type: {type(obj)}")
 
     # center dist - radius_a - radius_b
-    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (ellipse_dia + shape_dia)/2
+    return np.hypot(d_xy[:, 0], d_xy[:, 1]) - (ellipse_dia + shape_dia) / 2

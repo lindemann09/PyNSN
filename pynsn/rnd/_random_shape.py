@@ -1,6 +1,6 @@
-"""
-"""
-__author__ = 'Oliver Lindemann <lindemann@cognitive-psychology.eu>'
+""" """
+
+__author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
@@ -11,12 +11,14 @@ import numpy as np
 import shapely
 from numpy.typing import NDArray
 
-from .._shapes import (AbstractShape, Dot, Ellipse, Picture, PolygonShape,
-                       Rectangle)
-from ._distributions import (AbstractUnivarDistr, Categorical, CategoricalLike,
-                             Constant, ConstantLike)
-
-DistributionLike = AbstractUnivarDistr | ConstantLike | CategoricalLike
+from .._shapes import AbstractShape, Dot, Ellipse, Picture, PolygonShape, Rectangle
+from ._distributions import (
+    AbstractUnivarDistr,
+    Categorical,
+    Constant,
+    ConstantLike,
+    DistributionLike,
+)
 
 
 def _make_distr(value: DistributionLike) -> AbstractUnivarDistr:
@@ -31,7 +33,6 @@ def _make_distr(value: DistributionLike) -> AbstractUnivarDistr:
 
 
 class AbstractRndShape(metaclass=ABCMeta):
-
     def __init__(self, attributes: DistributionLike | None = None):
         """
 
@@ -45,19 +46,19 @@ class AbstractRndShape(metaclass=ABCMeta):
 
     @property
     def attributes(self) -> AbstractUnivarDistr | None:
-        """Distribution of attributes """
+        """Distribution of attributes"""
         return self._attributes
 
-    @ classmethod
+    @classmethod
     def shape_type(cls) -> str:
         return cls.__name__
 
     def __repr__(self) -> str:
         d = self.to_dict()
-        del d['type']
+        del d["type"]
         return f"{self.shape_type()}({d})"
 
-    @ abstractmethod
+    @abstractmethod
     def to_dict(self) -> dict:
         """dict representation of the object"""
         if isinstance(self.attributes, AbstractUnivarDistr):
@@ -68,7 +69,7 @@ class AbstractRndShape(metaclass=ABCMeta):
             attr = str(self.attributes)
         return {"type": self.shape_type(), "attr": attr}
 
-    @ abstractmethod
+    @abstractmethod
     def sample(self, n: int = 1) -> List[AbstractShape]:
         """get n random variants of shapes
 
@@ -80,16 +81,14 @@ class AbstractRndShape(metaclass=ABCMeta):
 
 
 class RndDot(AbstractRndShape):
-
-    def __init__(self,
-                 diameter: DistributionLike,
-                 attributes: DistributionLike | None = None):
-        """Define distributions parameter
-        """
+    def __init__(
+        self, diameter: DistributionLike, attributes: DistributionLike | None = None
+    ):
+        """Define distributions parameter"""
         super().__init__(attributes=attributes)
         self._diameter = _make_distr(diameter)
 
-    @ property
+    @property
     def diameter(self) -> AbstractUnivarDistr | None:
         return self._diameter
 
@@ -103,22 +102,23 @@ class RndDot(AbstractRndShape):
         return rtn
 
     def sample(self, n: int = 1) -> List[Dot]:
-
         if self._attributes is None:
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Dot(diameter=d, attribute=a)
-                for d, a in zip(self._diameter.sample(n), attr)]
+        return [
+            Dot(diameter=d, attribute=a) for d, a in zip(self._diameter.sample(n), attr)
+        ]
 
 
 class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
-
-    def __init__(self,
-                 width: DistributionLike | None = None,
-                 height: DistributionLike | None = None,
-                 size_proportion: DistributionLike | None = None,
-                 attributes: DistributionLike | None = None):
+    def __init__(
+        self,
+        width: DistributionLike | None = None,
+        height: DistributionLike | None = None,
+        size_proportion: DistributionLike | None = None,
+        attributes: DistributionLike | None = None,
+    ):
         """Define distributions parameter
 
         Parameters
@@ -149,10 +149,12 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
         if size_proportion is not None:
             if n_parameter != 1:
                 raise TypeError(
-                    "Define size proportion together with either width or height, not both.")
+                    "Define size proportion together with either width or height, not both."
+                )
         elif n_parameter < 2:
             raise TypeError(
-                "Define width and height or, alternatively, size proportion together with width or height.")
+                "Define width and height or, alternatively, size proportion together with width or height."
+            )
 
         if width is None:
             self._width = None
@@ -200,7 +202,6 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
         return rtn
 
     def _sample_sizes(self, n: int) -> NDArray:
-
         size = np.empty((n, 2), dtype=float)
         if self._width is not None and self._height is not None:
             size[:, 0] = self._width.sample(n)
@@ -212,24 +213,24 @@ class _RandShapeWidthHeight(AbstractRndShape, metaclass=ABCMeta):
             size[:, 1] = self._height.sample(n)
             size[:, 0] = size[:, 1] * self._size_proportion.sample(n)
         else:
-            raise RuntimeError("Something went wrong with the definition of the"
-                               " RndRectangle")
+            raise RuntimeError(
+                "Something went wrong with the definition of the" " RndRectangle"
+            )
         return size
 
 
 class RndRectangle(_RandShapeWidthHeight):
-
     def sample(self, n: int = 1) -> List[Rectangle]:
         if self._attributes is None:
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Rectangle(size=s, attribute=a)
-                for s, a in zip(self._sample_sizes(n), attr)]
+        return [
+            Rectangle(size=s, attribute=a) for s, a in zip(self._sample_sizes(n), attr)
+        ]
 
 
 class RndEllipse(_RandShapeWidthHeight):
-
     def sample(self, n: int = 1) -> List[Ellipse]:
         if self._attributes is None:
             attr = [None] * n
@@ -240,14 +241,14 @@ class RndEllipse(_RandShapeWidthHeight):
 
 
 class RndPolygonShape(_RandShapeWidthHeight):
-
-    def __init__(self,
-                 polygons: (shapely.Polygon | Sequence[shapely.Polygon] |
-                            NDArray[shapely.Polygon]),  # type: ignore
-                 width: DistributionLike | None = None,
-                 height: DistributionLike | None = None,
-                 size_proportion: DistributionLike | None = None,
-                 attributes: DistributionLike | None = None):
+    def __init__(
+        self,
+        polygons: (shapely.Polygon | Sequence[shapely.Polygon] | NDArray),  # type: ignore
+        width: DistributionLike | None = None,
+        height: DistributionLike | None = None,
+        size_proportion: DistributionLike | None = None,
+        attributes: DistributionLike | None = None,
+    ):
         """Define distributions parameter
 
 
@@ -279,8 +280,12 @@ class RndPolygonShape(_RandShapeWidthHeight):
             width = -1
             height = -1
             size_proportion = None
-        super().__init__(width=width, height=height,
-                         size_proportion=size_proportion, attributes=attributes)
+        super().__init__(
+            width=width,
+            height=height,
+            size_proportion=size_proportion,
+            attributes=attributes,
+        )
 
         if isinstance(polygons, shapely.Polygon):
             self._polygons = Constant(PolygonShape(polygons))
@@ -309,28 +314,34 @@ class RndPolygonShape(_RandShapeWidthHeight):
 
 
 class RndPicture(_RandShapeWidthHeight):
-
-    def __init__(self,
-                 width: DistributionLike | None = None,
-                 height: DistributionLike | None = None,
-                 size_proportion: DistributionLike | None = None,
-                 path: Categorical | Constant | str | Path | Sequence[Path] | Sequence[str] | None = None):
-        """Define distributions parameter
-        """
+    def __init__(
+        self,
+        width: DistributionLike | None = None,
+        height: DistributionLike | None = None,
+        size_proportion: DistributionLike | None = None,
+        path: Categorical
+        | Constant
+        | str
+        | Path
+        | Sequence[Path]
+        | Sequence[str]
+        | None = None,
+    ):
+        """Define distributions parameter"""
         if isinstance(path, (str, Path)):
             attr = Constant(str(Path(path)))
         elif isinstance(path, Sequence):
-            pathes = [Path(x)for x in path]
+            pathes = [Path(x) for x in path]
             attr = Categorical(pathes)
         else:
             attr = path
-        super().__init__(width=width, height=height, size_proportion=size_proportion,
-                         attributes=attr)
+        super().__init__(
+            width=width, height=height, size_proportion=size_proportion, attributes=attr
+        )
 
     def sample(self, n: int = 1) -> List[Picture]:
         if self._attributes is None:
             attr = [None] * n
         else:
             attr = self._attributes.sample(n)
-        return [Picture(size=s,
-                        path=a) for s, a in zip(self._sample_sizes(n), attr)]  # type: ignore
+        return [Picture(size=s, path=a) for s, a in zip(self._sample_sizes(n), attr)]  # type: ignore

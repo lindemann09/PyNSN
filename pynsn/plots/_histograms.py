@@ -1,14 +1,15 @@
 from typing import Tuple
+
+import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 
 from ..rnd._distributions import AbstractDistribution
 
 
-def distribution_samples(distr: AbstractDistribution,
-                         n: int = 100000,
-                         ax: Axes | None = None) -> Tuple[Figure | None, Axes]:
+def distribution_samples(
+    distr: AbstractDistribution, n: int = 100000, ax: Axes | None = None
+) -> Tuple[Figure | None, Axes]:
     """Creating a visualization of the distribution with ``matplotlib.pyplot``
 
     Parameters

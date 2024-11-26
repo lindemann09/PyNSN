@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Any, Dict
 
 from .. import _misc, defaults
@@ -15,7 +16,7 @@ class StimulusColours(object):
         center_of_field_area: ColourLike = None,
         center_of_mass: ColourLike = None,
         opacity_object: float = defaults.OPACITY_OBJECT,
-        opacity_guides: float = defaults.OPACITY_GUIDES
+        opacity_guides: float = defaults.OPACITY_GUIDES,
     ):
         self._target_area = Colour(target_area)
         self._convex_hull = Colour(convex_hull)
@@ -51,7 +52,8 @@ class StimulusColours(object):
             center_of_field_area=d["center_of_field_area"],
             center_of_mass=d["center_of_mass"],
             opacity_object=d["object_opacity"],
-            opacity_guides=d["info_opacity"])
+            opacity_guides=d["info_opacity"],
+        )
 
     def __str__(self) -> str:
         return _misc.dict_to_text(self.to_dict())

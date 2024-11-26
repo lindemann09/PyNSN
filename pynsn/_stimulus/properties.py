@@ -1,6 +1,4 @@
-"""
-
-"""
+""" """
 
 from __future__ import annotations
 
@@ -23,25 +21,25 @@ from .shape_array import ShapeArray
 class VP(enum.Enum):  # visual properties
     """Visual Properties
 
-        `N` = Numerosity
+    `N` = Numerosity
 
-        `TSA` = Total surface area
+    `TSA` = Total surface area
 
-        `ASA` = Av. surface area or item surface area
+    `ASA` = Av. surface area or item surface area
 
-        `AP` = Av. perimeter
+    `AP` = Av. perimeter
 
-        `TP` = Total perimeter
+    `TP` = Total perimeter
 
-        `SP` = Sparsity  (=1/density)
+    `SP` = Sparsity  (=1/density)
 
-        `FA` = Field area
+    `FA` = Field area
 
-        `CO` = Coverage
+    `CO` = Coverage
 
-        `LOG_SIZE`
+    `LOG_SIZE`
 
-        `LOG_SPACING`
+    `LOG_SPACING`
     """
 
     N = enum.auto()
@@ -102,7 +100,8 @@ class VP(enum.Enum):  # visual properties
         other_size_prop = other in VP.size_properties()
         other_space_prop = other in VP.space_properties()
         return (is_size_prop and other_size_prop) or (
-            is_space_prop and other_space_prop)
+            is_space_prop and other_space_prop
+        )
 
 
 class ArrayProperties(object):
@@ -143,16 +142,16 @@ class ArrayProperties(object):
         # rects and polygons
         idx = np.append(
             self._shape_arr.ids(Rectangle.shape_type()),
-            self._shape_arr.ids(Picture.shape_type())
+            self._shape_arr.ids(Picture.shape_type()),
         )
         if len(idx) > 0:
-            rtn[idx] = self._shape_arr.sizes[idx, 0] * \
-                self._shape_arr.sizes[idx, 1]
+            rtn[idx] = self._shape_arr.sizes[idx, 0] * self._shape_arr.sizes[idx, 1]
 
         # circular shapes area, Area = pi * r_x * r_y
         idx = np.append(
             self._shape_arr.ids(Dot.shape_type()),
-            self._shape_arr.ids(Ellipse.shape_type()))
+            self._shape_arr.ids(Ellipse.shape_type()),
+        )
         if len(idx) > 0:
             r = self._shape_arr.sizes[idx, :] / 2
             rtn[idx] = np.pi * r[:, 0] * r[:, 1]
@@ -169,11 +168,13 @@ class ArrayProperties(object):
 
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
 
-        idx = np.concatenate((
-            self._shape_arr.ids(Rectangle.shape_type()),
-            self._shape_arr.ids(Picture.shape_type()),
-            self._shape_arr.ids(PolygonShape.shape_type())
-        ))
+        idx = np.concatenate(
+            (
+                self._shape_arr.ids(Rectangle.shape_type()),
+                self._shape_arr.ids(Picture.shape_type()),
+                self._shape_arr.ids(PolygonShape.shape_type()),
+            )
+        )
         if len(idx) > 0:
             rtn[idx] = shapely.length(self._shape_arr.polygons[idx])
         # dots perimeter
@@ -191,8 +192,7 @@ class ArrayProperties(object):
     def center_of_mass(self) -> NDArray:
         """center of mass of all shapes"""
         areas = self.areas
-        weighted_sum = np.sum(self._shape_arr.xy *
-                              np.atleast_2d(areas).T, axis=0)
+        weighted_sum = np.sum(self._shape_arr.xy * np.atleast_2d(areas).T, axis=0)
         return weighted_sum / np.sum(areas)
 
     @property
@@ -297,12 +297,11 @@ class ArrayProperties(object):
         """Dictionary with the visual properties"""
         rtn = []
         if short_format:
-            rtn.extend([(x.name, self.get(x))
-                        for x in list(VP)])  # type: ignore
+            rtn.extend([(x.name, self.get(x)) for x in list(VP)])  # type: ignore
         else:
-            rtn.extend([(x.long_label, self.get(x))
-                        for x in list(VP)])  # type: ignore
+            rtn.extend([(x.long_label, self.get(x)) for x in list(VP)])  # type: ignore
         return OrderedDict(rtn)
+
 
 # helper
 
