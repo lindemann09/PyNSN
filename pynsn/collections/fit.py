@@ -15,7 +15,7 @@ from ._coll_stim_pairs import CollectionStimuli as _CollectionStimuli
 from ._coll_stim_pairs import CollectionStimulusPairs as _CollectionStimulusPairs
 
 
-def property_correlation(
+def property_distribution(
     stimuli: _CollectionStimuli,
     distr: _AbstractUnivarDistr,
     prop_a: str | _VP,
