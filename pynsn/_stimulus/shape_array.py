@@ -210,9 +210,7 @@ class ShapeArray(object):
             # non-circular shape as target
             return shapely.distance(shape.polygon, self.polygons)
 
-    def dwithin(
-        self, shape: Point2D | AbstractShape, distance: float = 0
-    ) -> NDArray[np.bool_]:
+    def dwithin(self, shape: Point2D | AbstractShape, distance: float ) -> NDArray[np.bool_]:
         """Returns True for all elements of the array that are within the
         specified distance.
 

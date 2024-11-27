@@ -286,9 +286,8 @@ class NSNStimulus(shape_array.ShapeArray):
         else:
             # random position anywhere
             try:
-                target = rnd_free_pos(
+                target = self.rnd_free_pos(
                     target,
-                    nsn_stim=self,
                     inside_convex_hull=False,
                     ignore_overlaps=False,
                     max_iterations=max_iterations,
@@ -410,9 +409,8 @@ class NSNStimulus(shape_array.ShapeArray):
         """ "adds shape to random positions in the array"""
 
         try:
-            shape = rnd_free_pos(
+            shape = self.rnd_free_pos(
                 shape=shape,
-                nsn_stim=self,
                 ignore_overlaps=ignore_overlaps,
                 inside_convex_hull=inside_convex_hull,
                 max_iterations=max_iterations,
@@ -481,47 +479,46 @@ class NSNStimulus(shape_array.ShapeArray):
         }
         return d
 
+    def rnd_free_pos(
+        self,
+        shape: AbstractShape,
+        ignore_overlaps: bool = False,
+        inside_convex_hull: bool = False,
+        max_iterations: int | None = None,
+    ) -> AbstractShape:
+        """moves the object to a random free position
 
-def rnd_free_pos(
-    shape: AbstractShape,
-    nsn_stim: NSNStimulus,
-    ignore_overlaps: bool = False,
-    inside_convex_hull: bool = False,
-    max_iterations: int | None = None,
-) -> AbstractShape:
-    """moves the object to a random free position
+        raise exception if not found
+        """
 
-    raise exception if not found
-    """
+        if not isinstance(shape, AbstractShape):
+            raise NotImplementedError("Not implemented for " f"{type(shape).__name__}")
+        if max_iterations is None:
+            max_iterations = defaults.MAX_ITERATIONS
 
-    if not isinstance(shape, AbstractShape):
-        raise NotImplementedError("Not implemented for " f"{type(shape).__name__}")
-    if max_iterations is None:
-        max_iterations = defaults.MAX_ITERATIONS
-
-    if inside_convex_hull:
-        area = TargetArea(
-            shape=PolygonShape(nsn_stim.convex_hull.polygon),
-            min_dist_boarder=nsn_stim.target_area.min_dist_boarder,
-        )
-    else:
-        area = nsn_stim.target_area
-
-    cnt = 0
-    while True:
-        if cnt > max_iterations:
-            raise NoSolutionError("Can't find a free position for this object")
-        cnt += 1
-        # propose a random position
-        shape.xy = area.random_xy_inside_bounds()
-
-        if not area.is_object_inside(shape):
-            continue
-
-        if ignore_overlaps:
-            return shape
+        if inside_convex_hull:
+            area = TargetArea(
+                shape=PolygonShape(self.convex_hull.polygon),
+                min_dist_boarder=self.target_area.min_dist_boarder,
+            )
         else:
-            # find overlaps
-            overlaps = nsn_stim.dwithin(shape, distance=nsn_stim.min_distance)
-            if not np.any(overlaps):
+            area = self.target_area
+
+        cnt = 0
+        while True:
+            if cnt > max_iterations:
+                raise NoSolutionError("Can't find a free position for this object")
+            cnt += 1
+            # propose a random position
+            shape.xy = area.random_xy_inside_bounds()
+
+            if not area.is_object_inside(shape):
+                continue
+
+            if ignore_overlaps:
                 return shape
+            else:
+                # find overlaps
+                overlaps = self.dwithin(shape, distance=self.min_distance)
+                if not np.any(overlaps):
+                    return shape

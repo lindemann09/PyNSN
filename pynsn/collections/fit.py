@@ -6,13 +6,82 @@ import numpy.typing as _ntp
 import pandas as _pd
 from scipy.stats import linregress as _linregress
 
-from .. import fit as _stim_fit
+from .. import fit as _sfit
 from .._stimulus.properties import VP as _VP
 from .._stimulus.properties import ensure_vp as _ensure_vp
+from .._stimulus.stimulus_pair import NSNStimulusPair as _NSNStimulusPair
 from ..rnd._distributions import AbstractUnivarDistr as _AbstractUnivarDistr
 from ..rnd._distributions_2d import Abstract2dDistr as _Abstract2dDistr
 from ._coll_stim_pairs import CollectionStimuli as _CollectionStimuli
 from ._coll_stim_pairs import CollectionStimulusPairs as _CollectionStimulusPairs
+
+
+def property_difference(
+    stim_pair: _NSNStimulusPair,
+    prop: str | _VP,
+    delta: float | _np.floating,
+    adapt_stim: str = "both",
+):
+    """Adapt visual property difference of NSNStimulusPair. Changes the property
+    `prop` of the stimuli so that difference is equal to `delta`.
+
+    There are three different adapt methods:
+        `"a"`: change the properties of stimulus A only
+        `"b"`: change the properties of stimulus B only
+        `"both"`: change the stimulus A and B, each by 50% for the required change
+    """
+    prop = _ensure_vp(prop)
+
+    p_a = stim_pair.stim_a.properties.get(prop)
+    p_b = stim_pair.stim_b.properties.get(prop)
+    rc = delta - (p_a - p_b)  # required change
+
+    if adapt_stim == "both":
+        rc = rc / 2
+        _sfit.property_adapt(stim_pair.stim_a, prop, p_a + rc)
+        _sfit.property_adapt(stim_pair.stim_b, prop, p_b - rc)
+    elif adapt_stim == "a":
+        _sfit.property_adapt(stim_pair.stim_a, prop, p_a + rc)
+    elif adapt_stim == "b":
+        _sfit.property_adapt(stim_pair.stim_b, prop, p_b - rc)
+    else:
+        raise ValueError(
+            f"Unknown adapt method {adapt_stim}. " + "Must be either 'both', 'a' or 'b'"
+        )
+def property_ratio(
+    stim_pair: _NSNStimulusPair,
+    prop: str | _VP,
+    ratio: float | _np.floating,
+    adapt_stim: str = "both",
+):
+    """Adapt visual property ratio of NSNStimulusPair. Changes the property
+    `prop` of the two stimuli so that ratio is equal to `delta`.
+
+    There are three different adapt methods:
+        `"a"`: change the properties of stimulus A only
+        `"b"`: change the properties of stimulus B only
+        `"both"`: change the stimulus A and B, each by 50% for the required change
+    """
+    prop = _ensure_vp(prop)
+
+    pa = stim_pair.stim_a.properties.get(prop)
+    pb = stim_pair.stim_b.properties.get(prop)
+
+    rc = ratio / (pa / pb)  # required change
+
+    if adapt_stim == "both":
+        rc = _np.sqrt(rc)
+        _sfit.property_adapt(stim_pair.stim_a, prop, pa * rc)
+        _sfit.property_adapt(stim_pair.stim_b, prop, pb / rc)
+    elif adapt_stim == "a":
+        _sfit.property_adapt(stim_pair.stim_a, prop, pa * rc)
+    elif adapt_stim == "b":
+        _sfit.property_adapt(stim_pair.stim_b, prop, pb / rc)
+    else:
+        raise ValueError(
+            f"Unknown adapt method {_sfit.property_adapt}. "
+            + "Must be either 'both', 'a' or 'b'"
+        )
 
 
 def property_distribution(
@@ -36,10 +105,10 @@ def property_distribution(
     for i, sp in enumerate(stimuli.stimuli):
         if feedback:
             _sys.stdout.write(f"fitting {i+1}/{n} {sp.name}                 \r")
-        _stim_fit.property_adapt(sp, prop_a, rnd_values[i, 0])
+        _sfit.property_adapt(sp, prop_a, rnd_values[i, 0])
 
         if isinstance(prop_b, _VP):
-            _stim_fit.property_adapt(sp, prop_b, rnd_values[i, 1])
+            _sfit.property_adapt(sp, prop_b, rnd_values[i, 1])
 
     if feedback:
         print(" " * 70)
@@ -64,7 +133,7 @@ def minimize_correlation_property_ratio(
     for i, sp in enumerate(pairs.pairs):
         if feedback:
             _sys.stdout.write(f"fitting {i+1}/{n} {sp.name}                 \r")
-        _stim_fit.property_ratio(sp, prop, pa[i], adapt_stim=adapt_stim)
+        property_ratio(sp, prop, pa[i], adapt_stim=adapt_stim)
 
     if feedback:
         _sys.stdout.write(" " * 70)
@@ -96,10 +165,10 @@ def property_ratio_distribution(
     for i, sp in enumerate(pairs.pairs):
         if feedback:
             _sys.stdout.write(f"fitting {i+1}/{n} {sp.name}                 \r")
-        _stim_fit.property_ratio(sp, prop_a, rnd_values[i, 0], adapt_stim=adapt_stim)
+        property_ratio(sp, prop_a, rnd_values[i, 0], adapt_stim=adapt_stim)
 
         if isinstance(prop_b, _VP):
-            _stim_fit.property_ratio(
+            property_ratio(
                 sp, prop_b, rnd_values[i, 1], adapt_stim=adapt_stim
             )
 
@@ -132,9 +201,9 @@ def property_difference_distribution(
     for i, sp in enumerate(pairs.pairs):
         if feedback:
             _sys.stdout.write(f"fitting {i+1}/{n} {sp.name}                 \r")
-        _stim_fit.property_difference(sp, prop_a, rnd_values[i, 0])
+        property_difference(sp, prop_a, rnd_values[i, 0])
         if isinstance(prop_b, _VP):
-            _stim_fit.property_difference(sp, prop_b, rnd_values[i, 1])
+            property_difference(sp, prop_b, rnd_values[i, 1])
     if feedback:
         _sys.stdout.write(" " * 70)
         _sys.stdout.write("\r")
