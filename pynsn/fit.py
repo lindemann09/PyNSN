@@ -5,9 +5,9 @@ import typing as _tp
 import numpy as _np
 import shapely as _shp
 
-from ._stimulus.nsn_stimulus import NSNStimulus as _NSNStimulus
 from . import _misc
 from . import defaults as _defaults
+from ._stimulus.nsn_stimulus import NSNStimulus as _NSNStimulus
 from ._stimulus.properties import VP as _VP
 from ._stimulus.properties import ensure_vp as _ensure_vp
 from .exceptions import NoSolutionError as _NoSolutionError

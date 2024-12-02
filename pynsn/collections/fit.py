@@ -48,6 +48,8 @@ def property_difference(
         raise ValueError(
             f"Unknown adapt method {adapt_stim}. " + "Must be either 'both', 'a' or 'b'"
         )
+
+
 def property_ratio(
     stim_pair: _NSNStimulusPair,
     prop: str | _VP,
@@ -168,9 +170,7 @@ def property_ratio_distribution(
         property_ratio(sp, prop_a, rnd_values[i, 0], adapt_stim=adapt_stim)
 
         if isinstance(prop_b, _VP):
-            property_ratio(
-                sp, prop_b, rnd_values[i, 1], adapt_stim=adapt_stim
-            )
+            property_ratio(sp, prop_b, rnd_values[i, 1], adapt_stim=adapt_stim)
 
     if feedback:
         _sys.stdout.write(" " * 70)
