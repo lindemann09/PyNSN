@@ -255,6 +255,10 @@ class ArrayProperties(object):
             return self.field_area / self.numerosity
 
     @property
+    def density(self) -> np.float64:
+        return 1 / self.sparsity
+
+    @property
     def field_area(self) -> np.float64:
         return np.float64(self._shape_arr.convex_hull.area)
 
