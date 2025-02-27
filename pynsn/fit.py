@@ -242,6 +242,21 @@ def sparsity(stim: _NSNStimulus, value: float | _np.floating, precision=None) ->
     field_area(stim, value=value * stim.n_shapes, precision=precision)
 
 
+def density(stim: _NSNStimulus, value: float | _np.floating, precision=None) -> None:
+    """_summary_
+
+    Parameters
+    ----------
+    stim : _NSNStimulus
+        _description_
+    value : float | _np.floating
+        _description_
+    precision : _type_, optional
+        _description_, by default None
+    """
+    sparsity(stim, value=1 / value, precision=precision)
+
+
 def property_adapt(
     stim: _NSNStimulus, prop: str | _VP, value: float | _np.floating
 ) -> _tp.Any:
@@ -278,6 +293,9 @@ def property_adapt(
 
     elif prop == _VP.SP:
         return sparsity(stim, value=value)
+
+    elif prop == _VP.DE:
+        return density(stim, value=value)
 
     elif prop == _VP.FA:
         return field_area(stim, value=value)
@@ -319,6 +337,9 @@ def property_match(stim: _NSNStimulus, ref: _NSNStimulus, prop: str | _VP) -> _t
 
     elif prop == _VP.SP:
         return sparsity(stim, value=rp.sparsity)
+
+    elif prop == _VP.DE:
+        return density(stim, value=rp.density)
 
     elif prop == _VP.FA:
         return field_area(stim, value=rp.field_area)

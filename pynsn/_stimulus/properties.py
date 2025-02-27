@@ -23,23 +23,22 @@ class VP(enum.Enum):  # visual properties
 
     `N` = Numerosity
 
-    `TSA` = Total surface area
+    ## Size Parameter
+    * `TSA` = Total surface area
+    * `ASA` = Av. surface area/item surface area
+    * `TP` = Total perimeter
+    * `AP` = Av. perimeter
 
-    `ASA` = Av. surface area or item surface area
+    ## Space Parameter
+    * `FA` = Field area
+    * `SP` = Sparsity  (=1/density)
+    * `DE` = Density  (=1/sparsity)
+    * `CO` = Coverage
 
-    `AP` = Av. perimeter
+    ## Log Parameter
+    * `LOG_SIZE`
+    * `LOG_SPACING`
 
-    `TP` = Total perimeter
-
-    `SP` = Sparsity  (=1/density)
-
-    `FA` = Field area
-
-    `CO` = Coverage
-
-    `LOG_SIZE`
-
-    `LOG_SPACING`
     """
 
     N = enum.auto()
@@ -50,6 +49,7 @@ class VP(enum.Enum):  # visual properties
     TSA = enum.auto()
     TP = enum.auto()
     SP = enum.auto()
+    DE = enum.auto()
     FA = enum.auto()
     CO = enum.auto()
 
@@ -57,9 +57,9 @@ class VP(enum.Enum):  # visual properties
     LOG_SIZE = enum.auto()
 
     @classmethod
-    def space_properties(cls) -> Tuple[VP, VP, VP]:
+    def space_properties(cls) -> Tuple[VP, VP, VP, VP]:
         """tuple of all space properties"""
-        return (cls.SP, cls.FA, cls.LOG_SPACING)
+        return (cls.SP, cls.FA, cls.DE, cls.LOG_SPACING)
 
     @classmethod
     def size_properties(cls) -> Tuple[VP, VP, VP, VP, VP]:
@@ -86,6 +86,8 @@ class VP(enum.Enum):  # visual properties
             return "Log spacing"
         elif self == VP.SP:
             return "Sparsity"
+        elif self == VP.DE:
+            return "Density"
         elif self == VP.FA:
             return "Field area"
         elif self == VP.CO:
@@ -284,6 +286,9 @@ class ArrayProperties(object):
 
         elif prop == VP.SP:
             return self.sparsity
+
+        elif prop == VP.DE:
+            return self.density
 
         elif prop == VP.FA:
             return self.field_area
