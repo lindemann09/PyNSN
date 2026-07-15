@@ -1,7 +1,7 @@
 """Creating Non-Symbolic Number Displays"""
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = "1.1.1-dev2"
+__version__ = "1.1.1-dev3"
 
 __all__ = (
     "defaults",
@@ -28,7 +28,6 @@ from ._misc import is_interactive_mode as _is_interactive_mode
 from ._shapes import Colour, Dot, Ellipse, Picture, Point2D, PolygonShape, Rectangle
 from ._stimulus import VP, NSNStimulus, NSNStimulusPair
 from .rnd._factory import StimulusFactory
-
 
 if not (_python_version_info[0] >= 3 and _python_version_info[1] >= 10):
     raise RuntimeError(

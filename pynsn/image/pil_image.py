@@ -134,7 +134,6 @@ class _PILDraw(_base.AbstractArrayDraw):
             )
 
         elif isinstance(shape, _shapes.Picture):
-            upper_left = _np.flip(shape.left_top).tolist()
             pict = _Image.open(shape.path, "r")
             if pict.size[0] != shape.size[0] or pict.size[1] != shape.size[1]:
                 pict = pict.resize(
@@ -142,6 +141,8 @@ class _PILDraw(_base.AbstractArrayDraw):
                 )
 
             tr_layer = _Image.new("RGBA", image.size, (0, 0, 0, 0))
+            upper_left = _np.ceil(shape.left_top).astype(int).tolist()
+            upper_left[1] = upper_left[1] - pict.size[1]
             tr_layer.paste(pict, upper_left)
             res = _Image.alpha_composite(image, tr_layer)
             image.paste(res)
