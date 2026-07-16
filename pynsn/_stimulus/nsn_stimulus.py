@@ -390,7 +390,7 @@ class NSNStimulus(shape_array.ShapeArray):
                 warnings.warn(txt, ShapeOutsideWarning)
             else:
                 raise ShapeOverlapsError(txt)
-        if not self.target_area.is_object_inside(shape):
+        if not self.target_area.is_object_inside(shape) and not ignore_overlaps:
             txt = f"Shape outside target array. {shape}"
             if defaults.WARNINGS:
                 warnings.warn(txt, ShapeOutsideWarning)
