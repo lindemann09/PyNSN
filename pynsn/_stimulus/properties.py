@@ -114,19 +114,19 @@ class ArrayProperties(object):
         self._ch = None
         self._defined_areas_perimeter = None # per default, calculate areas and perimeter from shapes
 
-    def set_areas_perimeter(self, areas: NDArray[np.float64], perimeter: NDArray[np.float64]) -> None:
+    def set_areas_perimeters(self, areas: NDArray[np.float64], perimeters: NDArray[np.float64]) -> None:
         """set areas of the shapes, if they deviate from the calculated areas. This might useful for
         pictures with known areas and perimeter parameters"""
 
         a = np.asarray(areas)
-        p = np.asarray(perimeter)
+        p = np.asarray(perimeters)
         if a.ndim != 1 or p.ndim != 1:
             raise ValueError(
                 f"Areas and perimeter must be 1D arrays, but got {a.ndim}D and {p.ndim}D."
             )
-        if len(areas) != self._shape_arr.n_shapes or len(perimeter) != self._shape_arr.n_shapes:
+        if len(areas) != self._shape_arr.n_shapes or len(perimeters) != self._shape_arr.n_shapes:
             raise ValueError(
-                f"Length of areas ({len(areas)}) or perimeter ({len(perimeter)}) does not match number of shapes ({self._shape_arr.n_shapes})."
+                f"Length of areas ({len(areas)}) or perimeter ({len(perimeters)}) does not match number of shapes ({self._shape_arr.n_shapes})."
             )
 
         self._defined_areas_perimeter = np.vstack((a, p)).T
