@@ -54,3 +54,4 @@ test*
 *.svg
 *.png
 *.tmp
+uv.lock

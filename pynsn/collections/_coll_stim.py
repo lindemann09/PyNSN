@@ -7,7 +7,7 @@ from typing import List
 
 import pandas as pd
 
-from .. import _misc, defaults
+from .. import __version__, _misc, defaults
 from .._stimulus import NSNStimulus
 from .._stimulus.properties import VPList, ensure_vp
 from ._abc_coll import AbstractCollection, ListNSNStimuli
@@ -43,7 +43,8 @@ class CollectionStimuli(AbstractCollection):
     def save(self, path: str | Path, zipped: bool = False, decimals: int | None = None):
         """Save the collection as json files organized in subfolder"""
 
-        json_str = "["
+        json_str = f"//created by PyNSN {__version__}\n"
+        json_str += "["
         for x in self.stimuli:
             s = x.to_json(path=None, indent=2, tabular=True, decimals=decimals)
             json_str += f"\n{s},"

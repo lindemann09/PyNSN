@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import gzip
 import json
+import warnings
 from pathlib import Path
 from typing import List
-import warnings
 
 import pandas as pd
 
-from .. import _misc, defaults
+from .. import __version__, _misc, defaults
 from .._stimulus import NSNStimulus, NSNStimulusPair
-from .._stimulus.properties import ensure_vp, VPOrList
+from .._stimulus.properties import VPOrList, ensure_vp
 from ._abc_coll import AbstractCollection, ListNSNStimPairs
 from ._coll_stim import CollectionStimuli
 
@@ -58,7 +58,8 @@ class CollectionStimulusPairs(AbstractCollection):
             _description_, by default None
         """
 
-        json_str = "["
+        json_str = f"//created by PyNSN {__version__}\n"
+        json_str += "["
         for x in self.pairs:
             s = x.to_json(path=None, indent=2, tabular=True, decimals=decimals)
             json_str += "\n" + s[1:-1] + ","

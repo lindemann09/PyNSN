@@ -1,7 +1,7 @@
 """Creating Non-Symbolic Number Displays"""
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = "1.1.3"
+__version__ = "1.1.4-dev0"
 
 __all__ = (
     "defaults",
@@ -25,7 +25,8 @@ from sys import version_info as _python_version_info
 
 from . import defaults, exceptions, fit, rnd
 from ._misc import is_interactive_mode as _is_interactive_mode
-from ._shapes import Colour, Dot, Ellipse, Picture, Point2D, PolygonShape, Rectangle
+from ._shapes import (Colour, Dot, Ellipse, Picture, Point2D, PolygonShape,
+                      Rectangle)
 from ._stimulus import VP, NSNStimulus, NSNStimulusPair
 from .rnd._factory import StimulusFactory
 
