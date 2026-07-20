@@ -118,18 +118,16 @@ class ArrayProperties(object):
         """set areas of the shapes, if they deviate from the calculated areas. This might useful for
         pictures with known areas and perimeter parameters"""
 
-        a = np.asarray(areas)
-        p = np.asarray(perimeters)
-        if a.ndim != 1 or p.ndim != 1:
+        if areas.ndim != 1 or perimeters.ndim != 1:
             raise ValueError(
-                f"Areas and perimeter must be 1D arrays, but got {a.ndim}D and {p.ndim}D."
+                f"Areas and perimeter must be 1D arrays, but got {areas.ndim}D and {perimeters.ndim}D."
             )
         if len(areas) != self._shape_arr.n_shapes or len(perimeters) != self._shape_arr.n_shapes:
             raise ValueError(
                 f"Length of areas ({len(areas)}) or perimeter ({len(perimeters)}) does not match number of shapes ({self._shape_arr.n_shapes})."
             )
 
-        self._defined_areas_perimeter = np.vstack((a, p)).T
+        self._defined_areas_perimeter = np.vstack((areas, perimeters)).T
 
     def to_text(self, short_format: bool = False) -> str:
         rtn = ""
