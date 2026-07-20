@@ -1,7 +1,7 @@
 """Creating Non-Symbolic Number Displays"""
 
 __author__ = "Oliver Lindemann <lindemann@cognitive-psychology.eu>"
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 
 __all__ = (
     "defaults",

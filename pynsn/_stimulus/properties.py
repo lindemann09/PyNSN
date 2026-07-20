@@ -112,6 +112,24 @@ class ArrayProperties(object):
     def __init__(self, shape_array: ShapeArray) -> None:
         self._shape_arr = shape_array
         self._ch = None
+        self._defined_areas_perimeter = None # per default, calculate areas and perimeter from shapes
+
+    def set_areas_perimeter(self, areas: NDArray[np.float64], perimeter: NDArray[np.float64]) -> None:
+        """set areas of the shapes, if they deviate from the calculated areas. This might useful for
+        pictures with known areas and perimeter parameters"""
+
+        a = np.asarray(areas)
+        p = np.asarray(perimeter)
+        if a.ndim != 1 or p.ndim != 1:
+            raise ValueError(
+                f"Areas and perimeter must be 1D arrays, but got {a.ndim}D and {p.ndim}D."
+            )
+        if len(areas) != self._shape_arr.n_shapes or len(perimeter) != self._shape_arr.n_shapes:
+            raise ValueError(
+                f"Length of areas ({len(areas)}) or perimeter ({len(perimeter)}) does not match number of shapes ({self._shape_arr.n_shapes})."
+            )
+
+        self._defined_areas_perimeter = np.vstack((a, p)).T
 
     def to_text(self, short_format: bool = False) -> str:
         rtn = ""
@@ -140,6 +158,9 @@ class ArrayProperties(object):
     def areas(self) -> NDArray[np.float64]:
         """area of each object"""
 
+        if isinstance(self._defined_areas_perimeter, np.ndarray):
+            return self._defined_areas_perimeter[:, 0]
+
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
         # rects and polygons
         idx = np.append(
@@ -167,6 +188,8 @@ class ArrayProperties(object):
     @property
     def perimeter(self) -> NDArray[np.float64]:
         """Perimeter for each object"""
+        if isinstance(self._defined_areas_perimeter, np.ndarray):
+            return self._defined_areas_perimeter[:, 1]
 
         rtn = np.full(self._shape_arr.n_shapes, np.nan)
 
@@ -194,7 +217,7 @@ class ArrayProperties(object):
     def center_of_mass(self) -> NDArray:
         """center of mass of all shapes"""
         areas = self.areas
-        weighted_sum = np.sum(self._shape_arr.xy * np.atleast_2d(areas).T, axis=0)
+        weighted_sum = np.sum(self._shape_arr.xy * np.atleast_2d(areas).T, axis=0) # assuming symmetric shapes
         return weighted_sum / np.sum(areas)
 
     @property
