@@ -9,17 +9,19 @@ readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies =  ["numpy>=2.1.3",
                     "pandas>=2.2",
                     "scipy>=1.14",
-                    "matplotlib>=3.9",
                     "shapely>=2.0",
                     "svgwrite>=1.4",
                     "Pillow>=11.0"]
 
 [project.optional-dependencies]
 pygame = ["pygame>=2.5"]
+plot = [
+    "matplotlib>=3.9",
+]
 #expyriment = ["expyriment>=0.10"]
 test = [
     "pytest >=2.7.3"
@@ -32,3 +34,11 @@ doc = ["Sphinx>=5.1",
 [project.urls]
 Documentation = "https://github.com/lindemann09/PyNSN"
 Source = "https://github.com/lindemann09/PyNSN"
+
+
+[tool.ruff.lint]
+ignore = ["F401", "F405"]
+
+[tool.ruff.format]
+line-ending = "lf"
+indent-style = "space"
